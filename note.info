@@ -1,0 +1,21 @@
+
+
+Idea items -
+1.  feature that for some specific shop type will have different onboarding steps that we will ask user for their shop information. example the jewelry shop may ask service they have like pawn, selling silver, ...etc
+2. Let's planning the stories that allow user to create order by speak and also the same for create expenses
+
+-- Testing plan
+Review the TEST_PLAN_ISO.md and run the type check for Auth flow please on iOS - result should be updated
+
+On the mobile, let's allow user to create customer
+
+
+Should you the logo, icon same as the frontend right?
+
+Actually, on the mobile, user can use phone or username to login(username in web platform)
+
+Let's review if any missing APIs in server side for this mobile app
+
+
+Let's define all the flow/plan we should test on mobile IOS
+

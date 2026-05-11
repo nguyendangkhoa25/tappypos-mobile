@@ -1,0 +1,56 @@
+appId: com.knp.tappypos
+name: "02 POS golden path — add product → cart → checkout → order success"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../subflows/_login.yaml
+
+# ── P01: Navigate to Selling (Bán hàng) tab ──────────────────────────────────
+- tapOn:
+    id: "tab-selling"
+- assertVisible: "Tìm sản phẩm..."
+
+# ── P06: Tap a product to add it to cart ─────────────────────────────────────
+# testID is "pos-product-<name>" set on the product card TouchableOpacity
+- tapOn:
+    id: "pos-product-${PRODUCT_NAME}"
+
+# ── P08: Cart badge shows item count (badge is outside the button, Text is independently accessible)
+- assertVisible: "1"
+
+# ── P08b: Tap the same product again — badge increments ──────────────────────
+- tapOn:
+    id: "pos-product-${PRODUCT_NAME}"
+- assertVisible: "2"
+
+# ── P11: Open cart ───────────────────────────────────────────────────────────
+- tapOn:
+    id: "pos-cart-btn"
+- assertVisible: "Thanh toán"
+- assertVisible: ${PRODUCT_NAME}
+
+# ── P12: Increase quantity via stepper — testID is qty-plus-<productId>
+- tapOn:
+    id: "qty-plus-.*"
+- assertVisible: "3"
+
+# ── P15: Proceed to checkout ─────────────────────────────────────────────────
+- tapOn: "Thanh toán"
+- assertVisible: "Hoàn tất đơn hàng"
+- assertVisible: "Phương thức thanh toán"
+
+# ── P18: Default payment method is Tiền mặt (CASH) pre-selected — assert by testID
+- assertVisible:
+    id: "payment-method-CASH"
+
+# ── P20: Complete the order ───────────────────────────────────────────────────
+- tapOn: "Hoàn tất đơn hàng"
+
+# ── P22: Order success screen renders ────────────────────────────────────────
+- assertVisible: "Đặt hàng thành công!"
+- assertVisible:
+    id: "order-success-number"
+
+# ── P23: "Đơn mới" returns to POS with cleared cart ─────────────────────────
+- tapOn: "Đơn mới"
+- assertVisible: "Tìm sản phẩm..."

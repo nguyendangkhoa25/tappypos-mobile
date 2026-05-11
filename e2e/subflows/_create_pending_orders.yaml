@@ -1,0 +1,69 @@
+appId: com.knp.tappypos
+---
+
+# Creates 2 PENDING orders via the backend send-to-kitchen API.
+# Runs BEFORE _login.yaml so there is no active app session.
+# Uses /auth/login/force to override any leftover session from a previous test run,
+# then logs out at the end so the app can log in cleanly.
+#
+# Two-step evalScript pattern avoids the Maestro bug where ${VAR} + any } in the
+# same script causes "Missing close quote" (Maestro wraps evalScript in a regex
+# that greedily matches ${ ... } and the first } inside an object literal closes it).
+
+# Step 1: capture env vars into output (no {} in this script)
+- evalScript: |
+    output.phone = "${PHONE}";
+    output.password = "${PASSWORD}";
+    output.shopId = "${SHOP_ID}";
+
+# Step 2: force-login, seed 2 PENDING orders, then logout
+- evalScript: |
+    var BASE = 'http://localhost:6868/api';
+    var PHONE = output.phone;
+    var PASSWORD = output.password;
+    var SHOP_ID = output.shopId;
+
+    var loginResp = http.post(
+      BASE + '/auth/login/force',
+      JSON.stringify({ username: PHONE, password: PASSWORD, rememberMe: false }),
+      { 'Content-Type': 'application/json', 'X-Tenant-ID': SHOP_ID }
+    );
+    var loginBody = JSON.parse(loginResp.body);
+    if (!loginBody.data || !loginBody.data.accessToken) {
+      throw new Error('Login failed: ' + loginResp.body);
+    }
+    var token = loginBody.data.accessToken;
+
+    var H = {
+      'Content-Type': 'application/json',
+      'X-Tenant-ID': SHOP_ID,
+      'Authorization': 'Bearer ' + token
+    };
+
+    var productsResp = http.get(BASE + '/products?size=1', H);
+    var productsBody = JSON.parse(productsResp.body);
+    if (!productsBody.data || !productsBody.data.content || productsBody.data.content.length === 0) {
+      throw new Error('No products found for seeding');
+    }
+    var productId = productsBody.data.content[0].id;
+
+    function createPendingOrder(label) {
+      var cartResp = http.post(BASE + '/carts', '{}', H);
+      var cartId = JSON.parse(cartResp.body).data.cartId;
+      http.post(
+        BASE + '/carts/' + cartId + '/items',
+        JSON.stringify({ productId: productId, quantity: 1 }),
+        H
+      );
+      http.post(
+        BASE + '/carts/' + cartId + '/send-to-kitchen',
+        JSON.stringify({ tableLabel: label }),
+        H
+      );
+    }
+
+    createPendingOrder('E2E Test A');
+    createPendingOrder('E2E Test B');
+
+    // Logout so the app can log in cleanly without DEVICE_CONFLICT
+    http.post(BASE + '/auth/logout', '{}', H);

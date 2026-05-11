@@ -1,0 +1,83 @@
+appId: com.knp.tappypos
+name: "01 Auth — shop ID validation, login errors, PIN skip"
+---
+
+# ── A01: Cold launch shows ShopId screen ─────────────────────────────────────
+- launchApp:
+    clearState: true
+# clearState wipes dev-client's stored server URL; tap through picker if it appears
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+# iOS Keychain (SecureStore) survives clearState; if PIN screen appears, reset to ShopId
+- tapOn:
+    text: "Đổi cửa hàng"
+    optional: true
+- assertVisible: "TappyPOS"
+- assertVisible: "Mã cửa hàng"
+
+# ── A03: Unknown shop ID shows inline error (no alert, inline red text) ───────
+- tapOn:
+    id: "shop-id-input"
+- inputText: "nonexistent-xyz-99"
+- tapOn:
+    id: "shop-id-submit"
+- assertVisible:
+    id: "shop-id-error-not-found"
+
+# ── A05: Valid shop ID navigates to Login ─────────────────────────────────────
+- tapOn:
+    id: "shop-id-input"
+- eraseText: 50
+- inputText: ${SHOP_ID}
+- tapOn:
+    id: "shop-id-submit"
+- assertVisible: "Đăng nhập"
+
+# ── A08: Wrong credentials — app stays on LoginScreen (does not navigate) ─────
+- tapOn:
+    id: "login-phone"
+- inputText: ${PHONE}
+- tapOn:
+    id: "login-password"
+- inputText: "WrongPass999!"
+# Wait for button to become enabled (React processes keystrokes async)
+- assertVisible:
+    id: "login-submit"
+    enabled: true
+# Press Return/Done on the focused password field — avoids keyboard-intercept issue
+# where a direct tapOn fires keyboard dismiss instead of button onPress on iOS.
+- pressKey: Enter
+# Verify we did NOT navigate to dashboard (stay on login after wrong password)
+- assertVisible: "Đăng nhập"
+
+# ── A12/A24: Navigate fresh → correct credentials → Dashboard (or PIN skip) ──
+# Navigate back to ShopId for a clean form (avoids erase-retype timing issues)
+- tapOn:
+    text: "Đổi cửa hàng"
+- tapOn:
+    id: "shop-id-input"
+- inputText: ${SHOP_ID}
+- assertVisible:
+    id: "shop-id-submit"
+    enabled: true
+- tapOn:
+    id: "shop-id-submit"
+- assertVisible: "Đăng nhập"
+- tapOn:
+    id: "login-phone"
+- inputText: ${PHONE}
+- tapOn:
+    id: "login-password"
+- inputText: ${PASSWORD}
+- assertVisible:
+    id: "login-submit"
+    enabled: true
+# Press Return/Done key — fires onSubmitEditing on the password field, bypassing
+# the iOS first-touch keyboard-dismiss that swallows a direct tapOn.
+- pressKey: Enter
+# If PinSetup appears (no PIN in Keychain), skip it — else app goes directly to Dashboard
+- tapOn:
+    text: "Bỏ qua, thiết lập sau"
+    optional: true
+- assertVisible: "Tổng quan"

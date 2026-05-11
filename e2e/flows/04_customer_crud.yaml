@@ -1,0 +1,62 @@
+appId: com.knp.tappypos
+name: "04 Customer CRUD — create, view detail, delete"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../subflows/_login.yaml
+
+# ── Navigate to Customer list via Dashboard ───────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+- assertVisible: "Tìm theo tên, số điện thoại..."
+
+# ── M06b: Search for an existing customer ────────────────────────────────────
+- tapOn: "Tìm theo tên, số điện thoại..."
+- inputText: "Test"
+- assertVisible: "Tìm theo tên, số điện thoại..."
+
+# Clear search and dismiss keyboard
+- eraseText: 50
+- hideKeyboard
+
+# ── M07d: Open CustomerFormScreen to create a new customer ──────────────────
+- tapOn:
+    id: "customer-add-fab"
+- assertVisible: "Thêm khách hàng"
+
+# ── M07d: Fill in required fields ────────────────────────────────────────────
+- tapOn:
+    id: "customer-name"
+- inputText: "Khách Test Maestro"
+
+- tapOn:
+    id: "customer-phone"
+- inputText: ${NEW_CUSTOMER_PHONE}
+
+# ── M07d: Submit the form ─────────────────────────────────────────────────────
+- tapOn:
+    id: "customer-form-submit"
+- assertVisible: "Đã thêm khách hàng"
+
+# ── M06: Back on CustomerList — new customer appears ─────────────────────────
+- assertVisible: "Khách hàng"
+- assertVisible: "Khách Test Maestro"
+
+# ── M07: Tap the new customer to open detail ─────────────────────────────────
+- tapOn: "Khách Test Maestro"
+- assertVisible: "Khách Test Maestro"
+- assertVisible: "đơn hàng"
+
+# ── M07b: Delete the customer ────────────────────────────────────────────────
+- tapOn:
+    id: "customer-delete-btn"
+- assertVisible: "Xóa khách hàng?"
+- tapOn: "Xóa khách hàng"
+- assertVisible: "Đã xóa khách hàng"
+
+# ── Verify customer no longer appears in list ─────────────────────────────────
+- assertNotVisible: "Khách Test Maestro"

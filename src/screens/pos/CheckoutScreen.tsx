@@ -1,0 +1,240 @@
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { cartApi } from '../../services/api';
+import { useCartStore } from '../../store/cartStore';
+import { formatVnd } from '../../utils/format';
+import type { POSScreenProps } from '../../types/navigation';
+
+type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CARD';
+
+const PAYMENT_METHODS: { key: PaymentMethod; icon: string; labelKey: string }[] = [
+  { key: 'CASH', icon: 'cash', labelKey: 'pos.cash' },
+  { key: 'BANK_TRANSFER', icon: 'bank-transfer', labelKey: 'pos.transfer' },
+  { key: 'CARD', icon: 'credit-card-outline', labelKey: 'pos.card' },
+];
+
+export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const { items, discount, getTotal, clearCart, promoCode, setPromo } = useCartStore();
+  const total = getTotal();
+  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
+  const [cashReceived, setCashReceived] = useState('');
+  const [promoInput, setPromoInput] = useState('');
+  const [applyingPromo, setApplyingPromo] = useState(false);
+
+  const cashReceivedNum = parseFloat(cashReceived.replace(/[^0-9]/g, '')) || 0;
+  const change = paymentMethod === 'CASH' ? Math.max(0, cashReceivedNum - total) : 0;
+
+  const checkoutMutation = useMutation({
+    mutationFn: async () => {
+      // 1. Create a server-side cart session
+      const initRes = await cartApi.init();
+      const cartId = initRes.data.data.cartId;
+
+      // 2. Push all local cart items to the server cart
+      for (const item of items) {
+        await cartApi.addItem(cartId, item.productId, item.quantity);
+      }
+
+      // 3. Apply promo code if one was entered
+      if (promoCode) {
+        await cartApi.applyPromo(cartId, promoCode);
+      }
+
+      // 4. Checkout
+      const res = await cartApi.checkout(cartId, {
+        paymentMethod,
+        amountPaid: cashReceivedNum || undefined,
+      });
+      return res.data.data;
+    },
+    onSuccess: (data) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      clearCart();
+      navigation.replace('OrderSuccess', {
+        orderId: data.orderId,
+        orderNumber: data.orderNumber,
+        total: data.total,
+      });
+    },
+    onError: () => {
+      Alert.alert(t('common.error'), t('common.errorStateMsg'));
+    },
+  });
+
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setApplyingPromo(true);
+    try {
+      // Validate promo code by checking discount — actual apply happens at checkout time
+      setPromo(promoInput.trim(), 0);
+    } catch {
+      Alert.alert(t('common.error'), t('common.errorStateMsg'));
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
+  return (
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      {/* Header */}
+      <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+        <TouchableOpacity className="mr-3 p-1" onPress={() => navigation.goBack()}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
+        </TouchableOpacity>
+        <Text className="text-xl font-bold text-gray-900">{t('pos.checkout')}</Text>
+      </View>
+
+      <ScrollView className="flex-1 px-4 pt-4">
+        {/* Order summary */}
+        <View className="bg-gray-50 rounded-2xl p-4 mb-4">
+          {items.map((item) => (
+            <View key={item.productId} className="flex-row justify-between mb-2">
+              <Text className="text-gray-700 flex-1 mr-2" numberOfLines={1}>
+                {item.name} × {item.quantity}
+              </Text>
+              <Text className="text-gray-800 font-medium">
+                {formatVnd(item.price * item.quantity)}
+              </Text>
+            </View>
+          ))}
+          {discount > 0 && (
+            <View className="flex-row justify-between pt-2 border-t border-gray-200 mt-2">
+              <Text className="text-gray-500">{t('pos.discount')}</Text>
+              <Text className="text-warning font-semibold">-{formatVnd(discount)}</Text>
+            </View>
+          )}
+          <View className="flex-row justify-between pt-2 border-t border-gray-200 mt-2">
+            <Text className="font-bold text-gray-900 text-base">{t('pos.total')}</Text>
+            <Text className="font-bold text-primary text-lg">{formatVnd(total)}</Text>
+          </View>
+        </View>
+
+        {/* Promo code */}
+        {!promoCode && (
+          <View className="flex-row gap-2 mb-4">
+            <TextInput
+              className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-base"
+              placeholder={t('pos.promoCode')}
+              placeholderTextColor="#9ca3af"
+              value={promoInput}
+              onChangeText={setPromoInput}
+              autoCapitalize="characters"
+            />
+            <TouchableOpacity
+              className="bg-gray-100 rounded-xl px-4 py-3 items-center justify-center active:opacity-70"
+              onPress={handleApplyPromo}
+              disabled={applyingPromo}
+            >
+              {applyingPromo ? (
+                <ActivityIndicator size="small" color="#4f46e5" />
+              ) : (
+                <Text className="text-primary font-semibold">{t('pos.applyPromo')}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {promoCode && (
+          <View className="flex-row items-center bg-primary-light rounded-xl px-4 py-3 mb-4">
+            <MaterialCommunityIcons name="tag-outline" size={18} color="#4f46e5" />
+            <Text className="flex-1 ml-2 text-primary font-semibold">{promoCode}</Text>
+            <TouchableOpacity onPress={() => setPromo(null, 0)}>
+              <MaterialCommunityIcons name="close" size={18} color="#4f46e5" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Payment method */}
+        <Text className="text-base font-bold text-gray-800 mb-3">{t('pos.paymentMethod')}</Text>
+        <View className="flex-row gap-3 mb-4">
+          {PAYMENT_METHODS.map(({ key, icon, labelKey }) => (
+            <TouchableOpacity
+              key={key}
+              testID={`payment-method-${key}`}
+              className={`flex-1 py-4 rounded-2xl items-center border-2 ${
+                paymentMethod === key
+                  ? 'border-primary bg-primary-light'
+                  : 'border-gray-200 bg-white'
+              }`}
+              onPress={() => setPaymentMethod(key)}
+            >
+              <MaterialCommunityIcons
+                name={icon as never}
+                size={24}
+                color={paymentMethod === key ? '#4f46e5' : '#9ca3af'}
+              />
+              <Text
+                className={`text-xs font-semibold mt-1 ${
+                  paymentMethod === key ? 'text-primary' : 'text-gray-500'
+                }`}
+              >
+                {t(labelKey)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Cash change calculator */}
+        {paymentMethod === 'CASH' && (
+          <View className="bg-gray-50 rounded-2xl p-4 mb-6">
+            <Text className="text-sm text-gray-500 mb-2">{t('pos.cashReceived')}</Text>
+            <TextInput
+              className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-xl font-bold text-gray-900 mb-3"
+              value={cashReceived}
+              onChangeText={setCashReceived}
+              keyboardType="numeric"
+              placeholder="0"
+            />
+            {cashReceivedNum > 0 && (
+              <View className="flex-row justify-between items-center">
+                <Text className="text-gray-600 font-medium">{t('pos.change')}</Text>
+                <Text
+                  className={`text-xl font-bold ${change >= 0 ? 'text-primary' : 'text-danger'}`}
+                >
+                  {formatVnd(change)}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Complete button */}
+      <View
+        className="px-4 pt-3 bg-white border-t border-gray-100"
+        style={{ paddingBottom: insets.bottom + 16 }}
+      >
+        <TouchableOpacity
+          className={`rounded-2xl py-4 items-center ${
+            checkoutMutation.isPending ? 'bg-gray-300' : 'bg-primary active:opacity-80'
+          }`}
+          onPress={() => checkoutMutation.mutate()}
+          disabled={checkoutMutation.isPending}
+        >
+          {checkoutMutation.isPending ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text className="text-white font-bold text-lg">{t('pos.completeOrder')}</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}

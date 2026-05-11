@@ -1,0 +1,893 @@
+import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
+import i18n from '../i18n';
+import { forceLogout } from './authSession';
+
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://tappypos.vn/api';
+
+export const api = axios.create({
+  baseURL: BASE_URL,
+  timeout: 15_000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// ── Request interceptor ───────────────────────────────────────────────────────
+
+api.interceptors.request.use(async (config) => {
+  try {
+    const [token, tenantId] = await Promise.all([
+      SecureStore.getItemAsync('access_token'),
+      SecureStore.getItemAsync('tenant_id'),
+    ]);
+    // Never send a stored token on credential-based auth endpoints — a stale token triggers
+    // DEVICE_SWITCHED 401 from JwtAuthenticationFilter before the login logic runs.
+    const isAuthEndpoint = /^\/auth\/(login|phone-pin|register|password-reset)/.test(config.url ?? '');
+    if (token && !config.headers.Authorization && !isAuthEndpoint) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (tenantId && !config.headers['X-Tenant-ID']) config.headers['X-Tenant-ID'] = tenantId;
+  } catch {
+    // Keychain unavailable (e.g. missing entitlement in dev build) — proceed without auth headers
+  }
+  config.headers['Accept-Language'] = i18n.language ?? 'vi';
+  return config;
+});
+
+// ── Response interceptor — handles 401 / refresh / DEVICE_SWITCHED ───────────
+
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
+
+function processQueue(error: unknown, token: string | null) {
+  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token!)));
+  failedQueue = [];
+}
+
+api.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const original = error.config;
+
+    if (error.response?.status === 401 && !original.url?.startsWith('/auth/')) {
+      // Device conflict — another device took over this session
+      if (error.response?.data?.error === 'DEVICE_SWITCHED') {
+        isRefreshing = false;
+        processQueue(error, null);
+        await forceLogout('device_switched');
+        return Promise.reject(error);
+      }
+
+      if (!original._retry) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          }).then((token) => {
+            original.headers.Authorization = `Bearer ${token}`;
+            return api(original);
+          });
+        }
+
+        original._retry = true;
+        isRefreshing = true;
+
+        try {
+          const refreshToken = await SecureStore.getItemAsync('refresh_token');
+          const phone = await SecureStore.getItemAsync('phone');
+          if (!refreshToken) throw new Error('no_refresh_token');
+
+          // Backend change required: accept { refreshToken } in request body when no cookie.
+          // See MOBILE_SPEC.md §4 and backend AuthController.refreshToken().
+          const { data } = await axios.post<ApiResponse<AuthData>>(
+            `${BASE_URL}/auth/refresh`,
+            { refreshToken },
+            {
+              params: phone ? { username: phone } : undefined,
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept-Language': i18n.language ?? 'vi',
+              },
+            },
+          );
+
+          const { accessToken, refreshToken: newRefresh } = data.data;
+          await Promise.all([
+            SecureStore.setItemAsync('access_token', accessToken),
+            ...(newRefresh ? [SecureStore.setItemAsync('refresh_token', newRefresh)] : []),
+          ]);
+
+          processQueue(null, accessToken);
+          original.headers.Authorization = `Bearer ${accessToken}`;
+          return api(original);
+        } catch (refreshError) {
+          processQueue(refreshError, null);
+          await forceLogout('session_expired');
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type ApiResponse<T> = { success: boolean; data: T; message: string | null };
+
+type AuthData = {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn: number;
+  tokenType: string;
+  username: string;
+};
+
+type ProfileData = {
+  username: string;
+  fullName: string | null;
+  shopName: string | null;
+  role: string | null;
+};
+
+// ── Auth API ──────────────────────────────────────────────────────────────────
+// Backend changes needed for mobile (see MOBILE_SPEC.md §8):
+//   1. LoginRequest: add `refreshInBody` field — when true, include refreshToken in response body
+//      and skip Turnstile verification (mobile clients can't render Turnstile widgets).
+//   2. AuthController.refreshToken(): also accept { refreshToken } from request body
+//      when the HttpOnly cookie is absent.
+//   3. New endpoints: POST /auth/phone-pin, POST /auth/pin/setup (mobile-only flows).
+
+export const authApi = {
+  login: (username: string, password: string) =>
+    api.post<ApiResponse<AuthData>>('/auth/login', {
+      username,
+      password,
+      rememberMe: true,
+      refreshInBody: true,
+    }),
+
+  loginWithPin: (username: string, pin: string) =>
+    api.post<ApiResponse<AuthData>>('/auth/phone-pin', { username, pin }),
+
+  setupPin: (pin: string, token?: string) =>
+    api.post<ApiResponse<null>>(
+      '/auth/pin/setup',
+      { pin },
+      token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+    ),
+
+  refresh: (refreshToken: string, username?: string) =>
+    axios.post<ApiResponse<AuthData>>(
+      `${BASE_URL}/auth/refresh`,
+      { refreshToken },
+      {
+        params: username ? { username } : undefined,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    ),
+
+  forceLogin: (username: string, password: string) =>
+    api.post<ApiResponse<AuthData>>('/auth/login/force', {
+      username,
+      password,
+      rememberMe: true,
+      refreshInBody: true,
+    }),
+
+  logout: () => api.post<ApiResponse<null>>('/auth/logout'),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api.put<ApiResponse<null>>('/profiles/password', { currentPassword, newPassword }),
+};
+
+// ── Profile API ───────────────────────────────────────────────────────────────
+
+export const profileApi = {
+  getMe: () => api.get<ApiResponse<ProfileData>>('/profiles/me'),
+};
+
+// ── Dashboard API ─────────────────────────────────────────────────────────────
+
+export type KpiPreset = 'today' | 'week' | 'month';
+
+export type KpiData = {
+  totalRevenue: number;
+  totalOrders: number;
+  completedOrders: number;
+  pendingOrders: number;
+};
+
+// ── Product & Category API ────────────────────────────────────────────────────
+
+export type ProductData = {
+  id: string;
+  name: string;
+  price: number;
+  unit: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  productTypeCode: string | null;
+  description: string | null;
+  inStock: boolean;
+  stockQuantity: number | null;
+  dynamicPrice: boolean;
+};
+
+export type CategoryData = {
+  id: string;
+  name: string;
+};
+
+export const productApi = {
+  list: (params: { page?: number; size?: number; categoryId?: string; search?: string }) =>
+    api.get<ApiResponse<{ content: ProductData[]; totalPages: number; totalElements: number }>>(
+      '/products',
+      { params: { page: 0, size: 30, ...params } },
+    ),
+
+  search: (q: string) =>
+    api.get<ApiResponse<{ content: ProductData[]; totalPages: number }>>('/products/search', { params: { keyword: q } }),
+
+  getById: (id: string) =>
+    api.get<ApiResponse<ProductData>>(`/products/${id}`),
+};
+
+// ── Cart API ──────────────────────────────────────────────────────────────────
+
+export type CartItemResponse = {
+  id: string;
+  productId: string;
+  productName: string;
+  unitPrice: number;
+  quantity: number;
+  unit: string;
+  subtotal: number;
+};
+
+export type CartResponse = {
+  cartId: string;
+  items: CartItemResponse[];
+  subtotal: number;
+  totalDiscount: number;
+  total: number;
+  appliedPromotions: string[] | null;
+};
+
+export type CheckoutRequest = {
+  paymentMethod: 'CASH' | 'BANK_TRANSFER' | 'CARD';
+  amountPaid?: number;
+  customerId?: number;
+  notes?: string;
+};
+
+export type CheckoutResponse = {
+  orderId: string;
+  orderNumber: string;
+  total: number;
+};
+
+export const cartApi = {
+  init: () => api.post<ApiResponse<CartResponse>>('/carts'),
+
+  get: (cartId: string) => api.get<ApiResponse<CartResponse>>(`/carts/${cartId}`),
+
+  addItem: (cartId: string, productId: string, quantity: number) =>
+    api.post<ApiResponse<CartResponse>>(`/carts/${cartId}/items`, { productId, quantity }),
+
+  updateItem: (cartId: string, cartItemId: string, quantity: number) =>
+    api.put<ApiResponse<CartResponse>>(`/carts/${cartId}/items/${cartItemId}`, { newQuantity: quantity }),
+
+  removeItem: (cartId: string, cartItemId: string) =>
+    api.delete<ApiResponse<CartResponse>>(`/carts/${cartId}/items/${cartItemId}`),
+
+  applyPromo: (cartId: string, promoCode: string) =>
+    api.post<ApiResponse<CartResponse>>(`/carts/${cartId}/promotion`, { promoCode }),
+
+  checkout: (cartId: string, req: CheckoutRequest) =>
+    api.post<ApiResponse<CheckoutResponse>>(`/carts/${cartId}/checkout`, req),
+
+  sendToKitchen: (cartId: string) =>
+    api.post<ApiResponse<{ orderId: string; orderNumber: string; status: string }>>(`/carts/${cartId}/send-to-kitchen`, {}),
+};
+
+// ── Order API ─────────────────────────────────────────────────────────────────
+
+export type OrderStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
+
+export type OrderSummary = {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  total: number;
+  customerName: string | null;
+  createdByName: string | null;
+  createdAt: string;
+  itemCount: number;
+};
+
+export type OrderItemDetail = {
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  unit: string;
+};
+
+export type OrderDetail = OrderSummary & {
+  items: OrderItemDetail[];
+  subtotal: number;
+  discount: number;
+  paymentMethod: string | null;
+  note: string | null;
+  amountPaid: number | null;
+  changeAmount: number | null;
+  cancelReason: string | null;
+  cancelledBy: string | null;
+  cancelledAt: string | null;
+};
+
+export const orderApi = {
+  list: (params: {
+    status?: string;
+    search?: string;
+    page?: number;
+    size?: number;
+    customerId?: string;
+    from?: string;
+    to?: string;
+    paymentMethod?: string;
+  }) =>
+    api.get<ApiResponse<{ content: OrderSummary[]; totalPages: number; totalElements: number }>>(
+      '/orders',
+      { params: { size: 20, ...params } },
+    ),
+
+  getById: (id: string) => api.get<ApiResponse<OrderDetail>>(`/orders/${id}`),
+
+  complete: (id: string) => api.put<ApiResponse<OrderDetail>>(`/orders/${id}/complete`),
+
+  cancel: (id: string) => api.post<ApiResponse<OrderDetail>>(`/orders/${id}/cancel`),
+
+  create: (req: {
+    items: { productId: string; quantity: number }[];
+    paymentMethod: 'CASH' | 'BANK_TRANSFER' | 'CARD';
+    cashReceived?: number;
+    customerId?: string;
+    note?: string;
+    source?: string;
+    comboId?: string;
+  }) => api.post<ApiResponse<{ orderId: string; orderNumber: string; total: number }>>('/orders', req),
+
+  delete: (id: string) => api.delete<ApiResponse<null>>(`/orders/${id}`),
+
+  topProducts: (params: { limit?: number; days?: number }) =>
+    api.get<ApiResponse<{ productId: string; name: string; price: number; orderCount: number }[]>>(
+      '/orders/top-products',
+      { params },
+    ),
+
+  summary: (params: { from: string; to: string; status?: string; paymentMethod?: string }) =>
+    api.get<ApiResponse<{
+      totalRevenue: number;
+      orderCount: number;
+      avgOrderValue: number;
+      completedCount: number;
+      cancelledCount: number;
+    }>>('/orders/summary', { params }),
+
+  chart: (params: { from: string; to: string; granularity: 'hour' | 'day' | 'month' }) =>
+    api.get<ApiResponse<{ label: string; value: number }[]>>('/orders/chart', { params }),
+};
+
+// ── App version API ───────────────────────────────────────────────────────────
+
+export const appApi = {
+  getVersion: () =>
+    api.get<ApiResponse<{ minVersion: string; latestVersion: string }>>('/app/version'),
+
+  // Public version check — uses a plain axios instance (no auth interceptor) so a
+  // 401 or missing endpoint never blocks startup.
+  getVersionPublic: () =>
+    axios.get<ApiResponse<{ minVersion: string; latestVersion: string }>>(
+      `${BASE_URL}/app/version`,
+      { timeout: 5_000 },
+    ),
+};
+
+// ── Tenant / shop API ─────────────────────────────────────────────────────────
+
+export type ShopStatus = 'ACTIVE' | 'SUSPENDED' | 'NOT_FOUND';
+
+export type ShopType = {
+  code: string;
+  name: string;
+  emoji: string;
+  tenantPrefix: string;
+  features: string[];
+};
+
+export type ProductTemplate = {
+  id: string;
+  name: string;
+  price: number;
+  unit: string;
+  dynamicPrice: boolean;
+};
+
+export type ExpenseSuggestion = {
+  name: string;
+  emoji: string;
+  color: string;
+};
+
+export const tenantApi = {
+  checkStatus: (shopId: string) =>
+    api.get<ApiResponse<{ shopId: string; shopName: string; status: ShopStatus }>>(
+      `/tenants/${shopId}/status`,
+    ),
+
+  getShopTypes: () => api.get<ApiResponse<ShopType[]>>('/shop-types'),
+
+  getProductTemplates: (shopTypeCode: string) =>
+    api.get<ApiResponse<ProductTemplate[]>>('/product-templates', {
+      params: { shopTypeCode },
+    }),
+
+  getExpenseSuggestions: (shopTypeCode: string) =>
+    api.get<ApiResponse<ExpenseSuggestion[]>>('/expense-suggestions', {
+      params: { shopTypeCode },
+    }),
+
+  selfProvision: (payload: {
+    shopTypeCode: string;
+    shopName: string;
+    address: string;
+    nickname: string;
+    fullName: string;
+    products: { name: string; price: number; unit: string; dynamicPrice: boolean }[];
+    expenses: { name: string; monthlyAmount: number }[];
+  }) =>
+    api.post<ApiResponse<{ accessToken: string; refreshToken: string }>>('/tenants/self-provision', payload),
+};
+
+// ── Auth additional endpoints ─────────────────────────────────────────────────
+
+export const authExtApi = {
+  register: (phone: string, password: string) =>
+    api.post<ApiResponse<{ accessToken: string; refreshToken?: string }>>('/auth/register', {
+      phone,
+      password,
+      refreshInBody: true,
+    }),
+
+  requestPasswordReset: (phone: string) =>
+    api.post<ApiResponse<null>>('/auth/password-reset/request', { phone }),
+};
+
+// ── Subscription API ──────────────────────────────────────────────────────────
+
+export type SubscriptionData = {
+  plan: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'SUSPENDED';
+  startedAt: string;
+  expiresAt: string;
+  maxUsers: number;
+  currentUsers: number;
+  features: string[];
+};
+
+export const subscriptionApi = {
+  getCurrent: () => api.get<ApiResponse<SubscriptionData>>('/subscriptions/current'),
+};
+
+// ── Dashboard extended API ────────────────────────────────────────────────────
+
+export const dashboardApi = {
+  // Backend returns DashboardSummaryDTO directly (no ApiResponse wrapper)
+  getKpi: (_preset: KpiPreset) =>
+    api.get<KpiData>('/dashboard/summary'),
+};
+
+// ── Expense API ───────────────────────────────────────────────────────────────
+
+export type ExpenseData = {
+  id: string;
+  name: string;
+  amount: number;
+  type: 'FIXED' | 'VARIABLE';
+  category: string | null;
+  date: string;
+  note: string | null;
+};
+
+export type DefaultExpense = {
+  id: string;
+  name: string;
+  monthlyAmount: number;
+  paymentDate: number | null;
+};
+
+export const expenseApi = {
+  list: (params: {
+    from?: string;
+    to?: string;
+    type?: 'FIXED' | 'VARIABLE';
+    category?: string;
+    page?: number;
+    size?: number;
+  }) =>
+    api.get<ApiResponse<{ content: ExpenseData[]; totalPages: number; totalElements: number }>>(
+      '/expenses',
+      { params: { size: 30, ...params } },
+    ),
+
+  create: (data: Omit<ExpenseData, 'id'>) =>
+    api.post<ApiResponse<ExpenseData>>('/expenses', data),
+
+  update: (id: string, data: Partial<Omit<ExpenseData, 'id'>>) =>
+    api.put<ApiResponse<ExpenseData>>(`/expenses/${id}`, data),
+
+  delete: (id: string) => api.delete<ApiResponse<null>>(`/expenses/${id}`),
+
+  summary: (params: { from: string; to: string; type?: string }) =>
+    api.get<ApiResponse<{
+      total: number;
+      fixed: number;
+      variable: number;
+      netVsRevenue: number;
+    }>>('/expenses/summary', { params }),
+
+  chart: (params: { from: string; to: string; granularity: 'hour' | 'day' | 'month' }) =>
+    api.get<ApiResponse<{ label: string; value: number }[]>>('/expenses/chart', { params }),
+
+  getDefaults: () => api.get<ApiResponse<DefaultExpense[]>>('/expenses/defaults'),
+
+  createDefault: (data: Omit<DefaultExpense, 'id'>) =>
+    api.post<ApiResponse<DefaultExpense>>('/expenses/defaults', data),
+
+  updateDefault: (id: string, data: Partial<Omit<DefaultExpense, 'id'>>) =>
+    api.put<ApiResponse<DefaultExpense>>(`/expenses/defaults/${id}`, data),
+
+  deleteDefault: (id: string) => api.delete<ApiResponse<null>>(`/expenses/defaults/${id}`),
+
+  cloneDefaults: (month: string) =>
+    api.post<ApiResponse<ExpenseData[]>>('/expenses/clone-defaults', { month }),
+};
+
+// ── Customer API ──────────────────────────────────────────────────────────────
+
+export type CustomerData = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  gender: 'MALE' | 'FEMALE' | 'OTHER' | null;
+  dateOfBirth: string | null;
+  birthday: string | null;
+  zaloId: string | null;
+  facebookId: string | null;
+  hairType: string | null;
+  preferredServices: string | null;
+  allergiesOrSensitivities: string | null;
+  specialRequests: string | null;
+  notes: string | null;
+  note: string | null;
+  idCardNumber: string | null;
+  idCardIssuedDate: string | null;
+  idCardIssuedPlace: string | null;
+  permanentAddress: string | null;
+  totalOrders: number;
+  totalSpend: number;
+  points: number;
+  createdAt: string;
+};
+
+export type CustomerFormPayload = {
+  name: string;
+  phone: string;
+  email?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  dateOfBirth?: string;
+  zaloId?: string;
+  facebookId?: string;
+  hairType?: string;
+  preferredServices?: string;
+  allergiesOrSensitivities?: string;
+  specialRequests?: string;
+  notes?: string;
+  idCardNumber?: string;
+  idCardIssuedDate?: string;
+  idCardIssuedPlace?: string;
+  permanentAddress?: string;
+};
+
+export const customerApi = {
+  list: (params: { search?: string; page?: number; size?: number }) =>
+    api.get<ApiResponse<{ content: CustomerData[]; totalPages: number }>>(
+      '/customers',
+      { params: { size: 30, ...params } },
+    ),
+
+  getById: (id: string) => api.get<ApiResponse<CustomerData>>(`/customers/${id}`),
+
+  create: (data: CustomerFormPayload) =>
+    api.post<ApiResponse<CustomerData>>('/customers', data),
+
+  update: (id: string, data: Partial<CustomerFormPayload>) =>
+    api.put<ApiResponse<CustomerData>>(`/customers/${id}`, data),
+
+  checkPhone: (phone: string) =>
+    api.get<ApiResponse<CustomerData | null>>('/customers/check-phone', { params: { phone } }),
+
+  delete: (id: string) => api.delete<ApiResponse<null>>(`/customers/${id}`),
+
+  recent: (limit = 5) =>
+    api.get<ApiResponse<CustomerData[]>>('/customers/recent', { params: { limit } }),
+};
+
+// ── Shop config API ───────────────────────────────────────────────────────────
+
+export type BankAccount = {
+  id: string;
+  bankCode: string;
+  bankName: string;
+  accountNo: string;
+  accountName: string;
+  branch: string | null;
+  isDefault: boolean;
+};
+
+export const shopConfigApi = {
+  getBanks: () => api.get<ApiResponse<BankAccount[]>>('/shop-config/banks'),
+
+  addBank: (data: Omit<BankAccount, 'id' | 'isDefault'>) =>
+    api.post<ApiResponse<BankAccount>>('/shop-config/banks', data),
+
+  updateBank: (id: string, data: Partial<Omit<BankAccount, 'id'>>) =>
+    api.put<ApiResponse<BankAccount>>(`/shop-config/banks/${id}`, data),
+
+  deleteBank: (id: string) => api.delete<ApiResponse<null>>(`/shop-config/banks/${id}`),
+
+  getLoyalty: () =>
+    api.get<ApiResponse<{ pointsPerUnit: number; unitValue: number }>>('/shop-config/loyalty'),
+
+  uploadLogo: (formData: FormData) =>
+    api.put<ApiResponse<{ logoUrl: string }>>('/shop-config/logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+};
+
+// ── Category API ──────────────────────────────────────────────────────────────
+
+export const categoryApi = {
+  list: () => api.get<ApiResponse<CategoryData[]>>('/categories'),
+
+  create: (data: { name: string; emoji: string }) =>
+    api.post<ApiResponse<CategoryData>>('/categories', data),
+
+  update: (id: string, data: { name: string; emoji: string }) =>
+    api.put<ApiResponse<CategoryData>>(`/categories/${id}`, data),
+
+  delete: (id: string) => api.delete<ApiResponse<null>>(`/categories/${id}`),
+};
+
+// ── Product extended API ──────────────────────────────────────────────────────
+
+export const productExtApi = {
+  list: (params: { page?: number; size?: number; categoryId?: string; search?: string }) =>
+    api.get<ApiResponse<{ content: ProductData[]; totalPages: number; totalElements: number }>>(
+      '/products',
+      { params: { page: 0, size: 30, ...params } },
+    ),
+
+  getById: (id: string) => api.get<ApiResponse<ProductData>>(`/products/${id}`),
+
+  setVisibility: (id: string, active: boolean) =>
+    api.patch<ApiResponse<null>>(`/products/${id}/visibility`, { active }),
+};
+
+// ── Combo API ─────────────────────────────────────────────────────────────────
+
+export type ComboItem = { productId: string; productName: string; quantity: number; price: number };
+
+export type ComboData = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  active: boolean;
+  items: ComboItem[];
+  totalIndividualPrice: number;
+};
+
+export const comboApi = {
+  list: (active?: boolean) =>
+    api.get<ApiResponse<ComboData[]>>('/combos', {
+      params: active !== undefined ? { active } : undefined,
+    }),
+
+  create: (data: Omit<ComboData, 'id' | 'totalIndividualPrice'>) =>
+    api.post<ApiResponse<ComboData>>('/combos', data),
+
+  update: (id: string, data: Partial<Omit<ComboData, 'id' | 'totalIndividualPrice'>>) =>
+    api.put<ApiResponse<ComboData>>(`/combos/${id}`, data),
+
+  delete: (id: string) => api.delete<ApiResponse<null>>(`/combos/${id}`),
+};
+
+// ── Inventory API ─────────────────────────────────────────────────────────────
+
+export type InventoryItem = {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  lowStockThreshold: number | null;
+};
+
+export const inventoryApi = {
+  list: (params?: { status?: 'low' | 'out' }) =>
+    api.get<ApiResponse<InventoryItem[]>>('/inventory', { params }),
+
+  adjust: (productId: string, quantity: number, reason: string, note?: string) =>
+    api.post<ApiResponse<InventoryItem>>('/inventory/adjust', { productId, quantity, reason, note }),
+};
+
+// ── Notification API ──────────────────────────────────────────────────────────
+
+export type NotificationData = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  createdAt: string;
+  linkTo?: string;
+};
+
+export const notificationApi = {
+  list: (params?: { page?: number; unreadOnly?: boolean }) =>
+    api.get<ApiResponse<{ content: NotificationData[]; totalUnread: number; totalPages: number }>>(
+      '/notifications',
+      { params },
+    ),
+
+  markRead: (id: string) => api.put<ApiResponse<null>>(`/notifications/${id}/read`),
+
+  markAllRead: () => api.put<ApiResponse<null>>('/notifications/read-all'),
+
+  getPreferences: () =>
+    api.get<ApiResponse<Record<string, boolean>>>('/notifications/preferences'),
+
+  updatePreferences: (prefs: Record<string, boolean>) =>
+    api.put<ApiResponse<null>>('/notifications/preferences', prefs),
+};
+
+// ── Activity log API ──────────────────────────────────────────────────────────
+
+export type ActivityLogEntry = {
+  id: string;
+  action: string;
+  description: string;
+  source: 'WEB' | 'MOBILE';
+  createdAt: string;
+};
+
+export const activityLogApi = {
+  list: (params?: { page?: number; category?: string; from?: string; to?: string }) =>
+    api.get<ApiResponse<{ content: ActivityLogEntry[]; totalPages: number }>>(
+      '/activity-logs',
+      { params: { size: 30, ...params } },
+    ),
+
+  logEvent: (action: string, description: string) =>
+    api.post<ApiResponse<null>>('/activity-logs/event', { action, description }),
+};
+
+// ── Gold price API ────────────────────────────────────────────────────────────
+
+export type GoldPrice = {
+  date: string;
+  buyPrice: number;
+  sellPrice: number;
+  note: string | null;
+};
+
+export const goldPriceApi = {
+  getCurrent: () => api.get<ApiResponse<GoldPrice>>('/gold-prices/current'),
+
+  getHistory: (days = 30) =>
+    api.get<ApiResponse<GoldPrice[]>>('/gold-prices/history', { params: { days } }),
+
+  create: (data: GoldPrice) => api.post<ApiResponse<GoldPrice>>('/gold-prices', data),
+};
+
+// ── Utilities API ─────────────────────────────────────────────────────────────
+
+export type ExchangeRateItem = {
+  currencyCode: string;
+  buyRate: number | null;
+  transferRate: number | null;
+  sellRate: number | null;
+};
+
+export type ExchangeRatesData = {
+  source: string;
+  fetchedAt: string | null;
+  rates: ExchangeRateItem[];
+};
+
+export const utilitiesApi = {
+  getExchangeRates: () => api.get<ApiResponse<ExchangeRatesData>>('/utilities/exchange-rates'),
+};
+
+// ── Legal API ─────────────────────────────────────────────────────────────────
+
+export const legalApi = {
+  getTnC: () =>
+    api.get<ApiResponse<{ version: string; content: string; updatedAt: string }>>('/legal/tnc'),
+};
+
+// ── Feedback API ──────────────────────────────────────────────────────────────
+
+export type FeedbackData = {
+  id: string;
+  category: 'BUG' | 'IDEA' | 'FEATURE' | 'OTHER';
+  content: string;
+  status: 'RECEIVED' | 'PROCESSING' | 'RESOLVED';
+  createdAt: string;
+};
+
+export const feedbackApi = {
+  submit: (data: { category: string; content: string }) =>
+    api.post<ApiResponse<FeedbackData>>('/feedback', data),
+
+  getMy: () => api.get<ApiResponse<FeedbackData[]>>('/feedback/my'),
+};
+
+// ── Print template API ────────────────────────────────────────────────────────
+
+export type PrintTemplate = {
+  id: string;
+  name: string;
+  type: string;
+  isDefault: boolean;
+  config: Record<string, unknown>;
+  updatedAt: string;
+};
+
+export const printTemplateApi = {
+  list: () => api.get<ApiResponse<PrintTemplate[]>>('/shop-config/print-templates'),
+
+  getById: (id: string) => api.get<ApiResponse<PrintTemplate>>(`/shop-config/print-templates/${id}`),
+
+  create: (data: Omit<PrintTemplate, 'id' | 'updatedAt'>) =>
+    api.post<ApiResponse<PrintTemplate>>('/shop-config/print-templates', data),
+
+  update: (id: string, data: Partial<Omit<PrintTemplate, 'id' | 'updatedAt'>>) =>
+    api.put<ApiResponse<PrintTemplate>>(`/shop-config/print-templates/${id}`, data),
+
+  delete: (id: string) => api.delete<ApiResponse<null>>(`/shop-config/print-templates/${id}`),
+
+  setDefault: (id: string) =>
+    api.put<ApiResponse<null>>(`/shop-config/print-templates/${id}/default`),
+};
+
+// ── User / profile extended ───────────────────────────────────────────────────
+
+export const userApi = {
+  getMe: () => api.get<ApiResponse<{
+    username: string;
+    fullName: string | null;
+    nickname: string | null;
+    shopName: string | null;
+    role: string | null;
+  }>>('/profiles/me'),
+
+  updateProfile: (data: { nickname?: string; fullName?: string }) =>
+    api.put<ApiResponse<null>>('/profiles/me', data),
+
+  deleteAccount: () => api.delete<ApiResponse<null>>('/users/me'),
+};

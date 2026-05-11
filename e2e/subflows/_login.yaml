@@ -1,0 +1,64 @@
+# Reusable subflow: cold-launch → Shop ID → Login → skip PIN → main app
+#
+# Required env vars (pass with --env or --env-file):
+#   SHOP_ID   - tenant slug (e.g. "my-shop")
+#   PHONE     - login phone / username
+#   PASSWORD  - login password
+#
+# Result: user lands on the "Tổng quan" (Dashboard) tab.
+appId: com.knp.tappypos
+---
+
+- launchApp:
+    clearState: true
+
+# ── 0. Expo dev-client server picker (dev builds only) ───────────────────────
+# clearState wipes the stored server URL; tap through the picker if it appears.
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+
+# ── 0b. Handle already-logged-in case ────────────────────────────────────────
+# iOS Keychain (SecureStore) survives clearState; if the app resumes at Dashboard,
+# navigate to Settings → tap logout → the stub SettingsScreen logs out immediately
+# (no confirmation dialog) and resets to ShopId screen.
+- tapOn:
+    id: "tab-settings"
+    optional: true
+- tapOn:
+    id: "settings-logout-btn"
+    optional: true
+
+# ── 0c. PIN screen "change store" link (also survives clearState) ─────────────
+- tapOn:
+    text: "Đổi cửa hàng"
+    optional: true
+
+# ── 1. Shop ID screen ────────────────────────────────────────────────────────
+- assertVisible: "Mã cửa hàng"
+- tapOn:
+    id: "shop-id-input"
+- inputText: ${SHOP_ID}
+- tapOn:
+    id: "shop-id-submit"
+
+# ── 2. Login screen ──────────────────────────────────────────────────────────
+- assertVisible: "Đăng nhập"
+- tapOn:
+    id: "login-phone"
+- inputText: ${PHONE}
+- tapOn:
+    id: "login-password"
+- inputText: ${PASSWORD}
+- assertVisible:
+    id: "login-submit"
+    enabled: true
+- pressKey: Enter
+
+# ── 3. PIN setup — skip if it appears (Keychain PIN survives clearState) ─────
+- tapOn:
+    text: "Bỏ qua, thiết lập sau"
+    optional: true
+
+# ── 4. Main app is ready ─────────────────────────────────────────────────────
+- assertVisible: "Tổng quan"
