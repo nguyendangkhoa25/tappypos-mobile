@@ -8,11 +8,34 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "tsc": "tsc --noEmit",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
     "e2e": "e2e/maestro.sh e2e/flows/",
     "e2e:auth": "e2e/maestro.sh e2e/flows/01_auth.yaml",
     "e2e:pos": "e2e/maestro.sh e2e/flows/02_pos_golden_path.yaml",
     "e2e:orders": "e2e/maestro.sh e2e/flows/03_order_complete_cancel.yaml",
     "e2e:customers": "e2e/maestro.sh e2e/flows/04_customer_crud.yaml"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFilesAfterEnvironment": ["./jest.setup.ts"],
+    "testPathIgnorePatterns": ["/node_modules/", "/ios/", "/android/", "/build/"],
+    "collectCoverageFrom": [
+      "src/utils/**/*.{ts,tsx}",
+      "src/store/**/*.{ts,tsx}",
+      "src/hooks/**/*.{ts,tsx}",
+      "src/components/**/*.{ts,tsx}",
+      "src/services/authSession.ts",
+      "!src/**/*.d.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
@@ -50,8 +73,12 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^13.3.3",
     "@types/react": "~19.1.0",
+    "@types/react-test-renderer": "^19.1.0",
     "babel-preset-expo": "~54.0.10",
+    "jest-expo": "~54.0.0",
+    "react-test-renderer": "^19.1.0",
     "typescript": "~5.9.2"
   },
   "private": true
