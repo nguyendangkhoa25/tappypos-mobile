@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Checkout Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #f1f5f9;
+    padding: 32px;
+    color: #1e293b;
+  }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 {
+    font-size: 14px; font-weight: 700; color: #334155;
+    margin: 48px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label {
+    font-size: 11px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+  }
+  .phone {
+    width: 375px; height: 812px;
+    background: #ffffff;
+    border-radius: 48px;
+    border: 10px solid #1e293b;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 34px;
+    background: #1e293b;
+    border-radius: 0 0 22px 22px;
+    z-index: 100;
+  }
+
+  .status-bar {
+    height: 44px; flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 20px 6px;
+    position: relative; z-index: 10;
+    background: white;
+  }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    background: white;
+    flex-shrink: 0;
+  }
+  .back-btn { font-size: 22px; color: #374151; flex-shrink: 0; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; }
+
+  /* Scrollable content */
+  .scroll-area { flex: 1; overflow: hidden; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* Order summary card */
+  .summary-card {
+    background: #f9fafb;
+    border-radius: 18px;
+    padding: 14px 16px;
+  }
+  .summary-item-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .summary-item-name { font-size: 13px; color: #374151; flex: 1; margin-right: 8px; }
+  .summary-item-total { font-size: 13px; font-weight: 600; color: #1f2937; white-space: nowrap; }
+  .summary-divider { height: 1px; background: #e5e7eb; margin: 8px 0; }
+  .summary-discount-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .summary-discount-label { font-size: 13px; color: #6b7280; }
+  .summary-discount-val { font-size: 13px; font-weight: 700; color: #f59e0b; }
+  .summary-total-row { display: flex; justify-content: space-between; align-items: center; }
+  .summary-total-label { font-size: 15px; font-weight: 800; color: #111827; }
+  .summary-total-val { font-size: 18px; font-weight: 800; color: #4f46e5; }
+
+  /* Promo code */
+  .promo-row { display: flex; gap: 8px; }
+  .promo-input {
+    flex: 1; background: #f9fafb; border: 1px solid #e5e7eb;
+    border-radius: 12px; padding: 12px 14px;
+    font-size: 14px; color: #9ca3af;
+  }
+  .promo-btn {
+    background: #f3f4f6; border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13px; font-weight: 700; color: #4f46e5;
+    white-space: nowrap;
+    display: flex; align-items: center;
+  }
+  .promo-applied {
+    display: flex; align-items: center; gap: 8px;
+    background: #eef2ff; border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .promo-tag { font-size: 15px; }
+  .promo-code-text { flex: 1; font-size: 14px; font-weight: 700; color: #4f46e5; }
+  .promo-remove { font-size: 16px; color: #4f46e5; }
+
+  /* Customer row */
+  .customer-row {
+    display: flex; align-items: center; gap: 10px;
+    background: #eef2ff; border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .cust-icon { font-size: 16px; color: #4f46e5; }
+  .cust-name-text { font-size: 14px; font-weight: 700; color: #3730a3; }
+  .cust-phone-text { font-size: 11px; color: #6366f1; margin-top: 1px; }
+
+  /* Payment method tiles */
+  .payment-label { font-size: 15px; font-weight: 700; color: #111827; }
+  .payment-tiles { display: flex; gap: 10px; }
+  .payment-tile {
+    flex: 1; padding: 14px 6px;
+    border-radius: 18px; border: 2px solid #e5e7eb;
+    background: white;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .payment-tile.active { border-color: #4f46e5; background: #eef2ff; }
+  .payment-tile-icon { font-size: 22px; }
+  .payment-tile-label { font-size: 11px; font-weight: 700; color: #9ca3af; }
+  .payment-tile.active .payment-tile-label { color: #4f46e5; }
+
+  /* Cash calculator */
+  .cash-calc {
+    background: #f9fafb; border-radius: 18px;
+    padding: 14px 16px;
+  }
+  .cash-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cash-label { font-size: 13px; color: #6b7280; }
+  .exact-chip {
+    background: #eef2ff; border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px; font-weight: 700; color: #4f46e5;
+  }
+  .cash-input-mock {
+    background: white; border: 1px solid #e5e7eb;
+    border-radius: 12px; padding: 12px 16px;
+    font-size: 22px; font-weight: 800; color: #111827;
+    margin-bottom: 10px;
+  }
+  .cash-input-mock.placeholder { color: #d1d5db; }
+  .change-row { display: flex; justify-content: space-between; align-items: center; }
+  .change-label { font-size: 14px; font-weight: 600; color: #374151; }
+  .change-val { font-size: 22px; font-weight: 800; color: #4f46e5; }
+  .change-val.negative { color: #ef4444; }
+
+  /* Error banner */
+  .error-banner {
+    display: flex; align-items: center; gap: 8px;
+    background: #fffbeb; border: 1px solid #fde68a;
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .error-icon { font-size: 16px; }
+  .error-text { flex: 1; font-size: 13px; font-weight: 600; color: #92400e; }
+  .error-close { font-size: 14px; color: #d97706; }
+
+  /* Footer */
+  .checkout-footer {
+    background: white; border-top: 1px solid #f3f4f6;
+    padding: 12px 16px 28px;
+    flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .complete-btn {
+    background: #4f46e5; border-radius: 18px;
+    padding: 16px; text-align: center;
+    font-size: 16px; font-weight: 800; color: white;
+  }
+  .complete-btn.loading { background: #d1d5db; }
+
+  /* Spinner */
+  .spinner {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Print receipt button */
+  .btn-print {
+    border: 1.5px solid #c7d2fe; border-radius: 16px;
+    padding: 12px 16px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: #eef2ff;
+  }
+  .btn-print-icon { font-size: 18px; }
+  .btn-print-text { font-size: 14px; font-weight: 700; color: #3730a3; }
+
+  /* VietQR info panel */
+  .qr-panel {
+    background: white; border: 1.5px solid #d1fae5;
+    border-radius: 16px; padding: 14px 16px;
+  }
+  .qr-bank-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .qr-bank-logo {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: #059669; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; color: white; letter-spacing: -0.5px; flex-shrink: 0;
+  }
+  .qr-bank-name { font-size: 14px; font-weight: 700; color: #111827; }
+  .qr-bank-acct { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .qr-show-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: #4f46e5; border-radius: 12px; padding: 11px 14px;
+  }
+  .qr-show-text { font-size: 13px; font-weight: 700; color: white; }
+
+  /* VietQR modal overlay */
+  .qr-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; display: flex; flex-direction: column; }
+  .qr-sheet { background: white; border-radius: 28px 28px 0 0; padding: 20px 20px 32px; margin-top: auto; }
+  .qr-sheet-handle { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 0 auto 16px; }
+  .qr-sheet-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .qr-box {
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px;
+    padding: 16px; display: flex; flex-direction: column; align-items: center;
+    margin-bottom: 14px;
+  }
+  .qr-visual {
+    width: 136px; height: 136px; background: white;
+    border: 1px solid #e5e7eb; border-radius: 4px;
+    position: relative; margin-bottom: 12px; overflow: hidden;
+  }
+  .qr-tl, .qr-tr, .qr-bl { position: absolute; width: 28px; height: 28px; border: 3px solid #111827; border-radius: 2px; }
+  .qr-tl { top: 8px; left: 8px; }
+  .qr-tr { top: 8px; right: 8px; }
+  .qr-bl { bottom: 8px; left: 8px; }
+  .qr-tl-inner, .qr-tr-inner, .qr-bl-inner { position: absolute; inset: 5px; background: #111827; border-radius: 1px; }
+  .qr-data { position: absolute; top: 44px; left: 44px; right: 8px; bottom: 8px; background: repeating-conic-gradient(#111827 0% 25%, white 0% 50%) 0 0 / 7px 7px; opacity: 0.75; border-radius: 1px; }
+  .qr-badge { position: absolute; bottom: 5px; right: 5px; background: #059669; padding: 2px 4px; border-radius: 2px; font-size: 7px; font-weight: 800; color: white; }
+  .qr-amount-label { font-size: 12px; color: #6b7280; }
+  .qr-amount-val { font-size: 22px; font-weight: 800; color: #059669; margin-top: 3px; }
+  .qr-confirm-btn { width: 100%; background: #059669; border-radius: 16px; padding: 14px; text-align: center; font-size: 15px; font-weight: 700; color: white; }
+  .qr-cancel-text { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Checkout Screen</h1>
+<p class="subtitle">Thanh toán • Order summary, payment method, cash change, promo, error</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- ─── State 1: Cash + Change Calculated ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Cash + Change</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Thanh toán</span>
+      </div>
+      <div class="scroll-area">
+        <!-- Order summary -->
+        <div class="summary-card">
+          <div class="summary-item-row"><span class="summary-item-name">Cà phê sữa đá × 1</span><span class="summary-item-total">35.000 ₫</span></div>
+          <div class="summary-item-row"><span class="summary-item-name">Trà sữa trân châu × 2</span><span class="summary-item-total">110.000 ₫</span></div>
+          <div class="summary-item-row" style="margin-bottom:0;"><span class="summary-item-name">Bánh mì pate × 3</span><span class="summary-item-total">75.000 ₫</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-total-row">
+            <span class="summary-total-label">Tổng cộng</span>
+            <span class="summary-total-val">220.000 ₫</span>
+          </div>
+        </div>
+        <!-- Promo input -->
+        <div class="promo-row">
+          <div class="promo-input">Nhập mã khuyến mãi</div>
+          <div class="promo-btn">Áp dụng</div>
+        </div>
+        <!-- Payment method -->
+        <div class="payment-label">Phương thức thanh toán</div>
+        <div class="payment-tiles">
+          <div class="payment-tile active">
+            <span class="payment-tile-icon">💵</span>
+            <span class="payment-tile-label">Tiền mặt</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">🏦</span>
+            <span class="payment-tile-label">Chuyển khoản</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">💳</span>
+            <span class="payment-tile-label">Thẻ</span>
+          </div>
+        </div>
+        <!-- Cash calculator -->
+        <div class="cash-calc">
+          <div class="cash-top-row">
+            <span class="cash-label">Tiền khách đưa</span>
+            <span class="exact-chip">Đúng tiền</span>
+          </div>
+          <div class="cash-input-mock">300.000</div>
+          <div class="change-row">
+            <span class="change-label">Tiền thừa</span>
+            <span class="change-val">80.000 ₫</span>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-footer">
+        <div class="btn-print"><span class="btn-print-icon">🖨</span><span class="btn-print-text">In biên nhận</span></div>
+        <div class="complete-btn">Hoàn tất đơn hàng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 2: Bank Transfer + Exact Money ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Bank Transfer</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Thanh toán</span>
+      </div>
+      <div class="scroll-area">
+        <div class="summary-card">
+          <div class="summary-item-row"><span class="summary-item-name">Cà phê sữa đá × 1</span><span class="summary-item-total">35.000 ₫</span></div>
+          <div class="summary-item-row" style="margin-bottom:0;"><span class="summary-item-name">Trà sữa trân châu × 2</span><span class="summary-item-total">110.000 ₫</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-total-row">
+            <span class="summary-total-label">Tổng cộng</span>
+            <span class="summary-total-val">145.000 ₫</span>
+          </div>
+        </div>
+        <!-- Promo input -->
+        <div class="promo-row">
+          <div class="promo-input">Nhập mã khuyến mãi</div>
+          <div class="promo-btn">Áp dụng</div>
+        </div>
+        <!-- Payment method -->
+        <div class="payment-label">Phương thức thanh toán</div>
+        <div class="payment-tiles">
+          <div class="payment-tile">
+            <span class="payment-tile-icon">💵</span>
+            <span class="payment-tile-label">Tiền mặt</span>
+          </div>
+          <div class="payment-tile active">
+            <span class="payment-tile-icon">🏦</span>
+            <span class="payment-tile-label">Chuyển khoản</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">💳</span>
+            <span class="payment-tile-label">Thẻ</span>
+          </div>
+        </div>
+        <!-- VietQR info panel -->
+        <div class="qr-panel">
+          <div class="qr-bank-row">
+            <div class="qr-bank-logo">VCB</div>
+            <div>
+              <div class="qr-bank-name">Vietcombank</div>
+              <div class="qr-bank-acct">1234567890 — Nguyễn Văn A</div>
+            </div>
+          </div>
+          <div class="qr-show-btn">
+            <span style="font-size:16px;">📱</span>
+            <span class="qr-show-text">Hiển thị mã VietQR</span>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-footer">
+        <div class="btn-print"><span class="btn-print-icon">🖨</span><span class="btn-print-text">In biên nhận</span></div>
+        <div class="complete-btn">Hoàn tất đơn hàng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 3: Promo Applied + Customer + Card ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Promo Applied + Customer</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Thanh toán</span>
+      </div>
+      <div class="scroll-area">
+        <!-- Order summary with discount -->
+        <div class="summary-card">
+          <div class="summary-item-row"><span class="summary-item-name">Cà phê sữa đá × 2</span><span class="summary-item-total">70.000 ₫</span></div>
+          <div class="summary-item-row" style="margin-bottom:0;"><span class="summary-item-name">Trà sữa trân châu × 1</span><span class="summary-item-total">55.000 ₫</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-discount-row">
+            <span class="summary-discount-label">Giảm giá</span>
+            <span class="summary-discount-val">−20.000 ₫</span>
+          </div>
+          <div class="summary-total-row">
+            <span class="summary-total-label">Tổng cộng</span>
+            <span class="summary-total-val">105.000 ₫</span>
+          </div>
+        </div>
+        <!-- Promo applied chip -->
+        <div class="promo-applied">
+          <span class="promo-tag">🏷️</span>
+          <span class="promo-code-text">SALE20</span>
+          <span class="promo-remove">✕</span>
+        </div>
+        <!-- Customer row -->
+        <div class="customer-row">
+          <span class="cust-icon">👤</span>
+          <div style="flex:1;">
+            <div class="cust-name-text">Nguyễn Thị Lan</div>
+            <div class="cust-phone-text">0901 234 567</div>
+          </div>
+        </div>
+        <!-- Payment method — Card -->
+        <div class="payment-label">Phương thức thanh toán</div>
+        <div class="payment-tiles">
+          <div class="payment-tile">
+            <span class="payment-tile-icon">💵</span>
+            <span class="payment-tile-label">Tiền mặt</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">🏦</span>
+            <span class="payment-tile-label">Chuyển khoản</span>
+          </div>
+          <div class="payment-tile active">
+            <span class="payment-tile-icon">💳</span>
+            <span class="payment-tile-label">Thẻ</span>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-footer">
+        <div class="btn-print"><span class="btn-print-icon">🖨</span><span class="btn-print-text">In biên nhận</span></div>
+        <div class="complete-btn">Hoàn tất đơn hàng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 4: Cash insufficient (negative change) ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Cash Insufficient</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Thanh toán</span>
+      </div>
+      <div class="scroll-area">
+        <div class="summary-card">
+          <div class="summary-item-row"><span class="summary-item-name">Cà phê sữa đá × 1</span><span class="summary-item-total">35.000 ₫</span></div>
+          <div class="summary-item-row" style="margin-bottom:0;"><span class="summary-item-name">Trà sữa trân châu × 2</span><span class="summary-item-total">110.000 ₫</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-total-row">
+            <span class="summary-total-label">Tổng cộng</span>
+            <span class="summary-total-val">145.000 ₫</span>
+          </div>
+        </div>
+        <div class="promo-row">
+          <div class="promo-input">Nhập mã khuyến mãi</div>
+          <div class="promo-btn">Áp dụng</div>
+        </div>
+        <div class="payment-label">Phương thức thanh toán</div>
+        <div class="payment-tiles">
+          <div class="payment-tile active">
+            <span class="payment-tile-icon">💵</span>
+            <span class="payment-tile-label">Tiền mặt</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">🏦</span>
+            <span class="payment-tile-label">Chuyển khoản</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">💳</span>
+            <span class="payment-tile-label">Thẻ</span>
+          </div>
+        </div>
+        <div class="cash-calc">
+          <div class="cash-top-row">
+            <span class="cash-label">Tiền khách đưa</span>
+            <span class="exact-chip">Đúng tiền</span>
+          </div>
+          <div class="cash-input-mock">100.000</div>
+          <div class="change-row">
+            <span class="change-label">Tiền thừa</span>
+            <span class="change-val negative">−45.000 ₫</span>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-footer">
+        <div class="btn-print"><span class="btn-print-icon">🖨</span><span class="btn-print-text">In biên nhận</span></div>
+        <div class="complete-btn">Hoàn tất đơn hàng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 5: Error Banner ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Error Banner</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Thanh toán</span>
+      </div>
+      <div class="scroll-area">
+        <div class="summary-card">
+          <div class="summary-item-row"><span class="summary-item-name">Cà phê sữa đá × 1</span><span class="summary-item-total">35.000 ₫</span></div>
+          <div class="summary-item-row" style="margin-bottom:0;"><span class="summary-item-name">Trà sữa trân châu × 2</span><span class="summary-item-total">110.000 ₫</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-total-row">
+            <span class="summary-total-label">Tổng cộng</span>
+            <span class="summary-total-val">145.000 ₫</span>
+          </div>
+        </div>
+        <div class="promo-row">
+          <div class="promo-input">Nhập mã khuyến mãi</div>
+          <div class="promo-btn">Áp dụng</div>
+        </div>
+        <div class="payment-label">Phương thức thanh toán</div>
+        <div class="payment-tiles">
+          <div class="payment-tile active">
+            <span class="payment-tile-icon">💵</span>
+            <span class="payment-tile-label">Tiền mặt</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">🏦</span>
+            <span class="payment-tile-label">Chuyển khoản</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">💳</span>
+            <span class="payment-tile-label">Thẻ</span>
+          </div>
+        </div>
+        <div class="cash-calc">
+          <div class="cash-top-row">
+            <span class="cash-label">Tiền khách đưa</span>
+            <span class="exact-chip">Đúng tiền</span>
+          </div>
+          <div class="cash-input-mock">200.000</div>
+          <div class="change-row">
+            <span class="change-label">Tiền thừa</span>
+            <span class="change-val">55.000 ₫</span>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-footer">
+        <div class="btn-print"><span class="btn-print-icon">🖨</span><span class="btn-print-text">In biên nhận</span></div>
+        <!-- Error banner sticky above button -->
+        <div class="error-banner">
+          <span class="error-icon">⚠️</span>
+          <span class="error-text">Không thể hoàn tất đơn hàng. Vui lòng thử lại.</span>
+          <span class="error-close">✕</span>
+        </div>
+        <div class="complete-btn">Hoàn tất đơn hàng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 6: Processing (loading button) ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Processing</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Thanh toán</span>
+      </div>
+      <div class="scroll-area">
+        <div class="summary-card">
+          <div class="summary-item-row"><span class="summary-item-name">Cà phê sữa đá × 1</span><span class="summary-item-total">35.000 ₫</span></div>
+          <div class="summary-item-row" style="margin-bottom:0;"><span class="summary-item-name">Trà sữa trân châu × 2</span><span class="summary-item-total">110.000 ₫</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-total-row">
+            <span class="summary-total-label">Tổng cộng</span>
+            <span class="summary-total-val">145.000 ₫</span>
+          </div>
+        </div>
+        <div class="promo-row">
+          <div class="promo-input">Nhập mã khuyến mãi</div>
+          <div class="promo-btn">Áp dụng</div>
+        </div>
+        <div class="payment-label">Phương thức thanh toán</div>
+        <div class="payment-tiles">
+          <div class="payment-tile active">
+            <span class="payment-tile-icon">💵</span>
+            <span class="payment-tile-label">Tiền mặt</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">🏦</span>
+            <span class="payment-tile-label">Chuyển khoản</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">💳</span>
+            <span class="payment-tile-label">Thẻ</span>
+          </div>
+        </div>
+        <div class="cash-calc">
+          <div class="cash-top-row">
+            <span class="cash-label">Tiền khách đưa</span>
+            <span class="exact-chip">Đúng tiền</span>
+          </div>
+          <div class="cash-input-mock">145.000</div>
+          <div class="change-row">
+            <span class="change-label">Tiền thừa</span>
+            <span class="change-val">0 ₫</span>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-footer">
+        <div class="complete-btn loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 7: Transfer + VietQR Modal Shown ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">VietQR Shown</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Thanh toán</span>
+      </div>
+      <div class="scroll-area">
+        <div class="summary-card">
+          <div class="summary-item-row"><span class="summary-item-name">Cà phê sữa đá × 1</span><span class="summary-item-total">35.000 ₫</span></div>
+          <div class="summary-item-row" style="margin-bottom:0;"><span class="summary-item-name">Trà sữa trân châu × 2</span><span class="summary-item-total">110.000 ₫</span></div>
+          <div class="summary-divider"></div>
+          <div class="summary-total-row">
+            <span class="summary-total-label">Tổng cộng</span>
+            <span class="summary-total-val">145.000 ₫</span>
+          </div>
+        </div>
+        <div class="promo-row">
+          <div class="promo-input">Nhập mã khuyến mãi</div>
+          <div class="promo-btn">Áp dụng</div>
+        </div>
+        <div class="payment-label">Phương thức thanh toán</div>
+        <div class="payment-tiles">
+          <div class="payment-tile">
+            <span class="payment-tile-icon">💵</span>
+            <span class="payment-tile-label">Tiền mặt</span>
+          </div>
+          <div class="payment-tile active">
+            <span class="payment-tile-icon">🏦</span>
+            <span class="payment-tile-label">Chuyển khoản</span>
+          </div>
+          <div class="payment-tile">
+            <span class="payment-tile-icon">💳</span>
+            <span class="payment-tile-label">Thẻ</span>
+          </div>
+        </div>
+        <div class="qr-panel">
+          <div class="qr-bank-row">
+            <div class="qr-bank-logo">VCB</div>
+            <div>
+              <div class="qr-bank-name">Vietcombank</div>
+              <div class="qr-bank-acct">1234567890 — Nguyễn Văn A</div>
+            </div>
+          </div>
+          <div class="qr-show-btn">
+            <span style="font-size:16px;">📱</span>
+            <span class="qr-show-text">Hiển thị mã VietQR</span>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-footer">
+        <div class="btn-print"><span class="btn-print-icon">🖨</span><span class="btn-print-text">In biên nhận</span></div>
+        <div class="complete-btn">Hoàn tất đơn hàng</div>
+      </div>
+      <!-- VietQR modal overlay -->
+      <div class="qr-overlay">
+        <div class="qr-sheet">
+          <div class="qr-sheet-handle"></div>
+          <div class="qr-sheet-header">
+            <div class="qr-bank-logo">VCB</div>
+            <div>
+              <div class="qr-bank-name">Vietcombank</div>
+              <div class="qr-bank-acct">1234567890 — Nguyễn Văn A</div>
+            </div>
+          </div>
+          <div class="qr-box">
+            <div class="qr-visual">
+              <!-- Finder pattern TL -->
+              <div class="qr-tl"><div class="qr-tl-inner"></div></div>
+              <!-- Finder pattern TR -->
+              <div class="qr-tr"><div class="qr-tr-inner"></div></div>
+              <!-- Finder pattern BL -->
+              <div class="qr-bl"><div class="qr-bl-inner"></div></div>
+              <!-- Data area -->
+              <div class="qr-data"></div>
+              <!-- VietQR badge -->
+              <div class="qr-badge">VietQR</div>
+            </div>
+            <div class="qr-amount-label">Số tiền cần thanh toán</div>
+            <div class="qr-amount-val">145.000 ₫</div>
+          </div>
+          <div class="qr-confirm-btn">Đã nhận tiền</div>
+          <div class="qr-cancel-text">Huỷ</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Table Setup Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  /* Header */
+  .page-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px; flex-shrink: 0; }
+  .header-row { display: flex; align-items: center; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 8px; line-height: 1; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .add-btn-icon { font-size: 22px; color: #4f46e5; line-height: 1; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+
+  /* Scroll body */
+  .scroll-body { flex: 1; overflow: hidden; }
+
+  /* Zone group header */
+  .zone-header { padding: 14px 16px 6px; display: flex; align-items: center; justify-content: space-between; }
+  .zone-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.07em; }
+  .zone-count { font-size: 11px; color: #9ca3af; }
+
+  /* Table row */
+  .table-list { padding: 0 14px; display: flex; flex-direction: column; gap: 8px; }
+  .table-row { background: white; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+  .drag-handle { font-size: 16px; color: #d1d5db; margin-right: 2px; flex-shrink: 0; }
+  .table-icon { width: 38px; height: 38px; border-radius: 10px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .table-info { flex: 1; min-width: 0; }
+  .table-name { font-size: 14px; font-weight: 600; color: #111827; }
+  .table-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+  .meta-tag { font-size: 11px; color: #6b7280; background: #f3f4f6; border-radius: 6px; padding: 2px 7px; }
+  .meta-tag-zone { font-size: 11px; color: #4338ca; background: #e0e7ff; border-radius: 6px; padding: 2px 7px; }
+  .row-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .edit-icon { font-size: 17px; color: #9ca3af; }
+  .del-icon { font-size: 17px; color: #f87171; }
+
+  /* Empty state */
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 32px; }
+  .empty-icon { font-size: 56px; opacity: 0.2; margin-bottom: 14px; }
+  .empty-title { font-size: 15px; font-weight: 600; color: #9ca3af; text-align: center; }
+  .empty-hint { font-size: 12px; color: #9ca3af; margin-top: 6px; text-align: center; line-height: 1.5; }
+  .empty-cta { margin-top: 24px; background: #4f46e5; border-radius: 16px; padding: 13px 28px; display: flex; align-items: center; gap: 8px; }
+  .empty-cta-text { color: white; font-size: 14px; font-weight: 700; }
+
+  /* Bottom sheet overlay */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; z-index: 50; }
+  .bottom-sheet { background: white; border-radius: 28px 28px 0 0; padding: 20px 20px 32px; width: 100%; }
+  .sheet-drag { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 0 auto 16px; }
+  .sheet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .sheet-title { font-size: 16px; font-weight: 700; color: #111827; }
+  .close-btn { font-size: 18px; color: #9ca3af; }
+
+  /* Form fields */
+  .field-group { margin-bottom: 14px; }
+  .field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+  .optional { font-size: 11px; color: #9ca3af; font-weight: 400; }
+  .text-input { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 11px 14px; font-size: 14px; color: #111827; background: white; }
+  .text-input.placeholder { color: #9ca3af; }
+  .text-input.filled { border-color: #c7d2fe; background: #f5f3ff; color: #111827; }
+
+  /* Capacity stepper */
+  .stepper-row { display: flex; align-items: center; gap: 0; border: 1.5px solid #e5e7eb; border-radius: 12px; overflow: hidden; align-self: flex-start; width: fit-content; }
+  .step-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #4f46e5; background: #f5f3ff; font-weight: 700; flex-shrink: 0; }
+  .step-val { width: 56px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #111827; border-left: 1.5px solid #e5e7eb; border-right: 1.5px solid #e5e7eb; }
+  .step-unit { font-size: 12px; color: #6b7280; font-weight: 400; margin-left: 10px; }
+
+  /* Zone chips */
+  .zone-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .zone-chip { padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; border: 1.5px solid #e5e7eb; background: white; color: #6b7280; }
+  .zone-chip.active { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; }
+
+  /* Sheet buttons */
+  .sheet-btns { display: flex; gap: 10px; margin-top: 16px; }
+  .btn-cancel { flex: 1; padding: 13px 0; border-radius: 16px; border: 1.5px solid #e5e7eb; text-align: center; font-size: 14px; font-weight: 600; color: #6b7280; }
+  .btn-save { flex: 2; padding: 13px 0; border-radius: 16px; background: #4f46e5; text-align: center; font-size: 14px; font-weight: 700; color: white; }
+  .btn-save.disabled { background: #e5e7eb; color: #9ca3af; }
+
+  /* Delete link in edit sheet */
+  .delete-link { margin-top: 10px; text-align: center; font-size: 13px; font-weight: 600; color: #ef4444; padding: 8px 0; }
+
+  /* Alert / confirm dialog */
+  .alert-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 28px; }
+  .alert-box { background: white; border-radius: 20px; padding: 24px 20px 18px; width: 100%; }
+  .alert-icon { font-size: 36px; text-align: center; margin-bottom: 10px; }
+  .alert-title { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 8px; text-align: center; }
+  .alert-msg { font-size: 13px; color: #6b7280; text-align: center; line-height: 1.5; margin-bottom: 18px; }
+  .alert-btns { display: flex; gap: 8px; }
+  .alert-btn { flex: 1; padding: 12px; border-radius: 12px; text-align: center; font-size: 14px; font-weight: 600; }
+  .alert-btn.cancel { background: #f3f4f6; color: #374151; }
+  .alert-btn.danger { background: #fef2f2; color: #dc2626; }
+
+  /* Skeleton */
+  .skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 14px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* FAB */
+  .fab { position: absolute; right: 20px; bottom: 96px; width: 52px; height: 52px; border-radius: 50%; background: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 26px; color: white; box-shadow: 0 4px 16px rgba(79,70,229,0.4); z-index: 20; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</head>
+<body>
+
+<h1>Table Setup Screen</h1>
+<p class="subtitle">Quản lý bàn — cấu hình danh sách bàn cho nhà hàng / quán cà phê nhỏ</p>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>1. Danh sách bàn</h2>
+<!-- ═══════════════════════════════════════ -->
+<div class="phone-row">
+
+  <!-- State 1: Empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Chưa có bàn</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Quản lý bàn</span>
+        </div>
+        <div class="header-hint">🪑 Thêm bàn để nhân viên chọn nhanh khi tạo đơn tại quầy.</div>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">🪑</div>
+        <div class="empty-title">Chưa có bàn nào</div>
+        <div class="empty-hint">Thêm bàn để bắt đầu nhận đơn theo bàn — khách ngồi bàn nào, gọi món vào bàn đó.</div>
+        <div class="empty-cta">
+          <span style="font-size:18px; color:white;">＋</span>
+          <span class="empty-cta-text">Thêm bàn đầu tiên</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Table list (grouped by zone) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Có bàn</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Quản lý bàn</span>
+          <span class="add-btn-icon">＋</span>
+        </div>
+        <div class="header-hint">🪑 8 bàn đang hoạt động. Giữ và kéo để sắp xếp lại thứ tự.</div>
+      </div>
+      <div class="scroll-body">
+        <!-- Zone: Trong nhà -->
+        <div class="zone-header">
+          <span class="zone-title">🏠 Trong nhà</span>
+          <span class="zone-count">4 bàn</span>
+        </div>
+        <div class="table-list">
+          <div class="table-row">
+            <span class="drag-handle">⠿</span>
+            <div class="table-icon">🪑</div>
+            <div class="table-info">
+              <div class="table-name">Bàn 1</div>
+              <div class="table-meta">
+                <span class="meta-tag">4 chỗ</span>
+                <span class="meta-tag-zone">Trong nhà</span>
+              </div>
+            </div>
+            <div class="row-actions">
+              <span class="edit-icon">✏️</span>
+              <span class="del-icon">🗑</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <span class="drag-handle">⠿</span>
+            <div class="table-icon">🪑</div>
+            <div class="table-info">
+              <div class="table-name">Bàn 2</div>
+              <div class="table-meta">
+                <span class="meta-tag">4 chỗ</span>
+                <span class="meta-tag-zone">Trong nhà</span>
+              </div>
+            </div>
+            <div class="row-actions">
+              <span class="edit-icon">✏️</span>
+              <span class="del-icon">🗑</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <span class="drag-handle">⠿</span>
+            <div class="table-icon">🪑</div>
+            <div class="table-info">
+              <div class="table-name">Bàn 3</div>
+              <div class="table-meta">
+                <span class="meta-tag">2 chỗ</span>
+                <span class="meta-tag-zone">Trong nhà</span>
+              </div>
+            </div>
+            <div class="row-actions">
+              <span class="edit-icon">✏️</span>
+              <span class="del-icon">🗑</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <span class="drag-handle">⠿</span>
+            <div class="table-icon">🪑</div>
+            <div class="table-info">
+              <div class="table-name">Bàn VIP</div>
+              <div class="table-meta">
+                <span class="meta-tag">8 chỗ</span>
+                <span class="meta-tag-zone">Trong nhà</span>
+              </div>
+            </div>
+            <div class="row-actions">
+              <span class="edit-icon">✏️</span>
+              <span class="del-icon">🗑</span>
+            </div>
+          </div>
+        </div>
+        <!-- Zone: Ngoài trời -->
+        <div class="zone-header">
+          <span class="zone-title">🌿 Ngoài trời</span>
+          <span class="zone-count">3 bàn</span>
+        </div>
+        <div class="table-list">
+          <div class="table-row">
+            <span class="drag-handle">⠿</span>
+            <div class="table-icon">🌿</div>
+            <div class="table-info">
+              <div class="table-name">Bàn sân A1</div>
+              <div class="table-meta">
+                <span class="meta-tag">4 chỗ</span>
+                <span class="meta-tag-zone" style="color:#15803d; background:#dcfce7;">Ngoài trời</span>
+              </div>
+            </div>
+            <div class="row-actions">
+              <span class="edit-icon">✏️</span>
+              <span class="del-icon">🗑</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <span class="drag-handle">⠿</span>
+            <div class="table-icon">🌿</div>
+            <div class="table-info">
+              <div class="table-name">Bàn sân A2</div>
+              <div class="table-meta">
+                <span class="meta-tag">4 chỗ</span>
+                <span class="meta-tag-zone" style="color:#15803d; background:#dcfce7;">Ngoài trời</span>
+              </div>
+            </div>
+            <div class="row-actions">
+              <span class="edit-icon">✏️</span>
+              <span class="del-icon">🗑</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <span class="drag-handle">⠿</span>
+            <div class="table-icon">🌿</div>
+            <div class="table-info">
+              <div class="table-name">Bàn sân A3</div>
+              <div class="table-meta">
+                <span class="meta-tag">2 chỗ</span>
+                <span class="meta-tag-zone" style="color:#15803d; background:#dcfce7;">Ngoài trời</span>
+              </div>
+            </div>
+            <div class="row-actions">
+              <span class="edit-icon">✏️</span>
+              <span class="del-icon">🗑</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fab">＋</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>2. Thêm / Sửa bàn</h2>
+<!-- ═══════════════════════════════════════ -->
+<div class="phone-row">
+
+  <!-- Add table sheet -->
+  <div class="phone-wrap">
+    <div class="phone-label">Thêm bàn mới</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header" style="opacity:0.25;">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Quản lý bàn</span>
+          <span class="add-btn-icon">＋</span>
+        </div>
+      </div>
+      <div class="scroll-body" style="opacity:0.25; padding: 14px;">
+        <div class="table-list">
+          <div class="table-row"><div class="table-icon">🪑</div><div class="table-info"><div class="table-name">Bàn 1</div></div></div>
+          <div class="table-row"><div class="table-icon">🪑</div><div class="table-info"><div class="table-name">Bàn 2</div></div></div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet">
+          <div class="sheet-drag"></div>
+          <div class="sheet-header">
+            <span class="sheet-title">Thêm bàn mới</span>
+            <span class="close-btn">✕</span>
+          </div>
+          <!-- Tên bàn -->
+          <div class="field-group">
+            <div class="field-label">Tên bàn</div>
+            <div class="text-input placeholder">Ví dụ: Bàn 4, Bàn VIP, Quầy bar...</div>
+          </div>
+          <!-- Số chỗ -->
+          <div class="field-group">
+            <div class="field-label">Số chỗ ngồi</div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="stepper-row">
+                <div class="step-btn">−</div>
+                <div class="step-val">4</div>
+                <div class="step-btn">＋</div>
+              </div>
+              <span class="step-unit">chỗ ngồi</span>
+            </div>
+          </div>
+          <!-- Khu vực -->
+          <div class="field-group">
+            <div class="field-label">Khu vực <span class="optional">(tuỳ chọn)</span></div>
+            <div class="zone-chips">
+              <div class="zone-chip active">🏠 Trong nhà</div>
+              <div class="zone-chip">🌿 Ngoài trời</div>
+              <div class="zone-chip">🏢 Tầng 2</div>
+              <div class="zone-chip">🚪 Phòng riêng</div>
+            </div>
+          </div>
+          <!-- Buttons -->
+          <div class="sheet-btns">
+            <div class="btn-cancel">Huỷ</div>
+            <div class="btn-save disabled">Lưu bàn</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit table sheet (table name filled in) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Sửa bàn</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header" style="opacity:0.25;">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Quản lý bàn</span>
+          <span class="add-btn-icon">＋</span>
+        </div>
+      </div>
+      <div class="scroll-body" style="opacity:0.25; padding: 14px;">
+        <div class="table-list">
+          <div class="table-row"><div class="table-icon">🪑</div><div class="table-info"><div class="table-name">Bàn 1</div></div></div>
+          <div class="table-row"><div class="table-icon">🌿</div><div class="table-info"><div class="table-name">Bàn sân A1</div></div></div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet">
+          <div class="sheet-drag"></div>
+          <div class="sheet-header">
+            <span class="sheet-title">Sửa bàn</span>
+            <span class="close-btn">✕</span>
+          </div>
+          <!-- Tên bàn filled -->
+          <div class="field-group">
+            <div class="field-label">Tên bàn</div>
+            <div class="text-input filled">Bàn sân A1</div>
+          </div>
+          <!-- Số chỗ -->
+          <div class="field-group">
+            <div class="field-label">Số chỗ ngồi</div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="stepper-row">
+                <div class="step-btn">−</div>
+                <div class="step-val">4</div>
+                <div class="step-btn">＋</div>
+              </div>
+              <span class="step-unit">chỗ ngồi</span>
+            </div>
+          </div>
+          <!-- Khu vực -->
+          <div class="field-group">
+            <div class="field-label">Khu vực <span class="optional">(tuỳ chọn)</span></div>
+            <div class="zone-chips">
+              <div class="zone-chip">🏠 Trong nhà</div>
+              <div class="zone-chip active" style="color:#15803d; border-color:#86efac; background:#f0fdf4;">🌿 Ngoài trời</div>
+              <div class="zone-chip">🏢 Tầng 2</div>
+              <div class="zone-chip">🚪 Phòng riêng</div>
+            </div>
+          </div>
+          <!-- Buttons -->
+          <div class="sheet-btns">
+            <div class="btn-cancel">Huỷ</div>
+            <div class="btn-save">Lưu thay đổi</div>
+          </div>
+          <!-- Delete link -->
+          <div class="delete-link">🗑 Xoá bàn này</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirm alert -->
+  <div class="phone-wrap">
+    <div class="phone-label">Xác nhận xoá</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header" style="opacity:0.25;">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Quản lý bàn</span>
+        </div>
+      </div>
+      <div class="scroll-body" style="opacity:0.2; padding: 14px;">
+        <div class="table-list">
+          <div class="table-row"><div class="table-icon">🪑</div><div class="table-info"><div class="table-name">Bàn 1</div></div></div>
+          <div class="table-row"><div class="table-icon">🌿</div><div class="table-info"><div class="table-name">Bàn sân A1</div></div></div>
+        </div>
+      </div>
+      <div class="alert-overlay">
+        <div class="alert-box">
+          <div class="alert-icon">🗑</div>
+          <div class="alert-title">Xoá Bàn sân A1?</div>
+          <div class="alert-msg">Bàn này sẽ bị xoá khỏi danh sách. Các đơn hàng cũ đã tạo không bị ảnh hưởng.</div>
+          <div class="alert-btns">
+            <div class="alert-btn cancel">Giữ lại</div>
+            <div class="alert-btn danger">Xoá bàn</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>3. Loading</h2>
+<!-- ═══════════════════════════════════════ -->
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Quản lý bàn</span>
+        </div>
+      </div>
+      <div class="scroll-body" style="padding: 14px;">
+        <div style="padding: 14px 0 6px;">
+          <div class="skeleton" style="height:14px; width:80px; margin-bottom:10px;"></div>
+        </div>
+        <div class="table-list">
+          <div class="skeleton" style="height:62px;"></div>
+          <div class="skeleton" style="height:62px;"></div>
+          <div class="skeleton" style="height:62px;"></div>
+        </div>
+        <div style="padding: 18px 0 6px;">
+          <div class="skeleton" style="height:14px; width:100px; margin-bottom:10px;"></div>
+        </div>
+        <div class="table-list">
+          <div class="skeleton" style="height:62px;"></div>
+          <div class="skeleton" style="height:62px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

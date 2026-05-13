@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – More Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #f1f5f9;
+    padding: 32px;
+    color: #1e293b;
+  }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 {
+    font-size: 14px; font-weight: 700; color: #334155;
+    margin: 48px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label {
+    font-size: 11px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+  }
+  .phone {
+    width: 375px; height: 812px;
+    background: #f9fafb;
+    border-radius: 48px;
+    border: 10px solid #1e293b;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .phone.dark { background: #111827; border-color: #0f172a; }
+
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 34px;
+    background: #1e293b;
+    border-radius: 0 0 22px 22px;
+    z-index: 100;
+  }
+  .phone.dark .notch { background: #0f172a; }
+
+  .status-bar {
+    height: 44px; flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 20px 6px;
+    position: relative; z-index: 10;
+    background: #f9fafb;
+  }
+  .phone.dark .status-bar { background: #111827; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .phone.dark .s-time { color: #f9fafb; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+  .phone.dark .s-icons { color: #d1d5db; }
+
+  /* Header */
+  .screen-header {
+    padding: 16px 20px 12px;
+    background: #f9fafb;
+  }
+  .phone.dark .screen-header { background: #111827; }
+  .screen-title { font-size: 22px; font-weight: 800; color: #111827; }
+  .phone.dark .screen-title { color: #f9fafb; }
+  .screen-hint { font-size: 12px; color: #9ca3af; margin-top: 2px; line-height: 1.4; }
+  .phone.dark .screen-hint { font-size: 12px; color: #9ca3af; margin-top: 2px; line-height: 1.4; }
+
+  /* Scroll body */
+  .scroll-body {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 10px; font-weight: 700; color: #9ca3af;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin: 14px 0 8px 4px;
+  }
+  .phone.dark .section-label { color: #6b7280; }
+
+  /* Grid */
+  .grid-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .grid-tile {
+    flex: 1;
+    background: white;
+    border-radius: 18px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #f1f5f9;
+  }
+  .phone.dark .grid-tile { background: #1f2937; border-color: #374151; }
+  .tile-icon-wrap {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .tile-label {
+    font-size: 12px; font-weight: 600; color: #374151;
+    text-align: center; line-height: 1.3;
+  }
+  .phone.dark .tile-label { color: #e5e7eb; }
+
+  /* Settings row */
+  .settings-row {
+    background: white;
+    border-radius: 18px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 4px;
+  }
+  .phone.dark .settings-row { background: #1f2937; border-color: #374151; }
+  .settings-icon-wrap {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: #f3f4f6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .phone.dark .settings-icon-wrap { background: #374151; }
+  .settings-text { flex: 1; }
+  .settings-name { font-size: 14px; font-weight: 600; color: #1f2937; }
+  .phone.dark .settings-name { color: #f3f4f6; }
+  .settings-hint { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+  .settings-chevron { font-size: 16px; color: #9ca3af; }
+
+  /* Bottom tab bar */
+  .tab-bar {
+    height: 82px; flex-shrink: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    padding-bottom: 20px;
+  }
+  .phone.dark .tab-bar { background: #1f2937; border-top-color: #374151; }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+  }
+  .tab-icon { font-size: 22px; }
+  .tab-label { font-size: 10px; font-weight: 600; color: #9ca3af; }
+  .tab-item.active .tab-label { color: #4f46e5; }
+  .tab-item.active .tab-icon-bar { color: #4f46e5; }
+  .tab-icon-bar { font-size: 22px; color: #9ca3af; }
+  .phone.dark .tab-label { color: #6b7280; }
+  .phone.dark .tab-item.active .tab-label { color: #818cf8; }
+</style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</head>
+<body>
+
+<h1>More Screen</h1>
+<p class="subtitle">Màn hình "Thêm" — hub điều hướng quản lý nâng cao</p>
+
+<h2>Bán lẻ / Chung (có Tồn kho)</h2>
+<div class="phone-row">
+
+  <!-- State 1: Default (with Notifications feature) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Default (with Notifications)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>🔋</span></div>
+      </div>
+      <div class="screen-header">
+        <div class="screen-title">Thêm</div>
+        <div class="screen-hint">📱 Công cụ quản lý nâng cao cho cửa hàng — kho hàng, combo, giá vàng, mẫu in và nhiều hơn nữa.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="section-label">Quản lý</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ede9fe;">📦</div>
+            <div class="tile-label">Sản phẩm</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#e0e7ff;">🏭</div>
+            <div class="tile-label">Tồn kho</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#dbeafe;">👥</div>
+            <div class="tile-label">Khách hàng</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ffedd5;">🎁</div>
+            <div class="tile-label">Combo</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fce7f3;">🏷️</div>
+            <div class="tile-label">Danh mục</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#f1f5f9;">🖨️</div>
+            <div class="tile-label">In ấn</div>
+          </div>
+        </div>
+        <div class="section-label">Vận hành</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fef3c7;">🥇</div>
+            <div class="tile-label">Giá vàng</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ccfbf1;">📋</div>
+            <div class="tile-label">Công việc</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fef9c3;">🔔</div>
+            <div class="tile-label">Thông báo</div>
+          </div>
+          <div style="flex:1;"></div>
+        </div>
+        <div class="section-label">Cài đặt</div>
+        <div class="settings-row">
+          <div class="settings-icon-wrap">⚙️</div>
+          <div class="settings-text">
+            <div class="settings-name">Cài đặt</div>
+            <div class="settings-hint">Tài khoản, cửa hàng, bảo mật...</div>
+          </div>
+          <div class="settings-chevron">›</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-home-outline"></i></span><span class="tab-label">Trang chủ</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-cash-register"></i></span><span class="tab-label">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-label">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-label">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon-bar" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-label" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Without Notifications feature -->
+  <div class="phone-wrap">
+    <div class="phone-label">Without Notifications feature</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>🔋</span></div>
+      </div>
+      <div class="screen-header">
+        <div class="screen-title">Thêm</div>
+        <div class="screen-hint">📱 Công cụ quản lý nâng cao cho cửa hàng — kho hàng, combo, giá vàng, mẫu in và nhiều hơn nữa.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="section-label">Quản lý</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ede9fe;">📦</div>
+            <div class="tile-label">Sản phẩm</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#e0e7ff;">🏭</div>
+            <div class="tile-label">Tồn kho</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#dbeafe;">👥</div>
+            <div class="tile-label">Khách hàng</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ffedd5;">🎁</div>
+            <div class="tile-label">Combo</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fce7f3;">🏷️</div>
+            <div class="tile-label">Danh mục</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#f1f5f9;">🖨️</div>
+            <div class="tile-label">In ấn</div>
+          </div>
+        </div>
+        <div class="section-label">Vận hành</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fef3c7;">🥇</div>
+            <div class="tile-label">Giá vàng</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ccfbf1;">📋</div>
+            <div class="tile-label">Công việc</div>
+          </div>
+        </div>
+        <!-- No Notifications tile -->
+        <div class="section-label">Cài đặt</div>
+        <div class="settings-row">
+          <div class="settings-icon-wrap">⚙️</div>
+          <div class="settings-text">
+            <div class="settings-name">Cài đặt</div>
+            <div class="settings-hint">Tài khoản, cửa hàng, bảo mật...</div>
+          </div>
+          <div class="settings-chevron">›</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-home-outline"></i></span><span class="tab-label">Trang chủ</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-cash-register"></i></span><span class="tab-label">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-label">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-label">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon-bar" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-label" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Dark Mode -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dark Mode</div>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>🔋</span></div>
+      </div>
+      <div class="screen-header">
+        <div class="screen-title">Thêm</div>
+        <div class="screen-hint">📱 Công cụ quản lý nâng cao cho cửa hàng — kho hàng, combo, giá vàng, mẫu in và nhiều hơn nữa.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="section-label">Quản lý</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#4c1d95;">📦</div>
+            <div class="tile-label">Sản phẩm</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#312e81;">🏭</div>
+            <div class="tile-label">Tồn kho</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#1e3a5f;">👥</div>
+            <div class="tile-label">Khách hàng</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#431407;">🎁</div>
+            <div class="tile-label">Combo</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#500724;">🏷️</div>
+            <div class="tile-label">Danh mục</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#1e293b;">🖨️</div>
+            <div class="tile-label">In ấn</div>
+          </div>
+        </div>
+        <div class="section-label">Vận hành</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#451a03;">🥇</div>
+            <div class="tile-label">Giá vàng</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#042f2e;">📋</div>
+            <div class="tile-label">Công việc</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#422006;">🔔</div>
+            <div class="tile-label">Thông báo</div>
+          </div>
+          <div style="flex:1;"></div>
+        </div>
+        <div class="section-label">Cài đặt</div>
+        <div class="settings-row">
+          <div class="settings-icon-wrap">⚙️</div>
+          <div class="settings-text">
+            <div class="settings-name">Cài đặt</div>
+            <div class="settings-hint">Tài khoản, cửa hàng, bảo mật...</div>
+          </div>
+          <div class="settings-chevron">›</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-home-outline"></i></span><span class="tab-label">Trang chủ</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-cash-register"></i></span><span class="tab-label">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-label">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-label">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon-bar" style="color:#818cf8;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-label" style="color:#818cf8;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2>Không có Tồn kho – Tiệm tóc / Cà phê / Nhà hàng / Tiệm vàng</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="phone-row">
+
+  <!-- Barber / service shop -->
+  <div class="phone-wrap">
+    <div class="phone-label">Tiệm tóc / Dịch vụ</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>🔋</span></div>
+      </div>
+      <div class="screen-header">
+        <div class="screen-title">Thêm</div>
+        <div class="screen-hint">✂️ Quản lý dịch vụ, khách hàng và cài đặt cửa hàng.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="section-label">Quản lý</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ede9fe;">✂️</div>
+            <div class="tile-label">Dịch vụ</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#dbeafe;">👥</div>
+            <div class="tile-label">Khách hàng</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ffedd5;">🎁</div>
+            <div class="tile-label">Combo</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fce7f3;">🏷️</div>
+            <div class="tile-label">Danh mục</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#f1f5f9;">🖨️</div>
+            <div class="tile-label">In ấn</div>
+          </div>
+          <div style="flex:1;"></div>
+        </div>
+        <div class="section-label">Vận hành</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ccfbf1;">📋</div>
+            <div class="tile-label">Công việc</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fef9c3;">🔔</div>
+            <div class="tile-label">Thông báo</div>
+          </div>
+        </div>
+        <div class="section-label">Cài đặt</div>
+        <div class="settings-row">
+          <div class="settings-icon-wrap">⚙️</div>
+          <div class="settings-text">
+            <div class="settings-name">Cài đặt</div>
+            <div class="settings-hint">Tài khoản, cửa hàng, bảo mật...</div>
+          </div>
+          <div class="settings-chevron">›</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-home-outline"></i></span><span class="tab-label">Trang chủ</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-cash-register"></i></span><span class="tab-label">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-label">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-label">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon-bar" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-label" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jewelry shop -->
+  <div class="phone-wrap">
+    <div class="phone-label">Tiệm vàng / Trang sức</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>🔋</span></div>
+      </div>
+      <div class="screen-header">
+        <div class="screen-title">Thêm</div>
+        <div class="screen-hint">💍 Mỗi sản phẩm là 1 món duy nhất — khi bán xong tự động ẩn khỏi danh sách.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="section-label">Quản lý</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ede9fe;">💍</div>
+            <div class="tile-label">Sản phẩm</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#dbeafe;">👥</div>
+            <div class="tile-label">Khách hàng</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ffedd5;">🎁</div>
+            <div class="tile-label">Combo</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fce7f3;">🏷️</div>
+            <div class="tile-label">Danh mục</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#f1f5f9;">🖨️</div>
+            <div class="tile-label">In ấn</div>
+          </div>
+          <div style="flex:1;"></div>
+        </div>
+        <div class="section-label">Vận hành</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fef3c7;">🥇</div>
+            <div class="tile-label">Giá vàng</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ccfbf1;">📋</div>
+            <div class="tile-label">Công việc</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fef9c3;">🔔</div>
+            <div class="tile-label">Thông báo</div>
+          </div>
+          <div style="flex:1;"></div>
+        </div>
+        <div class="section-label">Cài đặt</div>
+        <div class="settings-row">
+          <div class="settings-icon-wrap">⚙️</div>
+          <div class="settings-text">
+            <div class="settings-name">Cài đặt</div>
+            <div class="settings-hint">Tài khoản, cửa hàng, bảo mật...</div>
+          </div>
+          <div class="settings-chevron">›</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-home-outline"></i></span><span class="tab-label">Trang chủ</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-cash-register"></i></span><span class="tab-label">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-label">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-label">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon-bar" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-label" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coffee / Restaurant -->
+  <div class="phone-wrap">
+    <div class="phone-label">Cà phê / Nhà hàng</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>🔋</span></div>
+      </div>
+      <div class="screen-header">
+        <div class="screen-title">Thêm</div>
+        <div class="screen-hint">☕ Quản lý thực đơn, khách hàng và cài đặt cửa hàng.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="section-label">Quản lý</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ede9fe;">🍜</div>
+            <div class="tile-label">Thực đơn</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#dbeafe;">👥</div>
+            <div class="tile-label">Khách hàng</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ffedd5;">🎁</div>
+            <div class="tile-label">Combo</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fce7f3;">🏷️</div>
+            <div class="tile-label">Danh mục</div>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#f1f5f9;">🖨️</div>
+            <div class="tile-label">In ấn</div>
+          </div>
+          <div style="flex:1;"></div>
+        </div>
+        <div class="section-label">Vận hành</div>
+        <div class="grid-row">
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#ccfbf1;">📋</div>
+            <div class="tile-label">Công việc</div>
+          </div>
+          <div class="grid-tile">
+            <div class="tile-icon-wrap" style="background:#fef9c3;">🔔</div>
+            <div class="tile-label">Thông báo</div>
+          </div>
+        </div>
+        <div class="section-label">Cài đặt</div>
+        <div class="settings-row">
+          <div class="settings-icon-wrap">⚙️</div>
+          <div class="settings-text">
+            <div class="settings-name">Cài đặt</div>
+            <div class="settings-hint">Tài khoản, cửa hàng, bảo mật...</div>
+          </div>
+          <div class="settings-chevron">›</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-home-outline"></i></span><span class="tab-label">Trang chủ</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-cash-register"></i></span><span class="tab-label">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-label">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon-bar"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-label">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon-bar" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-label" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

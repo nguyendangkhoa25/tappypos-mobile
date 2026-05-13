@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Inventory List Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  .inv-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px 0; flex-shrink: 0; }
+  .header-top { display: flex; align-items: center; margin-bottom: 2px; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 6px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+  .stat-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .stat-box { flex: 1; background: #f9fafb; border-radius: 12px; padding: 8px 10px; text-align: center; }
+  .stat-val { font-size: 18px; font-weight: 800; }
+  .chip-row { display: flex; gap: 8px; padding-bottom: 10px; }
+  .chip { padding: 5px 14px; border-radius: 20px; border: 1px solid #e5e7eb; font-size: 12px; font-weight: 500; color: #6b7280; background: white; }
+  .chip.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+  .inv-list { flex: 1; overflow: hidden; padding: 12px 16px 0; }
+  .inv-item { background: white; border-radius: 16px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; }
+  .inv-info { flex: 1; }
+  .inv-name { font-size: 14px; font-weight: 600; color: #111827; }
+  .inv-sub { font-size: 12px; color: #6b7280; margin-top: 3px; }
+  .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-right: 10px; white-space: nowrap; }
+  .status-badge.ok { background: #e0e7ff; color: #4338ca; }
+  .status-badge.low { background: #fef3c7; color: #d97706; }
+  .status-badge.out { background: #fee2e2; color: #dc2626; }
+  .edit-btn { font-size: 18px; color: #4f46e5; }
+
+  /* Adjust Modal */
+  .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; flex-direction: column; justify-content: flex-end; }
+  .modal-sheet { background: white; border-radius: 28px 28px 0 0; padding: 24px 24px 32px; }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .modal-title { font-size: 17px; font-weight: 800; color: #111827; }
+  .modal-subtitle { font-size: 13px; color: #6b7280; margin-top: 2px; }
+  .modal-close { font-size: 20px; color: #9ca3af; }
+  .field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .field-input { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 14px; font-size: 15px; color: #111827; background: #f9fafb; margin-bottom: 14px; width: 100%; }
+  .reason-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .reason-chip { padding: 6px 12px; border-radius: 12px; border: 2px solid #e5e7eb; font-size: 12px; font-weight: 600; color: #6b7280; }
+  .reason-chip.active { border-color: #4f46e5; background: #eef2ff; color: #3730a3; }
+  .confirm-btn { background: #4f46e5; border-radius: 16px; padding: 14px; text-align: center; color: white; font-size: 15px; font-weight: 700; }
+
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .empty-icon { font-size: 48px; opacity: 0.25; margin-bottom: 12px; }
+  .empty-title { font-size: 15px; font-weight: 600; color: #9ca3af; text-align: center; }
+  .empty-hint { font-size: 13px; color: #9ca3af; margin-top: 4px; text-align: center; line-height: 1.5; }
+
+  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #e0e7ff; border-top-color: #4f46e5; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-center { flex: 1; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<h1>Inventory List Screen</h1>
+<p class="subtitle">Tồn kho — lọc theo trạng thái, điều chỉnh số lượng qua modal</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- State 1: All items -->
+  <div class="phone-wrap">
+    <div class="phone-label">All Items</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="inv-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Tồn kho</span></div>
+        <div class="header-hint">📦 Xem mức tồn kho theo thời gian thực — lọc Sắp hết hoặc Hết hàng để xử lý nhanh.</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-val" style="color:#111827;">148</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Tổng SKU</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#d97706;">12</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Sắp hết</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#dc2626;">5</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Hết hàng</div></div>
+        </div>
+        <div class="chip-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Sắp hết</div>
+          <div class="chip">Hết hàng</div>
+        </div>
+      </div>
+      <div class="inv-list">
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Trà sữa trân châu</div><div class="inv-sub">48 Ly · Ngưỡng: 10</div></div><div class="status-badge ok">Còn hàng</div><div class="edit-btn">✎</div></div>
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Cà phê sữa đá</div><div class="inv-sub">120 Ly · Ngưỡng: 20</div></div><div class="status-badge ok">Còn hàng</div><div class="edit-btn">✎</div></div>
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Bánh mì thịt nguội</div><div class="inv-sub">3 Cái · Ngưỡng: 10</div></div><div class="status-badge low">Sắp hết</div><div class="edit-btn">✎</div></div>
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Nước ép cam tươi</div><div class="inv-sub">0 Ly · Ngưỡng: 5</div></div><div class="status-badge out">Hết hàng</div><div class="edit-btn">✎</div></div>
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Sinh tố xoài</div><div class="inv-sub">2 Ly · Ngưỡng: 5</div></div><div class="status-badge low">Sắp hết</div><div class="edit-btn">✎</div></div>
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Kem dừa tươi</div><div class="inv-sub">15 Phần · Ngưỡng: 5</div></div><div class="status-badge ok">Còn hàng</div><div class="edit-btn">✎</div></div>
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Combo trà sữa + bánh</div><div class="inv-sub">22 Phần</div></div><div class="status-badge ok">Còn hàng</div><div class="edit-btn">✎</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Filtered low stock -->
+  <div class="phone-wrap">
+    <div class="phone-label">Filter: Sắp hết</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="inv-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Tồn kho</span></div>
+        <div class="header-hint">📦 Xem mức tồn kho theo thời gian thực — lọc Sắp hết hoặc Hết hàng để xử lý nhanh.</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-val" style="color:#111827;">148</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Tổng SKU</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#d97706;">12</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Sắp hết</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#dc2626;">5</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Hết hàng</div></div>
+        </div>
+        <div class="chip-row">
+          <div class="chip">Tất cả</div>
+          <div class="chip active">Sắp hết</div>
+          <div class="chip">Hết hàng</div>
+        </div>
+      </div>
+      <div class="inv-list">
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Bánh mì thịt nguội</div><div class="inv-sub">3 Cái · Ngưỡng: 10</div></div><div class="status-badge low">Sắp hết</div><div class="edit-btn">✎</div></div>
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Sinh tố xoài</div><div class="inv-sub">2 Ly · Ngưỡng: 5</div></div><div class="status-badge low">Sắp hết</div><div class="edit-btn">✎</div></div>
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Bánh flan caramel</div><div class="inv-sub">4 Cái · Ngưỡng: 8</div></div><div class="status-badge low">Sắp hết</div><div class="edit-btn">✎</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Adjust Modal open -->
+  <div class="phone-wrap">
+    <div class="phone-label">Adjust Modal</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="inv-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Tồn kho</span></div>
+        <div class="header-hint">📦 Xem mức tồn kho theo thời gian thực — lọc Sắp hết hoặc Hết hàng để nhập hàng kịp thời.</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-val" style="color:#111827;">148</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Tổng SKU</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#d97706;">12</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Sắp hết</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#dc2626;">5</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Hết hàng</div></div>
+        </div>
+        <div class="chip-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Sắp hết</div>
+          <div class="chip">Hết hàng</div>
+        </div>
+      </div>
+      <div class="inv-list" style="opacity:0.3;">
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Trà sữa trân châu</div><div class="inv-sub">48 Ly</div></div><div class="status-badge ok">Còn hàng</div><div class="edit-btn">✎</div></div>
+        <div class="inv-item"><div class="inv-info"><div class="inv-name">Bánh mì thịt nguội</div><div class="inv-sub">3 Cái</div></div><div class="status-badge low">Sắp hết</div><div class="edit-btn">✎</div></div>
+      </div>
+      <div class="modal-overlay">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <div><div class="modal-title">Điều chỉnh tồn kho</div><div class="modal-subtitle">Bánh mì thịt nguội</div></div>
+            <div class="modal-close">✕</div>
+          </div>
+          <div class="field-label">Số lượng mới</div>
+          <input class="field-input" value="3" readonly />
+          <div class="field-label">Lý do điều chỉnh</div>
+          <div class="reason-row">
+            <div class="reason-chip active">Kiểm kho</div>
+            <div class="reason-chip">Nhập hàng</div>
+            <div class="reason-chip">Hỏng/mất</div>
+            <div class="reason-chip">Trả hàng</div>
+          </div>
+          <input class="field-input" placeholder="Ghi chú tuỳ chọn" style="margin-bottom:16px;" readonly />
+          <div class="confirm-btn">Lưu</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 4: Loading -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="inv-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Tồn kho</span></div>
+        <div class="header-hint">📦 Xem mức tồn kho theo thời gian thực — lọc Sắp hết hoặc Hết hàng để nhập hàng kịp thời.</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-val" style="color:#111827;">—</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Tổng SKU</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#d97706;">—</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Sắp hết</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#dc2626;">—</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Hết hàng</div></div>
+        </div>
+        <div class="chip-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Sắp hết</div>
+          <div class="chip">Hết hàng</div>
+        </div>
+      </div>
+      <div class="loading-center"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- State 5: Empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="inv-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Tồn kho</span></div>
+        <div class="header-hint">📦 Xem mức tồn kho theo thời gian thực — lọc Sắp hết hoặc Hết hàng để nhập hàng kịp thời.</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-val" style="color:#111827;">0</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Tổng SKU</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#d97706;">0</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Sắp hết</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#dc2626;">0</div><div style="font-size:10px;color:#6b7280;margin-top:2px;">Hết hàng</div></div>
+        </div>
+        <div class="chip-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Sắp hết</div>
+          <div class="chip">Hết hàng</div>
+        </div>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">🏭</div>
+        <div class="empty-title">Chưa có dữ liệu tồn kho</div>
+        <div class="empty-hint">Tồn kho theo dõi số lượng từng sản phẩm trong kho. Thêm sản phẩm vào hệ thống trước, sau đó nhập hàng để bắt đầu quản lý kho.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

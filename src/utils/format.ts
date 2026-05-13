@@ -3,8 +3,12 @@ export function formatVnd(amount: number | null | undefined): string {
   return amount.toLocaleString('vi-VN') + ' ₫';
 }
 
-export function formatDate(iso: string): string {
-  const d = new Date(iso);
+export function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  // Parse YYYY-MM-DD manually to avoid timezone/engine quirks in React Native
+  const parts = iso.split('T')[0].split('-').map(Number);
+  if (parts.length < 3 || parts.some(isNaN)) return '—';
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
   return d.toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',

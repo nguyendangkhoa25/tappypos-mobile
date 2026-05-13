@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Report Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #f1f5f9; padding: 32px; color: #1e293b;
+  }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 {
+    font-size: 14px; font-weight: 700; color: #334155;
+    margin: 48px 0 16px; padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label {
+    font-size: 11px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+  }
+  .phone {
+    width: 375px; height: 812px; background: #f9fafb;
+    border-radius: 48px; border: 10px solid #1e293b;
+    overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .phone.dark { background: #111827; border-color: #475569; }
+
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 34px; background: #1e293b;
+    border-radius: 0 0 22px 22px; z-index: 100;
+  }
+  .phone.dark .notch { background: #0f172a; }
+
+  .status-bar {
+    height: 44px; flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 20px 6px; background: white; position: relative; z-index: 10;
+  }
+  .phone.dark .status-bar { background: #1f2937; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .phone.dark .s-time { color: #f1f5f9; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; }
+  .phone.dark .s-icons { color: #cbd5e1; }
+
+  /* Header */
+  .rep-header {
+    background: white; border-bottom: 1px solid #f3f4f6;
+    padding: 10px 16px 0; flex-shrink: 0;
+  }
+  .phone.dark .rep-header { background: #1f2937; border-bottom-color: #374151; }
+  .screen-title { font-size: 20px; font-weight: 800; color: #111827; margin-bottom: 2px; }
+  .phone.dark .screen-title { color: #f1f5f9; }
+  .hint-text { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+
+  /* Tab switcher (segmented control) */
+  .tab-switcher {
+    display: flex; background: #f3f4f6; border-radius: 12px;
+    padding: 4px; margin-bottom: 12px;
+  }
+  .phone.dark .tab-switcher { background: #374151; }
+  .tab-btn {
+    flex: 1; padding: 8px 4px; border-radius: 9px;
+    text-align: center; font-size: 13px; font-weight: 600; color: #6b7280;
+  }
+  .tab-btn.active { background: white; color: #4f46e5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .phone.dark .tab-btn.active { background: #1f2937; color: #818cf8; }
+  .phone.dark .tab-btn { color: #9ca3af; }
+
+  /* Period chips */
+  .period-chips { display: flex; gap: 8px; overflow: hidden; padding-bottom: 12px; }
+  .chip {
+    padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    background: white; color: #6b7280; border: 1px solid #e5e7eb; white-space: nowrap; flex-shrink: 0;
+  }
+  .phone.dark .chip { background: #374151; color: #9ca3af; border-color: #4b5563; }
+  .chip.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+
+  /* Custom date pickers */
+  .date-row { display: flex; gap: 12px; padding-bottom: 12px; }
+  .date-field {
+    flex: 1; border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 10px 12px; background: #f9fafb; font-size: 13px; color: #374151;
+  }
+  .phone.dark .date-field { background: #374151; border-color: #4b5563; color: #cbd5e1; }
+  .date-field.empty { color: #9ca3af; }
+
+  /* KPI grid */
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 16px 0; }
+  .kpi-card { background: white; border-radius: 18px; padding: 14px 16px; }
+  .phone.dark .kpi-card { background: #1f2937; }
+  .kpi-label { font-size: 11px; color: #9ca3af; margin-bottom: 6px; font-weight: 500; }
+  .kpi-val { font-size: 17px; font-weight: 800; }
+  .kpi-val.indigo { color: #4f46e5; }
+  .kpi-val.gray { color: #111827; }
+  .kpi-val.blue { color: #3b82f6; }
+  .kpi-val.red { color: #ef4444; }
+  .kpi-val.amber { color: #f59e0b; }
+  .phone.dark .kpi-val.gray { color: #f1f5f9; }
+
+  /* Bar chart card */
+  .chart-card {
+    margin: 12px 16px 0;
+    background: white; border-radius: 18px; padding: 14px 14px 10px;
+  }
+  .phone.dark .chart-card { background: #1f2937; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 72px; }
+  .bar { border-radius: 3px 3px 0 0; min-height: 3px; }
+  .chart-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+  .chart-lbl { font-size: 9px; color: #9ca3af; }
+
+  /* Empty state */
+  .empty-card {
+    margin: 12px 16px 0;
+    background: white; border-radius: 18px; padding: 32px 16px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .phone.dark .empty-card { background: #1f2937; }
+  .empty-text { font-size: 14px; color: #9ca3af; text-align: center; margin-bottom: 4px; }
+  .empty-hint { font-size: 13px; color: #9ca3af; margin-top: 4px; text-align: center; line-height: 1.5; }
+
+  /* Loading */
+  .loading-state {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+  }
+  .spinner {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 3px solid #e0e7ff; border-top-color: #4f46e5;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Skeleton */
+  .sk {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite; border-radius: 8px; display: block;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Bottom tab */
+  .tab-bar {
+    height: 82px; flex-shrink: 0; background: white;
+    border-top: 1px solid #e5e7eb;
+    display: flex; align-items: flex-start; padding-top: 10px;
+  }
+  .phone.dark .tab-bar { background: #1e293b; border-top-color: #334155; }
+  .t-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .t-icon { font-size: 22px; line-height: 1; }
+  .t-lbl { font-size: 10px; font-weight: 600; color: #9ca3af; }
+  .t-item.active .t-lbl { color: #4f46e5; font-weight: 700; }
+  .phone.dark .t-lbl { color: #6b7280; }
+  .phone.dark .t-item.active .t-lbl { color: #818cf8; }
+
+  .content-scroll { flex: 1; overflow: hidden; }
+</style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</head>
+<body>
+
+<h1>Report Screen</h1>
+<p class="subtitle">Báo cáo tab • Revenue & expenses, period selector, KPI grid, bar chart</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- ─── State 1: Revenue Tab – This Month ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Revenue – This Month</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="rep-header">
+        <div class="screen-title">Báo cáo</div>
+        <div class="hint-text">📊 Xem doanh thu, chi phí và lợi nhuận từng kỳ. Lọc Hôm nay / Tuần / Tháng hoặc chọn khoảng ngày tuỳ chọn để xuất báo cáo.</div>
+        <div class="tab-switcher">
+          <div class="tab-btn active">Doanh thu</div>
+          <div class="tab-btn">Chi phí</div>
+        </div>
+        <div class="period-chips">
+          <div class="chip">Hôm nay</div>
+          <div class="chip">Hôm qua</div>
+          <div class="chip">Tuần này</div>
+          <div class="chip active">Tháng này</div>
+          <div class="chip">Tuỳ chọn</div>
+        </div>
+      </div>
+      <div class="content-scroll">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Doanh thu</div>
+            <div class="kpi-val indigo">48.750.000 ₫</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Số đơn hàng</div>
+            <div class="kpi-val gray">312</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Giá trị TB / đơn</div>
+            <div class="kpi-val blue">156.250 ₫</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Hoàn thành</div>
+            <div class="kpi-val gray">287</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="bar-chart">
+            <div class="bar" style="flex:1;height:28px;background:#c7d2fe;"></div>
+            <div class="bar" style="flex:1;height:44px;background:#a5b4fc;"></div>
+            <div class="bar" style="flex:1;height:36px;background:#c7d2fe;"></div>
+            <div class="bar" style="flex:1;height:52px;background:#818cf8;"></div>
+            <div class="bar" style="flex:1;height:60px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:48px;background:#6366f1;"></div>
+            <div class="bar" style="flex:1;height:72px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:56px;background:#6366f1;"></div>
+            <div class="bar" style="flex:1;height:40px;background:#818cf8;"></div>
+            <div class="bar" style="flex:1;height:64px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:50px;background:#6366f1;"></div>
+            <div class="bar" style="flex:1;height:32px;background:#c7d2fe;"></div>
+            <div class="bar" style="flex:1;height:20px;background:#c7d2fe;"></div>
+          </div>
+          <div class="chart-labels">
+            <span class="chart-lbl">1/5</span>
+            <span class="chart-lbl">5/5</span>
+            <span class="chart-lbl">9/5</span>
+            <span class="chart-lbl">13/5</span>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-home-outline"></i></span><span class="t-lbl">Home</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-cash-register"></i></span><span class="t-lbl">Bán hàng</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="t-lbl">Chi phí</span></div>
+        <div class="t-item active"><span class="t-icon" style="color:#4f46e5;"><i class="mdi mdi-chart-areaspline"></i></span><span class="t-lbl" style="color:#4f46e5;">Báo cáo</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="t-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 2: Expenses Tab ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Expenses Tab</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="rep-header">
+        <div class="screen-title">Báo cáo</div>
+        <div class="hint-text">📊 Xem doanh thu, chi phí và lợi nhuận từng kỳ. Lọc Hôm nay / Tuần / Tháng hoặc chọn khoảng ngày tuỳ chọn để xuất báo cáo.</div>
+        <div class="tab-switcher">
+          <div class="tab-btn">Doanh thu</div>
+          <div class="tab-btn active">Chi phí</div>
+        </div>
+        <div class="period-chips">
+          <div class="chip">Hôm nay</div>
+          <div class="chip">Hôm qua</div>
+          <div class="chip">Tuần này</div>
+          <div class="chip active">Tháng này</div>
+          <div class="chip">Tuỳ chọn</div>
+        </div>
+      </div>
+      <div class="content-scroll">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Tổng chi phí</div>
+            <div class="kpi-val red">15.200.000 ₫</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Lợi nhuận ròng</div>
+            <div class="kpi-val indigo">33.550.000 ₫</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Chi phí cố định</div>
+            <div class="kpi-val blue">9.500.000 ₫</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Chi phí phát sinh</div>
+            <div class="kpi-val amber">5.700.000 ₫</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="bar-chart">
+            <div class="bar" style="flex:1;height:14px;background:#fca5a5;"></div>
+            <div class="bar" style="flex:1;height:22px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:10px;background:#fca5a5;"></div>
+            <div class="bar" style="flex:1;height:38px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:54px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:18px;background:#fca5a5;"></div>
+            <div class="bar" style="flex:1;height:30px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:44px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:72px;background:#dc2626;"></div>
+            <div class="bar" style="flex:1;height:28px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:20px;background:#fca5a5;"></div>
+            <div class="bar" style="flex:1;height:36px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:12px;background:#fca5a5;"></div>
+          </div>
+          <div class="chart-labels">
+            <span class="chart-lbl">1/5</span>
+            <span class="chart-lbl">5/5</span>
+            <span class="chart-lbl">9/5</span>
+            <span class="chart-lbl">13/5</span>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-home-outline"></i></span><span class="t-lbl">Home</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-cash-register"></i></span><span class="t-lbl">Bán hàng</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="t-lbl">Chi phí</span></div>
+        <div class="t-item active"><span class="t-icon" style="color:#4f46e5;"><i class="mdi mdi-chart-areaspline"></i></span><span class="t-lbl" style="color:#4f46e5;">Báo cáo</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="t-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 3: Custom Range (pickers visible) ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Custom Date Range</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="rep-header">
+        <div class="screen-title">Báo cáo</div>
+        <div class="hint-text">📊 Xem doanh thu, chi phí và lợi nhuận từng kỳ. Lọc Hôm nay / Tuần / Tháng hoặc chọn khoảng ngày tuỳ chọn để xuất báo cáo.</div>
+        <div class="tab-switcher">
+          <div class="tab-btn active">Doanh thu</div>
+          <div class="tab-btn">Chi phí</div>
+        </div>
+        <div class="period-chips">
+          <div class="chip">Hôm nay</div>
+          <div class="chip">Hôm qua</div>
+          <div class="chip">Tuần này</div>
+          <div class="chip">Tháng này</div>
+          <div class="chip active">Tuỳ chọn</div>
+        </div>
+        <!-- Custom date pickers -->
+        <div class="date-row">
+          <div class="date-field">01/04/2026</div>
+          <div class="date-field">30/04/2026</div>
+        </div>
+      </div>
+      <div class="content-scroll">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Doanh thu</div>
+            <div class="kpi-val indigo">42.100.000 ₫</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Số đơn hàng</div>
+            <div class="kpi-val gray">268</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Giá trị TB / đơn</div>
+            <div class="kpi-val blue">157.090 ₫</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Hoàn thành</div>
+            <div class="kpi-val gray">251</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="bar-chart">
+            <div class="bar" style="flex:1;height:50px;background:#6366f1;"></div>
+            <div class="bar" style="flex:1;height:38px;background:#818cf8;"></div>
+            <div class="bar" style="flex:1;height:62px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:44px;background:#6366f1;"></div>
+            <div class="bar" style="flex:1;height:30px;background:#a5b4fc;"></div>
+            <div class="bar" style="flex:1;height:56px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:68px;background:#4338ca;"></div>
+            <div class="bar" style="flex:1;height:42px;background:#6366f1;"></div>
+            <div class="bar" style="flex:1;height:72px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:58px;background:#6366f1;"></div>
+          </div>
+          <div class="chart-labels">
+            <span class="chart-lbl">1/4</span>
+            <span class="chart-lbl">10/4</span>
+            <span class="chart-lbl">20/4</span>
+            <span class="chart-lbl">30/4</span>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-home-outline"></i></span><span class="t-lbl">Home</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-cash-register"></i></span><span class="t-lbl">Bán hàng</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="t-lbl">Chi phí</span></div>
+        <div class="t-item active"><span class="t-icon" style="color:#4f46e5;"><i class="mdi mdi-chart-areaspline"></i></span><span class="t-lbl" style="color:#4f46e5;">Báo cáo</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="t-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 4: Custom Range – pickers not yet filled ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Custom – Awaiting Dates</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="rep-header">
+        <div class="screen-title">Báo cáo</div>
+        <div class="hint-text">📊 Xem doanh thu, chi phí và lợi nhuận từng kỳ. Lọc Hôm nay / Tuần / Tháng hoặc chọn khoảng ngày tuỳ chọn để xuất báo cáo.</div>
+        <div class="tab-switcher">
+          <div class="tab-btn active">Doanh thu</div>
+          <div class="tab-btn">Chi phí</div>
+        </div>
+        <div class="period-chips">
+          <div class="chip">Hôm nay</div>
+          <div class="chip">Hôm qua</div>
+          <div class="chip">Tuần này</div>
+          <div class="chip">Tháng này</div>
+          <div class="chip active">Tuỳ chọn</div>
+        </div>
+        <div class="date-row">
+          <div class="date-field empty">dd/mm/yyyy</div>
+          <div class="date-field empty">dd/mm/yyyy</div>
+        </div>
+      </div>
+      <div class="content-scroll" style="display:flex;align-items:center;justify-content:center;">
+        <div class="empty-card" style="margin-top:0;">
+          <div class="empty-text">Chưa có dữ liệu</div>
+          <div class="empty-hint">Chọn khoảng ngày để xem báo cáo</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-home-outline"></i></span><span class="t-lbl">Home</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-cash-register"></i></span><span class="t-lbl">Bán hàng</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="t-lbl">Chi phí</span></div>
+        <div class="t-item active"><span class="t-icon" style="color:#4f46e5;"><i class="mdi mdi-chart-areaspline"></i></span><span class="t-lbl" style="color:#4f46e5;">Báo cáo</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="t-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 5: Dark Mode – Revenue Tab ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dark Mode</div>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#1f2937;"><span class="s-time" style="color:#f1f5f9;">9:41</span><div class="s-icons" style="color:#cbd5e1;"><span>●●●</span><span>🔋</span></div></div>
+      <div class="rep-header" style="background:#1f2937;border-bottom-color:#374151;">
+        <div class="screen-title" style="color:#f1f5f9;">Báo cáo</div>
+        <div class="hint-text">📊 Xem doanh thu, chi phí và lợi nhuận từng kỳ. Lọc Hôm nay / Tuần / Tháng hoặc chọn khoảng ngày tuỳ chọn để xuất báo cáo.</div>
+        <div class="tab-switcher" style="background:#374151;">
+          <div class="tab-btn" style="color:#9ca3af;">Doanh thu</div>
+          <div class="tab-btn active" style="background:#1f2937;color:#818cf8;">Chi phí</div>
+        </div>
+        <div class="period-chips">
+          <div class="chip active">Tuần này</div>
+          <div class="chip" style="background:#374151;color:#9ca3af;border-color:#4b5563;">Hôm nay</div>
+          <div class="chip" style="background:#374151;color:#9ca3af;border-color:#4b5563;">Tháng này</div>
+          <div class="chip" style="background:#374151;color:#9ca3af;border-color:#4b5563;">Tuỳ chọn</div>
+        </div>
+      </div>
+      <div class="content-scroll" style="background:#111827;">
+        <div class="kpi-grid">
+          <div class="kpi-card" style="background:#1f2937;">
+            <div class="kpi-label">Tổng chi phí</div>
+            <div class="kpi-val red">3.200.000 ₫</div>
+          </div>
+          <div class="kpi-card" style="background:#1f2937;">
+            <div class="kpi-label">Lợi nhuận ròng</div>
+            <div class="kpi-val indigo">9.050.000 ₫</div>
+          </div>
+          <div class="kpi-card" style="background:#1f2937;">
+            <div class="kpi-label">Chi phí cố định</div>
+            <div class="kpi-val blue">2.000.000 ₫</div>
+          </div>
+          <div class="kpi-card" style="background:#1f2937;">
+            <div class="kpi-label">Chi phí phát sinh</div>
+            <div class="kpi-val amber">1.200.000 ₫</div>
+          </div>
+        </div>
+        <div class="chart-card" style="background:#1f2937;">
+          <div class="bar-chart">
+            <div class="bar" style="flex:1;height:20px;background:#7f1d1d80;"></div>
+            <div class="bar" style="flex:1;height:36px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:48px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:24px;background:#7f1d1d80;"></div>
+            <div class="bar" style="flex:1;height:60px;background:#dc2626;"></div>
+            <div class="bar" style="flex:1;height:42px;background:#ef4444;"></div>
+            <div class="bar" style="flex:1;height:72px;background:#b91c1c;"></div>
+          </div>
+          <div class="chart-labels">
+            <span class="chart-lbl" style="color:#6b7280;">T2</span>
+            <span class="chart-lbl" style="color:#6b7280;">T3</span>
+            <span class="chart-lbl" style="color:#6b7280;">T4</span>
+            <span class="chart-lbl" style="color:#6b7280;">T5</span>
+            <span class="chart-lbl" style="color:#6b7280;">T6</span>
+            <span class="chart-lbl" style="color:#6b7280;">T7</span>
+            <span class="chart-lbl" style="color:#6b7280;">CN</span>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar" style="background:#1e293b;border-top-color:#334155;">
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-home-outline"></i></span><span class="t-lbl" style="color:#6b7280;">Home</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-cash-register"></i></span><span class="t-lbl" style="color:#6b7280;">Bán hàng</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="t-lbl" style="color:#6b7280;">Chi phí</span></div>
+        <div class="t-item active"><span class="t-icon" style="color:#818cf8;"><i class="mdi mdi-chart-areaspline"></i></span><span class="t-lbl" style="color:#818cf8;">Báo cáo</span></div>
+        <div class="t-item"><span class="t-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="t-lbl" style="color:#6b7280;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

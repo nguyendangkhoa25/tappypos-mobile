@@ -2,8 +2,9 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import i18n from '../i18n';
 import { forceLogout } from './authSession';
+import { useNetworkStore } from '../store/networkStore';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://tappypos.vn/api';
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://tappypos.vn/api';
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -44,9 +45,18 @@ function processQueue(error: unknown, token: string | null) {
 }
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    useNetworkStore.getState().setMaintenance(false);
+    return res;
+  },
   async (error) => {
     const original = error.config;
+
+    if (error.response?.status === 503) {
+      useNetworkStore.getState().setMaintenance(true);
+    } else if (error.response) {
+      useNetworkStore.getState().setMaintenance(false);
+    }
 
     if (error.response?.status === 401 && !original.url?.startsWith('/auth/')) {
       // Device conflict — another device took over this session
@@ -122,6 +132,7 @@ type AuthData = {
   expiresIn: number;
   tokenType: string;
   username: string;
+  setupComplete?: boolean;
 };
 
 type ProfileData = {
@@ -180,6 +191,8 @@ export const authApi = {
 
   changePassword: (currentPassword: string, newPassword: string) =>
     api.put<ApiResponse<null>>('/profiles/password', { currentPassword, newPassword }),
+
+  deletePin: () => api.delete<ApiResponse<null>>('/auth/pin'),
 };
 
 // ── Profile API ───────────────────────────────────────────────────────────────
@@ -188,9 +201,22 @@ export const profileApi = {
   getMe: () => api.get<ApiResponse<ProfileData>>('/profiles/me'),
 };
 
+// ── Employee API ──────────────────────────────────────────────────────────────
+
+export type EmployeeData = {
+  id: string;
+  fullName: string;
+  position: string | null;
+  commissionRate: number | null;
+};
+
+export const employeeApi = {
+  listActive: () => api.get<ApiResponse<EmployeeData[]>>('/employees/active'),
+};
+
 // ── Dashboard API ─────────────────────────────────────────────────────────────
 
-export type KpiPreset = 'today' | 'week' | 'month';
+export type KpiPreset = 'today' | 'yesterday' | 'week' | 'month';
 
 export type KpiData = {
   totalRevenue: number;
@@ -206,32 +232,89 @@ export type ProductData = {
   name: string;
   price: number;
   unit: string;
-  categoryId: string | null;
-  categoryName: string | null;
+  categoryIds: string[] | null;
+  categoryNames: string[] | null;
   productTypeCode: string | null;
+  productTypeName: string | null;
   description: string | null;
-  inStock: boolean;
+  inStock: boolean | null;
   stockQuantity: number | null;
   dynamicPrice: boolean;
+  durationMinutes: number;
+  status: string;
 };
 
 export type CategoryData = {
   id: string;
   name: string;
+  emoji: string;
+};
+
+export type ProductUpdatePayload = {
+  name: string;
+  price: number;
+  unit: string;
+  categoryIds: number[] | null;
+  description: string | null;
+  status: string;
+  durationMinutes: number | null;
+};
+
+export type ProductSummary = {
+  total: number;
+  outOfStock: number;
+  lowStock: number;
+};
+
+export type ProductTypeData = {
+  id: string;
+  name: string;
+  code: string;
+  description: string | null;
+};
+
+export type ProductCreatePayload = {
+  productTypeId: number;
+  sku: string;
+  name: string;
+  price: number;
+  unit: string;
+  categoryIds: number[] | null;
+  description: string | null;
+  status: string;
+  durationMinutes: number | null;
+  attributes: Record<string, unknown>;
 };
 
 export const productApi = {
+  summary: () => api.get<ApiResponse<ProductSummary>>('/products/summary'),
+
   list: (params: { page?: number; size?: number; categoryId?: string; search?: string }) =>
     api.get<ApiResponse<{ content: ProductData[]; totalPages: number; totalElements: number }>>(
       '/products',
       { params: { page: 0, size: 30, ...params } },
     ),
 
-  search: (q: string) =>
-    api.get<ApiResponse<{ content: ProductData[]; totalPages: number }>>('/products/search', { params: { keyword: q } }),
+  search: (params: { keyword: string; page?: number; size?: number }) =>
+    api.get<ApiResponse<{ content: ProductData[]; totalPages: number; totalElements: number }>>(
+      '/products/search',
+      { params: { page: 0, size: 30, ...params } },
+    ),
 
   getById: (id: string) =>
     api.get<ApiResponse<ProductData>>(`/products/${id}`),
+
+  update: (id: string, data: ProductUpdatePayload) =>
+    api.put<ApiResponse<ProductData>>(`/products/${id}`, data),
+
+  types: () =>
+    api.get<ApiResponse<ProductTypeData[]>>('/products/types/all'),
+
+  suggestSku: (name: string, typeCode: string) =>
+    api.get<ApiResponse<string>>('/products/sku/suggest', { params: { name, typeCode } }),
+
+  create: (data: ProductCreatePayload) =>
+    api.post<ApiResponse<ProductData>>('/products', data),
 };
 
 // ── Cart API ──────────────────────────────────────────────────────────────────
@@ -258,8 +341,9 @@ export type CartResponse = {
 export type CheckoutRequest = {
   paymentMethod: 'CASH' | 'BANK_TRANSFER' | 'CARD';
   amountPaid?: number;
-  customerId?: number;
+  customerId?: string;
   notes?: string;
+  redeemPoints?: boolean;
 };
 
 export type CheckoutResponse = {
@@ -273,8 +357,12 @@ export const cartApi = {
 
   get: (cartId: string) => api.get<ApiResponse<CartResponse>>(`/carts/${cartId}`),
 
-  addItem: (cartId: string, productId: string, quantity: number) =>
-    api.post<ApiResponse<CartResponse>>(`/carts/${cartId}/items`, { productId, quantity }),
+  addItem: (cartId: string, productId: string, quantity: number, unitPrice?: number) =>
+    api.post<ApiResponse<CartResponse>>(`/carts/${cartId}/items`, {
+      productId,
+      quantity,
+      ...(unitPrice !== undefined && unitPrice > 0 ? { unitPrice } : {}),
+    }),
 
   updateItem: (cartId: string, cartItemId: string, quantity: number) =>
     api.put<ApiResponse<CartResponse>>(`/carts/${cartId}/items/${cartItemId}`, { newQuantity: quantity }),
@@ -284,6 +372,11 @@ export const cartApi = {
 
   applyPromo: (cartId: string, promoCode: string) =>
     api.post<ApiResponse<CartResponse>>(`/carts/${cartId}/promotion`, { promoCode }),
+
+  updateCommission: (cartId: string, itemId: string, employeeId: string) =>
+    api.patch<ApiResponse<CartResponse>>(`/carts/${cartId}/items/${itemId}/commission`, {
+      assignedEmployeeId: employeeId,
+    }),
 
   checkout: (cartId: string, req: CheckoutRequest) =>
     api.post<ApiResponse<CheckoutResponse>>(`/carts/${cartId}/checkout`, req),
@@ -326,6 +419,33 @@ export type OrderDetail = OrderSummary & {
   cancelReason: string | null;
   cancelledBy: string | null;
   cancelledAt: string | null;
+};
+
+export type WorkItemStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+
+export type WorkItemDTO = {
+  itemId: number;
+  orderId: number;
+  orderNumber: string;
+  customerName: string | null;
+  productId: number;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  durationMinutes: number;
+  status: WorkItemStatus;
+  completedAt: string | null;
+  assignedEmployeeId: number | null;
+  assignedEmployeeName: string | null;
+  orderCreatedAt: string;
+};
+
+export type WorkItemSummaryDTO = {
+  completedCount: number;
+  totalRevenue: number;
+  totalDurationMinutes: number;
+  totalCommission: number;
 };
 
 export const orderApi = {
@@ -379,6 +499,39 @@ export const orderApi = {
 
   chart: (params: { from: string; to: string; granularity: 'hour' | 'day' | 'month' }) =>
     api.get<ApiResponse<{ label: string; value: number }[]>>('/orders/chart', { params }),
+
+  workItems: (params?: { page?: number; size?: number }) =>
+    api.get<ApiResponse<{ content: WorkItemDTO[]; totalPages: number }>>('/orders/work-items', { params: { size: 20, ...params } }),
+
+  pendingWorkItems: (params?: { page?: number; size?: number }) =>
+    api.get<ApiResponse<{ content: WorkItemDTO[]; totalPages: number }>>('/orders/work-items/pending', { params: { size: 20, ...params } }),
+
+  availableWorkItems: (params?: { page?: number; size?: number }) =>
+    api.get<ApiResponse<{ content: WorkItemDTO[]; totalPages: number }>>('/orders/work-items/available', { params: { size: 20, ...params } }),
+
+  pickupWorkItem: (itemId: number) =>
+    api.put<ApiResponse<WorkItemDTO>>(`/orders/work-items/${itemId}/pickup`),
+
+  unpickWorkItem: (itemId: number) =>
+    api.put<ApiResponse<WorkItemDTO>>(`/orders/work-items/${itemId}/unpick`),
+
+  startWorkItem: (itemId: number) =>
+    api.put<ApiResponse<WorkItemDTO>>(`/orders/work-items/${itemId}/start`),
+
+  completeWorkItem: (itemId: number) =>
+    api.put<ApiResponse<WorkItemDTO>>(`/orders/work-items/${itemId}/complete`),
+
+  releaseWorkItem: (itemId: number) =>
+    api.put<ApiResponse<WorkItemDTO>>(`/orders/work-items/${itemId}/release`),
+
+  completedWorkItems: (params?: { filterType?: string; day?: number; month?: number; year?: number; keyword?: string; page?: number; size?: number }) =>
+    api.get<ApiResponse<{ content: WorkItemDTO[]; totalPages: number }>>('/orders/work-items/completed', { params: { size: 20, ...params } }),
+
+  workItemSummary: (params?: { filterType?: string; day?: number; month?: number; year?: number }) =>
+    api.get<ApiResponse<WorkItemSummaryDTO>>('/orders/work-items/summary', { params }),
+
+  workItemTrend: (params?: { filterType?: string; day?: number; month?: number; year?: number }) =>
+    api.get<ApiResponse<{ label: string; count: number; revenue: number }[]>>('/orders/work-items/trend', { params }),
 };
 
 // ── App version API ───────────────────────────────────────────────────────────
@@ -411,6 +564,7 @@ export type ShopType = {
 export type ProductTemplate = {
   id: string;
   name: string;
+  emoji: string;
   price: number;
   unit: string;
   dynamicPrice: boolean;
@@ -419,7 +573,8 @@ export type ProductTemplate = {
 export type ExpenseSuggestion = {
   name: string;
   emoji: string;
-  color: string;
+  color?: string;
+  category?: string;
 };
 
 export const tenantApi = {
@@ -446,17 +601,18 @@ export const tenantApi = {
     address: string;
     nickname: string;
     fullName: string;
-    products: { name: string; price: number; unit: string; dynamicPrice: boolean }[];
-    expenses: { name: string; monthlyAmount: number }[];
+    products: { templateId: string; name: string; price: number; unit: string; dynamicPrice: boolean }[];
+    expenses: { name: string; monthlyAmount: number; category?: string; expenseType?: string; paymentDate?: number; note?: string }[];
+    refreshInBody?: boolean;
   }) =>
-    api.post<ApiResponse<{ accessToken: string; refreshToken: string }>>('/tenants/self-provision', payload),
+    api.post<ApiResponse<{ accessToken: string; refreshToken?: string; tenantId: string; setupComplete: boolean }>>('/tenants/self-provision', payload),
 };
 
 // ── Auth additional endpoints ─────────────────────────────────────────────────
 
 export const authExtApi = {
   register: (phone: string, password: string) =>
-    api.post<ApiResponse<{ accessToken: string; refreshToken?: string }>>('/auth/register', {
+    api.post<ApiResponse<{ accessToken: string; refreshToken?: string; setupComplete?: boolean }>>('/auth/register', {
       phone,
       password,
       refreshInBody: true,
@@ -494,12 +650,25 @@ export const dashboardApi = {
 
 export type ExpenseData = {
   id: string;
-  name: string;
   amount: number;
-  type: 'FIXED' | 'VARIABLE';
-  category: string | null;
-  date: string;
-  note: string | null;
+  category: string;
+  categoryDisplayName?: string;
+  description: string;
+  expenseDate: string; // YYYY-MM-DD
+  paymentMethod?: string | null;
+  referenceNumber?: string | null;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ExpenseRequest = {
+  amount: number;
+  category: string;
+  description: string;
+  expenseDate: string;
+  paymentMethod?: string | null;
+  referenceNumber?: string | null;
 };
 
 export type DefaultExpense = {
@@ -513,7 +682,6 @@ export const expenseApi = {
   list: (params: {
     from?: string;
     to?: string;
-    type?: 'FIXED' | 'VARIABLE';
     category?: string;
     page?: number;
     size?: number;
@@ -523,10 +691,10 @@ export const expenseApi = {
       { params: { size: 30, ...params } },
     ),
 
-  create: (data: Omit<ExpenseData, 'id'>) =>
+  create: (data: ExpenseRequest) =>
     api.post<ApiResponse<ExpenseData>>('/expenses', data),
 
-  update: (id: string, data: Partial<Omit<ExpenseData, 'id'>>) =>
+  update: (id: string, data: ExpenseRequest) =>
     api.put<ApiResponse<ExpenseData>>(`/expenses/${id}`, data),
 
   delete: (id: string) => api.delete<ApiResponse<null>>(`/expenses/${id}`),
@@ -639,7 +807,34 @@ export type BankAccount = {
   isDefault: boolean;
 };
 
+export type ShopInfo = {
+  shopName: string;
+  address: string | null;
+  phone: string | null;
+  description: string | null;
+  logoUrl: string | null;
+  shopTypeCode: string | null;
+  posMode: string | null;
+};
+
+export type PosConfig = {
+  posMode: 'LIST' | 'BARCODE' | 'TABLE';
+  autoPrint: boolean;
+  vatMode: 'NONE' | 'INCLUDED' | 'ADDED';
+  vatRate: number;
+  denominations: number[];
+  quickNotes: string[];
+};
+
 export const shopConfigApi = {
+  getInfo: () => api.get<ApiResponse<ShopInfo>>('/shop-config'),
+  updateInfo: (data: Partial<Omit<ShopInfo, 'logoUrl'>>) =>
+    api.put<ApiResponse<ShopInfo>>('/shop-config', data),
+
+  getPosConfig: () => api.get<ApiResponse<PosConfig>>('/shop-config/pos-config'),
+  updatePosConfig: (data: Partial<PosConfig>) =>
+    api.put<ApiResponse<PosConfig>>('/shop-config/pos-config', data),
+
   getBanks: () => api.get<ApiResponse<BankAccount[]>>('/shop-config/banks'),
 
   addBank: (data: Omit<BankAccount, 'id' | 'isDefault'>) =>
@@ -753,6 +948,9 @@ export const notificationApi = {
       '/notifications',
       { params },
     ),
+
+  getUnreadCount: () =>
+    api.get<ApiResponse<{ count: number }>>('/notifications/unread-count'),
 
   markRead: (id: string) => api.put<ApiResponse<null>>(`/notifications/${id}/read`),
 
@@ -884,10 +1082,14 @@ export const userApi = {
     nickname: string | null;
     shopName: string | null;
     role: string | null;
+    lang: string | null;
   }>>('/profiles/me'),
 
   updateProfile: (data: { nickname?: string; fullName?: string }) =>
     api.put<ApiResponse<null>>('/profiles/me', data),
+
+  updateLang: (username: string, lang: string) =>
+    api.put<ApiResponse<null>>('/profiles/lang', { username, lang }),
 
   deleteAccount: () => api.delete<ApiResponse<null>>('/users/me'),
 };

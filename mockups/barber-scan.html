@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Barber Service & Scan Screens</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  /* Header */
+  .page-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px; flex-shrink: 0; }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .header-icon-btn { background: #f3f4f6; border-radius: 10px; padding: 8px; font-size: 18px; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+  .queue-badges { display: flex; gap: 8px; margin-bottom: 6px; }
+  .queue-badge { display: flex; align-items: center; gap: 5px; border-radius: 99px; padding: 3px 8px; }
+  .badge-amber { background: #fffbeb; }
+  .badge-indigo { background: #eef2ff; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .dot-amber { background: #f59e0b; }
+  .dot-indigo { background: #6366f1; }
+  .badge-text-amber { font-size: 11px; font-weight: 500; color: #b45309; }
+  .badge-text-indigo { font-size: 11px; font-weight: 500; color: #4338ca; }
+
+  /* Search bar */
+  .search-bar { display: flex; gap: 8px; margin-bottom: 10px; }
+  .search-input { flex: 1; display: flex; align-items: center; gap: 8px; background: #f3f4f6; border-radius: 12px; padding: 9px 12px; }
+  .search-placeholder { font-size: 13px; color: #9ca3af; }
+  .search-icon { font-size: 16px; color: #9ca3af; }
+  .search-btn { background: #4f46e5; border-radius: 12px; padding: 9px 16px; font-size: 13px; font-weight: 600; color: white; white-space: nowrap; }
+
+  /* Body */
+  .scroll-body { flex: 1; overflow: hidden; }
+  .service-grid { display: flex; flex-wrap: wrap; }
+  .service-card { width: calc(50% - 6px); background: white; border-radius: 16px; border: 1px solid #f3f4f6; padding: 14px; margin: 3px; }
+  .service-name { font-size: 13px; font-weight: 600; color: #1f2937; line-height: 1.4; margin-bottom: 6px; }
+  .service-duration { font-size: 11px; color: #6b7280; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+  .service-footer { display: flex; justify-content: space-between; align-items: center; }
+  .service-price { font-size: 14px; font-weight: 700; color: #4f46e5; }
+  .add-btn { background: #eef2ff; border-radius: 99px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #4f46e5; }
+
+  /* Cart bar */
+  .cart-bar { background: #4f46e5; padding: 12px 14px 18px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
+  .cart-count { width: 24px; height: 24px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #4f46e5; }
+  .cart-info { flex: 1; }
+  .cart-names { font-size: 11px; color: rgba(255,255,255,0.75); }
+  .cart-total { font-size: 14px; font-weight: 700; color: white; }
+  .checkout-btn { background: white; border-radius: 12px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #4f46e5; }
+  .trash-icon { font-size: 16px; color: rgba(255,255,255,0.6); margin-right: 2px; }
+
+  /* Bottom Sheet overlay */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; z-index: 50; }
+  .bottom-sheet { background: white; border-radius: 28px 28px 0 0; padding: 16px 18px 28px; width: 100%; }
+  .sheet-drag { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 0 auto 14px; }
+  .sheet-title { font-size: 17px; font-weight: 700; color: #111827; margin-bottom: 14px; }
+  .item-row { display: flex; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #f9fafb; }
+  .item-info { flex: 1; }
+  .item-name { font-size: 13px; font-weight: 600; color: #111827; }
+  .item-staff { font-size: 11px; color: #4f46e5; margin-top: 2px; }
+  .item-price { font-size: 13px; font-weight: 700; color: #4f46e5; margin-right: 10px; margin-top: 2px; }
+  .item-remove { font-size: 16px; color: #d1d5db; }
+  .order-total-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-bottom: 10px; }
+  .total-label { font-size: 15px; font-weight: 700; color: #111827; }
+  .total-amount { font-size: 15px; font-weight: 700; color: #4f46e5; }
+
+  /* Customer section */
+  .section-label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 8px; }
+  .customer-search { display: flex; align-items: center; gap: 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 9px 12px; margin-bottom: 8px; }
+  .customer-recent { display: flex; gap: 8px; margin-bottom: 10px; }
+  .recent-chip { background: #f3f4f6; border-radius: 99px; padding: 5px 12px; font-size: 12px; color: #374151; font-weight: 500; }
+
+  /* Payment methods */
+  .payment-methods { display: flex; gap: 8px; margin-bottom: 12px; }
+  .pay-btn { flex: 1; padding: 9px 0; border-radius: 12px; border: 1px solid #e5e7eb; text-align: center; font-size: 12px; font-weight: 600; color: #4b5563; background: white; }
+  .pay-btn.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+  .place-order-btn { background: #4f46e5; border-radius: 16px; padding: 14px; text-align: center; font-size: 15px; font-weight: 700; color: white; }
+
+  /* Add Item Sheet */
+  .field-section { margin-bottom: 12px; }
+  .field-label2 { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; display: flex; gap: 6px; align-items: center; }
+  .optional-tag { font-size: 11px; color: #9ca3af; font-weight: 400; }
+  .employee-row { display: flex; gap: 12px; }
+  .emp-chip-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .emp-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .emp-name { font-size: 11px; text-align: center; max-width: 52px; }
+  .emp-selected .emp-avatar { background: #4f46e5; color: white; }
+  .emp-unselected .emp-avatar { background: #f3f4f6; color: #4b5563; }
+  .emp-selected .emp-name { color: #4f46e5; font-weight: 600; }
+  .emp-unselected .emp-name { color: #6b7280; }
+  .note-area { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #9ca3af; min-height: 64px; }
+  .sheet-btns { display: flex; gap: 10px; margin-top: 14px; }
+  .sheet-cancel { flex: 1; padding: 13px 0; border-radius: 16px; border: 1px solid #e5e7eb; text-align: center; font-size: 14px; font-weight: 600; color: #4b5563; }
+  .sheet-add { flex: 2; padding: 13px 0; border-radius: 16px; background: #4f46e5; text-align: center; font-size: 14px; font-weight: 700; color: white; }
+
+  /* Category filter chips */
+  .cat-chips { display: flex; gap: 6px; overflow: hidden; padding: 2px 0 4px; }
+  .cat-chip { padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 600; white-space: nowrap; border: 1.5px solid #e5e7eb; background: white; color: #6b7280; flex-shrink: 0; }
+  .cat-chip.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+  /* Section headers inside service list */
+  .service-section-header { width: 100%; padding: 10px 12px 4px; font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.07em; }
+
+  /* Combo card */
+  .combo-card { width: calc(100% - 6px); margin: 3px; background: white; border-radius: 16px; border: 1.5px solid #eef2ff; padding: 12px 14px; }
+  .combo-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+  .combo-name { font-size: 14px; font-weight: 700; color: #1f2937; }
+  .combo-price { font-size: 15px; font-weight: 800; color: #4f46e5; }
+  .combo-duration { font-size: 11px; color: #6b7280; margin-bottom: 6px; }
+  .combo-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .combo-tag { background: #f3f4f6; border-radius: 99px; padding: 3px 10px; font-size: 11px; color: #374151; }
+  .combo-footer { display: flex; justify-content: flex-end; }
+  .combo-add-btn { background: #eef2ff; border-radius: 99px; padding: 5px 14px; font-size: 12px; font-weight: 700; color: #4f46e5; }
+
+  /* Expanded cart bar */
+  .cart-bar-expanded { background: #4f46e5; flex-shrink: 0; }
+  .cart-exp-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px 8px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+  .cart-exp-items { padding: 4px 14px 0; }
+  .cart-exp-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .cart-exp-item-name { flex: 1; font-size: 12px; color: rgba(255,255,255,0.9); line-height: 1.3; }
+  .cart-exp-item-price { font-size: 12px; font-weight: 700; color: white; }
+  .cart-exp-item-remove { font-size: 13px; color: rgba(255,255,255,0.4); padding: 2px 6px; }
+  .cart-exp-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 18px; }
+  .cart-exp-total { display: flex; flex-direction: column; }
+  .cart-exp-total-label { font-size: 10px; color: rgba(255,255,255,0.65); margin-bottom: 1px; }
+  .cart-exp-total-val { font-size: 17px; font-weight: 800; color: white; }
+  .cart-exp-checkout-btn { background: white; border-radius: 12px; padding: 9px 18px; font-size: 13px; font-weight: 700; color: #4f46e5; }
+
+  /* Skeleton */
+  .skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 16px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* Scan screen */
+  .scan-body { flex: 1; display: flex; align-items: center; justify-content: center; background: white; }
+  .scan-frame { width: 200px; height: 200px; position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 28px; }
+  .scan-corner { width: 36px; height: 36px; position: absolute; }
+  .scan-corner.tl { top: 0; left: 0; border-top: 4px solid #4f46e5; border-left: 4px solid #4f46e5; border-radius: 6px 0 0 0; }
+  .scan-corner.tr { top: 0; right: 0; border-top: 4px solid #4f46e5; border-right: 4px solid #4f46e5; border-radius: 0 6px 0 0; }
+  .scan-corner.bl { bottom: 0; left: 0; border-bottom: 4px solid #4f46e5; border-left: 4px solid #4f46e5; border-radius: 0 0 0 6px; }
+  .scan-corner.br { bottom: 0; right: 0; border-bottom: 4px solid #4f46e5; border-right: 4px solid #4f46e5; border-radius: 0 0 6px 0; }
+  .scan-icon { font-size: 72px; opacity: 0.2; color: #6366f1; }
+  .scan-title { font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
+  .scan-desc { font-size: 13px; color: #9ca3af; line-height: 1.5; }
+  .scan-hint { font-size: 11px; color: #d1d5db; margin-top: 4px; }
+  .scan-content { display: flex; flex-direction: column; align-items: flex-start; padding: 0 24px; }
+
+  /* Tab Bar */
+  .tab-bar { height: 82px; flex-shrink: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; align-items: flex-start; padding-top: 10px; }
+  .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .tab-icon { font-size: 20px; line-height: 1; }
+  .tab-lbl { font-size: 10px; font-weight: 600; color: #9ca3af; }
+  .tab-item.active .tab-lbl { color: #4f46e5; font-weight: 700; }
+</style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</head>
+<body>
+
+<h1>Barber Service & Scan Screens</h1>
+<p class="subtitle">BarberServiceScreen — tạo đơn dịch vụ; ScanScreen — coming soon</p>
+
+<h2>BarberServiceScreen</h2>
+<div class="phone-row">
+
+  <!-- Service grid with queue badges + cart bar -->
+  <div class="phone-wrap">
+    <div class="phone-label">With Services + Cart</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <div>
+            <div class="header-title">Tạo đơn mới</div>
+            <div class="queue-badges">
+              <div class="queue-badge badge-amber">
+                <div class="dot dot-amber"></div>
+                <span class="badge-text-amber">3 chờ</span>
+              </div>
+              <div class="queue-badge badge-indigo">
+                <div class="dot dot-indigo"></div>
+                <span class="badge-text-indigo">2 đang làm</span>
+              </div>
+            </div>
+          </div>
+          <div class="header-icon-btn">📋</div>
+        </div>
+        <div class="header-hint">💇 Chọn dịch vụ để tạo đơn và đưa vào hàng chờ.</div>
+        <div class="search-bar">
+          <div class="search-input">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm dịch vụ...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+        <div class="cat-chips">
+          <div class="cat-chip active">Tất cả</div>
+          <div class="cat-chip">✂️ Cắt & Tạo kiểu</div>
+          <div class="cat-chip">🎨 Nhuộm & Uốn</div>
+          <div class="cat-chip">🛁 Gội & Chăm sóc</div>
+          <div class="cat-chip">📦 Combo</div>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="service-grid">
+          <!-- Section: Cắt & Tạo kiểu -->
+          <div class="service-section-header">✂️ Cắt & Tạo kiểu</div>
+          <div class="service-card">
+            <div class="service-name">Cắt tóc nam</div>
+            <div class="service-duration">⏱ 30 phút</div>
+            <div class="service-footer">
+              <span class="service-price">80.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <div class="service-card">
+            <div class="service-name">Cắt + gội + sấy</div>
+            <div class="service-duration">⏱ 60 phút</div>
+            <div class="service-footer">
+              <span class="service-price">150.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <!-- Section: Nhuộm & Uốn -->
+          <div class="service-section-header">🎨 Nhuộm & Uốn</div>
+          <div class="service-card">
+            <div class="service-name">Nhuộm tóc</div>
+            <div class="service-duration">⏱ 90 phút</div>
+            <div class="service-footer">
+              <span class="service-price">350.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <div class="service-card">
+            <div class="service-name">Uốn tóc xoăn nhỏ</div>
+            <div class="service-duration">⏱ 75 phút</div>
+            <div class="service-footer">
+              <span class="service-price">280.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <!-- Section: Gội & Chăm sóc -->
+          <div class="service-section-header">🛁 Gội & Chăm sóc</div>
+          <div class="service-card">
+            <div class="service-name">Gội đầu + massage</div>
+            <div class="service-duration">⏱ 45 phút</div>
+            <div class="service-footer">
+              <span class="service-price">100.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <div class="service-card">
+            <div class="service-name">Duỗi tóc Hàn Quốc</div>
+            <div class="service-duration">⏱ 120 phút</div>
+            <div class="service-footer">
+              <span class="service-price">450.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <!-- Section: Combo -->
+          <div class="service-section-header">📦 Combo</div>
+          <div class="combo-card">
+            <div class="combo-header">
+              <div class="combo-name">Combo Cắt + Gội</div>
+              <div class="combo-price">160.000 ₫</div>
+            </div>
+            <div class="combo-duration">⏱ 75 phút</div>
+            <div class="combo-tags">
+              <span class="combo-tag">Cắt tóc nam</span>
+              <span class="combo-tag">Gội đầu + massage</span>
+            </div>
+            <div class="combo-footer"><div class="combo-add-btn">Thêm combo</div></div>
+          </div>
+          <div class="combo-card">
+            <div class="combo-header">
+              <div class="combo-name">Combo VIP</div>
+              <div class="combo-price">280.000 ₫</div>
+            </div>
+            <div class="combo-duration">⏱ 120 phút</div>
+            <div class="combo-tags">
+              <span class="combo-tag">Cắt + gội + sấy</span>
+              <span class="combo-tag">Massage đầu</span>
+              <span class="combo-tag">Tạo kiểu</span>
+            </div>
+            <div class="combo-footer"><div class="combo-add-btn">Thêm combo</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="cart-bar">
+        <div class="cart-count">2</div>
+        <div class="cart-info">
+          <div class="cart-names">Cắt tóc nam, Gội đầu + massage</div>
+          <div class="cart-total">180.000 ₫</div>
+        </div>
+        <span class="trash-icon">🗑</span>
+        <div class="checkout-btn">Xem đơn hàng</div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Expanded -->
+  <div class="phone-wrap">
+    <div class="phone-label">Cart Expanded</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <div>
+            <div class="header-title">Tạo đơn mới</div>
+            <div class="queue-badges">
+              <div class="queue-badge badge-amber"><div class="dot dot-amber"></div><span class="badge-text-amber">3 chờ</span></div>
+              <div class="queue-badge badge-indigo"><div class="dot dot-indigo"></div><span class="badge-text-indigo">2 đang làm</span></div>
+            </div>
+          </div>
+          <div class="header-icon-btn">📋</div>
+        </div>
+        <div class="header-hint">💇 Chọn dịch vụ để tạo đơn và đưa vào hàng chờ.</div>
+        <div class="search-bar">
+          <div class="search-input">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm dịch vụ...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+        <div class="cat-chips">
+          <div class="cat-chip active">Tất cả</div>
+          <div class="cat-chip">✂️ Cắt & Tạo kiểu</div>
+          <div class="cat-chip">🎨 Nhuộm & Uốn</div>
+          <div class="cat-chip">📦 Combo</div>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="service-grid">
+          <div class="service-section-header">✂️ Cắt & Tạo kiểu</div>
+          <div class="service-card">
+            <div class="service-name">Cắt tóc nam</div>
+            <div class="service-duration">⏱ 30 phút</div>
+            <div class="service-footer">
+              <span class="service-price">80.000 ₫</span>
+              <div class="add-btn" style="background:#4f46e5;color:white;">✓</div>
+            </div>
+          </div>
+          <div class="service-card">
+            <div class="service-name">Cắt + gội + sấy</div>
+            <div class="service-duration">⏱ 60 phút</div>
+            <div class="service-footer">
+              <span class="service-price">150.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <div class="service-section-header">🛁 Gội & Chăm sóc</div>
+          <div class="service-card">
+            <div class="service-name">Gội đầu + massage</div>
+            <div class="service-duration">⏱ 45 phút</div>
+            <div class="service-footer">
+              <span class="service-price">100.000 ₫</span>
+              <div class="add-btn" style="background:#4f46e5;color:white;">✓</div>
+            </div>
+          </div>
+          <div class="service-card">
+            <div class="service-name">Duỗi tóc Hàn Quốc</div>
+            <div class="service-duration">⏱ 120 phút</div>
+            <div class="service-footer">
+              <span class="service-price">450.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Expanded cart bar -->
+      <div class="cart-bar-expanded">
+        <div class="cart-exp-header">
+          <div class="cart-count">2</div>
+          <div class="cart-info">
+            <div class="cart-total" style="color:white;font-size:13px;">Dịch vụ đã chọn</div>
+          </div>
+          <span style="font-size:12px;color:rgba(255,255,255,0.6);">▲ Thu gọn</span>
+        </div>
+        <div class="cart-exp-items">
+          <div class="cart-exp-item">
+            <div class="cart-exp-item-name">Cắt tóc nam</div>
+            <div class="cart-exp-item-price">80.000 ₫</div>
+            <span class="cart-exp-item-remove">✕</span>
+          </div>
+          <div class="cart-exp-item" style="border-bottom:none;">
+            <div class="cart-exp-item-name">Gội đầu + massage</div>
+            <div class="cart-exp-item-price">100.000 ₫</div>
+            <span class="cart-exp-item-remove">✕</span>
+          </div>
+        </div>
+        <div class="cart-exp-footer">
+          <div class="cart-exp-total">
+            <span class="cart-exp-total-label">Tổng cộng</span>
+            <span class="cart-exp-total-val">180.000 ₫</span>
+          </div>
+          <div class="cart-exp-checkout-btn">Xem đơn hàng</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Item Sheet (service with employees) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Add Item Sheet</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header" style="opacity:0.3;">
+        <div class="header-title">Tạo đơn mới</div>
+      </div>
+      <div class="scroll-body" style="opacity:0.3;">
+        <div class="service-grid">
+          <div class="service-card"><div class="service-name">Cắt tóc nam</div></div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet">
+          <div class="sheet-drag"></div>
+          <!-- Product info -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+            <div>
+              <div style="font-size:17px; font-weight:700; color:#111827;">Cắt + gội + sấy</div>
+              <div style="font-size:13px; color:#6b7280; margin-top:3px;">⏱ 60 phút</div>
+            </div>
+            <div style="font-size:17px; font-weight:700; color:#4f46e5;">150.000 ₫</div>
+          </div>
+          <!-- Employee picker -->
+          <div class="field-section">
+            <div class="field-label2">Thợ thực hiện <span class="optional-tag">(tuỳ chọn)</span></div>
+            <div class="employee-row">
+              <div class="emp-chip-wrap emp-selected">
+                <div class="emp-avatar">KT</div>
+                <span class="emp-name">Kiên</span>
+              </div>
+              <div class="emp-chip-wrap emp-unselected">
+                <div class="emp-avatar">TH</div>
+                <span class="emp-name">Hùng</span>
+              </div>
+              <div class="emp-chip-wrap emp-unselected">
+                <div class="emp-avatar">NA</div>
+                <span class="emp-name">An</span>
+              </div>
+              <div class="emp-chip-wrap emp-unselected">
+                <div class="emp-avatar">ML</div>
+                <span class="emp-name">Long</span>
+              </div>
+            </div>
+          </div>
+          <!-- Note -->
+          <div class="field-section">
+            <div class="field-label2">Ghi chú</div>
+            <div class="note-area">Ghi chú cho dịch vụ này (tuỳ chọn)</div>
+          </div>
+          <div class="sheet-btns">
+            <div class="sheet-cancel">Huỷ</div>
+            <div class="sheet-add">Thêm vào đơn</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Sheet – Walk in (default) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Checkout – Walk in (mặc định)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="scroll-body" style="opacity:0.25; padding: 6px;">
+        <div class="service-grid">
+          <div class="service-card"><div class="service-name">Dịch vụ</div></div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet" style="max-height: 680px; overflow: hidden;">
+          <div class="sheet-drag"></div>
+          <div class="sheet-title">Xem đơn hàng</div>
+          <!-- Items -->
+          <div class="item-row">
+            <div class="item-info">
+              <div class="item-name">Cắt + gội + sấy</div>
+              <div class="item-staff">Kiên</div>
+            </div>
+            <span class="item-price">150.000 ₫</span>
+            <span class="item-remove">✕</span>
+          </div>
+          <div class="item-row">
+            <div class="item-info">
+              <div class="item-name">Gội đầu + massage</div>
+              <div class="item-staff">Hùng</div>
+            </div>
+            <span class="item-price">100.000 ₫</span>
+            <span class="item-remove">✕</span>
+          </div>
+          <div class="order-total-row">
+            <span class="total-label">Tổng cộng</span>
+            <span class="total-amount">250.000 ₫</span>
+          </div>
+          <!-- Customer: walk-in selected (default) -->
+          <div style="margin-bottom:10px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <div class="section-label" style="margin:0;">Khách hàng</div>
+              <div style="font-size:11px; font-weight:700; color:#059669; background:#d1fae5; border-radius:99px; padding:3px 10px; display:flex; align-items:center; gap:4px;">✓ Walk in</div>
+            </div>
+            <!-- Walk-in selected row -->
+            <div style="display:flex; align-items:center; gap:10px; background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px; padding:9px 12px;">
+              <span style="font-size:16px;">🚶</span>
+              <span style="font-size:13px; font-weight:600; color:#15803d; flex:1;">Khách vãng lai</span>
+              <span style="font-size:12px; color:#6b7280; font-weight:500;">Đổi</span>
+            </div>
+          </div>
+          <!-- Payment -->
+          <div style="margin-bottom:12px;">
+            <div class="section-label">Phương thức thanh toán</div>
+            <div class="payment-methods">
+              <div class="pay-btn active">Tiền mặt</div>
+              <div class="pay-btn">Chuyển khoản</div>
+              <div class="pay-btn">Thẻ</div>
+            </div>
+          </div>
+          <div class="place-order-btn">Đặt đơn · 250.000 ₫</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Sheet – Searching customer -->
+  <div class="phone-wrap">
+    <div class="phone-label">Checkout – Tìm khách</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="scroll-body" style="opacity:0.25; padding: 6px;">
+        <div class="service-grid">
+          <div class="service-card"><div class="service-name">Dịch vụ</div></div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet" style="max-height: 680px; overflow: hidden;">
+          <div class="sheet-drag"></div>
+          <div class="sheet-title">Xem đơn hàng</div>
+          <!-- Items -->
+          <div class="item-row">
+            <div class="item-info">
+              <div class="item-name">Cắt + gội + sấy</div>
+              <div class="item-staff">Kiên</div>
+            </div>
+            <span class="item-price">150.000 ₫</span>
+            <span class="item-remove">✕</span>
+          </div>
+          <div class="item-row">
+            <div class="item-info">
+              <div class="item-name">Gội đầu + massage</div>
+              <div class="item-staff">Hùng</div>
+            </div>
+            <span class="item-price">100.000 ₫</span>
+            <span class="item-remove">✕</span>
+          </div>
+          <div class="order-total-row">
+            <span class="total-label">Tổng cộng</span>
+            <span class="total-amount">250.000 ₫</span>
+          </div>
+          <!-- Customer: searching, walk-in not active -->
+          <div style="margin-bottom:10px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <div class="section-label" style="margin:0;">Khách hàng <span style="font-size:11px; color:#9ca3af; font-weight:400;">(tuỳ chọn)</span></div>
+              <div style="font-size:11px; font-weight:700; color:#4f46e5; background:#eef2ff; border-radius:99px; padding:3px 10px;">🚶 Walk in</div>
+            </div>
+            <div class="customer-search">
+              <span style="font-size:14px; color:#9ca3af;">🔍</span>
+              <span style="font-size:13px; color:#9ca3af;">Tìm theo tên hoặc số điện thoại</span>
+            </div>
+            <div style="font-size:11px; color:#9ca3af; margin-bottom:5px; margin-top:6px;">Gần đây</div>
+            <div class="customer-recent">
+              <div class="recent-chip">Minh</div>
+              <div class="recent-chip">Lan</div>
+              <div class="recent-chip">Hoa</div>
+              <div class="recent-chip">Đức</div>
+            </div>
+          </div>
+          <!-- Payment -->
+          <div style="margin-bottom:12px;">
+            <div class="section-label">Phương thức thanh toán</div>
+            <div class="payment-methods">
+              <div class="pay-btn active">Tiền mặt</div>
+              <div class="pay-btn">Chuyển khoản</div>
+              <div class="pay-btn">Thẻ</div>
+            </div>
+          </div>
+          <div class="place-order-btn">Đặt đơn · 250.000 ₫</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-title" style="margin-bottom:6px;">Tạo đơn mới</div>
+        <div class="search-bar">
+          <div class="search-input">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm dịch vụ...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="service-grid">
+          <div class="skeleton" style="width: calc(50% - 6px); height: 110px; margin: 3px;"></div>
+          <div class="skeleton" style="width: calc(50% - 6px); height: 110px; margin: 3px;"></div>
+          <div class="skeleton" style="width: calc(50% - 6px); height: 110px; margin: 3px;"></div>
+          <div class="skeleton" style="width: calc(50% - 6px); height: 110px; margin: 3px;"></div>
+          <div class="skeleton" style="width: calc(50% - 6px); height: 110px; margin: 3px;"></div>
+          <div class="skeleton" style="width: calc(50% - 6px); height: 110px; margin: 3px;"></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2>ScanScreen (Coming Soon)</h2>
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Scan — Coming Soon</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="scan-body">
+        <div class="scan-content">
+          <div class="scan-frame">
+            <div class="scan-corner tl"></div>
+            <div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div>
+            <div class="scan-corner br"></div>
+            <span class="scan-icon">▉▉</span>
+          </div>
+          <div class="scan-title">Quét mã</div>
+          <div class="scan-desc">Tính năng quét mã đang được phát triển</div>
+          <div class="scan-hint">Sẽ sớm ra mắt trong phiên bản tiếp theo</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

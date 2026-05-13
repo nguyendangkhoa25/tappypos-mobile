@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – POS Config Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  .page-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px; flex-shrink: 0; }
+  .header-row { display: flex; align-items: center; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 8px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .save-link { font-size: 15px; font-weight: 600; color: #4f46e5; }
+
+  .scroll-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: white; border-radius: 16px; padding: 14px; }
+  .section-label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .hint-text { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+
+  /* Mode options */
+  .mode-row { display: flex; flex-direction: column; gap: 8px; }
+  .mode-opt { display: flex; align-items: center; padding: 11px 12px; border-radius: 12px; border: 2px solid #e5e7eb; background: #f9fafb; }
+  .mode-opt.selected { border-color: #4f46e5; background: #eef2ff; }
+  .mode-icon { font-size: 16px; margin-right: 10px; }
+  .mode-text { font-size: 13px; font-weight: 500; color: #374151; flex: 1; }
+  .mode-opt.selected .mode-text { color: #4338ca; }
+  .check-icon { font-size: 14px; color: #4f46e5; }
+
+  /* Toggle */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle-label { font-size: 13px; color: #111827; flex: 1; margin-right: 12px; }
+  .toggle { width: 44px; height: 24px; border-radius: 12px; background: #4f46e5; position: relative; flex-shrink: 0; }
+  .toggle-thumb { width: 20px; height: 20px; border-radius: 50%; background: white; position: absolute; top: 2px; right: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle.off { background: #d1d5db; }
+  .toggle.off .toggle-thumb { right: auto; left: 2px; }
+
+  /* VAT options */
+  .vat-row { display: flex; flex-direction: column; gap: 8px; }
+  .vat-opt { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 12px; border: 2px solid #e5e7eb; background: #f9fafb; }
+  .vat-opt.selected { border-color: #4f46e5; background: #eef2ff; }
+  .vat-text { font-size: 13px; font-weight: 500; color: #374151; }
+  .vat-opt.selected .vat-text { color: #4338ca; }
+
+  /* Denominations */
+  .denom-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .denom-chip { padding: 7px 14px; border-radius: 10px; border: 2px solid #e5e7eb; background: #f9fafb; font-size: 12px; font-weight: 600; color: #6b7280; }
+  .denom-chip.selected { border-color: #4f46e5; background: #eef2ff; color: #4338ca; }
+
+  /* Loading */
+  .loader { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #e0e7ff; border-top-color: #4f46e5; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<h1>POS Config Screen</h1>
+<p class="subtitle">Cấu hình POS — chế độ bán, in tự động, VAT, mệnh giá tiền mặt</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- State 1: List mode, auto-print off, no VAT -->
+  <div class="phone-wrap">
+    <div class="phone-label">List Mode / No VAT</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Cấu hình POS</span>
+          <span class="save-link">Lưu</span>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="section-label">Chế độ bán hàng</div>
+          <div class="mode-row">
+            <div class="mode-opt selected">
+              <span class="mode-icon">≡</span>
+              <span class="mode-text">Danh sách sản phẩm</span>
+              <span class="check-icon">✓</span>
+            </div>
+            <div class="mode-opt">
+              <span class="mode-icon">▦</span>
+              <span class="mode-text">Quét mã vạch</span>
+            </div>
+            <div class="mode-opt">
+              <span class="mode-icon">⊞</span>
+              <span class="mode-text">Sơ đồ bàn</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">In hoá đơn</div>
+          <div class="toggle-row">
+            <span class="toggle-label">In tự động sau mỗi đơn hàng</span>
+            <div class="toggle off"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Thuế VAT</div>
+          <div class="vat-row">
+            <div class="vat-opt selected">
+              <span class="vat-text">Không áp dụng VAT</span>
+              <span style="font-size:14px;color:#4f46e5;">✓</span>
+            </div>
+            <div class="vat-opt"><span class="vat-text">Giá đã bao gồm VAT</span></div>
+            <div class="vat-opt"><span class="vat-text">Cộng thêm VAT vào giá</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Mệnh giá tiền mặt</div>
+          <div class="hint-text">Chọn các mệnh giá hiển thị khi thanh toán tiền mặt</div>
+          <div class="denom-grid">
+            <div class="denom-chip">1k</div>
+            <div class="denom-chip">2k</div>
+            <div class="denom-chip selected">5k</div>
+            <div class="denom-chip selected">10k</div>
+            <div class="denom-chip selected">20k</div>
+            <div class="denom-chip selected">50k</div>
+            <div class="denom-chip selected">100k</div>
+            <div class="denom-chip selected">200k</div>
+            <div class="denom-chip selected">500k</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Barcode mode, auto-print on, VAT added -->
+  <div class="phone-wrap">
+    <div class="phone-label">Barcode / VAT Added</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Cấu hình POS</span>
+          <span class="save-link">Lưu</span>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="section-label">Chế độ bán hàng</div>
+          <div class="mode-row">
+            <div class="mode-opt">
+              <span class="mode-icon">≡</span>
+              <span class="mode-text">Danh sách sản phẩm</span>
+            </div>
+            <div class="mode-opt selected">
+              <span class="mode-icon">▦</span>
+              <span class="mode-text">Quét mã vạch</span>
+              <span class="check-icon">✓</span>
+            </div>
+            <div class="mode-opt">
+              <span class="mode-icon">⊞</span>
+              <span class="mode-text">Sơ đồ bàn</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">In hoá đơn</div>
+          <div class="toggle-row">
+            <span class="toggle-label">In tự động sau mỗi đơn hàng</span>
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Thuế VAT</div>
+          <div class="vat-row">
+            <div class="vat-opt"><span class="vat-text">Không áp dụng VAT</span></div>
+            <div class="vat-opt"><span class="vat-text">Giá đã bao gồm VAT</span></div>
+            <div class="vat-opt selected">
+              <span class="vat-text">Cộng thêm VAT vào giá</span>
+              <span style="font-size:14px;color:#4f46e5;">✓</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Mệnh giá tiền mặt</div>
+          <div class="hint-text">Chọn các mệnh giá hiển thị khi thanh toán tiền mặt</div>
+          <div class="denom-grid">
+            <div class="denom-chip">1k</div>
+            <div class="denom-chip">2k</div>
+            <div class="denom-chip">5k</div>
+            <div class="denom-chip selected">10k</div>
+            <div class="denom-chip selected">20k</div>
+            <div class="denom-chip selected">50k</div>
+            <div class="denom-chip selected">100k</div>
+            <div class="denom-chip">200k</div>
+            <div class="denom-chip selected">500k</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Loading -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Cấu hình POS</span>
+          <span class="save-link">Lưu</span>
+        </div>
+      </div>
+      <div class="loader"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TappyPOS – Onboarding Screens</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 40px 24px 60px;
+    }
+    h1 { font-size: 22px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; color: #64748b; margin-bottom: 40px; }
+    .section-title {
+      font-size: 16px; font-weight: 700; color: #334155;
+      margin: 36px 0 16px; padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .phone-row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+    .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .phone-label {
+      font-size: 11px; font-weight: 600; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    /* Phone frame */
+    .phone {
+      width: 375px; height: 812px;
+      background: #fff; border-radius: 48px;
+      border: 10px solid #1e293b; position: relative;
+      overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.18); flex-shrink: 0;
+    }
+    .phone.dark { background: #111827; border-color: #0f172a; }
+
+    /* Notch */
+    .notch {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 130px; height: 34px;
+      background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100;
+    }
+    .phone.dark .notch { background: #0f172a; }
+
+    /* Status bar */
+    .status-bar {
+      background: white;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      padding: 0 20px 6px; height: 44px; flex-shrink: 0; position: relative; z-index: 10;
+      font-size: 12px; font-weight: 600; color: #111;
+    }
+    .phone.dark .status-bar { background: #111827; color: #f9fafb; }
+    .status-right { display: flex; gap: 5px; align-items: center; font-size: 11px; }
+
+    /* Screen body */
+    .screen { position: absolute; top: 44px; left: 0; right: 0; bottom: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+    :root { --primary: #4f46e5; }
+
+    /* ─── OnboardingHeader ─── */
+    .ob-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 0 0 0;
+    }
+    .ob-back {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #f3f4f6;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: #6b7280; flex-shrink: 0;
+    }
+    .phone.dark .ob-back { background: #374151; color: #d1d5db; }
+    .ob-spacer { width: 32px; flex-shrink: 0; }
+    .ob-progress { display: flex; gap: 6px; flex: 1; align-items: center; }
+    .ob-seg { flex: 1; height: 4px; border-radius: 2px; background: #e5e7eb; }
+    .phone.dark .ob-seg { background: #374151; }
+    .ob-seg.filled { background: var(--primary); }
+    .ob-counter {
+      font-size: 12px; font-weight: 600; color: #9ca3af;
+      flex-shrink: 0; width: 32px; text-align: right;
+    }
+    .phone.dark .ob-counter { color: #6b7280; }
+
+    /* Screen title */
+    .screen-title { font-size: 22px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+    .phone.dark .screen-title { color: #f9fafb; }
+
+    /* Subtitle paragraph */
+    .screen-sub { font-size: 12px; color: #6b7280; margin: 4px 0 12px; line-height: 1.5; }
+    .phone.dark .screen-sub { color: #9ca3af; }
+
+    /* Hint rows (icon + text) */
+    .hint-rows { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 12px; }
+    .hint-row { display: flex; align-items: flex-start; gap: 6px; }
+    .hint-icon { font-size: 11px; color: #9ca3af; margin-top: 1px; flex-shrink: 0; }
+    .hint-text { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+    .phone.dark .hint-text { color: #6b7280; }
+
+    /* Search input */
+    .search-input {
+      display: flex; align-items: center; gap: 8px;
+      background: #f9fafb; border: 1px solid #f3f4f6;
+      border-radius: 16px; padding: 10px 12px; margin-bottom: 10px;
+    }
+    .phone.dark .search-input { background: #1f2937; border-color: #374151; }
+    .search-icon { color: #9ca3af; font-size: 14px; }
+    .search-text { font-size: 13px; color: #9ca3af; flex: 1; }
+    .search-text.filled { color: #111827; }
+    .phone.dark .search-text.filled { color: #f3f4f6; }
+
+    /* Filter chips row */
+    .chips-row-h {
+      display: flex; gap: 8px; overflow: hidden;
+      padding: 0 20px; margin-bottom: 10px;
+    }
+    .fchip {
+      display: flex; align-items: center; gap: 4px;
+      padding: 6px 14px; border-radius: 999px;
+      border: 1px solid #e5e7eb; background: #f9fafb;
+      font-size: 12px; font-weight: 600; color: #6b7280;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .phone.dark .fchip { background: #1f2937; border-color: #4b5563; color: #d1d5db; }
+    .fchip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    /* Shop type list item */
+    .type-item {
+      display: flex; align-items: center; gap: 12px;
+      border-radius: 16px; padding: 12px 14px;
+      border: 2px solid transparent; background: #f9fafb; margin-bottom: 8px;
+    }
+    .phone.dark .type-item { background: #1f2937; }
+    .type-item.selected { background: #eef2ff; border-color: var(--primary); }
+    .phone.dark .type-item.selected { background: rgba(79,70,229,0.15); }
+    .type-emoji { font-size: 26px; flex-shrink: 0; }
+    .type-info { flex: 1; }
+    .type-name { font-size: 13px; font-weight: 700; color: #1f2937; }
+    .phone.dark .type-name { color: #f3f4f6; }
+    .type-item.selected .type-name { color: var(--primary); }
+    .phone.dark .type-item.selected .type-name { color: #a5b4fc; }
+    .type-examples { font-size: 11px; color: #9ca3af; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .check-icon { color: var(--primary); font-size: 16px; flex-shrink: 0; }
+
+    /* Input field */
+    .field-label {
+      font-size: 13px; font-weight: 600; color: #374151;
+      margin-bottom: 6px; display: block;
+    }
+    .phone.dark .field-label { color: #d1d5db; }
+    .input-wrap {
+      display: flex; align-items: center;
+      background: #fff; border: 1.5px solid #e5e7eb;
+      border-radius: 12px; padding: 10px 12px; margin-bottom: 2px;
+    }
+    .phone.dark .input-wrap { background: #1f2937; border-color: #374151; }
+    .input-wrap.focused { border-color: var(--primary); }
+    .input-text { font-size: 14px; color: #111827; flex: 1; }
+    .phone.dark .input-text { color: #f3f4f6; }
+    .input-placeholder { font-size: 14px; color: #9ca3af; flex: 1; }
+    .clear-btn { color: #9ca3af; font-size: 12px; }
+    .field-hint { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+    .phone.dark .field-hint { color: #6b7280; }
+    .field-error { font-size: 11px; color: #ef4444; margin-top: 3px; }
+    .input-wrap.error { border-color: #ef4444; }
+
+    /* Money input */
+    .money-input {
+      display: flex; align-items: center;
+      background: #fff; border: 1.5px solid #e5e7eb;
+      border-radius: 12px; padding: 10px 12px; gap: 4px;
+    }
+    .phone.dark .money-input { background: #1f2937; border-color: #374151; }
+    .money-input.focused { border-color: var(--primary); }
+    .money-value { font-size: 14px; color: #111827; flex: 1; }
+    .phone.dark .money-value { color: #f3f4f6; }
+    .money-placeholder { font-size: 14px; color: #9ca3af; flex: 1; }
+    .currency-suffix { font-size: 14px; color: #6b7280; font-weight: 600; }
+
+    /* Committed chips (products / expenses) */
+    .committed-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding: 4px 20px 8px;
+    }
+    .item-chip {
+      display: flex; align-items: center; gap: 4px;
+      background: #eef2ff; border: 1px solid #c7d2fe;
+      border-radius: 999px; padding: 5px 6px 5px 10px;
+      font-size: 12px; font-weight: 500; color: #4338ca;
+    }
+    .phone.dark .item-chip { background: rgba(79,70,229,0.15); border-color: #6366f1; color: #a5b4fc; }
+    .chip-x { color: #818cf8; font-size: 10px; }
+
+    /* Suggestion chips (horizontal) */
+    .sug-label {
+      font-size: 10px; font-weight: 700; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 0 20px; margin-bottom: 8px;
+    }
+    .sug-chips-row { display: flex; gap: 8px; padding: 0 20px; overflow: hidden; margin-bottom: 12px; }
+    .sug-chip {
+      display: flex; align-items: center; gap: 4px;
+      border: 1px solid #e5e7eb; background: #f9fafb;
+      border-radius: 999px; padding: 5px 10px;
+      font-size: 12px; font-weight: 500; color: #374151;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .phone.dark .sug-chip { background: #1f2937; border-color: #4b5563; color: #d1d5db; }
+    .sug-chip.on { background: #eef2ff; border-color: #a5b4fc; color: #4338ca; }
+    .phone.dark .sug-chip.on { background: rgba(79,70,229,0.15); border-color: #6366f1; color: #a5b4fc; }
+
+    /* Input row (name + plus button) */
+    .input-plus-row { display: flex; gap: 8px; align-items: stretch; }
+    .input-plus-row .input-wrap { flex: 1; margin-bottom: 0; }
+    .plus-btn {
+      width: 46px; border-radius: 12px; background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: #fff; flex-shrink: 0;
+    }
+    .plus-btn.disabled { background: #f3f4f6; color: #9ca3af; }
+    .phone.dark .plus-btn.disabled { background: #1f2937; }
+
+    /* Add hint row */
+    .add-hint { display: flex; align-items: center; gap: 5px; margin-top: 6px; padding: 0 2px; }
+    .add-hint-text { font-size: 11px; color: var(--primary); font-weight: 500; }
+
+    /* Dynamic price banner */
+    .dynamic-banner {
+      display: flex; align-items: center; gap: 8px;
+      background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: 12px; padding: 10px 12px;
+    }
+    .phone.dark .dynamic-banner { background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.3); }
+    .dynamic-text { font-size: 13px; color: #b45309; font-weight: 500; }
+    .phone.dark .dynamic-text { color: #fbbf24; }
+
+    /* Calendar button */
+    .cal-btn {
+      display: flex; align-items: center; gap: 4px;
+      border: 1.5px solid #e5e7eb; border-radius: 12px;
+      padding: 10px 12px; background: #fff; flex-shrink: 0;
+    }
+    .phone.dark .cal-btn { background: #1f2937; border-color: #374151; }
+    .cal-btn.active { border-color: #a5b4fc; background: #eef2ff; }
+    .phone.dark .cal-btn.active { background: rgba(79,70,229,0.15); border-color: #6366f1; }
+    .cal-icon { font-size: 15px; }
+    .cal-day { font-size: 11px; font-weight: 700; color: var(--primary); }
+
+    /* Unit chips */
+    .unit-chips-row { display: flex; gap: 8px; overflow: hidden; margin-top: 4px; }
+    .unit-chip {
+      padding: 5px 12px; border-radius: 999px;
+      border: 1px solid #e5e7eb; background: #fff;
+      font-size: 11px; font-weight: 500; color: #6b7280;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .phone.dark .unit-chip { background: #1f2937; border-color: #374151; color: #9ca3af; }
+    .unit-chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    /* Type chips (FIXED / VARIABLE) */
+    .type-chips-row { display: flex; gap: 8px; }
+    .type-chip {
+      padding: 5px 14px; border-radius: 999px;
+      border: 1px solid #e5e7eb; background: #fff;
+      font-size: 12px; font-weight: 500; color: #6b7280;
+    }
+    .phone.dark .type-chip { background: #1f2937; border-color: #374151; color: #9ca3af; }
+    .type-chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    /* Review section card */
+    .review-card {
+      background: #f9fafb; border-radius: 16px; padding: 14px; margin-bottom: 10px;
+    }
+    .phone.dark .review-card { background: #1f2937; }
+    .review-card-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    }
+    .review-section-label {
+      font-size: 10px; font-weight: 700; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .edit-link { font-size: 11px; font-weight: 700; color: var(--primary); }
+    .info-row { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; }
+    .info-icon { font-size: 13px; color: #6b7280; flex-shrink: 0; margin-top: 1px; }
+    .info-label { font-size: 11px; color: #9ca3af; width: 80px; flex-shrink: 0; }
+    .info-value { font-size: 13px; color: #374151; font-weight: 500; flex: 1; }
+    .phone.dark .info-value { color: #e5e7eb; }
+
+    /* Review list (products/expenses) */
+    .review-list { background: #f3f4f6; border-radius: 14px; overflow: hidden; }
+    .phone.dark .review-list { background: #111827; }
+    .review-row {
+      display: flex; align-items: center; padding: 9px 12px;
+      gap: 6px; border-bottom: 1px solid #e5e7eb;
+    }
+    .phone.dark .review-row { border-bottom-color: #374151; }
+    .review-row:last-child { border-bottom: none; }
+    .review-row-emoji { font-size: 16px; flex-shrink: 0; }
+    .review-row-info { flex: 1; min-width: 0; }
+    .review-row-name { font-size: 12px; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .phone.dark .review-row-name { color: #e5e7eb; }
+    .review-row-sub { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+    .review-row-price { font-size: 12px; color: #6b7280; flex-shrink: 0; }
+    .phone.dark .review-row-price { color: #9ca3af; }
+    .review-row-unit { font-size: 10px; color: #9ca3af; flex-shrink: 0; }
+    .review-row-x { color: #9ca3af; font-size: 11px; margin-left: 2px; flex-shrink: 0; }
+    .badge-fixed { font-size: 10px; font-weight: 600; color: #3b82f6; }
+    .badge-variable { font-size: 10px; font-weight: 600; color: #f97316; }
+
+    /* Empty state inside review */
+    .empty-inner { background: #f9fafb; border-radius: 12px; padding: 12px; }
+    .phone.dark .empty-inner { background: #1f2937; }
+    .empty-text { font-size: 13px; color: #9ca3af; }
+
+    /* Footer */
+    .footer {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid #f3f4f6;
+      padding: 12px 20px 24px;
+    }
+    .phone.dark .footer { background: #111827; border-color: #1f2937; }
+    .footer-row { display: flex; gap: 10px; align-items: center; }
+    .btn-primary {
+      flex: 1; background: var(--primary);
+      border-radius: 16px; padding: 14px 20px;
+      text-align: center; color: #fff;
+      font-size: 15px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-primary.disabled { background: #e5e7eb; color: #9ca3af; }
+    .phone.dark .btn-primary.disabled { background: #374151; color: #6b7280; }
+    .btn-count {
+      background: rgba(255,255,255,0.25); border-radius: 999px;
+      padding: 1px 8px; font-size: 11px; font-weight: 700; color: #fff;
+    }
+    .btn-skip { padding: 14px 8px; font-size: 13px; font-weight: 600; color: #9ca3af; }
+    .phone.dark .btn-skip { color: #6b7280; }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.8s linear infinite; flex-shrink: 0;
+    }
+    .spinner.indigo {
+      border-color: rgba(79,70,229,0.2); border-top-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+<h1>TappyPOS – Onboarding Screens</h1>
+<p class="subtitle">5 screens — ShopType → Step1 (Info) → Step2 (Products) → Step3 (Expenses) → Step4 (Review)</p>
+
+<!-- ══════════════════════ SCREEN 0: ShopTypeScreen ══════════════════════ -->
+<div class="section-title">Screen 0 — ShopTypeScreen · OnboardingHeader step=0 · "1 / 4"</div>
+<div class="phone-row">
+
+  <!-- State 1: No selection -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty — no selection</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <div style="padding:8px 20px 0;">
+            <!-- OnboardingHeader: step=0 → no back btn, 1 filled seg, "1 / 4" -->
+            <div class="ob-header">
+              <div class="ob-spacer"></div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+              </div>
+              <span class="ob-counter">1 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:16px;">Loại hình cửa hàng</div>
+            <p class="screen-sub">🎯 Chọn loại hình phù hợp để TappyPOS gợi ý sản phẩm và cài đặt tốt nhất cho cửa hàng bạn.</p>
+            <div class="search-input">
+              <span class="search-icon">🔍</span>
+              <span class="search-text">Tìm loại hình cửa hàng...</span>
+            </div>
+          </div>
+          <div class="chips-row-h" style="margin-bottom:10px;">
+            <div class="fchip active">Tất cả</div>
+            <div class="fchip">🍜 Quán ăn</div>
+            <div class="fchip">☕ Đồ uống</div>
+            <div class="fchip">🛒 Tạp hóa</div>
+            <div class="fchip">👗 Thời trang</div>
+          </div>
+          <div style="padding:0 20px;">
+            <div class="type-item">
+              <span class="type-emoji">🍜</span>
+              <div class="type-info">
+                <div class="type-name">Quán phở</div>
+                <div class="type-examples">Phở bò, phở gà, phở đặc biệt</div>
+              </div>
+            </div>
+            <div class="type-item">
+              <span class="type-emoji">🍚</span>
+              <div class="type-info">
+                <div class="type-name">Cơm bình dân</div>
+                <div class="type-examples">Cơm phần, cơm đĩa, cơm tấm</div>
+              </div>
+            </div>
+            <div class="type-item">
+              <span class="type-emoji">☕</span>
+              <div class="type-info">
+                <div class="type-name">Quán cà phê</div>
+                <div class="type-examples">Cà phê đen, bạc xỉu, cà phê sữa đá</div>
+              </div>
+            </div>
+            <div class="type-item">
+              <span class="type-emoji">🧋</span>
+              <div class="type-info">
+                <div class="type-name">Quán trà sữa</div>
+                <div class="type-examples">Trà sữa, trà trái cây, topping</div>
+              </div>
+            </div>
+            <div class="type-item">
+              <span class="type-emoji">🛒</span>
+              <div class="type-info">
+                <div class="type-name">Tạp hóa</div>
+                <div class="type-examples">Hàng tạp hóa, thực phẩm khô, đồ dùng hàng ngày</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary disabled">Tiếp tục</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Group filter active -->
+  <div class="phone-wrap">
+    <div class="phone-label">Group filter — ☕ Đồ uống</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <div style="padding:8px 20px 0;">
+            <div class="ob-header">
+              <div class="ob-spacer"></div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+              </div>
+              <span class="ob-counter">1 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:16px;">Loại hình cửa hàng</div>
+            <p class="screen-sub">🎯 Chọn loại hình phù hợp để TappyPOS gợi ý sản phẩm và cài đặt tốt nhất cho cửa hàng bạn.</p>
+            <div class="search-input">
+              <span class="search-icon">🔍</span>
+              <span class="search-text">Tìm loại hình cửa hàng...</span>
+            </div>
+          </div>
+          <div class="chips-row-h" style="margin-bottom:10px;">
+            <div class="fchip">Tất cả</div>
+            <div class="fchip">🍜 Quán ăn</div>
+            <div class="fchip active">☕ Đồ uống</div>
+            <div class="fchip">🛒 Tạp hóa</div>
+          </div>
+          <div style="padding:0 20px;">
+            <div class="type-item">
+              <span class="type-emoji">☕</span>
+              <div class="type-info">
+                <div class="type-name">Quán cà phê</div>
+                <div class="type-examples">Cà phê đen, bạc xỉu, cà phê sữa đá</div>
+              </div>
+            </div>
+            <div class="type-item">
+              <span class="type-emoji">🧋</span>
+              <div class="type-info">
+                <div class="type-name">Quán trà sữa</div>
+                <div class="type-examples">Trà sữa, trà trái cây, topping</div>
+              </div>
+            </div>
+            <div class="type-item">
+              <span class="type-emoji">🥤</span>
+              <div class="type-info">
+                <div class="type-name">Quán nước ép</div>
+                <div class="type-examples">Nước ép, sinh tố, trà chanh, soda</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary disabled">Tiếp tục</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Selection made -->
+  <div class="phone-wrap">
+    <div class="phone-label">Selection made — Quán cà phê ✓</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <div style="padding:8px 20px 0;">
+            <div class="ob-header">
+              <div class="ob-spacer"></div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+              </div>
+              <span class="ob-counter">1 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:16px;">Loại hình cửa hàng</div>
+            <p class="screen-sub">🎯 Chọn loại hình phù hợp để TappyPOS gợi ý sản phẩm và cài đặt tốt nhất cho cửa hàng bạn.</p>
+            <div class="search-input">
+              <span class="search-icon">🔍</span>
+              <span class="search-text">Tìm loại hình cửa hàng...</span>
+            </div>
+          </div>
+          <div class="chips-row-h" style="margin-bottom:10px;">
+            <div class="fchip active">Tất cả</div>
+            <div class="fchip">🍜 Quán ăn</div>
+            <div class="fchip">☕ Đồ uống</div>
+            <div class="fchip">🛒 Tạp hóa</div>
+          </div>
+          <div style="padding:0 20px;">
+            <div class="type-item">
+              <span class="type-emoji">🍜</span>
+              <div class="type-info">
+                <div class="type-name">Quán phở</div>
+                <div class="type-examples">Phở bò, phở gà, phở đặc biệt</div>
+              </div>
+            </div>
+            <div class="type-item">
+              <span class="type-emoji">🍚</span>
+              <div class="type-info">
+                <div class="type-name">Cơm bình dân</div>
+                <div class="type-examples">Cơm phần, cơm đĩa, cơm tấm</div>
+              </div>
+            </div>
+            <div class="type-item selected">
+              <span class="type-emoji">☕</span>
+              <div class="type-info">
+                <div class="type-name">Quán cà phê</div>
+                <div class="type-examples">Cà phê đen, bạc xỉu, cà phê sữa đá</div>
+              </div>
+              <span class="check-icon">✓</span>
+            </div>
+            <div class="type-item">
+              <span class="type-emoji">🧋</span>
+              <div class="type-info">
+                <div class="type-name">Quán trà sữa</div>
+                <div class="type-examples">Trà sữa, trà trái cây, topping</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary">Tiếp tục</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 4: Search active -->
+  <div class="phone-wrap">
+    <div class="phone-label">Search — "nail"</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <div style="padding:8px 20px 0;">
+            <div class="ob-header">
+              <div class="ob-spacer"></div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+              </div>
+              <span class="ob-counter">1 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:16px;">Loại hình cửa hàng</div>
+            <p class="screen-sub">🎯 Chọn loại hình phù hợp để TappyPOS gợi ý sản phẩm và cài đặt tốt nhất cho cửa hàng bạn.</p>
+            <div class="search-input" style="border-color:#c7d2fe;">
+              <span class="search-icon">🔍</span>
+              <span class="search-text filled">nail</span>
+              <span style="font-size:12px;color:#9ca3af;">✕</span>
+            </div>
+          </div>
+          <div class="chips-row-h" style="margin-bottom:10px;">
+            <div class="fchip">Tất cả</div>
+            <div class="fchip">💅 Làm đẹp</div>
+          </div>
+          <div style="padding:0 20px;">
+            <div class="type-item">
+              <span class="type-emoji">💅</span>
+              <div class="type-info">
+                <div class="type-name">Tiệm nail</div>
+                <div class="type-examples">Sơn móng, đắp bột, vẽ nail, gel</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary disabled">Tiếp tục</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════ SCREEN 1: Step1Screen ══════════════════════ -->
+<div class="section-title">Screen 1 — Step1Screen · Thông tin cơ bản · step=1 · "2 / 4"</div>
+<div class="phone-row">
+
+  <!-- State 1: Empty form -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty form</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:90px;">
+          <div style="padding:8px 24px 0;">
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+              </div>
+              <span class="ob-counter">2 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:20px;">Thông tin cơ bản</div>
+            <div class="hint-rows">
+              <div class="hint-row"><span class="hint-icon">👤</span><span class="hint-text">Biệt danh là tên TappyPOS dùng để chào bạn mỗi ngày</span></div>
+              <div class="hint-row"><span class="hint-icon">🏪</span><span class="hint-text">Tên cửa hàng sẽ xuất hiện trên mọi hóa đơn và báo cáo</span></div>
+              <div class="hint-row"><span class="hint-icon">📍</span><span class="hint-text">Tên thật và địa chỉ không bắt buộc — điền sau cũng được</span></div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Biệt danh *</span>
+              <div class="input-wrap">
+                <span class="input-placeholder">Tên bạn muốn được gọi (vd: Hoa, Minh)</span>
+              </div>
+              <div class="field-hint">Dùng trong lời chào "Xin chào, Bạn 👋"</div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Họ và tên</span>
+              <div class="input-wrap">
+                <span class="input-placeholder">Tên đầy đủ của bạn</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Tên cửa hàng *</span>
+              <div class="input-wrap">
+                <span class="input-placeholder">vd: Tạp hóa Bình Minh</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Địa chỉ</span>
+              <div class="input-wrap">
+                <span class="input-placeholder">Số nhà, tên đường, quận/huyện</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary disabled">Tiếp tục</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Filled — continue enabled -->
+  <div class="phone-wrap">
+    <div class="phone-label">Filled — Continue active</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:90px;">
+          <div style="padding:8px 24px 0;">
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+              </div>
+              <span class="ob-counter">2 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:20px;">Thông tin cơ bản</div>
+            <div class="hint-rows">
+              <div class="hint-row"><span class="hint-icon">👤</span><span class="hint-text">Biệt danh là tên TappyPOS dùng để chào bạn mỗi ngày</span></div>
+              <div class="hint-row"><span class="hint-icon">🏪</span><span class="hint-text">Tên cửa hàng sẽ xuất hiện trên mọi hóa đơn và báo cáo</span></div>
+              <div class="hint-row"><span class="hint-icon">📍</span><span class="hint-text">Tên thật và địa chỉ không bắt buộc — điền sau cũng được</span></div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Biệt danh *</span>
+              <div class="input-wrap focused">
+                <span class="input-text">Hoa</span>
+                <span class="clear-btn">✕</span>
+              </div>
+              <div class="field-hint">Dùng trong lời chào "Xin chào, Hoa 👋"</div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Họ và tên</span>
+              <div class="input-wrap">
+                <span class="input-text">Nguyễn Thị Hoa</span>
+                <span class="clear-btn">✕</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Tên cửa hàng *</span>
+              <div class="input-wrap">
+                <span class="input-text">Cà phê Bình Minh</span>
+                <span class="clear-btn">✕</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Địa chỉ</span>
+              <div class="input-wrap">
+                <span class="input-text">123 Nguyễn Trãi, Q.1</span>
+                <span class="clear-btn">✕</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary">Tiếp tục</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Validation error -->
+  <div class="phone-wrap">
+    <div class="phone-label">Validation error</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:90px;">
+          <div style="padding:8px 24px 0;">
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+              </div>
+              <span class="ob-counter">2 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:20px;">Thông tin cơ bản</div>
+            <div class="hint-rows">
+              <div class="hint-row"><span class="hint-icon">👤</span><span class="hint-text">Biệt danh là tên TappyPOS dùng để chào bạn mỗi ngày</span></div>
+              <div class="hint-row"><span class="hint-icon">🏪</span><span class="hint-text">Tên cửa hàng sẽ xuất hiện trên mọi hóa đơn và báo cáo</span></div>
+              <div class="hint-row"><span class="hint-icon">📍</span><span class="hint-text">Tên thật và địa chỉ không bắt buộc — điền sau cũng được</span></div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Biệt danh *</span>
+              <div class="input-wrap error">
+                <span class="input-placeholder">Tên bạn muốn được gọi (vd: Hoa, Minh)</span>
+              </div>
+              <div class="field-error">Vui lòng nhập biệt danh</div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Họ và tên</span>
+              <div class="input-wrap">
+                <span class="input-placeholder">Tên đầy đủ của bạn</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Tên cửa hàng *</span>
+              <div class="input-wrap error">
+                <span class="input-placeholder">vd: Tạp hóa Bình Minh</span>
+              </div>
+              <div class="field-error">Vui lòng nhập tên cửa hàng</div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Địa chỉ</span>
+              <div class="input-wrap">
+                <span class="input-placeholder">Số nhà, tên đường, quận/huyện</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary disabled">Tiếp tục</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 4: Dark mode filled -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dark mode — filled</div>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:90px;">
+          <div style="padding:8px 24px 0;">
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg"></div>
+                <div class="ob-seg"></div>
+              </div>
+              <span class="ob-counter">2 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:20px;">Thông tin cơ bản</div>
+            <div class="hint-rows">
+              <div class="hint-row"><span class="hint-icon">👤</span><span class="hint-text">Biệt danh là tên TappyPOS dùng để chào bạn mỗi ngày</span></div>
+              <div class="hint-row"><span class="hint-icon">🏪</span><span class="hint-text">Tên cửa hàng sẽ xuất hiện trên mọi hóa đơn và báo cáo</span></div>
+              <div class="hint-row"><span class="hint-icon">📍</span><span class="hint-text">Tên thật và địa chỉ không bắt buộc — điền sau cũng được</span></div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Biệt danh *</span>
+              <div class="input-wrap focused">
+                <span class="input-text">Minh</span>
+                <span class="clear-btn">✕</span>
+              </div>
+              <div class="field-hint">Dùng trong lời chào "Xin chào, Minh 👋"</div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Họ và tên</span>
+              <div class="input-wrap"><span class="input-placeholder">Tên đầy đủ của bạn</span></div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Tên cửa hàng *</span>
+              <div class="input-wrap">
+                <span class="input-text">Tiệm tóc Bình Minh</span>
+                <span class="clear-btn">✕</span>
+              </div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <span class="field-label">Địa chỉ</span>
+              <div class="input-wrap"><span class="input-placeholder">Số nhà, tên đường, quận/huyện</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary">Tiếp tục</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════ SCREEN 2: Step2Screen ══════════════════════ -->
+<div class="section-title">Screen 2 — Step2Screen · Sản phẩm đang bán · step=1 · "2 / 4"</div>
+<div class="phone-row">
+
+  <!-- State 1: Empty form, suggestions showing -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty — suggestions</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <!-- Fixed header -->
+        <div style="padding:8px 20px 0;">
+          <div class="ob-header">
+            <div class="ob-back">←</div>
+            <div class="ob-progress">
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg"></div>
+              <div class="ob-seg"></div>
+            </div>
+            <span class="ob-counter">2 / 4</span>
+          </div>
+          <div class="screen-title" style="margin-top:14px;">Sản phẩm đang bán</div>
+          <div class="hint-rows" style="margin-bottom:0;">
+            <div class="hint-row"><span class="hint-icon">⚡</span><span class="hint-text">Nhấn chọn gợi ý hoặc tự gõ tên sản phẩm của bạn</span></div>
+            <div class="hint-row"><span class="hint-icon">🏷️</span><span class="hint-text">Thêm giá và đơn vị — hoặc để trống điền sau cũng được</span></div>
+            <div class="hint-row"><span class="hint-icon">✏️</span><span class="hint-text">Tất cả đều có thể chỉnh sửa sau khi tạo cửa hàng</span></div>
+          </div>
+        </div>
+        <!-- Scrollable body -->
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <!-- Suggestion chips -->
+          <div style="margin-top:12px;">
+            <div class="sug-label">Phổ biến</div>
+            <div class="sug-chips-row">
+              <div class="sug-chip">☕ Cà phê đen</div>
+              <div class="sug-chip">🥛 Bạc xỉu</div>
+              <div class="sug-chip">🧋 Trà sữa</div>
+              <div class="sug-chip">🍵 Trà đào</div>
+              <div class="sug-chip">🥤 Sinh tố</div>
+            </div>
+          </div>
+          <!-- Input form -->
+          <div style="padding:12px 20px 0; display:flex;flex-direction:column;gap:14px;">
+            <!-- Name + plus -->
+            <div>
+              <div class="input-plus-row">
+                <div class="input-wrap"><span class="input-placeholder">Tên sản phẩm...</span></div>
+                <div class="plus-btn disabled">+</div>
+              </div>
+            </div>
+            <!-- Price label -->
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Giá bán</div>
+              <div class="money-input">
+                <span class="money-placeholder">Nhập giá...</span>
+                <span class="currency-suffix">₫</span>
+              </div>
+            </div>
+            <!-- Unit chips -->
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Đơn vị</div>
+              <div class="unit-chips-row">
+                <div class="unit-chip active">Cái</div>
+                <div class="unit-chip">Hộp</div>
+                <div class="unit-chip">Chai</div>
+                <div class="unit-chip">Túi</div>
+                <div class="unit-chip">Ly</div>
+                <div class="unit-chip">Phần</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="footer-row">
+            <div class="btn-skip">Bỏ qua</div>
+            <div class="btn-primary">Tiếp tục</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Products added + form being filled -->
+  <div class="phone-wrap">
+    <div class="phone-label">Products added — typing new</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="padding:8px 20px 0;">
+          <div class="ob-header">
+            <div class="ob-back">←</div>
+            <div class="ob-progress">
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg"></div>
+              <div class="ob-seg"></div>
+            </div>
+            <span class="ob-counter">2 / 4</span>
+          </div>
+          <div class="screen-title" style="margin-top:14px;">Sản phẩm đang bán</div>
+          <div class="hint-rows" style="margin-bottom:0;">
+            <div class="hint-row"><span class="hint-icon">⚡</span><span class="hint-text">Nhấn chọn gợi ý hoặc tự gõ tên sản phẩm của bạn</span></div>
+            <div class="hint-row"><span class="hint-icon">🏷️</span><span class="hint-text">Thêm giá và đơn vị — hoặc để trống điền sau cũng được</span></div>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <!-- Committed chips -->
+          <div class="committed-chips">
+            <div class="item-chip">Cà phê đen: 25.000₫ <span class="chip-x">✕</span></div>
+            <div class="item-chip">Bạc xỉu: 30.000₫ <span class="chip-x">✕</span></div>
+            <div class="item-chip">Trà sữa: 45.000₫ <span class="chip-x">✕</span></div>
+          </div>
+          <!-- Suggestion chips -->
+          <div style="margin-top:4px;">
+            <div class="sug-label">Phổ biến</div>
+            <div class="sug-chips-row">
+              <div class="sug-chip on">✓ Cà phê đen</div>
+              <div class="sug-chip on">✓ Bạc xỉu</div>
+              <div class="sug-chip">🍵 Trà đào</div>
+              <div class="sug-chip">🥤 Sinh tố</div>
+            </div>
+          </div>
+          <!-- Form -->
+          <div style="padding:10px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <div class="input-plus-row">
+                <div class="input-wrap focused">
+                  <span class="input-text">Cà phê muối</span>
+                  <span class="clear-btn">✕</span>
+                </div>
+                <div class="plus-btn">+</div>
+              </div>
+              <!-- Add hint -->
+              <div class="add-hint">
+                <span style="font-size:11px;color:var(--primary);">↩</span>
+                <span class="add-hint-text">+ Thêm sản phẩm "Cà phê muối"</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Giá bán</div>
+              <div class="money-input focused">
+                <span class="money-value">35.000</span>
+                <span class="currency-suffix">₫</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Đơn vị</div>
+              <div class="unit-chips-row">
+                <div class="unit-chip active">Ly</div>
+                <div class="unit-chip">Cái</div>
+                <div class="unit-chip">Hộp</div>
+                <div class="unit-chip">Chai</div>
+                <div class="unit-chip">Phần</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="footer-row">
+            <div class="btn-skip">Bỏ qua</div>
+            <div class="btn-primary">Tiếp tục <span class="btn-count">3</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Dynamic price product -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dynamic price (gold)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="padding:8px 20px 0;">
+          <div class="ob-header">
+            <div class="ob-back">←</div>
+            <div class="ob-progress">
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg"></div>
+              <div class="ob-seg"></div>
+            </div>
+            <span class="ob-counter">2 / 4</span>
+          </div>
+          <div class="screen-title" style="margin-top:14px;">Sản phẩm đang bán</div>
+          <div class="hint-rows" style="margin-bottom:0;">
+            <div class="hint-row"><span class="hint-icon">⚡</span><span class="hint-text">Nhấn chọn gợi ý hoặc tự gõ tên sản phẩm của bạn</span></div>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <div class="committed-chips">
+            <div class="item-chip">Vàng 9999 · ⚡ <span class="chip-x">✕</span></div>
+          </div>
+          <div style="margin-top:4px;">
+            <div class="sug-label">Phổ biến</div>
+            <div class="sug-chips-row">
+              <div class="sug-chip on">✓ Vàng 9999</div>
+              <div class="sug-chip">💎 Nhẫn vàng</div>
+              <div class="sug-chip">📿 Dây chuyền</div>
+              <div class="sug-chip">🔮 Vàng miếng</div>
+            </div>
+          </div>
+          <div style="padding:10px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <div class="input-plus-row">
+                <div class="input-wrap focused">
+                  <span class="input-text">Nhẫn vàng 18K</span>
+                  <span class="clear-btn">✕</span>
+                </div>
+                <div class="plus-btn">+</div>
+              </div>
+              <div class="add-hint">
+                <span style="font-size:11px;color:var(--primary);">↩</span>
+                <span class="add-hint-text">+ Thêm sản phẩm "Nhẫn vàng 18K" · ⚡ Theo giá vàng</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Giá bán</div>
+              <div class="dynamic-banner">
+                <span style="font-size:13px;">🔄</span>
+                <span class="dynamic-text">Giá tự động theo thị trường</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Đơn vị</div>
+              <div class="unit-chips-row">
+                <div class="unit-chip active">Chỉ</div>
+                <div class="unit-chip">Cái</div>
+                <div class="unit-chip">Gram</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="footer-row">
+            <div class="btn-skip">Bỏ qua</div>
+            <div class="btn-primary">Tiếp tục <span class="btn-count">1</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════ SCREEN 3: Step3Screen ══════════════════════ -->
+<div class="section-title">Screen 3 — Step3Screen · Chi phí hàng tháng · step=2 · "3 / 4"</div>
+<div class="phone-row">
+
+  <!-- State 1: Empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty — suggestions</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="padding:8px 20px 0;">
+          <div class="ob-header">
+            <div class="ob-back">←</div>
+            <div class="ob-progress">
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg"></div>
+            </div>
+            <span class="ob-counter">3 / 4</span>
+          </div>
+          <div class="screen-title" style="margin-top:14px;">Chi phí hàng tháng</div>
+          <div class="hint-rows" style="margin-bottom:0;">
+            <div class="hint-row"><span class="hint-icon">⚡</span><span class="hint-text">Nhấn gợi ý hoặc gõ tìm kiếm để thêm chi phí</span></div>
+            <div class="hint-row"><span class="hint-icon">💰</span><span class="hint-text">Nhập số tiền ước tính mỗi tháng cho từng mục</span></div>
+            <div class="hint-row"><span class="hint-icon">📈</span><span class="hint-text">Giúp TappyPOS so sánh doanh thu và chi phí hàng tháng</span></div>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <div style="margin-top:12px;">
+            <div class="sug-label">Phổ biến</div>
+            <div class="sug-chips-row">
+              <div class="sug-chip">🏠 Tiền thuê</div>
+              <div class="sug-chip">⚡ Tiền điện</div>
+              <div class="sug-chip">💧 Tiền nước</div>
+              <div class="sug-chip">📶 Internet</div>
+              <div class="sug-chip">👷 Lương NV</div>
+            </div>
+          </div>
+          <div style="padding:10px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <div class="input-plus-row">
+                <div class="input-wrap"><span class="input-placeholder">Tên chi phí...</span></div>
+                <div class="plus-btn disabled">+</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Số tiền mỗi tháng</div>
+              <div style="display:flex;gap:8px;">
+                <div class="money-input" style="flex:1;">
+                  <span class="money-placeholder">Nhập số tiền...</span>
+                  <span class="currency-suffix">₫</span>
+                </div>
+                <div class="cal-btn">
+                  <span class="cal-icon">📅</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Loại chi phí</div>
+              <div class="type-chips-row">
+                <div class="type-chip active">Cố định</div>
+                <div class="type-chip">Phát sinh</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="footer-row">
+            <div class="btn-skip">Bỏ qua</div>
+            <div class="btn-primary">Tiếp tục</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Expense suggestion tapped, form filled -->
+  <div class="phone-wrap">
+    <div class="phone-label">Expense filling — with calendar</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="padding:8px 20px 0;">
+          <div class="ob-header">
+            <div class="ob-back">←</div>
+            <div class="ob-progress">
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg"></div>
+            </div>
+            <span class="ob-counter">3 / 4</span>
+          </div>
+          <div class="screen-title" style="margin-top:14px;">Chi phí hàng tháng</div>
+          <div class="hint-rows" style="margin-bottom:0;">
+            <div class="hint-row"><span class="hint-icon">⚡</span><span class="hint-text">Nhấn gợi ý hoặc gõ tìm kiếm để thêm chi phí</span></div>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <div style="margin-top:10px;">
+            <div class="sug-label">Phổ biến</div>
+            <div class="sug-chips-row">
+              <div class="sug-chip on">✓ Tiền thuê</div>
+              <div class="sug-chip">⚡ Tiền điện</div>
+              <div class="sug-chip">💧 Tiền nước</div>
+              <div class="sug-chip">📶 Internet</div>
+            </div>
+          </div>
+          <div style="padding:10px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <div class="input-plus-row">
+                <div class="input-wrap focused">
+                  <span class="input-text">Tiền thuê mặt bằng</span>
+                  <span class="clear-btn">✕</span>
+                </div>
+                <div class="plus-btn">+</div>
+              </div>
+              <div class="add-hint">
+                <span style="font-size:11px;color:var(--primary);">↩</span>
+                <span class="add-hint-text">+ Thêm chi phí "Tiền thuê mặt bằng" · 5.000.000₫ · Cố định · ngày 1</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Số tiền mỗi tháng</div>
+              <div style="display:flex;gap:8px;">
+                <div class="money-input focused" style="flex:1;">
+                  <span class="money-value">5.000.000</span>
+                  <span class="currency-suffix">₫</span>
+                </div>
+                <div class="cal-btn active">
+                  <span class="cal-icon">📅</span>
+                  <span class="cal-day">1</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Loại chi phí</div>
+              <div class="type-chips-row">
+                <div class="type-chip active">Cố định</div>
+                <div class="type-chip">Phát sinh</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="footer-row">
+            <div class="btn-skip">Bỏ qua</div>
+            <div class="btn-primary">Tiếp tục</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Multiple expenses added -->
+  <div class="phone-wrap">
+    <div class="phone-label">Multiple expenses added</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="padding:8px 20px 0;">
+          <div class="ob-header">
+            <div class="ob-back">←</div>
+            <div class="ob-progress">
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg filled"></div>
+              <div class="ob-seg"></div>
+            </div>
+            <span class="ob-counter">3 / 4</span>
+          </div>
+          <div class="screen-title" style="margin-top:14px;">Chi phí hàng tháng</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding-bottom:80px;">
+          <!-- Committed chips -->
+          <div class="committed-chips" style="margin-top:8px;">
+            <div class="item-chip">🏠 Tiền thuê: 5.000.000₫ <span class="chip-x">✕</span></div>
+            <div class="item-chip">⚡ Tiền điện: 800.000₫ <span class="chip-x">✕</span></div>
+            <div class="item-chip">💧 Tiền nước: 200.000₫ <span class="chip-x">✕</span></div>
+            <div class="item-chip">👷 Lương nhân viên: 6.000.000₫ <span class="chip-x">✕</span></div>
+          </div>
+          <div style="margin-top:4px;">
+            <div class="sug-label">Phổ biến</div>
+            <div class="sug-chips-row">
+              <div class="sug-chip on">✓ Tiền thuê</div>
+              <div class="sug-chip on">✓ Tiền điện</div>
+              <div class="sug-chip">📶 Internet</div>
+              <div class="sug-chip">📱 Điện thoại</div>
+            </div>
+          </div>
+          <div style="padding:10px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div class="input-plus-row">
+              <div class="input-wrap"><span class="input-placeholder">Tên chi phí...</span></div>
+              <div class="plus-btn disabled">+</div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Số tiền mỗi tháng</div>
+              <div style="display:flex;gap:8px;">
+                <div class="money-input" style="flex:1;"><span class="money-placeholder">Nhập số tiền...</span><span class="currency-suffix">₫</span></div>
+                <div class="cal-btn"><span class="cal-icon">📅</span></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Loại chi phí</div>
+              <div class="type-chips-row">
+                <div class="type-chip active">Cố định</div>
+                <div class="type-chip">Phát sinh</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="footer-row">
+            <div class="btn-skip">Bỏ qua</div>
+            <div class="btn-primary">Tiếp tục <span class="btn-count">4</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════ SCREEN 4: Step4Screen ══════════════════════ -->
+<div class="section-title">Screen 4 — Step4Screen · Xem lại thông tin · step=3 · "4 / 4"</div>
+<div class="phone-row">
+
+  <!-- State 1: Full review -->
+  <div class="phone-wrap">
+    <div class="phone-label">Full review — ready to submit</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:90px;">
+          <div style="padding:8px 24px 0;">
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+              </div>
+              <span class="ob-counter">4 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:16px;">Xem lại thông tin</div>
+            <div class="hint-rows">
+              <div class="hint-row"><span class="hint-icon">👁️</span><span class="hint-text">Kiểm tra lại thông tin trước khi tạo cửa hàng</span></div>
+              <div class="hint-row"><span class="hint-icon">✏️</span><span class="hint-text">Nhấn Sửa ở từng mục để quay lại và chỉnh sửa</span></div>
+              <div class="hint-row"><span class="hint-icon">✅</span><span class="hint-text">Tất cả đều có thể cập nhật sau khi cửa hàng đã tạo</span></div>
+            </div>
+
+            <!-- Shop type -->
+            <div class="review-card">
+              <div class="review-card-header">
+                <span class="review-section-label">Loại hình</span>
+                <span class="edit-link">Sửa</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;color:#374151;">☕&nbsp; Quán cà phê</div>
+            </div>
+
+            <!-- Shop info -->
+            <div class="review-card">
+              <div class="review-card-header">
+                <span class="review-section-label">Thông tin cửa hàng</span>
+                <span class="edit-link">Sửa</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">🏪</span>
+                <span class="info-label">Tên cửa hàng</span>
+                <span class="info-value">Cà phê Bình Minh</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">👤</span>
+                <span class="info-label">Biệt danh</span>
+                <span class="info-value">Hoa</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">👤</span>
+                <span class="info-label">Họ và tên</span>
+                <span class="info-value">Nguyễn Thị Hoa</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">📍</span>
+                <span class="info-label">Địa chỉ</span>
+                <span class="info-value">123 Nguyễn Trãi, Q.1</span>
+              </div>
+            </div>
+
+            <!-- Products -->
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span class="review-section-label">Sản phẩm (3 mục)</span>
+                <span class="edit-link">Sửa danh sách</span>
+              </div>
+              <div class="review-list">
+                <div class="review-row">
+                  <div class="review-row-info">
+                    <div class="review-row-name">Cà phê đen</div>
+                  </div>
+                  <span class="review-row-price">25.000₫</span>
+                  <span class="review-row-unit">/ly</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+                <div class="review-row">
+                  <div class="review-row-info">
+                    <div class="review-row-name">Bạc xỉu</div>
+                  </div>
+                  <span class="review-row-price">30.000₫</span>
+                  <span class="review-row-unit">/ly</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+                <div class="review-row">
+                  <div class="review-row-info">
+                    <div class="review-row-name">Trà sữa</div>
+                  </div>
+                  <span class="review-row-price">45.000₫</span>
+                  <span class="review-row-unit">/ly</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expenses -->
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span class="review-section-label">Chi phí dự kiến (3 mục)</span>
+                <span class="edit-link">Sửa danh sách</span>
+              </div>
+              <div class="review-list">
+                <div class="review-row">
+                  <span class="review-row-emoji">🏠</span>
+                  <div class="review-row-info">
+                    <div class="review-row-name">Tiền thuê mặt bằng</div>
+                    <div class="review-row-sub"><span class="badge-fixed">Cố định</span> · ngày 1</div>
+                  </div>
+                  <span class="review-row-price">5.000.000₫</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-row-emoji">⚡</span>
+                  <div class="review-row-info">
+                    <div class="review-row-name">Tiền điện</div>
+                    <div class="review-row-sub"><span class="badge-variable">Phát sinh</span></div>
+                  </div>
+                  <span class="review-row-price">800.000₫</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+                <div class="review-row">
+                  <span class="review-row-emoji">👷</span>
+                  <div class="review-row-info">
+                    <div class="review-row-name">Lương nhân viên</div>
+                    <div class="review-row-sub"><span class="badge-fixed">Cố định</span> · ngày 25</div>
+                  </div>
+                  <span class="review-row-price">6.000.000₫</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary">🚀 Bắt đầu sử dụng</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Empty review (skipped all) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty review — skipped all</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:90px;">
+          <div style="padding:8px 24px 0;">
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+              </div>
+              <span class="ob-counter">4 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:16px;">Xem lại thông tin</div>
+            <div class="hint-rows">
+              <div class="hint-row"><span class="hint-icon">👁️</span><span class="hint-text">Kiểm tra lại thông tin trước khi tạo cửa hàng</span></div>
+              <div class="hint-row"><span class="hint-icon">✏️</span><span class="hint-text">Nhấn Sửa ở từng mục để quay lại và chỉnh sửa</span></div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-card-header">
+                <span class="review-section-label">Loại hình</span>
+                <span class="edit-link">Sửa</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;color:#374151;">🛒&nbsp; Tạp hóa</div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-card-header">
+                <span class="review-section-label">Thông tin cửa hàng</span>
+                <span class="edit-link">Sửa</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">🏪</span>
+                <span class="info-label">Tên cửa hàng</span>
+                <span class="info-value">Tạp hóa Bình Minh</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">👤</span>
+                <span class="info-label">Biệt danh</span>
+                <span class="info-value">Lan</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span class="review-section-label">Sản phẩm (0 mục)</span>
+                <span class="edit-link">Sửa danh sách</span>
+              </div>
+              <div class="empty-inner">
+                <span class="empty-text">Chưa chọn sản phẩm nào</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span class="review-section-label">Chi phí dự kiến (0 mục)</span>
+                <span class="edit-link">Sửa danh sách</span>
+              </div>
+              <div class="empty-inner">
+                <span class="empty-text">Chưa chọn chi phí nào</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary">🚀 Bắt đầu sử dụng</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Loading (submitting) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading — submitting</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen">
+        <div style="flex:1;overflow-y:auto;padding-bottom:90px;">
+          <div style="padding:8px 24px 0;">
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+              </div>
+              <span class="ob-counter">4 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:16px;">Xem lại thông tin</div>
+            <div class="hint-rows">
+              <div class="hint-row"><span class="hint-icon">👁️</span><span class="hint-text">Kiểm tra lại thông tin trước khi tạo cửa hàng</span></div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-card-header">
+                <span class="review-section-label">Loại hình</span>
+                <span class="edit-link">Sửa</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;color:#374151;">☕&nbsp; Quán cà phê</div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-card-header">
+                <span class="review-section-label">Thông tin cửa hàng</span>
+                <span class="edit-link">Sửa</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">🏪</span>
+                <span class="info-label">Tên cửa hàng</span>
+                <span class="info-value">Cà phê Bình Minh</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">👤</span>
+                <span class="info-label">Biệt danh</span>
+                <span class="info-value">Hoa</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span class="review-section-label">Sản phẩm (2 mục)</span>
+                <span class="edit-link">Sửa danh sách</span>
+              </div>
+              <div class="review-list">
+                <div class="review-row">
+                  <div class="review-row-info"><div class="review-row-name">Cà phê đen</div></div>
+                  <span class="review-row-price">25.000₫</span>
+                  <span class="review-row-unit">/ly</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+                <div class="review-row">
+                  <div class="review-row-info"><div class="review-row-name">Bạc xỉu</div></div>
+                  <span class="review-row-price">30.000₫</span>
+                  <span class="review-row-unit">/ly</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary" style="background:#e5e7eb;">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 4: Dark mode -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dark mode — full review</div>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><div class="status-right"><span>●●●</span><span>🔋</span></div></div>
+      <div class="screen" style="background:#111827;">
+        <div style="flex:1;overflow-y:auto;padding-bottom:90px;">
+          <div style="padding:8px 24px 0;">
+            <div class="ob-header">
+              <div class="ob-back">←</div>
+              <div class="ob-progress">
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+                <div class="ob-seg filled"></div>
+              </div>
+              <span class="ob-counter">4 / 4</span>
+            </div>
+            <div class="screen-title" style="margin-top:16px;">Xem lại thông tin</div>
+            <div class="hint-rows">
+              <div class="hint-row"><span class="hint-icon">👁️</span><span class="hint-text">Kiểm tra lại thông tin trước khi tạo cửa hàng</span></div>
+              <div class="hint-row"><span class="hint-icon">✏️</span><span class="hint-text">Nhấn Sửa ở từng mục để quay lại và chỉnh sửa</span></div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-card-header">
+                <span class="review-section-label">Loại hình</span>
+                <span class="edit-link">Sửa</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;color:#e5e7eb;">💅&nbsp; Tiệm nail</div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-card-header">
+                <span class="review-section-label">Thông tin cửa hàng</span>
+                <span class="edit-link">Sửa</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">🏪</span>
+                <span class="info-label">Tên cửa hàng</span>
+                <span class="info-value">Tiệm nail Linh</span>
+              </div>
+              <div class="info-row">
+                <span class="info-icon">👤</span>
+                <span class="info-label">Biệt danh</span>
+                <span class="info-value">Linh</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span class="review-section-label">Sản phẩm (2 mục)</span>
+                <span class="edit-link">Sửa danh sách</span>
+              </div>
+              <div class="review-list">
+                <div class="review-row">
+                  <div class="review-row-info"><div class="review-row-name">Sơn móng gel</div></div>
+                  <span class="review-row-price">150.000₫</span>
+                  <span class="review-row-unit">/lần</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+                <div class="review-row">
+                  <div class="review-row-info"><div class="review-row-name">Đắp bột acrylic</div></div>
+                  <span class="review-row-price">250.000₫</span>
+                  <span class="review-row-unit">/lần</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span class="review-section-label">Chi phí dự kiến (1 mục)</span>
+                <span class="edit-link">Sửa danh sách</span>
+              </div>
+              <div class="review-list">
+                <div class="review-row">
+                  <span class="review-row-emoji">🏠</span>
+                  <div class="review-row-info">
+                    <div class="review-row-name">Tiền thuê mặt bằng</div>
+                    <div class="review-row-sub"><span class="badge-fixed">Cố định</span></div>
+                  </div>
+                  <span class="review-row-price">4.000.000₫</span>
+                  <span class="review-row-x">✕</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="btn-primary">🚀 Bắt đầu sử dụng</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -26,10 +26,11 @@ const STRENGTH_COLORS = ['', '#ef4444', '#f59e0b', '#3b82f6', '#059669'];
 type Props = Omit<TextInputProps, 'value' | 'secureTextEntry'> & {
   value: string;
   showRules?: boolean;
+  showStrength?: boolean;
 };
 
 export const PasswordInput = forwardRef<TextInput, Props>(
-  ({ value, showRules = false, ...rest }, ref) => {
+  ({ value, showRules = false, showStrength = true, ...rest }, ref) => {
     const [show, setShow] = useState(false);
     const strength = value.length > 0 ? getStrength(value) : 0;
 
@@ -53,7 +54,7 @@ export const PasswordInput = forwardRef<TextInput, Props>(
           </TouchableOpacity>
         </View>
 
-        {value.length > 0 && (
+        {showStrength && value.length > 0 && (
           <View className="mt-2">
             <View className="flex-row gap-1 mb-1">
               {[1, 2, 3, 4].map((n) => (

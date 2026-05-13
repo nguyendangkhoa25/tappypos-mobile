@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1778544465660" clover="3.2.0">
+  <project timestamp="1778544465660" name="All files">
+    <metrics statements="456" coveredstatements="436" conditionals="333" coveredconditionals="300" methods="191" coveredmethods="179" elements="980" coveredelements="915" complexity="0" loc="456" ncloc="456" packages="5" files="34" classes="34"/>
+    <package name="components">
+      <metrics statements="138" coveredstatements="136" conditionals="125" coveredconditionals="119" methods="56" coveredmethods="53"/>
+      <file name="ClearableInput.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/ClearableInput.tsx">
+        <metrics statements="3" coveredstatements="3" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="1"/>
+        <line num="10" count="2" type="stmt"/>
+        <line num="12" count="12" type="stmt"/>
+        <line num="32" count="2" type="stmt"/>
+      </file>
+      <file name="DayPickerModal.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/DayPickerModal.tsx">
+        <metrics statements="6" coveredstatements="6" conditionals="9" coveredconditionals="9" methods="5" coveredmethods="5"/>
+        <line num="3" count="31" type="stmt"/>
+        <line num="16" count="9" type="stmt"/>
+        <line num="29" count="279" type="stmt"/>
+        <line num="30" count="279" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="47" count="1" type="stmt"/>
+      </file>
+      <file name="EmptyState.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/EmptyState.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="6" coveredconditionals="6" methods="1" coveredmethods="1"/>
+        <line num="12" count="8" type="stmt"/>
+      </file>
+      <file name="ErrorState.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/ErrorState.tsx">
+        <metrics statements="2" coveredstatements="2" conditionals="4" coveredconditionals="4" methods="1" coveredmethods="1"/>
+        <line num="10" count="7" type="stmt"/>
+        <line num="11" count="7" type="stmt"/>
+      </file>
+      <file name="FloatingLabelInput.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/FloatingLabelInput.tsx">
+        <metrics statements="13" coveredstatements="13" conditionals="14" coveredconditionals="13" methods="5" coveredmethods="5"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="13" count="9" type="stmt"/>
+        <line num="14" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="9" type="stmt"/>
+        <line num="19" count="2" type="stmt"/>
+        <line num="26" count="9" type="stmt"/>
+        <line num="27" count="9" type="stmt"/>
+        <line num="28" count="9" type="stmt"/>
+        <line num="33" count="9" type="stmt"/>
+        <line num="71" count="1" type="stmt"/>
+        <line num="72" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="89" count="1" type="stmt"/>
+      </file>
+      <file name="FriendlyAlert.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/FriendlyAlert.tsx">
+        <metrics statements="7" coveredstatements="6" conditionals="8" coveredconditionals="8" methods="4" coveredmethods="3"/>
+        <line num="5" count="8" type="stmt"/>
+        <line num="7" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="9" count="5" type="stmt"/>
+        <line num="17" count="0" type="stmt"/>
+        <line num="30" count="6" type="stmt"/>
+        <line num="36" count="2" type="stmt"/>
+        <line num="37" count="2" type="stmt"/>
+      </file>
+      <file name="LanguageChip.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/LanguageChip.tsx">
+        <metrics statements="17" coveredstatements="17" conditionals="2" coveredconditionals="1" methods="4" coveredmethods="4"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="10" count="5" type="stmt"/>
+        <line num="11" count="5" type="stmt"/>
+        <line num="12" count="5" type="stmt"/>
+        <line num="14" count="5" type="stmt"/>
+        <line num="19" count="5" type="stmt"/>
+        <line num="20" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="33" count="5" type="stmt"/>
+      </file>
+      <file name="MoneyInput.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/MoneyInput.tsx">
+        <metrics statements="9" coveredstatements="9" conditionals="8" coveredconditionals="7" methods="2" coveredmethods="2"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="14" count="6" type="stmt"/>
+        <line num="15" count="6" type="stmt"/>
+        <line num="16" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="6" type="stmt"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="23" count="6" type="stmt"/>
+        <line num="52" count="1" type="stmt"/>
+      </file>
+      <file name="PasswordInput.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/PasswordInput.tsx">
+        <metrics statements="22" coveredstatements="22" conditionals="25" coveredconditionals="23" methods="12" coveredmethods="12"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="11" type="stmt"/>
+        <line num="9" count="11" type="stmt"/>
+        <line num="10" count="11" type="stmt"/>
+        <line num="11" count="11" type="stmt"/>
+        <line num="12" count="11" type="stmt"/>
+        <line num="16" count="50" type="stmt"/>
+        <line num="17" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="19" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="34" count="12" type="stmt"/>
+        <line num="35" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="37" count="12" type="stmt"/>
+        <line num="48" count="3" type="stmt"/>
+        <line num="61" count="40" type="stmt"/>
+        <line num="77" count="5" type="stmt"/>
+        <line num="78" count="5" type="stmt"/>
+        <line num="98" count="1" type="stmt"/>
+      </file>
+      <file name="PhoneInput.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/PhoneInput.tsx">
+        <metrics statements="11" coveredstatements="11" conditionals="4" coveredconditionals="4" methods="5" coveredmethods="5"/>
+        <line num="13" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="14" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="19" count="10" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="24" count="5" type="stmt"/>
+        <line num="26" count="5" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
+        <line num="30" count="5" type="stmt"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="43" count="1" type="stmt"/>
+      </file>
+      <file name="PinPad.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/PinPad.tsx">
+        <metrics statements="23" coveredstatements="22" conditionals="26" coveredconditionals="25" methods="7" coveredmethods="6"/>
+        <line num="15" count="1" type="stmt"/>
+        <line num="23" count="9" type="stmt"/>
+        <line num="25" count="9" type="stmt"/>
+        <line num="26" count="0" type="stmt"/>
+        <line num="34" count="9" type="stmt"/>
+        <line num="35" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="36" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="39" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="41" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="43" count="1" type="stmt"/>
+        <line num="48" count="9" type="stmt"/>
+        <line num="50" count="9" type="stmt"/>
+        <line num="57" count="54" type="stmt"/>
+        <line num="71" count="28" type="stmt"/>
+        <line num="73" count="84" type="cond" truecount="4" falsecount="0"/>
+        <line num="74" count="6" type="stmt"/>
+        <line num="76" count="78" type="cond" truecount="2" falsecount="0"/>
+        <line num="77" count="78" type="stmt"/>
+        <line num="83" count="4" type="stmt"/>
+      </file>
+      <file name="Skeleton.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/Skeleton.tsx">
+        <metrics statements="7" coveredstatements="7" conditionals="5" coveredconditionals="5" methods="4" coveredmethods="4"/>
+        <line num="22" count="5" type="stmt"/>
+        <line num="24" count="5" type="stmt"/>
+        <line num="25" count="5" type="stmt"/>
+        <line num="30" count="5" type="stmt"/>
+        <line num="33" count="5" type="stmt"/>
+        <line num="34" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="5" type="stmt"/>
+      </file>
+      <file name="UndoToast.tsx" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/components/UndoToast.tsx">
+        <metrics statements="17" coveredstatements="17" conditionals="10" coveredconditionals="10" methods="4" coveredmethods="4"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="9" count="6" type="stmt"/>
+        <line num="10" count="6" type="stmt"/>
+        <line num="11" count="6" type="stmt"/>
+        <line num="12" count="6" type="stmt"/>
+        <line num="14" count="6" type="stmt"/>
+        <line num="15" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="4" type="stmt"/>
+        <line num="17" count="4" type="stmt"/>
+        <line num="19" count="2" type="stmt"/>
+        <line num="20" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="6" type="stmt"/>
+        <line num="23" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="27" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="29" count="4" type="stmt"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="hooks">
+      <metrics statements="53" coveredstatements="52" conditionals="24" coveredconditionals="18" methods="28" coveredmethods="26"/>
+      <file name="useCurrency.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/hooks/useCurrency.ts">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="4" type="stmt"/>
+      </file>
+      <file name="useCycleProgress.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/hooks/useCycleProgress.ts">
+        <metrics statements="18" coveredstatements="18" conditionals="10" coveredconditionals="8" methods="3" coveredmethods="3"/>
+        <line num="14" count="9" type="stmt"/>
+        <line num="15" count="9" type="cond" truecount="1" falsecount="1"/>
+        <line num="17" count="9" type="stmt"/>
+        <line num="18" count="9" type="stmt"/>
+        <line num="20" count="9" type="stmt"/>
+        <line num="24" count="9" type="cond" truecount="4" falsecount="0"/>
+        <line num="25" count="4" type="stmt"/>
+        <line num="28" count="5" type="stmt"/>
+        <line num="29" count="5" type="stmt"/>
+        <line num="31" count="5" type="stmt"/>
+        <line num="32" count="10" type="stmt"/>
+        <line num="33" count="5" type="stmt"/>
+        <line num="35" count="5" type="stmt"/>
+        <line num="36" count="5" type="stmt"/>
+        <line num="37" count="5" type="cond" truecount="1" falsecount="1"/>
+        <line num="39" count="5" type="stmt"/>
+        <line num="40" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="42" count="5" type="stmt"/>
+      </file>
+      <file name="useFeature.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/hooks/useFeature.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="11" coveredmethods="11"/>
+        <line num="5" count="12" type="stmt"/>
+        <line num="10" count="3" type="stmt"/>
+        <line num="11" count="2" type="stmt"/>
+        <line num="16" count="12" type="stmt"/>
+        <line num="21" count="9" type="stmt"/>
+      </file>
+      <file name="useLanguage.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/hooks/useLanguage.ts">
+        <metrics statements="16" coveredstatements="15" conditionals="10" coveredconditionals="6" methods="6" coveredmethods="5"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="13" count="4" type="stmt"/>
+        <line num="17" count="4" type="stmt"/>
+        <line num="19" count="4" type="cond" truecount="0" falsecount="2"/>
+        <line num="20" count="4" type="stmt"/>
+        <line num="23" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="26" count="1" type="cond" truecount="3" falsecount="1"/>
+        <line num="27" count="0" type="stmt"/>
+        <line num="32" count="4" type="stmt"/>
+        <line num="35" count="4" type="stmt"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="40" count="4" type="stmt"/>
+      </file>
+      <file name="useTourGuide.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/hooks/useTourGuide.ts">
+        <metrics statements="13" coveredstatements="13" conditionals="4" coveredconditionals="4" methods="7" coveredmethods="6"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="15" count="7" type="stmt"/>
+        <line num="17" count="7" type="stmt"/>
+        <line num="18" count="4" type="stmt"/>
+        <line num="19" count="4" type="stmt"/>
+        <line num="20" count="4" type="cond" truecount="4" falsecount="0"/>
+        <line num="21" count="3" type="stmt"/>
+        <line num="22" count="3" type="stmt"/>
+        <line num="25" count="4" type="stmt"/>
+        <line num="28" count="7" type="stmt"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="30" count="1" type="stmt"/>
+        <line num="33" count="7" type="stmt"/>
+      </file>
+    </package>
+    <package name="services">
+      <metrics statements="3" coveredstatements="3" conditionals="3" coveredconditionals="2" methods="2" coveredmethods="2"/>
+      <file name="authSession.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/services/authSession.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="3" coveredconditionals="2" methods="2" coveredmethods="2"/>
+        <line num="5" count="3" type="stmt"/>
+        <line num="8" count="7" type="stmt"/>
+        <line num="12" count="4" type="cond" truecount="1" falsecount="1"/>
+      </file>
+    </package>
+    <package name="store">
+      <metrics statements="139" coveredstatements="125" conditionals="70" coveredconditionals="59" methods="81" coveredmethods="75"/>
+      <file name="alertStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/alertStore.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="1" coveredconditionals="1" methods="3" coveredmethods="3"/>
+        <line num="18" count="2" type="stmt"/>
+        <line num="25" count="10" type="stmt"/>
+        <line num="27" count="4" type="stmt"/>
+      </file>
+      <file name="authStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/authStore.ts">
+        <metrics statements="37" coveredstatements="26" conditionals="24" coveredconditionals="19" methods="10" coveredmethods="6"/>
+        <line num="24" count="2" type="stmt"/>
+        <line num="34" count="5" type="stmt"/>
+        <line num="35" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="37" count="5" type="stmt"/>
+        <line num="38" count="5" type="stmt"/>
+        <line num="40" count="5" type="stmt"/>
+        <line num="41" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="42" count="2" type="stmt"/>
+        <line num="46" count="3" type="stmt"/>
+        <line num="47" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="50" count="3" type="stmt"/>
+        <line num="54" count="5" type="stmt"/>
+        <line num="55" count="5" type="stmt"/>
+        <line num="59" count="0" type="stmt"/>
+        <line num="60" count="0" type="stmt"/>
+        <line num="64" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="65" count="1" type="stmt"/>
+        <line num="67" count="1" type="stmt"/>
+        <line num="69" count="2" type="stmt"/>
+        <line num="73" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="74" count="0" type="stmt"/>
+        <line num="76" count="0" type="stmt"/>
+        <line num="78" count="0" type="stmt"/>
+        <line num="84" count="4" type="stmt"/>
+        <line num="88" count="4" type="stmt"/>
+        <line num="91" count="1" type="stmt"/>
+        <line num="94" count="4" type="stmt"/>
+        <line num="102" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="103" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="105" count="4" type="stmt"/>
+        <line num="116" count="2" type="stmt"/>
+        <line num="117" count="0" type="stmt"/>
+        <line num="118" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="119" count="0" type="stmt"/>
+        <line num="120" count="0" type="stmt"/>
+        <line num="122" count="0" type="stmt"/>
+      </file>
+      <file name="cartStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/cartStore.ts">
+        <metrics statements="18" coveredstatements="18" conditionals="12" coveredconditionals="9" methods="19" coveredmethods="19"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="32" count="18" type="stmt"/>
+        <line num="33" count="18" type="stmt"/>
+        <line num="34" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="37" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="41" count="17" type="cond" truecount="1" falsecount="1"/>
+        <line num="45" count="4" type="stmt"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="49" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="53" count="3" type="stmt"/>
+        <line num="56" count="1" type="stmt"/>
+        <line num="57" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="60" count="6" type="stmt"/>
+        <line num="62" count="1" type="stmt"/>
+        <line num="65" count="4" type="stmt"/>
+        <line num="66" count="4" type="stmt"/>
+        <line num="67" count="4" type="stmt"/>
+      </file>
+      <file name="onboardingStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/onboardingStore.ts">
+        <metrics statements="18" coveredstatements="16" conditionals="4" coveredconditionals="2" methods="24" coveredmethods="22"/>
+        <line num="43" count="1" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="53" count="1" type="stmt"/>
+        <line num="55" count="2" type="stmt"/>
+        <line num="56" count="1" type="stmt"/>
+        <line num="57" count="0" type="stmt"/>
+        <line num="59" count="7" type="stmt"/>
+        <line num="61" count="2" type="stmt"/>
+        <line num="63" count="1" type="stmt"/>
+        <line num="66" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="70" count="0" type="stmt"/>
+        <line num="72" count="3" type="stmt"/>
+        <line num="74" count="1" type="stmt"/>
+        <line num="76" count="1" type="stmt"/>
+        <line num="78" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="81" count="2" type="stmt"/>
+        <line num="82" count="1" type="stmt"/>
+        <line num="86" count="1" type="stmt"/>
+      </file>
+      <file name="privacyStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/privacyStore.ts">
+        <metrics statements="6" coveredstatements="6" conditionals="2" coveredconditionals="2" methods="3" coveredmethods="3"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="3" type="stmt"/>
+        <line num="20" count="3" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
+      </file>
+      <file name="reportStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/reportStore.ts">
+        <metrics statements="22" coveredstatements="21" conditionals="10" coveredconditionals="9" methods="7" coveredmethods="7"/>
+        <line num="20" count="5" type="stmt"/>
+        <line num="24" count="5" type="stmt"/>
+        <line num="25" count="5" type="stmt"/>
+        <line num="26" count="5" type="cond" truecount="4" falsecount="1"/>
+        <line num="28" count="2" type="stmt"/>
+        <line num="29" count="2" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="43" count="1" type="stmt"/>
+        <line num="44" count="1" type="stmt"/>
+        <line num="47" count="0" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="59" count="5" type="cond" truecount="5" falsecount="0"/>
+        <line num="60" count="5" type="stmt"/>
+        <line num="63" count="3" type="stmt"/>
+        <line num="64" count="3" type="stmt"/>
+        <line num="65" count="1" type="stmt"/>
+      </file>
+      <file name="sellingStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/sellingStore.ts">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+      </file>
+      <file name="themeStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/themeStore.ts">
+        <metrics statements="6" coveredstatements="6" conditionals="5" coveredconditionals="5" methods="3" coveredmethods="3"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="16" count="5" type="stmt"/>
+        <line num="17" count="5" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
+        <line num="22" count="3" type="cond" truecount="5" falsecount="0"/>
+        <line num="23" count="1" type="stmt"/>
+      </file>
+      <file name="toastStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/toastStore.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="11" count="2" type="stmt"/>
+        <line num="16" count="9" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+      </file>
+      <file name="userStore.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/store/userStore.ts">
+        <metrics statements="24" coveredstatements="24" conditionals="12" coveredconditionals="12" methods="7" coveredmethods="7"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="37" count="3" type="stmt"/>
+        <line num="38" count="3" type="stmt"/>
+        <line num="39" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="40" count="2" type="stmt"/>
+        <line num="41" count="2" type="stmt"/>
+        <line num="43" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="44" count="2" type="stmt"/>
+        <line num="45" count="2" type="stmt"/>
+        <line num="47" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="49" count="2" type="stmt"/>
+        <line num="51" count="3" type="stmt"/>
+        <line num="52" count="3" type="stmt"/>
+        <line num="56" count="2" type="stmt"/>
+        <line num="61" count="2" type="stmt"/>
+        <line num="69" count="2" type="stmt"/>
+        <line num="74" count="2" type="stmt"/>
+      </file>
+    </package>
+    <package name="utils">
+      <metrics statements="123" coveredstatements="120" conditionals="111" coveredconditionals="102" methods="24" coveredmethods="23"/>
+      <file name="constants.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/utils/constants.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="23" count="1" type="stmt"/>
+      </file>
+      <file name="featureFlags.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/utils/featureFlags.ts">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="5" count="4" type="stmt"/>
+        <line num="8" count="4" type="stmt"/>
+      </file>
+      <file name="format.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/utils/format.ts">
+        <metrics statements="75" coveredstatements="73" conditionals="78" coveredconditionals="72" methods="13" coveredmethods="13"/>
+        <line num="2" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="3" count="5" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="8" count="2" type="stmt"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="27" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="28" count="2" type="stmt"/>
+        <line num="33" count="4" type="stmt"/>
+        <line num="36" count="8" type="stmt"/>
+        <line num="37" count="8" type="stmt"/>
+        <line num="38" count="8" type="cond" truecount="6" falsecount="0"/>
+        <line num="39" count="3" type="cond" truecount="5" falsecount="1"/>
+        <line num="43" count="26" type="cond" truecount="2" falsecount="0"/>
+        <line num="44" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="45" count="7" type="stmt"/>
+        <line num="46" count="7" type="stmt"/>
+        <line num="47" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="53" count="25" type="cond" truecount="4" falsecount="0"/>
+        <line num="54" count="23" type="stmt"/>
+        <line num="55" count="23" type="stmt"/>
+        <line num="56" count="23" type="stmt"/>
+        <line num="57" count="23" type="stmt"/>
+        <line num="58" count="23" type="stmt"/>
+        <line num="59" count="23" type="stmt"/>
+        <line num="60" count="23" type="cond" truecount="2" falsecount="0"/>
+        <line num="61" count="23" type="cond" truecount="2" falsecount="0"/>
+        <line num="62" count="23" type="cond" truecount="2" falsecount="0"/>
+        <line num="63" count="23" type="cond" truecount="2" falsecount="0"/>
+        <line num="64" count="13" type="cond" truecount="3" falsecount="1"/>
+        <line num="65" count="13" type="stmt"/>
+        <line num="67" count="23" type="stmt"/>
+        <line num="68" count="23" type="stmt"/>
+        <line num="71" count="4" type="stmt"/>
+        <line num="76" count="4" type="stmt"/>
+        <line num="79" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="80" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="81" count="2" type="stmt"/>
+        <line num="82" count="2" type="stmt"/>
+        <line num="83" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="85" count="1" type="stmt"/>
+        <line num="86" count="1" type="stmt"/>
+        <line num="87" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="91" count="11" type="cond" truecount="3" falsecount="1"/>
+        <line num="92" count="11" type="stmt"/>
+        <line num="93" count="11" type="stmt"/>
+        <line num="94" count="11" type="stmt"/>
+        <line num="95" count="11" type="stmt"/>
+        <line num="96" count="11" type="stmt"/>
+        <line num="97" count="11" type="stmt"/>
+        <line num="98" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="99" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="100" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="101" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="102" count="11" type="stmt"/>
+        <line num="103" count="11" type="stmt"/>
+        <line num="108" count="36" type="cond" truecount="2" falsecount="0"/>
+        <line num="113" count="4" type="stmt"/>
+        <line num="116" count="5" type="cond" truecount="4" falsecount="2"/>
+        <line num="117" count="2" type="stmt"/>
+        <line num="118" count="1" type="stmt"/>
+        <line num="119" count="0" type="stmt"/>
+        <line num="120" count="0" type="stmt"/>
+        <line num="121" count="1" type="stmt"/>
+        <line num="122" count="1" type="stmt"/>
+        <line num="128" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="129" count="7" type="cond" truecount="4" falsecount="0"/>
+        <line num="130" count="7" type="stmt"/>
+        <line num="135" count="3" type="stmt"/>
+        <line num="136" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="137" count="1" type="stmt"/>
+        <line num="138" count="1" type="stmt"/>
+        <line num="140" count="2" type="stmt"/>
+      </file>
+      <file name="jwt.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/utils/jwt.ts">
+        <metrics statements="21" coveredstatements="21" conditionals="17" coveredconditionals="17" methods="5" coveredmethods="5"/>
+        <line num="12" count="32" type="stmt"/>
+        <line num="13" count="32" type="stmt"/>
+        <line num="14" count="32" type="cond" truecount="2" falsecount="0"/>
+        <line num="15" count="28" type="stmt"/>
+        <line num="16" count="28" type="stmt"/>
+        <line num="17" count="28" type="stmt"/>
+        <line num="18" count="26" type="stmt"/>
+        <line num="20" count="2" type="stmt"/>
+        <line num="25" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="29" count="10" type="stmt"/>
+        <line num="30" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="31" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="33" count="6" type="cond" truecount="5" falsecount="0"/>
+        <line num="34" count="1" type="stmt"/>
+        <line num="36" count="5" type="stmt"/>
+        <line num="40" count="4" type="stmt"/>
+        <line num="41" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="42" count="2" type="stmt"/>
+        <line num="46" count="3" type="stmt"/>
+        <line num="47" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="2" type="stmt"/>
+      </file>
+      <file name="notifications.ts" path="/Users/nguyendangkhoa/kim-ngan-phat/tappy-pos/mobile/src/utils/notifications.ts">
+        <metrics statements="20" coveredstatements="19" conditionals="16" coveredconditionals="13" methods="6" coveredmethods="5"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="0" type="stmt"/>
+        <line num="20" count="8" type="stmt"/>
+        <line num="21" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="4" type="stmt"/>
+        <line num="23" count="4" type="stmt"/>
+        <line num="34" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="35" count="3" type="stmt"/>
+        <line num="36" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="38" count="2" type="stmt"/>
+        <line num="39" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="41" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="55" count="2" type="stmt"/>
+        <line num="56" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="58" count="1" type="stmt"/>
+        <line num="59" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="62" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="80" count="1" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

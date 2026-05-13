@@ -15,12 +15,13 @@ export type RootStackParamList = {
 
 export type AuthStackParamList = {
   ShopId: undefined;
-  Login: undefined;
+  Login: { noTenantRequired?: boolean } | undefined;
   Register: undefined;
   PinLogin: undefined;
   PinSetup: { isFirstSetup: boolean; pendingAccessToken?: string; pendingRefreshToken?: string };
   ForgotPin: undefined;
   ForgotPassword: { prefillPhone?: string };
+  ForgotShopId: undefined;
 };
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> =
@@ -43,11 +44,10 @@ export type OnboardingScreenProps<T extends keyof OnboardingStackParamList> =
 
 export type AppTabParamList = {
   Home: undefined;
-  Selling: undefined;
+  Sell: undefined;
   Expenses: undefined;
   Report: undefined;
-  Tools: undefined;
-  Settings: undefined;
+  More: undefined;
 };
 
 export type AppTabScreenProps<T extends keyof AppTabParamList> =
@@ -84,6 +84,7 @@ export type SettingsStackParamList = {
   POSConfig: undefined;
   DefaultExpenses: undefined;
   Security: undefined;
+  PinSetup: { mode: 'setup' | 'change' };
   Display: undefined;
   TnC: undefined;
   ActivityLog: undefined;
@@ -93,6 +94,15 @@ export type SettingsStackParamList = {
   FeedbackHistory: undefined;
   Subscription: undefined;
   BankAccounts: undefined;
+  // Tools (moved from tab bar)
+  UtilitiesHub: undefined;
+  CurrencyConverter: undefined;
+  InterestCalculator: undefined;
+  LoanCalculator: undefined;
+  TaxCalculator: undefined;
+  BillSplitter: undefined;
+  BudgetRule: undefined;
+  Breakeven: undefined;
 };
 
 // ── Modal stacks (over tab bar, from overflow menu) ───────────────────────────
@@ -118,17 +128,27 @@ export type PrintTemplateStackParamList = {
 };
 
 export type GoldPriceStackParamList = {
-  GoldPrice: undefined;
+  GoldPriceMain: undefined;
 };
 
 export type ProductStackParamList = {
   ProductList: undefined;
   ProductDetail: { productId: string };
+  ProductEdit: { productId: string };
+  ProductCreate: undefined;
 };
 
 export type CategoryStackParamList = {
   CategoryList: undefined;
 };
+
+export type MyWorkStackParamList = {
+  MyWorkMain: undefined;
+  MyWorkHistory: undefined;
+};
+
+export type MyWorkScreenProps<T extends keyof MyWorkStackParamList> =
+  NativeStackScreenProps<MyWorkStackParamList, T>;
 
 export type ToolsStackParamList = {
   UtilitiesHub: undefined;
@@ -140,6 +160,25 @@ export type ToolsStackParamList = {
   BudgetRule: undefined;
   Breakeven: undefined;
 };
+
+// ── More tab (replaces Settings tab) ─────────────────────────────────────────
+
+export type MoreStackParamList = {
+  MoreMain: undefined;
+  Products: undefined;
+  Categories: undefined;
+  Customers: undefined;
+  Inventory: undefined;
+  Combos: undefined;
+  PrintTemplates: undefined;
+  GoldPrice: undefined;
+  MyWork: undefined;
+  Notifications: undefined;
+  Settings: undefined;
+};
+
+export type MoreScreenProps<T extends keyof MoreStackParamList> =
+  NativeStackScreenProps<MoreStackParamList, T>;
 
 // ── Convenience screen props ──────────────────────────────────────────────────
 

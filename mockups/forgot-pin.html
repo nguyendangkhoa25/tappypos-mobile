@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mockup — Quên mã PIN</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #e5e7eb;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 48px;
+      padding: 48px 32px;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      flex-wrap: wrap;
+    }
+
+    .phone-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .phone-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Phone frame */
+    .phone {
+      width: 375px;
+      min-height: 812px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1f2937,
+        0 0 0 12px #374151,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .notch {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 30px;
+      background: #1f2937;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+    .status-bar {
+      height: 44px;
+      padding: 14px 28px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .status-bar .time { font-size: 15px; font-weight: 600; color: #111; }
+    .status-bar .icons { display: flex; gap: 6px; align-items: center; }
+    .status-bar .icons svg { width: 16px; height: 16px; fill: #111; }
+
+    /* Screen */
+    .screen {
+      flex: 1;
+      padding: 16px 24px 32px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Back button */
+    .back-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px;
+      border: none; background: none;
+      cursor: pointer; color: #374151;
+      margin-left: -4px; margin-bottom: 24px;
+      flex-shrink: 0;
+    }
+    .back-btn svg { width: 24px; height: 24px; }
+
+    /* Header */
+    .title-area { margin-bottom: 36px; }
+    .title-area h1 {
+      font-size: 24px; font-weight: 700;
+      color: #111827; letter-spacing: -0.3px; margin-bottom: 6px;
+    }
+    .title-area p { font-size: 13px; color: #6b7280; line-height: 1.6; }
+
+    /* Step progress */
+    .step-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 32px;
+    }
+    .step-pip {
+      height: 4px; border-radius: 2px;
+      background: #e5e7eb;
+      flex: 1;
+    }
+    .step-pip.done { background: #4f46e5; }
+    .step-pip.active { background: #4f46e5; opacity: 0.5; }
+
+    /* Password field */
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: #374151; margin-bottom: 8px;
+    }
+    .input-wrap { position: relative; display: flex; align-items: center; }
+    .input-wrap input {
+      width: 100%;
+      padding: 14px 44px 14px 16px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 14px;
+      font-size: 15px; color: #111827;
+      background: #f9fafb; outline: none;
+      font-family: inherit;
+    }
+    .input-wrap input::placeholder { color: #9ca3af; }
+    .input-wrap input.focused { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); background: #fff; }
+    .input-icon {
+      position: absolute; right: 14px;
+      color: #9ca3af; display: flex; align-items: center; cursor: pointer;
+    }
+    .input-icon svg { width: 18px; height: 18px; }
+
+    /* Verify button */
+    .btn {
+      width: 100%; padding: 16px;
+      font-size: 16px; font-weight: 700;
+      border: none; border-radius: 16px;
+      cursor: pointer; letter-spacing: 0.01em;
+    }
+    .btn.primary { background: #4f46e5; color: #fff; }
+    .btn.primary:hover { opacity: 0.92; }
+    .btn.disabled { background: #e5e7eb; color: #9ca3af; cursor: default; }
+
+    /* Spinner */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+    .spinner-large {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(79,70,229,0.2);
+      border-top-color: #4f46e5;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 8px auto 40px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* PIN step sub-header */
+    .pin-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .pin-header h2 {
+      font-size: 20px; font-weight: 700;
+      color: #111827; margin-bottom: 6px;
+    }
+    .pin-header p { font-size: 13px; color: #6b7280; }
+
+    /* PIN dots */
+    .pin-dots {
+      display: flex; gap: 24px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+    .dot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #d1d5db;
+    }
+    .dot.filled { background: #4f46e5; }
+
+    /* Numpad */
+    .numpad {
+      display: flex; flex-direction: column; gap: 12px;
+      width: 288px;
+      align-self: center;
+    }
+    .numpad-row { display: flex; justify-content: space-between; }
+    .key {
+      width: 80px; height: 64px;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: none;
+    }
+    .key.num { background: #f3f4f6; font-size: 28px; font-weight: 500; color: #1f2937; }
+    .key.action { background: transparent; color: #6b7280; }
+    .key.action svg { width: 28px; height: 28px; }
+    .key.empty { background: transparent; pointer-events: none; }
+
+    /* Alert overlay */
+    .alert-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 50;
+      display: flex; align-items: center; justify-content: center;
+      padding: 32px;
+    }
+    .alert-box {
+      background: #fff; border-radius: 20px;
+      padding: 24px 20px 16px;
+      width: 100%; max-width: 300px;
+      text-align: center;
+    }
+    .alert-box h3 { font-size: 17px; font-weight: 700; color: #111827; margin-bottom: 8px; }
+    .alert-box p { font-size: 14px; color: #4b5563; line-height: 1.5; margin-bottom: 20px; }
+    .alert-actions { border-top: 1px solid #f3f4f6; padding-top: 12px; }
+    .alert-btn {
+      width: 100%; padding: 12px;
+      border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; background: #4f46e5; color: #fff;
+    }
+
+    /* ── Dark mode ── */
+    .phone.dark { background: #111827; }
+    .phone.dark .notch { background: #000; }
+    .phone.dark .status-bar .time { color: #f9fafb; }
+    .phone.dark .status-bar .icons svg { fill: #f9fafb; }
+    .phone.dark .back-btn { color: #d1d5db; }
+    .phone.dark .title-area h1 { color: #f9fafb; }
+    .phone.dark .title-area p { color: #9ca3af; }
+    .phone.dark .step-pip { background: #374151; }
+    .phone.dark .step-pip.done { background: #4f46e5; opacity: 1; }
+    .phone.dark .step-pip.active { background: #4f46e5; opacity: 0.5; }
+    .phone.dark .field label { color: #d1d5db; }
+    .phone.dark .input-wrap input { background: #1f2937; border-color: #374151; color: #f9fafb; }
+    .phone.dark .btn.disabled { background: #374151; color: #6b7280; }
+    .phone.dark .pin-header h2 { color: #f9fafb; }
+    .phone.dark .pin-header p { color: #9ca3af; }
+    .phone.dark .dot { background: #4b5563; }
+    .phone.dark .dot.filled { background: #4f46e5; }
+    .phone.dark .key.num { background: #374151; color: #f3f4f6; }
+    .phone.dark .key.action { color: #9ca3af; }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════
+       State 1 · Step 1 — Verify password, empty
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Step 1 — Empty</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <button class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="title-area">
+          <h1>Quên mã PIN</h1>
+          <p>Xác thực mật khẩu rồi đặt mã PIN mới</p>
+        </div>
+
+        <!-- Step strip: step 1 active -->
+        <div class="step-strip">
+          <div class="step-pip active"></div>
+          <div class="step-pip"></div>
+          <div class="step-pip"></div>
+        </div>
+
+        <div class="field">
+          <label>Mật khẩu hiện tại</label>
+          <div class="input-wrap">
+            <input type="password" placeholder="Nhập mật khẩu" readonly />
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <button class="btn disabled" disabled>Xác thực</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 2 · Step 1 — Filled, ready
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Step 1 — Filled</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <button class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="title-area">
+          <h1>Quên mã PIN</h1>
+          <p>Xác thực mật khẩu rồi đặt mã PIN mới</p>
+        </div>
+        <div class="step-strip">
+          <div class="step-pip active"></div>
+          <div class="step-pip"></div>
+          <div class="step-pip"></div>
+        </div>
+        <div class="field">
+          <label>Mật khẩu hiện tại</label>
+          <div class="input-wrap">
+            <input type="password" value="password123" readonly />
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </span>
+          </div>
+        </div>
+        <button class="btn primary">Xác thực</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 3 · Step 1 — Loading (verifying)
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Step 1 — Verifying</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <button class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="title-area">
+          <h1>Quên mã PIN</h1>
+          <p>Xác thực mật khẩu rồi đặt mã PIN mới</p>
+        </div>
+        <div class="step-strip">
+          <div class="step-pip active"></div>
+          <div class="step-pip"></div>
+          <div class="step-pip"></div>
+        </div>
+        <div class="field">
+          <label>Mật khẩu hiện tại</label>
+          <div class="input-wrap">
+            <input type="password" value="password123" readonly style="opacity:0.5;" />
+          </div>
+        </div>
+        <button class="btn primary" style="cursor:default;"><div class="spinner"></div></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 4 · Step 1 — Wrong password alert
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Step 1 — Wrong password</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <!-- Background dimmed -->
+      <div class="screen" style="filter:brightness(0.5);pointer-events:none;">
+        <button class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="title-area">
+          <h1>Quên mã PIN</h1>
+          <p>Xác thực mật khẩu rồi đặt mã PIN mới</p>
+        </div>
+        <div class="step-strip">
+          <div class="step-pip active"></div><div class="step-pip"></div><div class="step-pip"></div>
+        </div>
+        <div class="field">
+          <label>Mật khẩu hiện tại</label>
+          <div class="input-wrap"><input type="password" value="wrongpass" readonly /></div>
+        </div>
+        <button class="btn primary">Xác thực</button>
+      </div>
+      <!-- Alert -->
+      <div class="alert-overlay">
+        <div class="alert-box">
+          <h3>Sai mật khẩu</h3>
+          <p>Mật khẩu không đúng. Vui lòng thử lại.</p>
+          <div class="alert-actions"><button class="alert-btn">OK</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 5 · Step 2 — New PIN (empty)
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Step 2 — New PIN</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <button class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="title-area">
+          <h1>Quên mã PIN</h1>
+          <p>Xác thực mật khẩu rồi đặt mã PIN mới</p>
+        </div>
+        <!-- Step strip: step 1 done, step 2 active -->
+        <div class="step-strip">
+          <div class="step-pip done"></div>
+          <div class="step-pip active"></div>
+          <div class="step-pip"></div>
+        </div>
+
+        <!-- PIN sub-header -->
+        <div class="pin-header">
+          <h2>Tạo mã PIN mới</h2>
+          <p>Đặt mã PIN 6 chữ số</p>
+        </div>
+
+        <!-- 6 empty dots -->
+        <div class="pin-dots">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+
+        <div class="numpad">
+          <div class="numpad-row">
+            <button class="key num">1</button><button class="key num">2</button><button class="key num">3</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">4</button><button class="key num">5</button><button class="key num">6</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">7</button><button class="key num">8</button><button class="key num">9</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key empty"></button>
+            <button class="key num">0</button>
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/>
+                <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 6 · Step 2 — New PIN 4 of 6 entered
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Step 2 — 4 of 6</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <button class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="title-area">
+          <h1>Quên mã PIN</h1>
+          <p>Xác thực mật khẩu rồi đặt mã PIN mới</p>
+        </div>
+        <div class="step-strip">
+          <div class="step-pip done"></div>
+          <div class="step-pip active"></div>
+          <div class="step-pip"></div>
+        </div>
+        <div class="pin-header">
+          <h2>Tạo mã PIN mới</h2>
+          <p>Đặt mã PIN 6 chữ số</p>
+        </div>
+        <!-- 4 filled, 2 empty -->
+        <div class="pin-dots">
+          <div class="dot filled"></div><div class="dot filled"></div>
+          <div class="dot filled"></div><div class="dot filled"></div>
+          <div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="numpad">
+          <div class="numpad-row">
+            <button class="key num">1</button><button class="key num">2</button><button class="key num">3</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">4</button><button class="key num">5</button><button class="key num">6</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">7</button><button class="key num">8</button><button class="key num">9</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key empty"></button>
+            <button class="key num">0</button>
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 7 · Step 3 — Confirm PIN (empty)
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Step 3 — Confirm PIN</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <button class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="title-area">
+          <h1>Quên mã PIN</h1>
+          <p>Xác thực mật khẩu rồi đặt mã PIN mới</p>
+        </div>
+        <!-- Step strip: steps 1 & 2 done, step 3 active -->
+        <div class="step-strip">
+          <div class="step-pip done"></div>
+          <div class="step-pip done"></div>
+          <div class="step-pip active"></div>
+        </div>
+        <div class="pin-header">
+          <h2>Xác nhận mã PIN</h2>
+          <p>Nhập lại mã PIN để xác nhận</p>
+        </div>
+        <!-- 6 empty dots (fresh confirm) -->
+        <div class="pin-dots">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="numpad">
+          <div class="numpad-row">
+            <button class="key num">1</button><button class="key num">2</button><button class="key num">3</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">4</button><button class="key num">5</button><button class="key num">6</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">7</button><button class="key num">8</button><button class="key num">9</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key empty"></button>
+            <button class="key num">0</button>
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 8 · Step 3 — Mismatch alert
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Step 3 — Mismatch</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <!-- Background dimmed -->
+      <div class="screen" style="filter:brightness(0.5);pointer-events:none;">
+        <button class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
+        <div class="title-area"><h1>Quên mã PIN</h1><p>Xác thực mật khẩu rồi đặt mã PIN mới</p></div>
+        <div class="step-strip"><div class="step-pip done"></div><div class="step-pip done"></div><div class="step-pip active"></div></div>
+        <div class="pin-header"><h2>Xác nhận mã PIN</h2><p>Nhập lại mã PIN để xác nhận</p></div>
+        <div class="pin-dots">
+          <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+          <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+        </div>
+        <div class="numpad">
+          <div class="numpad-row"><button class="key num">1</button><button class="key num">2</button><button class="key num">3</button></div>
+          <div class="numpad-row"><button class="key num">4</button><button class="key num">5</button><button class="key num">6</button></div>
+          <div class="numpad-row"><button class="key num">7</button><button class="key num">8</button><button class="key num">9</button></div>
+          <div class="numpad-row"><button class="key empty"></button><button class="key num">0</button><button class="key action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button></div>
+        </div>
+      </div>
+      <!-- Alert -->
+      <div class="alert-overlay">
+        <div class="alert-box">
+          <h3>Không khớp</h3>
+          <p>Mã PIN xác nhận không đúng. Vui lòng thử lại.</p>
+          <div class="alert-actions"><button class="alert-btn">OK</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 9 · Dark mode — Step 2
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Dark mode — Step 2</span>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#f9fafb" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#f9fafb"/><path d="M20 10v4" stroke="#f9fafb" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <button class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="title-area">
+          <h1>Quên mã PIN</h1>
+          <p>Xác thực mật khẩu rồi đặt mã PIN mới</p>
+        </div>
+        <div class="step-strip">
+          <div class="step-pip done"></div>
+          <div class="step-pip active"></div>
+          <div class="step-pip"></div>
+        </div>
+        <div class="pin-header">
+          <h2>Tạo mã PIN mới</h2>
+          <p>Đặt mã PIN 6 chữ số</p>
+        </div>
+        <div class="pin-dots">
+          <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="numpad">
+          <div class="numpad-row">
+            <button class="key num">1</button><button class="key num">2</button><button class="key num">3</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">4</button><button class="key num">5</button><button class="key num">6</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">7</button><button class="key num">8</button><button class="key num">9</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key empty"></button>
+            <button class="key num">0</button>
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

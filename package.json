@@ -18,8 +18,15 @@
   },
   "jest": {
     "preset": "jest-expo",
-    "setupFilesAfterEnvironment": ["./jest.setup.ts"],
-    "testPathIgnorePatterns": ["/node_modules/", "/ios/", "/android/", "/build/"],
+    "setupFilesAfterEnvironment": [
+      "./jest.setup.ts"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/ios/",
+      "/android/",
+      "/build/"
+    ],
     "collectCoverageFrom": [
       "src/utils/**/*.{ts,tsx}",
       "src/store/**/*.{ts,tsx}",

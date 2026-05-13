@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mockup — Mã cửa hàng</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #e5e7eb;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 48px;
+      padding: 48px 32px;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      flex-wrap: wrap;
+    }
+
+    .phone-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .phone-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Phone frame */
+    .phone {
+      width: 375px;
+      min-height: 812px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1f2937,
+        0 0 0 12px #374151,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .notch {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 30px;
+      background: #1f2937;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+    .status-bar {
+      height: 44px;
+      padding: 14px 28px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .status-bar .time { font-size: 15px; font-weight: 600; color: #111; }
+    .status-bar .icons { display: flex; gap: 6px; align-items: center; }
+    .status-bar .icons svg { width: 16px; height: 16px; fill: #111; }
+
+    /* Floating lang chip */
+    .lang-float {
+      position: absolute;
+      right: 16px;
+      top: 54px;
+      z-index: 20;
+    }
+    .lang-chip {
+      display: flex; align-items: center; gap: 4px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 12px; font-weight: 600;
+      color: #374151; background: #f9fafb;
+    }
+    .lang-chip .active { color: #4f46e5; }
+    .lang-chip .sep { color: #d1d5db; }
+
+    /* Screen */
+    .screen {
+      flex: 1;
+      padding: 48px 24px 32px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Logo block */
+    .logo-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    .app-icon {
+      width: 80px; height: 80px;
+      background: #4f46e5;
+      border-radius: 24px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 28px rgba(79,70,229,0.35);
+    }
+    .app-icon svg { width: 40px; height: 40px; }
+    .logo-block h1 {
+      font-size: 28px; font-weight: 700;
+      color: #111827; letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .logo-block p { font-size: 15px; color: #6b7280; }
+
+    /* FloatingLabelInput */
+    .float-wrap {
+      position: relative;
+      margin-top: 8px;
+      margin-bottom: 0;
+    }
+    .float-label {
+      position: absolute;
+      left: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4f46e5;
+      background: #f9fafb;
+      padding: 0 4px;
+      top: -9px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .float-label.idle {
+      font-size: 15px;
+      font-weight: 400;
+      color: #9ca3af;
+      top: 16px;
+    }
+    .float-input-row {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      background: #f9fafb;
+      padding: 0 16px;
+    }
+    .float-input-row.focused { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); background: #fff; }
+    .float-input-row.error { border-color: #ef4444; }
+    .float-input-row input {
+      flex: 1;
+      font-size: 15px;
+      color: #111827;
+      padding: 16px 0;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: inherit;
+    }
+    .float-input-row input::placeholder { color: transparent; }
+    .clear-btn {
+      color: #9ca3af;
+      display: flex; align-items: center;
+      cursor: pointer; border: none; background: none; padding: 4px;
+    }
+    .clear-btn svg { width: 18px; height: 18px; }
+
+    /* Recently used card */
+    .recently-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 12px 16px;
+      background: #eef2ff;
+      border-radius: 16px;
+      border: 1px solid #e0e7ff;
+      cursor: pointer;
+    }
+    .recently-icon {
+      width: 36px; height: 36px;
+      background: #e0e7ff;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .recently-icon svg { width: 20px; height: 20px; }
+    .recently-info { flex: 1; min-width: 0; }
+    .recently-info .tag {
+      font-size: 11px; color: #6366f1; margin-bottom: 2px;
+    }
+    .recently-info .name {
+      font-size: 13px; font-weight: 700; color: #3730a3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .recently-info .id { font-size: 11px; color: #a5b4fc; }
+    .recently-chevron { color: #6366f1; }
+    .recently-chevron svg { width: 18px; height: 18px; }
+
+    /* Error states */
+    .error-text {
+      font-size: 13px; color: #ef4444;
+      margin-top: 8px;
+      display: flex; align-items: flex-start; gap: 4px;
+    }
+    .error-text svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+
+    .suspended-card {
+      margin-top: 10px;
+      background: #fffbeb;
+      border-radius: 12px;
+      padding: 12px 14px;
+      border: 1px solid #fde68a;
+    }
+    .suspended-card .title { font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 3px; }
+    .suspended-card .support { font-size: 12px; color: #b45309; }
+
+    /* Continue button */
+    .btn-continue {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      font-size: 16px; font-weight: 700;
+      border: none; border-radius: 16px;
+      cursor: pointer; letter-spacing: 0.01em;
+      transition: opacity 0.15s;
+    }
+    .btn-continue.active { background: #4f46e5; color: #fff; }
+    .btn-continue.active:hover { opacity: 0.92; }
+    .btn-continue.disabled { background: #e5e7eb; color: #9ca3af; cursor: default; }
+
+    /* Spinner */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Links */
+    .link-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+    .link-row span { color: #6b7280; }
+    .link-row a { color: #4f46e5; font-weight: 600; text-decoration: none; }
+    .link-center {
+      display: flex;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    .link-center a { font-size: 13px; color: #4f46e5; text-decoration: none; }
+    .pending-link {
+      text-align: center;
+      margin-top: 10px;
+      padding: 8px 0;
+      font-size: 12px;
+      color: #9ca3af;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    /* ── Dark mode ── */
+    .phone.dark { background: #111827; }
+    .phone.dark .notch { background: #000; }
+    .phone.dark .status-bar .time { color: #f9fafb; }
+    .phone.dark .status-bar .icons svg { fill: #f9fafb; }
+    .phone.dark .lang-chip { border-color: #374151; background: #1f2937; color: #d1d5db; }
+    .phone.dark .logo-block h1 { color: #f9fafb; }
+    .phone.dark .logo-block p { color: #9ca3af; }
+    .phone.dark .float-label { background: #1f2937; }
+    .phone.dark .float-input-row { background: #1f2937; border-color: #374151; }
+    .phone.dark .float-input-row input { color: #f9fafb; background: transparent; }
+    .phone.dark .recently-card { background: rgba(79,70,229,0.15); border-color: rgba(99,102,241,0.3); }
+    .phone.dark .recently-icon { background: rgba(79,70,229,0.25); }
+    .phone.dark .recently-info .name { color: #c7d2fe; }
+    .phone.dark .recently-info .id { color: #6366f1; }
+    .phone.dark .recently-info .tag { color: #818cf8; }
+    .phone.dark .btn-continue.disabled { background: #374151; color: #6b7280; }
+    .phone.dark .link-row span { color: #9ca3af; }
+    .phone.dark .link-row a { color: #818cf8; }
+    .phone.dark .link-center a { color: #818cf8; }
+    .phone.dark .pending-link { color: #6b7280; }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════
+       State 1: Empty — no last shop
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Empty — no last shop</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="lang-float">
+        <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+      </div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="logo-block">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <h1>TappyPOS</h1>
+          <p>💼 Quản lý thông minh, rảnh tay bán hàng</p>
+        </div>
+
+        <!-- FloatingLabelInput: idle (no value, not focused) -->
+        <div class="float-wrap">
+          <span class="float-label idle">Mã cửa hàng (vd: pho-a7k2)</span>
+          <div class="float-input-row">
+            <input type="text" placeholder=" " readonly />
+          </div>
+        </div>
+
+        <button class="btn-continue disabled" disabled>Tiếp tục</button>
+
+        <div class="link-center"><a href="#">Quên mã cửa hàng?</a></div>
+
+        <div class="link-row">
+          <span>Chưa có tài khoản?</span>
+          <a href="#">Đăng ký miễn phí</a>
+        </div>
+
+        <p class="pending-link">Đã đăng ký nhưng chưa tạo cửa hàng? Đăng nhập để tiếp tục</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 2: Focused + recently used card
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Focused + recently used</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="lang-float">
+        <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+      </div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="logo-block">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <h1>TappyPOS</h1>
+          <p>💼 Quản lý thông minh, rảnh tay bán hàng</p>
+        </div>
+
+        <!-- FloatingLabelInput: focused, partially typed (different from last shop) -->
+        <div class="float-wrap">
+          <span class="float-label">Mã cửa hàng (vd: pho-a7k2)</span>
+          <div class="float-input-row focused">
+            <input type="text" value="kim" readonly />
+            <button class="clear-btn">
+              <svg viewBox="0 0 24 24" fill="#9ca3af"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Recently used card (shown because "kim" ≠ last shop id) -->
+        <div class="recently-card">
+          <div class="recently-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2">
+              <polyline points="12 8 12 12 14 14"/>
+              <path d="M3.05 11a9 9 0 1 0 .5-4.5"/>
+              <polyline points="3 3 3 9 9 9"/>
+            </svg>
+          </div>
+          <div class="recently-info">
+            <p class="tag">Cửa hàng đã dùng gần đây</p>
+            <p class="name">Cửa hàng Kim Ngân Phát</p>
+            <p class="id">kim-ngan-phat</p>
+          </div>
+          <div class="recently-chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <button class="btn-continue active">Tiếp tục</button>
+
+        <div class="link-center"><a href="#">Quên mã cửa hàng?</a></div>
+        <div class="link-row">
+          <span>Chưa có tài khoản?</span>
+          <a href="#">Đăng ký miễn phí</a>
+        </div>
+        <p class="pending-link">Đã đăng ký nhưng chưa tạo cửa hàng? Đăng nhập để tiếp tục</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 3: Filled — active button
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Filled — ready</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="lang-float">
+        <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+      </div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="logo-block">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <h1>TappyPOS</h1>
+          <p>💼 Quản lý thông minh, rảnh tay bán hàng</p>
+        </div>
+
+        <!-- FloatingLabelInput: has value, blurred -->
+        <div class="float-wrap">
+          <span class="float-label">Mã cửa hàng (vd: pho-a7k2)</span>
+          <div class="float-input-row">
+            <input type="text" value="kim-ngan-phat" readonly />
+            <button class="clear-btn">
+              <svg viewBox="0 0 24 24" fill="#9ca3af"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn-continue active">Tiếp tục</button>
+
+        <div class="link-center"><a href="#">Quên mã cửa hàng?</a></div>
+        <div class="link-row">
+          <span>Chưa có tài khoản?</span>
+          <a href="#">Đăng ký miễn phí</a>
+        </div>
+        <p class="pending-link">Đã đăng ký nhưng chưa tạo cửa hàng? Đăng nhập để tiếp tục</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 4: Loading
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Loading</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="lang-float">
+        <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+      </div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="logo-block">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h1>TappyPOS</h1>
+          <p>💼 Quản lý thông minh, rảnh tay bán hàng</p>
+        </div>
+        <div class="float-wrap">
+          <span class="float-label">Mã cửa hàng (vd: pho-a7k2)</span>
+          <div class="float-input-row">
+            <input type="text" value="kim-ngan-phat" readonly />
+          </div>
+        </div>
+        <button class="btn-continue active" style="cursor:default;">
+          <div class="spinner"></div>
+        </button>
+        <div class="link-center"><a href="#">Quên mã cửa hàng?</a></div>
+        <div class="link-row"><span>Chưa có tài khoản?</span><a href="#">Đăng ký miễn phí</a></div>
+        <p class="pending-link">Đã đăng ký nhưng chưa tạo cửa hàng? Đăng nhập để tiếp tục</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 5: Error — not found
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Error — not found</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="lang-float">
+        <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+      </div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="logo-block">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h1>TappyPOS</h1>
+          <p>💼 Quản lý thông minh, rảnh tay bán hàng</p>
+        </div>
+        <div class="float-wrap">
+          <span class="float-label" style="color:#ef4444;">Mã cửa hàng (vd: pho-a7k2)</span>
+          <div class="float-input-row error">
+            <input type="text" value="sai-ma-xyz" readonly />
+            <button class="clear-btn">
+              <svg viewBox="0 0 24 24" fill="#9ca3af"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="error-text">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Không tìm thấy cửa hàng với mã này. Kiểm tra lại hoặc đăng ký mới.
+        </p>
+        <button class="btn-continue active">Tiếp tục</button>
+        <div class="link-center"><a href="#">Quên mã cửa hàng?</a></div>
+        <div class="link-row"><span>Chưa có tài khoản?</span><a href="#">Đăng ký miễn phí</a></div>
+        <p class="pending-link">Đã đăng ký nhưng chưa tạo cửa hàng? Đăng nhập để tiếp tục</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 6: Error — suspended (amber card)
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Error — suspended</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="lang-float">
+        <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+      </div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="logo-block">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h1>TappyPOS</h1>
+          <p>💼 Quản lý thông minh, rảnh tay bán hàng</p>
+        </div>
+        <div class="float-wrap">
+          <span class="float-label">Mã cửa hàng (vd: pho-a7k2)</span>
+          <div class="float-input-row">
+            <input type="text" value="shop-tam-ngung" readonly />
+            <button class="clear-btn">
+              <svg viewBox="0 0 24 24" fill="#9ca3af"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="suspended-card">
+          <p class="title">⚠️ Cửa hàng đang tạm ngưng hoạt động.</p>
+          <p class="support">Liên hệ hỗ trợ: 0901 234 567</p>
+        </div>
+        <button class="btn-continue active">Tiếp tục</button>
+        <div class="link-center"><a href="#">Quên mã cửa hàng?</a></div>
+        <div class="link-row"><span>Chưa có tài khoản?</span><a href="#">Đăng ký miễn phí</a></div>
+        <p class="pending-link">Đã đăng ký nhưng chưa tạo cửa hàng? Đăng nhập để tiếp tục</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 7: Dark mode — filled
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Dark mode</span>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="lang-float">
+        <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+      </div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#f9fafb" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#f9fafb"/><path d="M20 10v4" stroke="#f9fafb" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="logo-block">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h1>TappyPOS</h1>
+          <p>💼 Quản lý thông minh, rảnh tay bán hàng</p>
+        </div>
+        <div class="float-wrap">
+          <span class="float-label" style="background:#1f2937;">Mã cửa hàng (vd: pho-a7k2)</span>
+          <div class="float-input-row">
+            <input type="text" value="kim-ngan-phat" readonly style="color:#f9fafb;background:transparent;" />
+            <button class="clear-btn">
+              <svg viewBox="0 0 24 24" fill="#6b7280"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+            </button>
+          </div>
+        </div>
+        <!-- Recently used card in dark -->
+        <div class="recently-card">
+          <div class="recently-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4.5"/><polyline points="3 3 3 9 9 9"/></svg>
+          </div>
+          <div class="recently-info">
+            <p class="tag">Cửa hàng đã dùng gần đây</p>
+            <p class="name">Cửa hàng Kim Ngân Phát</p>
+            <p class="id">kim-ngan-phat</p>
+          </div>
+          <div class="recently-chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+        <button class="btn-continue active">Tiếp tục</button>
+        <div class="link-center"><a href="#" style="color:#818cf8;">Quên mã cửa hàng?</a></div>
+        <div class="link-row"><span>Chưa có tài khoản?</span><a href="#" style="color:#818cf8;">Đăng ký miễn phí</a></div>
+        <p class="pending-link">Đã đăng ký nhưng chưa tạo cửa hàng? Đăng nhập để tiếp tục</p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

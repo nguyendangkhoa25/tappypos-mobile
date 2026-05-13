@@ -331,7 +331,27 @@ Search + filter chips (Tất cả / Đang bán / Tạm ẩn / Hết hàng) + cat
 
 **AddProductSheet / Edit:** name*, price `MoneyInput` (hidden for dynamic-price), unit chips (filtered by PRODUCT_TYPE_UNIT_CONFIG), category picker, `ImagePicker` (single photo). "Thêm thuộc tính nâng cao" toggle → EAV fields (collapsed by default).
 
-**ProductDetailScreen:** hero image + name + price. Stock info + "Điều chỉnh tồn kho" (if INVENTORY). EAV attributes as label–value rows. "Đã bán N lần trong 30 ngày" stat. Edit / Delete buttons.
+**ProductDetailScreen:** Primary-colour hero with page title "Chi tiết sản phẩm" centred in the nav row (back ← · title · ✏️ edit). Hero shows: category chip, product name (2-line max), and price/badge.
+
+**Product types:**
+- Physical product — formatted VND price; stock status card (green ✓ / red ✗) with quantity + unit; never shown for SERVICE.
+- Dynamic-price (JEWELRY) — amber "Theo giá vàng" badge; no stock card shown.
+- SERVICE — violet "Dịch vụ" badge + duration chip in hero; price shown as a separate row below the hero only when price > 0; no stock card; "Đặt dịch vụ" button instead of "Thêm vào giỏ".
+
+**Category:** services support category assignment (categories are generic, not service-specific — use CategoryListScreen to add barber categories like "Cắt tóc", "Nhuộm", "Uốn"). Category shown as a chip in the hero and in the details row.
+
+**Body cards:**
+1. Price card (service only, price > 0)
+2. Stock status card (non-service, stockQuantity ≠ null)
+3. Details card — unit · category · product type · duration (service)
+4. Description card (when present)
+5. Hint card — indigo info box, 💡 what / how / why text
+
+**Footer:** sticky "Thêm vào giỏ" / "Đặt dịch vụ" button.
+
+**Edit flow:** ✏️ → ProductEditScreen (same stack). On save, React Query invalidates `['product', id]` and `['products']` so both detail and list refresh.
+
+API: `GET /api/products/{id}`. Gated by `PRODUCT`.
 
 ---
 
@@ -431,19 +451,37 @@ Quick cross-reference: where each UX improvement lives in the code.
 
 ---
 
-## Missing api.ts Entries (not yet wired — needed by stub screens)
+## api.ts Status (as of 2026-05-11)
 
-| Endpoint | Purpose | Screen |
-|---|---|---|
-| `DELETE /api/auth/pin` | Disable PIN | SecurityScreen |
-| `GET /api/shop-config` | Read shop info | ShopInfoScreen |
-| `PUT /api/shop-config` | Update shop info | ShopInfoScreen |
-| `GET /api/shop-config/pos-config` | Read POS settings | POSConfigScreen |
-| `PUT /api/shop-config/pos-config` | Update POS settings | POSConfigScreen |
+All previously missing endpoints have been added:
+- `authApi.deletePin()` → `DELETE /api/auth/pin`
+- `shopConfigApi.getInfo()` / `updateInfo()` → `GET/PUT /api/shop-config`
+- `shopConfigApi.getPosConfig()` / `updatePosConfig()` → `GET/PUT /api/shop-config/pos-config`
+- `ShopInfo` and `PosConfig` types defined
 
-Also fix in api.ts:
-- `CheckoutRequest.customerId: number` → should be `string`
-- `CheckoutRequest` missing `redeemPoints?: boolean` field (needed for US-130)
+Type bugs fixed:
+- `CheckoutRequest.customerId: number` → `string` ✅
+- `CheckoutRequest.redeemPoints?: boolean` added ✅
+- `selfProvision` response corrected to `{ accessToken, tenantId }` (was `{ accessToken, refreshToken }`) ✅
+- `ExpenseSuggestion.category?: string` added ✅
 
-**Why:** Decisions made in planning session 2026-05-10; screen implementations updated 2026-05-11.
-**How to apply:** Reference when implementing any screen in tappy-pos/mobile. For navigation structure and backend requirements read `project_mobile_plan.md`.
+## Settings Sub-Screens — Status
+
+All 14 settings sub-screens implemented 2026-05-12. TypeScript clean (0 new errors):
+
+**Completed:** ProfileUpdateScreen ✅, ChangePasswordScreen ✅, ShopInfoScreen ✅, POSConfigScreen ✅, DefaultExpensesScreen ✅, DisplayScreen ✅, TnCScreen ✅, ActivityLogScreen ✅, DeleteAccountScreen ✅, NotificationPreferencesScreen ✅, FeedbackScreen ✅, FeedbackHistoryScreen ✅, BankAccountsScreen ✅, SubscriptionScreen ✅
+
+**i18n namespaces added:** `settings.profileSettings.*`, `settings.changePassword.*`, `settings.shopInfo.*`, `settings.posConfig.*`, `settings.bankAccounts.*`, `settings.defaultExpenses.*`, `settings.displaySettings.*`, `settings.notificationPreferences.*`, `settings.activityLog.*`, `settings.feedback.*`, `settings.feedbackHistory.*`, `settings.tnc.*`, `settings.deleteAccount.*`, `settings.subscription.*`
+
+**Key patterns used:** alertStore `{ label, onPress, style }` buttons (not `text`), `useEffect` for query-to-state sync (TanStack Query v5 — no `onSuccess` in useQuery), FlatList with `onEndReached` for infinite scroll (ActivityLogScreen), bottom-sheet Modal for CRUD forms (BankAccounts, DefaultExpenses)
+
+## Main Screens — Status (as of 2026-05-12)
+
+**Completed:** NotificationScreen ✅, ExpensesScreen ✅, ReportScreen ✅, InventoryListScreen ✅, ComboListScreen ✅, ComboEditScreen ✅, CategoryListScreen ✅, GoldPriceScreen ✅, PrintTemplateListScreen ✅, PrintTemplateDetailScreen ✅
+
+**Still stub / incomplete:** POSMainScreen (complex, separate effort)
+
+**CategoryData type:** Added `emoji: string` field to match API + categoryApi.create/update signatures.
+
+**Why:** All main overflow and tab screens implemented 2026-05-12.
+**How to apply:** Reference this doc's per-screen design specs + `project_mobile_plan.md` for full details.

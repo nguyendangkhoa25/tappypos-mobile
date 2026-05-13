@@ -1,3 +1,5 @@
+export const PAGE_SIZE = 20;
+
 export const APP_STORE_URL = 'https://apps.apple.com/app/tappypos/id000000000';
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=vn.tappypos';
 

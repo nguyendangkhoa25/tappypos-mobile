@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Combo List Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  .combo-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px 0; flex-shrink: 0; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+  .header-left { display: flex; align-items: center; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 8px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; }
+  .add-btn { font-size: 22px; color: #4f46e5; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+  .chip-row { display: flex; gap: 8px; padding-bottom: 10px; }
+  .chip { padding: 5px 14px; border-radius: 20px; border: 1px solid #e5e7eb; font-size: 12px; font-weight: 500; color: #6b7280; background: white; }
+  .chip.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+  .combo-list { flex: 1; overflow: hidden; padding: 12px 16px 0; }
+  .combo-card { background: white; border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+  .combo-card.hidden { opacity: 0.6; }
+  .combo-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+  .combo-name { font-size: 15px; font-weight: 700; color: #111827; flex: 1; margin-right: 8px; }
+  .combo-desc { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+  .combo-items { font-size: 12px; color: #6b7280; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .combo-actions { display: flex; gap: 10px; }
+  .combo-action-btn { font-size: 17px; }
+  .combo-action-btn.edit { color: #6b7280; }
+  .combo-action-btn.del { color: #ef4444; }
+  .combo-bottom { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .combo-price { font-size: 15px; font-weight: 800; color: #4f46e5; }
+  .savings-badge { background: #eef2ff; border-radius: 20px; padding: 3px 10px; }
+  .savings-text { font-size: 11px; font-weight: 600; color: #4338ca; }
+  .toggle-btn { border: 1px solid #e5e7eb; border-radius: 12px; padding: 6px; text-align: center; font-size: 12px; color: #6b7280; }
+
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .empty-icon { font-size: 48px; opacity: 0.4; margin-bottom: 12px; }
+  .empty-title { font-size: 15px; font-weight: 600; color: #9ca3af; }
+  .empty-hint { font-size: 13px; color: #9ca3af; margin-top: 4px; text-align: center; line-height: 1.5; }
+  .empty-btn { background: #4f46e5; border-radius: 16px; padding: 10px 24px; color: white; font-size: 13px; font-weight: 600; margin-top: 20px; }
+
+  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #e0e7ff; border-top-color: #4f46e5; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-center { flex: 1; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<h1>Combo List Screen</h1>
+<p class="subtitle">Combo — danh sách combo sản phẩm, lọc trạng thái, tiết kiệm badge</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- State 1: Active combos -->
+  <div class="phone-wrap">
+    <div class="phone-label">Active Combos</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="combo-header">
+        <div class="header-top">
+          <div class="header-left"><span class="back-btn">‹</span><span class="header-title">Combo</span></div>
+          <span class="add-btn">+</span>
+        </div>
+        <div class="header-hint">🎁 Tạo combo ghép nhiều sản phẩm lại với giá ưu đãi để tăng doanh số bán hàng.</div>
+        <div class="chip-row">
+          <div class="chip">Tất cả</div>
+          <div class="chip active">Đang bán</div>
+          <div class="chip">Tạm ẩn</div>
+        </div>
+      </div>
+      <div class="combo-list">
+        <div class="combo-card">
+          <div class="combo-top">
+            <div class="combo-name">Combo bữa trưa A</div>
+            <div class="combo-actions"><span class="combo-action-btn edit">✎</span><span class="combo-action-btn del">🗑</span></div>
+          </div>
+          <div class="combo-desc">Cơm + canh + tráng miệng</div>
+          <div class="combo-items">Cơm sườn nướng · Canh chua cá · Chè đậu đen</div>
+          <div class="combo-bottom">
+            <div class="combo-price">55.000 ₫</div>
+            <div class="savings-badge"><span class="savings-text">Tiết kiệm 15.000 ₫</span></div>
+          </div>
+          <div class="toggle-btn">Tạm ẩn</div>
+        </div>
+        <div class="combo-card">
+          <div class="combo-top">
+            <div class="combo-name">Set trà sữa + bánh</div>
+            <div class="combo-actions"><span class="combo-action-btn edit">✎</span><span class="combo-action-btn del">🗑</span></div>
+          </div>
+          <div class="combo-items">Trà sữa trân châu · Bánh mì thịt nguội</div>
+          <div class="combo-bottom">
+            <div class="combo-price">58.000 ₫</div>
+            <div class="savings-badge"><span class="savings-text">Tiết kiệm 7.000 ₫</span></div>
+          </div>
+          <div class="toggle-btn">Tạm ẩn</div>
+        </div>
+        <div class="combo-card">
+          <div class="combo-top">
+            <div class="combo-name">Combo nước + kem</div>
+            <div class="combo-actions"><span class="combo-action-btn edit">✎</span><span class="combo-action-btn del">🗑</span></div>
+          </div>
+          <div class="combo-items">Cà phê sữa đá · Kem dừa tươi</div>
+          <div class="combo-bottom">
+            <div class="combo-price">60.000 ₫</div>
+            <div class="savings-badge"><span class="savings-text">Tiết kiệm 5.000 ₫</span></div>
+          </div>
+          <div class="toggle-btn">Tạm ẩn</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: All (active + hidden) -->
+  <div class="phone-wrap">
+    <div class="phone-label">All (Active + Hidden)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="combo-header">
+        <div class="header-top">
+          <div class="header-left"><span class="back-btn">‹</span><span class="header-title">Combo</span></div>
+          <span class="add-btn">+</span>
+        </div>
+        <div class="header-hint">🎁 Tạo combo ghép nhiều sản phẩm lại với giá ưu đãi để tăng doanh số bán hàng.</div>
+        <div class="chip-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Đang bán</div>
+          <div class="chip">Tạm ẩn</div>
+        </div>
+      </div>
+      <div class="combo-list">
+        <div class="combo-card">
+          <div class="combo-top">
+            <div class="combo-name">Combo bữa trưa A</div>
+            <div class="combo-actions"><span class="combo-action-btn edit">✎</span><span class="combo-action-btn del">🗑</span></div>
+          </div>
+          <div class="combo-items">Cơm sườn nướng · Canh chua cá · Chè đậu đen</div>
+          <div class="combo-bottom">
+            <div class="combo-price">55.000 ₫</div>
+            <div class="savings-badge"><span class="savings-text">Tiết kiệm 15.000 ₫</span></div>
+          </div>
+          <div class="toggle-btn">Tạm ẩn</div>
+        </div>
+        <div class="combo-card hidden">
+          <div class="combo-top">
+            <div class="combo-name">Set mùa hè</div>
+            <div class="combo-actions"><span class="combo-action-btn edit">✎</span><span class="combo-action-btn del">🗑</span></div>
+          </div>
+          <div class="combo-items">Sinh tố xoài · Kem dừa tươi</div>
+          <div class="combo-bottom">
+            <div class="combo-price">70.000 ₫</div>
+            <div class="savings-badge"><span class="savings-text">Tiết kiệm 10.000 ₫</span></div>
+          </div>
+          <div class="toggle-btn">Đang bán</div>
+        </div>
+        <div class="combo-card">
+          <div class="combo-top">
+            <div class="combo-name">Set trà sữa + bánh</div>
+            <div class="combo-actions"><span class="combo-action-btn edit">✎</span><span class="combo-action-btn del">🗑</span></div>
+          </div>
+          <div class="combo-items">Trà sữa trân châu · Bánh mì thịt nguội</div>
+          <div class="combo-bottom">
+            <div class="combo-price">58.000 ₫</div>
+            <div class="savings-badge"><span class="savings-text">Tiết kiệm 7.000 ₫</span></div>
+          </div>
+          <div class="toggle-btn">Tạm ẩn</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="combo-header">
+        <div class="header-top">
+          <div class="header-left"><span class="back-btn">‹</span><span class="header-title">Combo</span></div>
+          <span class="add-btn">+</span>
+        </div>
+        <div class="header-hint">🎁 Tạo combo ghép nhiều sản phẩm lại với giá ưu đãi để tăng doanh số bán hàng.</div>
+        <div class="chip-row">
+          <div class="chip">Tất cả</div>
+          <div class="chip active">Đang bán</div>
+          <div class="chip">Tạm ẩn</div>
+        </div>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">🍱</div>
+        <div class="empty-title">Chưa có combo nào</div>
+        <div class="empty-hint">Combo gộp nhiều sản phẩm lại thành một gói — ví dụ: "Cà phê + bánh mì" — để thêm vào giỏ chỉ một lần. Nhấn "Tạo combo" để bắt đầu.</div>
+        <div class="empty-btn">Tạo combo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 4: Loading -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="combo-header">
+        <div class="header-top">
+          <div class="header-left"><span class="back-btn">‹</span><span class="header-title">Combo</span></div>
+          <span class="add-btn">+</span>
+        </div>
+        <div class="header-hint">🎁 Tạo combo ghép nhiều sản phẩm lại với giá ưu đãi để tăng doanh số bán hàng.</div>
+        <div class="chip-row">
+          <div class="chip">Tất cả</div>
+          <div class="chip active">Đang bán</div>
+          <div class="chip">Tạm ẩn</div>
+        </div>
+      </div>
+      <div class="loading-center"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

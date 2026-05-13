@@ -9,12 +9,31 @@ Review the TEST_PLAN_ISO.md and run the type check for Auth flow please on iOS -
 
 On the mobile, let's allow user to create customer
 
+We should store the shop id in the local storage and use it as default even when user logout or not completed the onboarding process. at the select shop id let's show this if user already provided even incase user select to change shop id we can stil list out that shop then user can select?
 
-Should you the logo, icon same as the frontend right?
+having the case that user register account but not complete the onboarding process, this case the tenant still not created. then they quit the app, the open the app later and the app is asking for the shop id before provide user name and password for login, user click register but user cannot? how should we handle this case? give your ide
+
+Let's review the mobile and backend to see if any missing including api, seeding data, message hardcode, bugs and or components, screens not follow standard or the frontend style/design not consistency then fix it please. After that review if our document guidelines, tech spec .. are still valid or missing the please update
+
+Let's check the unit testings and integration testing to make sure all pass and the coverage is meet the requirement.
+
+there would be pos mod for mobile app same as the web app right? having plan for this before implementation
+
+we can start build for the barber shop first then move to the jewelry shop and the house ren shop
+
+Do we follow that each screen should have smart hint message with emoji?
+
+Should have tour for the first time user for the mobile app for home, order, expenses, ...etc
 
 Actually, on the mobile, user can use phone or username to login(username in web platform)
 
-Let's review if any missing APIs in server side for this mobile app
+At the Order screen, what if my barber shop has multiple service? do we support pagination already? if not please support it by loading more data when user scroll to the bottom and also ad the quick search feature/input with search button in the top
+
+
+
+padding: 14px 16px 0; I still can see the padding value for the body form for some screen. let's find and remove if it available
+
+
 
 
 Let's define all the flow/plan we should test on mobile IOS

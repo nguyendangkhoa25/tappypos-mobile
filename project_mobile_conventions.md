@@ -163,31 +163,77 @@ export const ClearableInput = forwardRef(ClearableInputInner);
 
 ---
 
-## i18n Key Structure
+## i18n Rules
 
-```json
-{
-  "common": { "back", "error", "retry", "skip", "cancel", "ok", "save", "confirm" },
-  "auth": {
-    "shopId": { "title", "placeholder", "notFound", "suspended" },
-    "login": { "title", "phone", "password", "submit" },
-    "register": { "title", "alreadyHaveAccount" },
-    "pinSetup": { "title", "subtitle", "confirmTitle" },
-    "pinLogin": { "title", "forgotPin", "changeShop" }
-  },
-  "onboarding": {
-    "shopType": { "title", "subtitle" },
-    "step1": { "title", "nickname", "fullName", "shopName", "address" },
-    "step2": { "title", "subtitle", "addProduct", "goldPrice" },
-    "step3": { "title", "subtitle", "addExpense", "suggestions": {...} },
-    "step4": { "title", "confirm", "products", "expenses", "collapseMore" }
-  },
-  "home": { "greeting": "Chào {{name}}!", "revenue", "orders" },
-  "pos": {...}, "orders": {...}, "products": {...}, "profile": {...}
-}
+**Hard rule: zero hard-coded user-facing strings in any .tsx file.**
+
+```tsx
+// WRONG
+<Text>Ngày {item.paymentDate} hàng tháng</Text>
+placeholder="VD: Cảm ơn quý khách!"
+showToast('Đã lưu');
+
+// CORRECT
+<Text>{t('settings.defaultExpenses.paymentDateHint', { day: item.paymentDate })}</Text>
+placeholder={t('printTemplates.detail.footerPlaceholder')}
+showToast(t('common.saved'));
 ```
 
-Always use interpolation for dynamic values: `t('home.greeting', { name: nickname })`
+Both `en.json` and `vi.json` must always be kept in sync — add keys to both files in the same commit.
+
+**JSON structure gotcha — avoid duplicate keys.**  
+JSON allows the same key twice but only the last value is kept. The `auth.login` namespace was duplicated (bug fixed 2026-05-12). Every time you add keys, grep the file for the namespace first:
+```bash
+grep -n '"login"' src/i18n/locales/en.json   # must appear exactly once inside "auth"
+```
+
+**Key namespace map (actual file structure):**
+
+```
+common:   loading, retry, error, errorStateTitle, errorStateMsg,
+          cancel, confirm, save, close, back, currency,
+          saved, datePlaceholder
+
+auth.login:   title, subtitle, phonePlaceholder, passwordPlaceholder,
+              loginButton, loading, wrongCredentials, locked, networkError,
+              shopLabel, changeShop, subtitleFull, subtitleOnboarding,
+              backToShopId, phoneLabel, phoneInputHint, passwordLabel,
+              passwordInput, forgotPassword, noAccount, registerLink,
+              forceLoginError, unexpectedError, lockedSupport
+
+auth.register:  title, subtitle, phoneLabel, passwordLabel,
+                passwordPlaceholder, confirmLabel, confirmPlaceholder,
+                passwordsMatch, passwordsNoMatch, tncText, tncLink,
+                button, hasAccount, loginLink, loginHere,
+                phoneRequired, passwordTooShort, confirmMismatch,
+                phoneTaken, error, tncModalTitle, tncAgree, tncContent
+
+printTemplates.detail:  nameLabel, namePlaceholder, contentLabel,
+                        footerLabel, footerPlaceholder, footerDefault,
+                        previewHint, showLogo, showAddress, showPhone,
+                        showQR, showDate, showStaff, showNote
+
+gold:     title, buyPrice, sellPrice, perChi, lastUpdated, history,
+          noData, noDataHint, updateTitle, updateDate, updateBuy,
+          updateSell, updateNote, updateNotePlaceholder, warnSellLtBuy,
+          saveSuccess, buyLabel, sellLabel, datePlaceholder
+
+settings.defaultExpenses:  title, addBtn, hint, empty, emptyHint,
+                            deleteTitle, deleteMsg, deleteConfirm,
+                            formTitle, nameLabel, namePlaceholder,
+                            amountLabel, amountPlaceholder,
+                            paymentDateLabel, paymentDatePlaceholder,
+                            saveSuccess, deleteSuccess, paymentDateHint
+```
+
+Always use interpolation for dynamic values:
+```tsx
+t('home.greeting', { name: nickname })
+t('settings.defaultExpenses.paymentDateHint', { day: item.paymentDate })
+t('onboarding.step4.sectionProducts', { count: products.length })
+```
+
+**TNC / long legal text:** store in `auth.register.tncContent` (both locales). Never hard-code in component files.
 
 ---
 
@@ -225,6 +271,23 @@ const isHidden = usePrivacyStore((s) => s.isHidden);
 ```
 
 Toggle from Profile screen (eye icon). Useful when owner shows phone to customer.
+
+---
+
+## Date / Day Picker Components
+
+Always reuse picker components from `tappy-hu/mobile/src/components/` — never use a bare `TextInput` for date or day input.
+
+| Component | When to use | Source |
+|---|---|---|
+| `DayPickerModal` | Day-of-month selection (1–31) | `tappy-hu/mobile/src/components/DayPickerModal.tsx` |
+| `DatePickerModal` | Full calendar date (YYYY-MM-DD) | `tappy-hu/mobile/src/components/DatePickerModal.tsx` |
+| `DatePickerInput` | Inline date input with calendar modal | `tappy-hu/mobile/src/components/DatePickerInput.tsx` |
+
+Copy the component file to `tappy-pos/mobile/src/components/` on first use. No external date library deps — all three components use only React Native primitives.
+
+**Why:** Consistency with tappy-hu UX and avoids raw keyboard number entry for dates, which is error-prone on mobile.
+**How to apply:** Any time a screen needs a date or day-of-month field, reach for one of these three components instead of `TextInput`.
 
 ---
 

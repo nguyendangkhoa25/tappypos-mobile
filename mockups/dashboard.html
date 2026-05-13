@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Dashboard Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #f1f5f9;
+    padding: 32px;
+    color: #1e293b;
+  }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 {
+    font-size: 16px; font-weight: 700; color: #334155;
+    margin: 48px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; margin-bottom: 8px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label {
+    font-size: 11px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+  }
+  .phone {
+    width: 375px; height: 812px;
+    background: #f9fafb;
+    border-radius: 48px;
+    border: 10px solid #1e293b;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .phone.dark { background: #0f172a; border-color: #475569; }
+
+  /* Notch */
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 34px;
+    background: #1e293b;
+    border-radius: 0 0 22px 22px;
+    z-index: 100;
+  }
+  .phone.dark .notch { background: #0f172a; }
+
+  /* Status bar */
+  .status-bar {
+    height: 44px; flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 20px 6px;
+    position: relative; z-index: 10; background: white;}
+  .status-bar.light .s-time { color: white; font-size: 15px; font-weight: 700; }
+  .status-bar.light .s-icons { color: white; font-size: 12px; display: flex; gap: 4px; align-items: center; }
+  .status-bar.dark-bar .s-time { color: #f1f5f9; font-size: 15px; font-weight: 700; }
+  .status-bar.dark-bar .s-icons { color: #f1f5f9; font-size: 12px; display: flex; gap: 4px; align-items: center; }
+
+  /* Scrollable content */
+  .screen { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* Bottom tab bar */
+  .tab-bar {
+    height: 82px; flex-shrink: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    display: flex; align-items: flex-start; padding-top: 10px;
+  }
+  .phone.dark .tab-bar { background: #1e293b; border-top-color: #334155; }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    position: relative;
+  }
+  .tab-icon { font-size: 20px; line-height: 1; }
+  .tab-lbl { font-size: 10px; font-weight: 600; color: #9ca3af; }
+  .tab-item.active .tab-lbl { color: #4f46e5; font-weight: 700; }
+  .tab-item.active .tab-icon { filter: none; }
+  .tab-active-icon { color: #4f46e5; }
+  .tab-inactive-icon { color: #9ca3af; }
+  .phone.dark .tab-lbl { color: #6b7280; }
+  .phone.dark .tab-item.active .tab-lbl { color: #818cf8; }
+  .tab-badge {
+    position: absolute; top: -2px; right: 16px;
+    background: #ef4444; color: white;
+    font-size: 9px; font-weight: 700;
+    min-width: 15px; height: 15px;
+    border-radius: 8px; padding: 0 3px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Indigo header */
+  .dash-header {
+    background: #4f46e5;
+    padding: 10px 20px 40px;
+    flex-shrink: 0;
+  }
+  .dash-greeting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 2px;
+  }
+  .dash-greeting { color: white; font-size: 20px; font-weight: 800; flex: 1; }
+  .bell-wrap { position: relative; }
+  .bell-icon { font-size: 20px; color: white; }
+  .bell-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: #ef4444; color: white;
+    font-size: 9px; font-weight: 700;
+    width: 15px; height: 15px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dash-shop-row {
+    display: flex; align-items: center; gap: 4px;
+    margin-bottom: 16px;
+  }
+  .dash-shop-name { color: rgba(199,210,254,0.9); font-size: 12px; font-weight: 500; }
+  .dash-rev-label { color: rgba(199,210,254,0.8); font-size: 12px; margin-bottom: 2px; }
+  .dash-rev-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .dash-rev-amount { color: white; font-size: 28px; font-weight: 800; }
+  .trend-badge {
+    display: flex; align-items: center; gap: 2px;
+    background: rgba(79,70,229,0.4);
+    padding: 3px 8px; border-radius: 20px;
+  }
+  .trend-badge.down { background: rgba(239,68,68,0.3); }
+  .trend-text { color: #6ee7b7; font-size: 11px; font-weight: 700; }
+  .trend-text.down { color: #fca5a5; }
+  .eye-icon { color: rgba(255,255,255,0.7); font-size: 17px; margin-left: 4px; }
+  .dash-trend-sub { color: #a5b4fc; font-size: 11px; margin-bottom: 14px; }
+  .stat-cols { display: flex; gap: 0; }
+  .stat-col { flex: 1; }
+  .stat-col-label { color: #a5b4fc; font-size: 11px; margin-bottom: 2px; }
+  .stat-col-val { color: white; font-size: 16px; font-weight: 700; }
+
+  /* Period selector card */
+  .period-card {
+    margin: -20px 16px 12px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    position: relative; z-index: 5;
+    flex-shrink: 0;
+  }
+  .phone.dark .period-card { background: #1e293b; border-color: #334155; }
+  .period-btn {
+    flex: 1; padding: 10px 4px;
+    text-align: center;
+    font-size: 12px; font-weight: 600;
+    color: #6b7280;
+  }
+  .phone.dark .period-btn { color: #94a3b8; }
+  .period-btn.active { background: #4f46e5; color: white; border-radius: 14px; }
+
+  /* Scrollable inner */
+  .dash-scroll { flex: 1; overflow: hidden; padding: 0 0 4px; }
+
+  /* Chart card */
+  .chart-card {
+    margin: 0 16px 12px;
+    background: white;
+    border-radius: 16px;
+    padding: 14px 14px 10px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .phone.dark .chart-card { background: #1e293b; border-color: #334155; }
+  .chart-title { font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 10px; }
+  .phone.dark .chart-title { color: #94a3b8; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 5px; height: 70px; }
+  .bar { border-radius: 4px 4px 0 0; min-height: 4px; }
+  .chart-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+  .chart-lbl { font-size: 9px; color: #9ca3af; }
+
+  /* Quick access */
+  .quick-card {
+    margin: 0 16px 12px;
+    background: white;
+    border-radius: 16px;
+    padding: 14px 16px;
+    border: 1px solid #e5e7eb;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .phone.dark .quick-card { background: #1e293b; border-color: #334155; }
+  .quick-icon-wrap {
+    width: 40px; height: 40px; border-radius: 20px;
+    background: #eef2ff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .quick-title { font-size: 15px; font-weight: 600; color: #111827; flex: 1; }
+  .phone.dark .quick-title { color: #f1f5f9; }
+  .quick-chevron { color: #d1d5db; font-size: 18px; }
+
+  /* Section label */
+  .section-lbl {
+    font-size: 14px; font-weight: 700; color: #111827;
+    margin: 0 16px 10px;
+  }
+  .phone.dark .section-lbl { color: #f1f5f9; }
+
+  /* Order card */
+  .order-card {
+    margin: 0 16px 10px;
+    background: white;
+    border-radius: 16px;
+    padding: 12px 14px;
+    border: 1px solid #e5e7eb;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .phone.dark .order-card { background: #1e293b; border-color: #334155; }
+  .order-num { font-size: 14px; font-weight: 700; color: #111827; }
+  .phone.dark .order-num { color: #f1f5f9; }
+  .order-meta { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+  .order-total { font-size: 14px; font-weight: 700; color: #111827; text-align: right; }
+  .phone.dark .order-total { color: #f1f5f9; }
+  .order-badge {
+    margin-top: 4px; padding: 2px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; display: inline-block; text-align: right;
+  }
+
+  /* Skeleton */
+  .sk {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+    display: block;
+  }
+  .phone.dark .sk {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background-size: 200% 100%;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Banner */
+  .sub-banner {
+    padding: 8px 20px;
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .sub-banner.expired { background: #ef4444; }
+  .sub-banner.expiring { background: #f59e0b; }
+  .sub-banner-text { color: white; font-size: 11px; font-weight: 600; flex: 1; }
+
+  /* Privacy mask */
+  .privacy-mask { color: white; font-size: 28px; font-weight: 800; letter-spacing: 4px; }
+</style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</head>
+<body>
+
+<h1>Dashboard Screen</h1>
+<p class="subtitle">Home tab • Revenue overview, stats, chart, recent orders</p>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- ─── State 1: Loading ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar light" style="background:#4f46e5;">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <!-- Header skeleton -->
+      <div class="dash-header" style="padding-bottom:44px;">
+        <div class="dash-greeting-row" style="margin-bottom:8px;">
+          <span class="sk" style="width:180px;height:22px;display:block;"></span>
+          <span style="font-size:20px;color:white;">🔔</span>
+        </div>
+        <span class="sk" style="width:140px;height:12px;display:block;margin-bottom:18px;"></span>
+        <span style="display:block;font-size:12px;color:rgba(199,210,254,0.8);margin-bottom:4px;">Doanh thu</span>
+        <span class="sk" style="width:60%;height:32px;display:block;margin-bottom:8px;"></span>
+        <div class="stat-cols">
+          <div class="stat-col">
+            <div class="stat-col-label">Đơn hàng</div>
+            <span class="sk" style="width:40px;height:18px;display:block;"></span>
+          </div>
+          <div class="stat-col">
+            <div class="stat-col-label">Hoàn thành</div>
+            <span class="sk" style="width:30px;height:18px;display:block;"></span>
+          </div>
+          <div class="stat-col">
+            <div class="stat-col-label">Đang xử lý</div>
+            <span class="sk" style="width:24px;height:18px;display:block;"></span>
+          </div>
+        </div>
+      </div>
+      <!-- Period card -->
+      <div class="period-card">
+        <div class="period-btn active">Hôm nay</div>
+        <div class="period-btn">Hôm qua</div>
+        <div class="period-btn">Tuần này</div>
+        <div class="period-btn">Tháng này</div>
+      </div>
+      <div class="dash-scroll" style="padding-top:8px;">
+        <!-- Chart skeleton -->
+        <div style="margin:0 16px 12px; background:white; border-radius:16px; padding:14px; border:1px solid #e5e7eb;">
+          <span class="sk" style="width:100px;height:12px;display:block;margin-bottom:10px;"></span>
+          <div class="bar-chart">
+            <span class="sk" style="flex:1;height:40px;border-radius:4px;"></span>
+            <span class="sk" style="flex:1;height:55px;border-radius:4px;"></span>
+            <span class="sk" style="flex:1;height:30px;border-radius:4px;"></span>
+            <span class="sk" style="flex:1;height:65px;border-radius:4px;"></span>
+            <span class="sk" style="flex:1;height:45px;border-radius:4px;"></span>
+            <span class="sk" style="flex:1;height:70px;border-radius:4px;"></span>
+            <span class="sk" style="flex:1;height:50px;border-radius:4px;"></span>
+          </div>
+        </div>
+        <!-- Quick card skeleton -->
+        <div style="margin:0 16px 12px; background:white; border-radius:16px; padding:14px; border:1px solid #e5e7eb; display:flex; align-items:center; gap:12px;">
+          <span class="sk" style="width:40px;height:40px;border-radius:20px;flex-shrink:0;"></span>
+          <span class="sk" style="flex:1;height:16px;"></span>
+        </div>
+        <!-- Orders skeleton -->
+        <div style="margin:0 16px 10px;"><span class="sk" style="width:120px;height:16px;display:block;"></span></div>
+        <div style="margin:0 16px 10px; background:white; border-radius:16px; padding:14px; border:1px solid #e5e7eb;">
+          <span class="sk" style="width:80px;height:14px;display:block;margin-bottom:6px;"></span>
+          <span class="sk" style="width:160px;height:12px;display:block;"></span>
+        </div>
+        <div style="margin:0 16px 10px; background:white; border-radius:16px; padding:14px; border:1px solid #e5e7eb;">
+          <span class="sk" style="width:80px;height:14px;display:block;margin-bottom:6px;"></span>
+          <span class="sk" style="width:140px;height:12px;display:block;"></span>
+        </div>
+        <div style="margin:0 16px 10px; background:white; border-radius:16px; padding:14px; border:1px solid #e5e7eb;">
+          <span class="sk" style="width:80px;height:14px;display:block;margin-bottom:6px;"></span>
+          <span class="sk" style="width:150px;height:12px;display:block;"></span>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item active">
+          <span class="tab-icon tab-active-icon"><i class="mdi mdi-home-outline"></i></span>
+          <span class="tab-lbl" style="color:#4f46e5;">Home</span>
+        </div>
+        <div class="tab-item">
+          <span class="tab-icon tab-inactive-icon"><i class="mdi mdi-cash-register"></i></span>
+          <span class="tab-lbl">Bán hàng</span>
+        </div>
+        <div class="tab-item">
+          <span class="tab-icon tab-inactive-icon"><i class="mdi mdi-wallet-outline"></i></span>
+          <span class="tab-lbl">Chi phí</span>
+        </div>
+        <div class="tab-item">
+          <span class="tab-icon tab-inactive-icon"><i class="mdi mdi-chart-areaspline"></i></span>
+          <span class="tab-lbl">Báo cáo</span>
+        </div>
+        <div class="tab-item">
+          <span class="tab-icon tab-inactive-icon"><i class="mdi mdi-dots-horizontal"></i></span>
+          <span class="tab-lbl">Thêm</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 2: With Data ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">With Data (Today)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar light" style="background:#4f46e5;">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="dash-header">
+        <div class="dash-greeting-row">
+          <span class="dash-greeting">Xin chào, Khoa! 👋</span>
+          <div class="bell-wrap">
+            <span class="bell-icon">🔔</span>
+            <div class="bell-badge">3</div>
+          </div>
+        </div>
+        <div class="dash-shop-row">
+          <span style="font-size:11px;">🏪</span>
+          <span class="dash-shop-name">Kim Ngân Phát · 12 Nguyễn Trãi</span>
+        </div>
+        <div class="dash-rev-label">Doanh thu</div>
+        <div class="dash-rev-row">
+          <span class="dash-rev-amount">12.500.000 ₫</span>
+          <div class="trend-badge">
+            <span style="font-size:10px;">↑</span>
+            <span class="trend-text">+18%</span>
+          </div>
+          <span class="eye-icon">👁</span>
+        </div>
+        <div class="dash-trend-sub">So với hôm qua</div>
+        <div class="stat-cols">
+          <div class="stat-col">
+            <div class="stat-col-label">Đơn hàng</div>
+            <div class="stat-col-val">47</div>
+          </div>
+          <div class="stat-col">
+            <div class="stat-col-label">Hoàn thành</div>
+            <div class="stat-col-val">41</div>
+          </div>
+          <div class="stat-col">
+            <div class="stat-col-label">Đang xử lý</div>
+            <div class="stat-col-val">6</div>
+          </div>
+        </div>
+      </div>
+      <div class="period-card">
+        <div class="period-btn active">Hôm nay</div>
+        <div class="period-btn">Hôm qua</div>
+        <div class="period-btn">Tuần này</div>
+        <div class="period-btn">Tháng này</div>
+      </div>
+      <div class="dash-scroll" style="overflow:hidden;">
+        <div class="chart-card" style="margin-top:8px;">
+          <div class="chart-title">Doanh thu theo giờ</div>
+          <div class="bar-chart">
+            <div class="bar" style="flex:1;height:22px;background:#c7d2fe;"></div>
+            <div class="bar" style="flex:1;height:35px;background:#c7d2fe;"></div>
+            <div class="bar" style="flex:1;height:18px;background:#c7d2fe;"></div>
+            <div class="bar" style="flex:1;height:50px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:62px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:45px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:70px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:55px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:40px;background:#4f46e5;"></div>
+          </div>
+          <div class="chart-labels">
+            <span class="chart-lbl">8h</span>
+            <span class="chart-lbl">10h</span>
+            <span class="chart-lbl">12h</span>
+            <span class="chart-lbl">14h</span>
+            <span class="chart-lbl">16h</span>
+          </div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-icon-wrap">👥</div>
+          <span class="quick-title">Khách hàng</span>
+          <span class="quick-chevron">›</span>
+        </div>
+        <div class="section-lbl">Đơn hàng gần đây</div>
+        <div class="order-card">
+          <div>
+            <div class="order-num">#TPS-00047</div>
+            <div class="order-meta">Khách lẻ · 09:32, 13/05/2026</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total">265.000 ₫</div>
+            <div class="order-badge" style="background:#dcfce7;color:#15803d;">Hoàn thành</div>
+          </div>
+        </div>
+        <div class="order-card">
+          <div>
+            <div class="order-num">#TPS-00046</div>
+            <div class="order-meta">Nguyễn Thị Lan · 09:15</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total">1.200.000 ₫</div>
+            <div class="order-badge" style="background:#dbeafe;color:#1d4ed8;">Đang xử lý</div>
+          </div>
+        </div>
+        <div class="order-card">
+          <div>
+            <div class="order-num">#TPS-00045</div>
+            <div class="order-meta">Trần Văn Hùng · 08:50</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total">450.000 ₫</div>
+            <div class="order-badge" style="background:#fef3c7;color:#92400e;">Chờ xác nhận</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item active">
+          <span class="tab-icon tab-active-icon"><i class="mdi mdi-home-outline"></i></span>
+          <span class="tab-lbl" style="color:#4f46e5;">Home</span>
+        </div>
+        <div class="tab-item">
+          <span class="tab-icon tab-inactive-icon"><i class="mdi mdi-cash-register"></i></span>
+          <span class="tab-lbl">Bán hàng</span>
+        </div>
+        <div class="tab-item">
+          <span class="tab-icon tab-inactive-icon"><i class="mdi mdi-wallet-outline"></i></span>
+          <span class="tab-lbl">Chi phí</span>
+        </div>
+        <div class="tab-item">
+          <span class="tab-icon tab-inactive-icon"><i class="mdi mdi-chart-areaspline"></i></span>
+          <span class="tab-lbl">Báo cáo</span>
+        </div>
+        <div class="tab-item">
+          <span class="tab-icon tab-inactive-icon"><i class="mdi mdi-dots-horizontal"></i></span>
+          <span class="tab-lbl">Thêm</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 3: Privacy Mode ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Privacy Mode (hidden)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar light" style="background:#4f46e5;">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="dash-header">
+        <div class="dash-greeting-row">
+          <span class="dash-greeting">Xin chào, Khoa! 👋</span>
+          <div class="bell-wrap">
+            <span class="bell-icon">🔔</span>
+          </div>
+        </div>
+        <div class="dash-shop-row">
+          <span style="font-size:11px;">🏪</span>
+          <span class="dash-shop-name">Kim Ngân Phát</span>
+        </div>
+        <div class="dash-rev-label">Doanh thu</div>
+        <div class="dash-rev-row">
+          <span class="privacy-mask">••••</span>
+          <span class="eye-icon">🙈</span>
+        </div>
+        <div style="margin-bottom:14px;"></div>
+        <div class="stat-cols">
+          <div class="stat-col">
+            <div class="stat-col-label">Đơn hàng</div>
+            <div class="stat-col-val">47</div>
+          </div>
+          <div class="stat-col">
+            <div class="stat-col-label">Hoàn thành</div>
+            <div class="stat-col-val">41</div>
+          </div>
+          <div class="stat-col">
+            <div class="stat-col-label">Đang xử lý</div>
+            <div class="stat-col-val">6</div>
+          </div>
+        </div>
+      </div>
+      <div class="period-card">
+        <div class="period-btn active">Hôm nay</div>
+        <div class="period-btn">Hôm qua</div>
+        <div class="period-btn">Tuần này</div>
+        <div class="period-btn">Tháng này</div>
+      </div>
+      <div class="dash-scroll" style="overflow:hidden; padding-top:8px;">
+        <div class="chart-card">
+          <div class="chart-title">Doanh thu theo giờ</div>
+          <div class="bar-chart">
+            <div class="bar" style="flex:1;height:22px;background:#c7d2fe;"></div>
+            <div class="bar" style="flex:1;height:35px;background:#c7d2fe;"></div>
+            <div class="bar" style="flex:1;height:50px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:62px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:70px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:55px;background:#4f46e5;"></div>
+            <div class="bar" style="flex:1;height:40px;background:#4f46e5;"></div>
+          </div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-icon-wrap">👥</div>
+          <span class="quick-title">Khách hàng</span>
+          <span class="quick-chevron">›</span>
+        </div>
+        <div class="section-lbl">Đơn hàng gần đây</div>
+        <div class="order-card">
+          <div>
+            <div class="order-num">#TPS-00047</div>
+            <div class="order-meta">Khách lẻ · 09:32</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total" style="letter-spacing:2px;">•••••</div>
+            <div class="order-badge" style="background:#dcfce7;color:#15803d;">Hoàn thành</div>
+          </div>
+        </div>
+        <div class="order-card">
+          <div>
+            <div class="order-num">#TPS-00046</div>
+            <div class="order-meta">Nguyễn Thị Lan · 09:15</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total" style="letter-spacing:2px;">•••••</div>
+            <div class="order-badge" style="background:#dbeafe;color:#1d4ed8;">Đang xử lý</div>
+          </div>
+        </div>
+        <div class="order-card">
+          <div>
+            <div class="order-num">#TPS-00045</div>
+            <div class="order-meta">Trần Văn Hùng · 08:50</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total" style="letter-spacing:2px;">•••••</div>
+            <div class="order-badge" style="background:#fef3c7;color:#92400e;">Chờ xác nhận</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item active">
+          <span class="tab-icon tab-active-icon"><i class="mdi mdi-home-outline"></i></span>
+          <span class="tab-lbl" style="color:#4f46e5;">Home</span>
+        </div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 4: Subscription Banner ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Subscription Banners</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar light" style="background:#ef4444;">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <!-- Expired banner (red) -->
+      <div class="sub-banner expired">
+        <span style="font-size:14px;">⚠️</span>
+        <span class="sub-banner-text">Gói dịch vụ đã hết hạn. Vui lòng gia hạn để tiếp tục sử dụng.</span>
+      </div>
+      <div class="dash-header" style="background:#ef4444; padding-bottom:40px;">
+        <div class="dash-greeting-row">
+          <span class="dash-greeting">Xin chào, Khoa! 👋</span>
+          <span class="bell-icon">🔔</span>
+        </div>
+        <div class="dash-shop-row">
+          <span class="dash-shop-name">Kim Ngân Phát</span>
+        </div>
+        <div class="dash-rev-label">Doanh thu</div>
+        <div class="dash-rev-row">
+          <span class="dash-rev-amount">0 ₫</span>
+        </div>
+        <div style="margin-bottom:14px;"></div>
+        <div class="stat-cols">
+          <div class="stat-col"><div class="stat-col-label">Đơn hàng</div><div class="stat-col-val">0</div></div>
+          <div class="stat-col"><div class="stat-col-label">Hoàn thành</div><div class="stat-col-val">0</div></div>
+          <div class="stat-col"><div class="stat-col-label">Đang xử lý</div><div class="stat-col-val">0</div></div>
+        </div>
+      </div>
+      <!-- Expiring soon banner (amber) shown separately below as second example -->
+      <div class="sub-banner expiring" style="margin-top:0;">
+        <span style="font-size:14px;">⏰</span>
+        <span class="sub-banner-text">Gói dịch vụ sắp hết hạn ngày 20/05/2026</span>
+      </div>
+      <div class="period-card">
+        <div class="period-btn active">Hôm nay</div>
+        <div class="period-btn">Hôm qua</div>
+        <div class="period-btn">Tuần này</div>
+        <div class="period-btn">Tháng này</div>
+      </div>
+      <div class="dash-scroll" style="overflow:hidden; padding-top:8px;">
+        <div class="quick-card">
+          <div class="quick-icon-wrap">👥</div>
+          <span class="quick-title">Khách hàng</span>
+          <span class="quick-chevron">›</span>
+        </div>
+        <div class="section-lbl">Đơn hàng gần đây</div>
+        <div style="margin:20px 16px; text-align:center;">
+          <span style="font-size:36px;">🧾</span>
+          <div style="font-size:14px;font-weight:600;color:#374151;margin-top:8px;">Chưa có đơn hàng hôm nay</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item active"><span class="tab-icon tab-active-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl" style="color:#4f46e5;">Home</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 5: Dark Mode ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dark Mode</div>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar dark-bar" style="background:#312e81;">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="dash-header" style="background:#312e81; padding-bottom:40px;">
+        <div class="dash-greeting-row">
+          <span class="dash-greeting">Xin chào, Khoa! 👋</span>
+          <div class="bell-wrap">
+            <span class="bell-icon">🔔</span>
+            <div class="bell-badge">3</div>
+          </div>
+        </div>
+        <div class="dash-shop-row">
+          <span style="font-size:11px;">🏪</span>
+          <span class="dash-shop-name">Kim Ngân Phát</span>
+        </div>
+        <div class="dash-rev-label">Doanh thu</div>
+        <div class="dash-rev-row">
+          <span class="dash-rev-amount">12.500.000 ₫</span>
+          <div class="trend-badge">
+            <span style="font-size:10px;">↑</span>
+            <span class="trend-text">+18%</span>
+          </div>
+          <span class="eye-icon">👁</span>
+        </div>
+        <div class="dash-trend-sub">So với hôm qua</div>
+        <div class="stat-cols">
+          <div class="stat-col"><div class="stat-col-label">Đơn hàng</div><div class="stat-col-val">47</div></div>
+          <div class="stat-col"><div class="stat-col-label">Hoàn thành</div><div class="stat-col-val">41</div></div>
+          <div class="stat-col"><div class="stat-col-label">Đang xử lý</div><div class="stat-col-val">6</div></div>
+        </div>
+      </div>
+      <div class="period-card" style="background:#1e293b;border-color:#334155;">
+        <div class="period-btn active">Hôm nay</div>
+        <div class="period-btn" style="color:#94a3b8;">Hôm qua</div>
+        <div class="period-btn" style="color:#94a3b8;">Tuần này</div>
+        <div class="period-btn" style="color:#94a3b8;">Tháng này</div>
+      </div>
+      <div class="dash-scroll" style="overflow:hidden;">
+        <div class="chart-card" style="margin-top:8px; background:#1e293b; border-color:#334155;">
+          <div class="chart-title" style="color:#94a3b8;">Doanh thu theo giờ</div>
+          <div class="bar-chart">
+            <div class="bar" style="flex:1;height:22px;background:#4338ca;"></div>
+            <div class="bar" style="flex:1;height:35px;background:#4338ca;"></div>
+            <div class="bar" style="flex:1;height:50px;background:#6366f1;"></div>
+            <div class="bar" style="flex:1;height:62px;background:#6366f1;"></div>
+            <div class="bar" style="flex:1;height:70px;background:#818cf8;"></div>
+            <div class="bar" style="flex:1;height:55px;background:#6366f1;"></div>
+            <div class="bar" style="flex:1;height:40px;background:#4338ca;"></div>
+          </div>
+        </div>
+        <div class="quick-card" style="background:#1e293b;border-color:#334155;">
+          <div class="quick-icon-wrap" style="background:#312e81;">👥</div>
+          <span class="quick-title" style="color:#f1f5f9;">Khách hàng</span>
+          <span class="quick-chevron">›</span>
+        </div>
+        <div class="section-lbl" style="color:#f1f5f9;">Đơn hàng gần đây</div>
+        <div class="order-card" style="background:#1e293b;border-color:#334155;">
+          <div>
+            <div class="order-num" style="color:#f1f5f9;">#TPS-00047</div>
+            <div class="order-meta">Khách lẻ · 09:32</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total" style="color:#f1f5f9;">265.000 ₫</div>
+            <div class="order-badge" style="background:#14532d40;color:#86efac;">Hoàn thành</div>
+          </div>
+        </div>
+        <div class="order-card" style="background:#1e293b;border-color:#334155;">
+          <div>
+            <div class="order-num" style="color:#f1f5f9;">#TPS-00046</div>
+            <div class="order-meta">Nguyễn Thị Lan · 09:15</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total" style="color:#f1f5f9;">1.200.000 ₫</div>
+            <div class="order-badge" style="background:#1e3a5f50;color:#93c5fd;">Đang xử lý</div>
+          </div>
+        </div>
+        <div class="order-card" style="background:#1e293b;border-color:#334155;">
+          <div>
+            <div class="order-num" style="color:#f1f5f9;">#TPS-00045</div>
+            <div class="order-meta">Trần Văn Hùng · 08:50</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total" style="color:#f1f5f9;">450.000 ₫</div>
+            <div class="order-badge" style="background:#78350f40;color:#fcd34d;">Chờ xác nhận</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar" style="background:#1e293b;border-top-color:#334155;">
+        <div class="tab-item active">
+          <span class="tab-icon" style="color:#818cf8;"><i class="mdi mdi-home-outline"></i></span>
+          <span class="tab-lbl" style="color:#818cf8;">Home</span>
+        </div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#6b7280;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl" style="color:#6b7280;">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl" style="color:#6b7280;">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon tab-inactive-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#6b7280;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /phone-row -->
+
+</body>
+</html>

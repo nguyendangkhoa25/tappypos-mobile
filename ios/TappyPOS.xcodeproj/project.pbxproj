@@ -20,7 +20,7 @@
 		13B07F961A680F5B00A75B9A /* TappyPOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TappyPOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TappyPOS/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = TappyPOS/Info.plist; sourceTree = "<group>"; };
-		1EC09B58481058948A8A600E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = TappyPOS/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		1EC09B58481058948A8A600E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = TappyPOS/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6F4A93FE1169071348C28F46 /* Pods-TappyPOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TappyPOS.release.xcconfig"; path = "Target Support Files/Pods-TappyPOS/Pods-TappyPOS.release.xcconfig"; sourceTree = "<group>"; };
 		759D50F89D35E21E81A7654F /* libPods-TappyPOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TappyPOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8148C042938542E59684E1C0 /* Pods-TappyPOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TappyPOS.debug.xcconfig"; path = "Target Support Files/Pods-TappyPOS/Pods-TappyPOS.debug.xcconfig"; sourceTree = "<group>"; };
@@ -73,7 +73,6 @@
 				8148C042938542E59684E1C0 /* Pods-TappyPOS.debug.xcconfig */,
 				6F4A93FE1169071348C28F46 /* Pods-TappyPOS.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -349,6 +348,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = TappyPOS/TappyPOS.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JANRX6WR5A;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -385,6 +385,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = TappyPOS/TappyPOS.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JANRX6WR5A;
 				INFOPLIST_FILE = TappyPOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (

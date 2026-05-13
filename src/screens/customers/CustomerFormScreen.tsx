@@ -5,15 +5,20 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { customerApi, type CustomerFormPayload } from '../../services/api';
+import { useAlertStore } from '../../store/alertStore';
+import { useToastStore } from '../../store/toastStore';
+import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { Skeleton } from '../../components/Skeleton';
+import { PhoneInput } from '../../components/PhoneInput';
 import type { HomeScreenProps } from '../../types/navigation';
 
 type Props = HomeScreenProps<'CustomerForm'>;
@@ -119,6 +124,9 @@ export function CustomerFormScreen({ navigation, route }: Props) {
   const { t } = useTranslation();
   const { top } = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { show: showAlert } = useAlertStore();
+  const { show: showToast } = useToastStore();
+  const showErrorAlert = useErrorAlert();
   const { customerId } = route.params;
   const isEdit = !!customerId;
 
@@ -164,10 +172,10 @@ export function CustomerFormScreen({ navigation, route }: Props) {
     mutationFn: (payload: CustomerFormPayload) => customerApi.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      Alert.alert('✓', t('customers.createSuccess'));
+      showToast(t('customers.createSuccess'));
       navigation.goBack();
     },
-    onError: () => Alert.alert(t('common.error'), t('common.errorStateMsg')),
+    onError: showErrorAlert,
   });
 
   const updateMutation = useMutation({
@@ -175,10 +183,10 @@ export function CustomerFormScreen({ navigation, route }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customer', customerId] });
-      Alert.alert('✓', t('customers.updateSuccess'));
+      showToast(t('customers.updateSuccess'));
       navigation.goBack();
     },
-    onError: () => Alert.alert(t('common.error'), t('common.errorStateMsg')),
+    onError: showErrorAlert,
   });
 
   async function handlePhoneBlur() {
@@ -188,12 +196,12 @@ export function CustomerFormScreen({ navigation, route }: Props) {
       const res = await customerApi.checkPhone(phone);
       const existing = res.data.data;
       if (existing && existing.id !== customerId) {
-        Alert.alert(
+        showAlert(
           t('customers.phoneConflictTitle'),
           t('customers.phoneConflictMsg', { name: existing.name }),
           [
-            { text: t('common.cancel'), style: 'cancel', onPress: () => set('phone', '') },
-            { text: t('customers.phoneConflictContinue'), style: 'default' },
+            { label: t('common.cancel'), style: 'cancel', onPress: () => set('phone', '') },
+            { label: t('customers.phoneConflictContinue') },
           ],
         );
       }
@@ -204,15 +212,15 @@ export function CustomerFormScreen({ navigation, route }: Props) {
 
   function validate(): boolean {
     if (!form.name.trim()) {
-      Alert.alert(t('common.error'), t('customers.nameRequired'));
+      showAlert(t('common.error'), t('customers.nameRequired'), [{ label: t('common.close'), style: 'cancel' }]);
       return false;
     }
     if (!form.phone.trim()) {
-      Alert.alert(t('common.error'), t('customers.phoneRequired'));
+      showAlert(t('common.error'), t('customers.phoneRequired'), [{ label: t('common.close'), style: 'cancel' }]);
       return false;
     }
     if (form.phone.replace(/\D/g, '').length < 10) {
-      Alert.alert(t('common.error'), t('customers.phoneTooShort'));
+      showAlert(t('common.error'), t('customers.phoneTooShort'), [{ label: t('common.close'), style: 'cancel' }]);
       return false;
     }
     return true;
@@ -267,7 +275,10 @@ export function CustomerFormScreen({ navigation, route }: Props) {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <KeyboardAvoidingView
+      className="flex-1 bg-gray-50"
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <View className="bg-primary px-6 pb-5" style={{ paddingTop: top + 16 }}>
         <View className="flex-row items-center justify-between">
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -278,11 +289,12 @@ export function CustomerFormScreen({ navigation, route }: Props) {
           </Text>
           <View style={{ width: 24 }} />
         </View>
+        <Text className="text-xs text-indigo-200 mt-1">{t('customers.formHint')}</Text>
       </View>
 
       <ScrollView
         className="flex-1 px-4 pt-4"
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 16 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Section 1 – Basic Info */}
@@ -300,12 +312,11 @@ export function CustomerFormScreen({ navigation, route }: Props) {
           </FormField>
 
           <FormField label={`${t('customers.phone')} *`}>
-            <StyledInput
+            <PhoneInput
               testID="customer-phone"
               value={form.phone}
-              onChangeText={(v) => set('phone', v)}
+              onChangeRaw={(v) => set('phone', v)}
               placeholder={t('customers.phonePlaceholder')}
-              keyboardType="phone-pad"
               onBlur={handlePhoneBlur}
             />
           </FormField>
@@ -463,7 +474,10 @@ export function CustomerFormScreen({ navigation, route }: Props) {
           </FormField>
         </View>
 
-        {/* Submit */}
+      </ScrollView>
+
+      {/* Fixed footer — always above keyboard thanks to KeyboardAvoidingView */}
+      <View className="px-4 pb-6 pt-3 bg-gray-50">
         <TouchableOpacity
           testID="customer-form-submit"
           onPress={handleSubmit}
@@ -482,7 +496,7 @@ export function CustomerFormScreen({ navigation, route }: Props) {
             </Text>
           )}
         </TouchableOpacity>
-      </ScrollView>
-    </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }

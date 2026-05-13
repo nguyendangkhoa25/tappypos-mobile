@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Thiết lập Kệ &amp; Tủ hàng</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  .nav-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 10px 16px 12px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .nav-back { font-size: 22px; color: #374151; line-height: 1; }
+  .nav-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .nav-skip { font-size: 13px; font-weight: 600; color: #6366f1; }
+
+  .scroll-body { flex: 1; overflow: hidden; }
+
+  /* Empty */
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 24px 28px; text-align: center; }
+  .empty-title { font-size: 18px; font-weight: 700; color: #111827; margin: 14px 0 8px; }
+  .empty-desc { font-size: 13px; color: #6b7280; line-height: 1.6; margin-bottom: 28px; }
+  .empty-cta { background: #4f46e5; border-radius: 16px; padding: 14px 0; font-size: 14px; font-weight: 700; color: white; margin-bottom: 14px; width: 100%; text-align: center; }
+  .empty-skip-link { font-size: 13px; color: #9ca3af; }
+  .empty-skip-link span { color: #6366f1; font-weight: 600; }
+
+  /* Zone */
+  .zone-section { padding: 0 14px; }
+  .zone-header { display: flex; align-items: center; gap: 8px; padding: 14px 0 8px; border-bottom: 1px solid #f3f4f6; }
+  .zone-icon { font-size: 15px; }
+  .zone-name { font-size: 12px; font-weight: 700; color: #374151; flex: 1; text-transform: uppercase; letter-spacing: 0.05em; }
+  .zone-count { font-size: 11px; color: #9ca3af; }
+
+  /* Shelf row */
+  .shelf-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid #f9fafb; }
+  .shelf-drag { font-size: 18px; color: #d1d5db; }
+  .shelf-icon-wrap { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .shelf-icon-purple { background: #eef2ff; }
+  .shelf-icon-teal { background: #f0fdfa; }
+  .shelf-icon-amber { background: #fffbeb; }
+  .shelf-info { flex: 1; min-width: 0; }
+  .shelf-name { font-size: 14px; font-weight: 600; color: #111827; }
+  .shelf-meta { font-size: 11px; color: #9ca3af; margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+  .shelf-type-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; border-radius: 6px; padding: 2px 7px; }
+  .badge-shelf { background: #ede9fe; color: #5b21b6; }
+  .badge-cabinet { background: #fef3c7; color: #92400e; }
+  .badge-counter { background: #dcfce7; color: #15803d; }
+  .badge-fridge { background: #e0f2fe; color: #0369a1; }
+  .shelf-actions { display: flex; gap: 6px; }
+  .shelf-edit-btn { font-size: 16px; color: #6366f1; padding: 4px; }
+  .shelf-del-btn { font-size: 16px; color: #d1d5db; padding: 4px; }
+
+  /* FAB */
+  .fab-row { padding: 10px 14px 14px; display: flex; justify-content: flex-end; background: white; border-top: 1px solid #f1f5f9; flex-shrink: 0; }
+  .fab-btn { background: #4f46e5; border-radius: 16px; padding: 10px 18px; font-size: 13px; font-weight: 700; color: white; display: flex; align-items: center; gap: 6px; }
+
+  /* Success */
+  .success-banner { margin: 14px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; }
+  .success-title { font-size: 13px; font-weight: 700; color: #15803d; margin-bottom: 2px; }
+  .success-desc { font-size: 12px; color: #166534; line-height: 1.5; }
+  .default-shelf-card { margin: 0 14px 12px; background: white; border-radius: 16px; border: 1.5px dashed #c7d2fe; padding: 14px; }
+  .default-shelf-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .default-shelf-icon { width: 40px; height: 40px; background: #eef2ff; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .default-shelf-name { font-size: 14px; font-weight: 700; color: #111827; }
+  .default-shelf-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .default-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .default-chip { background: #f3f4f6; border-radius: 8px; padding: 4px 10px; font-size: 11px; color: #374151; font-weight: 500; }
+  .edit-default-link { font-size: 12px; color: #6366f1; font-weight: 600; margin-top: 10px; }
+  .hint-box { margin: 0 14px; background: #f1f5f9; border-radius: 12px; padding: 12px 14px; font-size: 12px; color: #64748b; line-height: 1.6; }
+
+  /* Overlay / sheet */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; z-index: 50; }
+  .bottom-sheet { background: white; border-radius: 28px 28px 0 0; padding: 16px 18px 28px; width: 100%; }
+  .sheet-drag { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 0 auto 14px; }
+  .sheet-title { font-size: 17px; font-weight: 700; color: #111827; margin-bottom: 16px; }
+  .field-section { margin-bottom: 14px; }
+  .field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 7px; }
+  .text-input { background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 11px 14px; font-size: 14px; color: #111827; width: 100%; }
+  .text-input.focused { border-color: #6366f1; background: white; }
+  .type-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .type-chip { padding: 7px 13px; border-radius: 99px; font-size: 12px; font-weight: 600; border: 1.5px solid #e5e7eb; background: white; color: #6b7280; display: flex; align-items: center; gap: 4px; }
+  .type-chip.active { background: #eef2ff; border-color: #a5b4fc; color: #4338ca; }
+  .stepper-row { display: flex; align-items: center; justify-content: space-between; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 8px 14px; }
+  .stepper-label { font-size: 13px; color: #374151; }
+  .stepper-ctrl { display: flex; align-items: center; }
+  .stepper-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #4f46e5; font-weight: 700; background: #f5f3ff; border-radius: 10px; }
+  .stepper-val { width: 38px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #111827; }
+  .zone-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .zone-chip { padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 500; border: 1.5px solid #e5e7eb; background: white; color: #6b7280; }
+  .zone-chip.active { background: #eef2ff; border-color: #a5b4fc; color: #4338ca; font-weight: 600; }
+  .sheet-btns { display: flex; gap: 10px; margin-top: 16px; }
+  .sheet-cancel { flex: 1; padding: 13px 0; border-radius: 16px; border: 1px solid #e5e7eb; text-align: center; font-size: 14px; font-weight: 600; color: #4b5563; }
+  .sheet-save { flex: 2; padding: 13px 0; border-radius: 16px; background: #4f46e5; text-align: center; font-size: 14px; font-weight: 700; color: white; }
+  .sheet-delete-link { text-align: center; margin-top: 14px; font-size: 13px; color: #ef4444; font-weight: 600; }
+
+  /* Alert */
+  .alert-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 32px; }
+  .alert-box { background: white; border-radius: 20px; padding: 24px 20px; text-align: center; width: 100%; }
+  .alert-title { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+  .alert-desc { font-size: 13px; color: #6b7280; line-height: 1.55; margin-bottom: 20px; }
+  .alert-btns { display: flex; gap: 10px; }
+  .alert-cancel { flex: 1; padding: 12px 0; border-radius: 14px; border: 1px solid #e5e7eb; font-size: 14px; font-weight: 600; color: #374151; text-align: center; }
+  .alert-confirm { flex: 1; padding: 12px 0; border-radius: 14px; background: #ef4444; font-size: 14px; font-weight: 700; color: white; text-align: center; }
+
+  /* Skeleton */
+  .skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 12px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  .tab-bar { height: 82px; flex-shrink: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; align-items: flex-start; padding-top: 10px; }
+  .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .tab-icon { font-size: 22px; line-height: 1; }
+  .tab-lbl { font-size: 10px; font-weight: 600; color: #9ca3af; }
+  .tab-item.active .tab-lbl { color: #4f46e5; font-weight: 700; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</head>
+<body>
+
+<h1>Thiết lập Kệ &amp; Tủ hàng</h1>
+<p class="subtitle">ShelfSetupScreen — Cửa hàng tiện lợi / tiệm trang sức. Có thể bỏ qua; kệ mặc định tự động được tạo khi bỏ qua.</p>
+
+<!-- ══════════════════════════════════════════ -->
+<h2>1. Trống &amp; Bỏ qua</h2>
+<!-- ══════════════════════════════════════════ -->
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Chưa có kệ</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="nav-header">
+        <i class="mdi mdi-arrow-left nav-back"></i>
+        <span class="nav-title">Kệ &amp; tủ hàng</span>
+        <span class="nav-skip">Bỏ qua</span>
+      </div>
+      <div class="scroll-body">
+        <div class="empty-state">
+          <i class="mdi mdi-bookshelf" style="font-size:64px; color:#c7d2fe;"></i>
+          <div class="empty-title">Chưa có kệ hay tủ nào</div>
+          <div class="empty-desc">Thiết lập kệ, tủ kính trong cửa hàng giúp bạn biết hàng hoá đang ở vị trí nào khi nhập kho.</div>
+          <div class="empty-cta">+ Thêm kệ / tủ đầu tiên</div>
+          <div class="empty-skip-link">Hoặc <span>bỏ qua, dùng kệ mặc định →</span></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone-wrap">
+    <div class="phone-label">Bỏ qua → Kệ mặc định</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="nav-header">
+        <i class="mdi mdi-arrow-left nav-back"></i>
+        <span class="nav-title">Kệ &amp; tủ hàng</span>
+      </div>
+      <div class="scroll-body">
+        <div class="success-banner">
+          <span style="font-size:20px; flex-shrink:0;">✅</span>
+          <div>
+            <div class="success-title">Đã tạo kệ hàng mặc định</div>
+            <div class="success-desc">Có thể đổi tên hoặc thêm kệ mới bất kỳ lúc nào trong Cài đặt.</div>
+          </div>
+        </div>
+        <div class="default-shelf-card">
+          <div class="default-shelf-header">
+            <div class="default-shelf-icon"><i class="mdi mdi-bookshelf" style="color:#6366f1; font-size:20px;"></i></div>
+            <div>
+              <div class="default-shelf-name">Kệ hàng (Mặc định)</div>
+              <div class="default-shelf-sub">Tự động tạo · 3 ngăn</div>
+            </div>
+          </div>
+          <div class="default-chips">
+            <span class="default-chip">🗂 Ngăn 1</span>
+            <span class="default-chip">🗂 Ngăn 2</span>
+            <span class="default-chip">🗂 Ngăn 3</span>
+          </div>
+          <div class="edit-default-link">✏️ Đổi tên hoặc thêm ngăn →</div>
+        </div>
+        <div class="hint-box">💡 Khi thêm sản phẩm vào kho, bạn có thể chọn kệ/ngăn để biết hàng đang để ở đâu.</div>
+      </div>
+      <div class="fab-row">
+        <div class="fab-btn"><i class="mdi mdi-plus"></i> Thêm kệ / tủ</div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<h2>2. Danh sách kệ / tủ</h2>
+<!-- ══════════════════════════════════════════ -->
+<div class="phone-row">
+
+  <!-- Convenience store -->
+  <div class="phone-wrap">
+    <div class="phone-label">Cửa hàng tiện lợi</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="nav-header">
+        <i class="mdi mdi-arrow-left nav-back"></i>
+        <span class="nav-title">Kệ &amp; tủ hàng</span>
+      </div>
+      <div class="scroll-body">
+        <div class="zone-section">
+          <div class="zone-header">
+            <span class="zone-icon">🏪</span>
+            <span class="zone-name">Khu vực chính</span>
+            <span class="zone-count">3 kệ</span>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-purple"><i class="mdi mdi-bookshelf" style="color:#6366f1; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Kệ A</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-shelf">Kệ hàng</span><span>4 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-purple"><i class="mdi mdi-bookshelf" style="color:#6366f1; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Kệ B</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-shelf">Kệ hàng</span><span>4 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-teal"><i class="mdi mdi-fridge-outline" style="color:#0d9488; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Tủ lạnh</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-fridge">Tủ lạnh</span><span>2 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+        </div>
+        <div class="zone-section">
+          <div class="zone-header">
+            <span class="zone-icon">🧾</span>
+            <span class="zone-name">Quầy thu ngân</span>
+            <span class="zone-count">2 kệ</span>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-amber"><i class="mdi mdi-store-outline" style="color:#d97706; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Quầy chính</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-counter">Quầy</span><span>3 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-purple"><i class="mdi mdi-bookshelf" style="color:#6366f1; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Kệ snack</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-shelf">Kệ hàng</span><span>2 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="fab-row">
+        <div class="fab-btn"><i class="mdi mdi-plus"></i> Thêm kệ / tủ</div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jewelry store -->
+  <div class="phone-wrap">
+    <div class="phone-label">Tiệm trang sức</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="nav-header">
+        <i class="mdi mdi-arrow-left nav-back"></i>
+        <span class="nav-title">Kệ &amp; tủ hàng</span>
+      </div>
+      <div class="scroll-body">
+        <div class="zone-section">
+          <div class="zone-header">
+            <span class="zone-icon">💎</span>
+            <span class="zone-name">Quầy chính</span>
+            <span class="zone-count">3 tủ</span>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-amber"><i class="mdi mdi-archive-outline" style="color:#d97706; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Tủ kính A</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-cabinet">Tủ kính</span><span>4 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-amber"><i class="mdi mdi-archive-outline" style="color:#d97706; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Tủ kính B</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-cabinet">Tủ kính</span><span>3 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-amber"><i class="mdi mdi-archive-outline" style="color:#d97706; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Tủ kính C (nhẫn)</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-cabinet">Tủ kính</span><span>2 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+        </div>
+        <div class="zone-section">
+          <div class="zone-header">
+            <span class="zone-icon">🏪</span>
+            <span class="zone-name">Khu vực phụ</span>
+            <span class="zone-count">2 tủ</span>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-amber"><i class="mdi mdi-archive-outline" style="color:#d97706; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Tủ dây chuyền</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-cabinet">Tủ kính</span><span>3 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+          <div class="shelf-row">
+            <i class="mdi mdi-drag shelf-drag"></i>
+            <div class="shelf-icon-wrap shelf-icon-amber"><i class="mdi mdi-archive-outline" style="color:#d97706; font-size:18px;"></i></div>
+            <div class="shelf-info">
+              <div class="shelf-name">Tủ hoa tai</div>
+              <div class="shelf-meta"><span class="shelf-type-badge badge-cabinet">Tủ kính</span><span>2 ngăn</span></div>
+            </div>
+            <div class="shelf-actions"><i class="mdi mdi-pencil shelf-edit-btn"></i><i class="mdi mdi-trash-can-outline shelf-del-btn"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="fab-row">
+        <div class="fab-btn"><i class="mdi mdi-plus"></i> Thêm kệ / tủ</div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<h2>3. Thêm / Sửa kệ</h2>
+<!-- ══════════════════════════════════════════ -->
+<div class="phone-row">
+
+  <!-- Add sheet -->
+  <div class="phone-wrap">
+    <div class="phone-label">Thêm kệ / tủ</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="nav-header" style="opacity:0.3;"><span class="nav-title">Kệ &amp; tủ hàng</span></div>
+      <div class="scroll-body" style="opacity:0.25; padding:14px;">
+        <div class="shelf-row">
+          <div class="shelf-icon-wrap shelf-icon-purple"><i class="mdi mdi-bookshelf" style="color:#6366f1; font-size:18px;"></i></div>
+          <div class="shelf-info"><div class="shelf-name">Kệ A</div></div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet">
+          <div class="sheet-drag"></div>
+          <div class="sheet-title">Thêm kệ / tủ</div>
+          <div class="field-section">
+            <div class="field-label">Tên kệ / tủ</div>
+            <div class="text-input focused">Kệ C</div>
+          </div>
+          <div class="field-section">
+            <div class="field-label">Loại</div>
+            <div class="type-chips">
+              <div class="type-chip active"><i class="mdi mdi-bookshelf"></i> Kệ hàng</div>
+              <div class="type-chip"><i class="mdi mdi-archive-outline"></i> Tủ kính</div>
+              <div class="type-chip"><i class="mdi mdi-fridge-outline"></i> Tủ lạnh</div>
+              <div class="type-chip"><i class="mdi mdi-store-outline"></i> Quầy</div>
+            </div>
+          </div>
+          <div class="field-section">
+            <div class="field-label">Số ngăn</div>
+            <div class="stepper-row">
+              <span class="stepper-label">Số ngăn chứa hàng</span>
+              <div class="stepper-ctrl">
+                <div class="stepper-btn">−</div>
+                <div class="stepper-val">3</div>
+                <div class="stepper-btn">＋</div>
+              </div>
+            </div>
+          </div>
+          <div class="field-section">
+            <div class="field-label">Khu vực <span style="font-size:11px; color:#9ca3af; font-weight:400;">(tuỳ chọn)</span></div>
+            <div class="zone-chips">
+              <div class="zone-chip active">🏪 Khu vực chính</div>
+              <div class="zone-chip">🧾 Quầy thu ngân</div>
+              <div class="zone-chip" style="border-style:dashed;">+ Thêm khu vực</div>
+            </div>
+          </div>
+          <div class="sheet-btns">
+            <div class="sheet-cancel">Huỷ</div>
+            <div class="sheet-save">Lưu kệ / tủ</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit sheet -->
+  <div class="phone-wrap">
+    <div class="phone-label">Sửa kệ / tủ</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="nav-header" style="opacity:0.3;"><span class="nav-title">Kệ &amp; tủ hàng</span></div>
+      <div class="scroll-body" style="opacity:0.25; padding:14px;">
+        <div class="shelf-row">
+          <div class="shelf-icon-wrap shelf-icon-amber"><i class="mdi mdi-archive-outline" style="color:#d97706; font-size:18px;"></i></div>
+          <div class="shelf-info"><div class="shelf-name">Tủ kính A</div></div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet">
+          <div class="sheet-drag"></div>
+          <div class="sheet-title">Sửa kệ / tủ</div>
+          <div class="field-section">
+            <div class="field-label">Tên kệ / tủ</div>
+            <div class="text-input">Tủ kính A</div>
+          </div>
+          <div class="field-section">
+            <div class="field-label">Loại</div>
+            <div class="type-chips">
+              <div class="type-chip"><i class="mdi mdi-bookshelf"></i> Kệ hàng</div>
+              <div class="type-chip active"><i class="mdi mdi-archive-outline"></i> Tủ kính</div>
+              <div class="type-chip"><i class="mdi mdi-fridge-outline"></i> Tủ lạnh</div>
+              <div class="type-chip"><i class="mdi mdi-store-outline"></i> Quầy</div>
+            </div>
+          </div>
+          <div class="field-section">
+            <div class="field-label">Số ngăn</div>
+            <div class="stepper-row">
+              <span class="stepper-label">Số ngăn chứa hàng</span>
+              <div class="stepper-ctrl">
+                <div class="stepper-btn">−</div>
+                <div class="stepper-val">4</div>
+                <div class="stepper-btn">＋</div>
+              </div>
+            </div>
+          </div>
+          <div class="field-section">
+            <div class="field-label">Khu vực</div>
+            <div class="zone-chips">
+              <div class="zone-chip active">💎 Quầy chính</div>
+              <div class="zone-chip">🏪 Khu vực phụ</div>
+            </div>
+          </div>
+          <div class="sheet-btns">
+            <div class="sheet-cancel">Huỷ</div>
+            <div class="sheet-save">Lưu thay đổi</div>
+          </div>
+          <div class="sheet-delete-link">🗑 Xoá kệ / tủ này</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirm -->
+  <div class="phone-wrap">
+    <div class="phone-label">Xác nhận xoá</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="nav-header" style="opacity:0.3;"><span class="nav-title">Kệ &amp; tủ hàng</span></div>
+      <div class="scroll-body" style="opacity:0.15; padding:14px;">
+        <div class="shelf-row">
+          <div class="shelf-icon-wrap shelf-icon-purple"><i class="mdi mdi-bookshelf" style="color:#6366f1; font-size:18px;"></i></div>
+          <div class="shelf-info"><div class="shelf-name">Kệ A</div></div>
+        </div>
+      </div>
+      <div class="alert-overlay">
+        <div class="alert-box">
+          <div style="font-size:36px; margin-bottom:10px;">🗑️</div>
+          <div class="alert-title">Xoá Kệ A?</div>
+          <div class="alert-desc">Kệ này sẽ bị xoá. Các sản phẩm được gán vào kệ này sẽ không còn vị trí lưu trữ.</div>
+          <div class="alert-btns">
+            <div class="alert-cancel">Giữ lại</div>
+            <div class="alert-confirm">Xoá</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<h2>4. Loading</h2>
+<!-- ══════════════════════════════════════════ -->
+<div class="phone-row">
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="nav-header">
+        <i class="mdi mdi-arrow-left nav-back"></i>
+        <span class="nav-title">Kệ &amp; tủ hàng</span>
+      </div>
+      <div class="scroll-body" style="padding:14px;">
+        <div style="margin-bottom:28px;">
+          <div class="skeleton" style="height:14px; width:110px; margin-bottom:16px;"></div>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="skeleton" style="width:36px; height:36px; border-radius:10px; flex-shrink:0;"></div>
+              <div style="flex:1;"><div class="skeleton" style="height:13px; width:75%; margin-bottom:7px;"></div><div class="skeleton" style="height:10px; width:45%;"></div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="skeleton" style="width:36px; height:36px; border-radius:10px; flex-shrink:0;"></div>
+              <div style="flex:1;"><div class="skeleton" style="height:13px; width:60%; margin-bottom:7px;"></div><div class="skeleton" style="height:10px; width:40%;"></div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="skeleton" style="width:36px; height:36px; border-radius:10px; flex-shrink:0;"></div>
+              <div style="flex:1;"><div class="skeleton" style="height:13px; width:70%; margin-bottom:7px;"></div><div class="skeleton" style="height:10px; width:35%;"></div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="skeleton" style="height:14px; width:90px; margin-bottom:16px;"></div>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="skeleton" style="width:36px; height:36px; border-radius:10px; flex-shrink:0;"></div>
+              <div style="flex:1;"><div class="skeleton" style="height:13px; width:65%; margin-bottom:7px;"></div><div class="skeleton" style="height:10px; width:42%;"></div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="skeleton" style="width:36px; height:36px; border-radius:10px; flex-shrink:0;"></div>
+              <div style="flex:1;"><div class="skeleton" style="height:13px; width:55%; margin-bottom:7px;"></div><div class="skeleton" style="height:10px; width:38%;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#4f46e5;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

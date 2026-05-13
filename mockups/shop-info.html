@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Shop Info Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  .page-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px; flex-shrink: 0; }
+  .header-row { display: flex; align-items: center; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 8px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .save-link { font-size: 15px; font-weight: 600; color: #4f46e5; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+
+  .scroll-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: white; border-radius: 16px; padding: 14px; }
+  .field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .field-input { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #111827; background: #f9fafb; }
+  .field-input.placeholder { color: #9ca3af; }
+  .field-input.multiline { height: 68px; display: flex; align-items: flex-start; }
+  .gap-top { margin-top: 12px; }
+
+  /* Shop ID row */
+  .id-row { display: flex; align-items: center; gap: 8px; }
+  .id-code { font-size: 13px; font-family: monospace; color: #374151; flex: 1; }
+  .copy-icon { font-size: 15px; color: #4f46e5; }
+
+  /* Loading */
+  .loader { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #e0e7ff; border-top-color: #4f46e5; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<h1>Shop Info Screen</h1>
+<p class="subtitle">Thông tin cửa hàng — Shop ID (copy), tên, địa chỉ, SĐT, mô tả</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- State 1: Filled -->
+  <div class="phone-wrap">
+    <div class="phone-label">Filled</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Thông tin cửa hàng</span>
+          <span class="save-link">Lưu</span>
+        </div>
+        <div class="header-hint">🏪 Tên, địa chỉ và số điện thoại cửa hàng được in trên mọi hóa đơn khách nhận.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="field-label">Mã cửa hàng</div>
+          <div class="id-row">
+            <span class="id-code">kng-shop-001</span>
+            <span class="copy-icon">⧉</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="field-label">Tên cửa hàng</div>
+          <div class="field-input">Kim Ngân Phát</div>
+          <div class="field-label gap-top">Địa chỉ</div>
+          <div class="field-input">123 Nguyễn Huệ, Q.1, TP.HCM</div>
+          <div class="field-label gap-top">Số điện thoại</div>
+          <div class="field-input">0901 234 567</div>
+          <div class="field-label gap-top">Mô tả</div>
+          <div class="field-input multiline">Cửa hàng kim hoàn &amp; đồ trang sức cao cấp</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Empty (new shop) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Thông tin cửa hàng</span>
+          <span class="save-link">Lưu</span>
+        </div>
+        <div class="header-hint">🏪 Điền hoặc cập nhật thông tin bên dưới, sau đó nhấn Lưu.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="field-label">Mã cửa hàng</div>
+          <div class="id-row">
+            <span class="id-code">tappy-abc-xyz</span>
+            <span class="copy-icon">⧉</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="field-label">Tên cửa hàng</div>
+          <div class="field-input placeholder">Tên cửa hàng của bạn</div>
+          <div class="field-label gap-top">Địa chỉ</div>
+          <div class="field-input placeholder">Địa chỉ cửa hàng</div>
+          <div class="field-label gap-top">Số điện thoại</div>
+          <div class="field-input placeholder">Số điện thoại cửa hàng</div>
+          <div class="field-label gap-top">Mô tả</div>
+          <div class="field-input multiline placeholder">Giới thiệu ngắn về cửa hàng</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Loading -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Thông tin cửa hàng</span>
+          <span class="save-link">Lưu</span>
+        </div>
+      </div>
+      <div class="loader"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

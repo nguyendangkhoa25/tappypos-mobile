@@ -112,7 +112,7 @@ type AppState_ = 'splash' | 'force_update' | 'auth' | 'onboarding' | 'app';
 export function RootNavigator() {
   const [appState, setAppState] = useState<AppState_>('splash');
   const [softUpdateAvailable, setSoftUpdateAvailable] = useState(false);
-  const { isAuthenticated, tenantId, pinEnabled, hydrateFromStorage } = useAuthStore();
+  const { isAuthenticated, tenantId, setupComplete, pinEnabled, hydrateFromStorage } = useAuthStore();
   const hydrateDone = useRef(false);
   const bgTimestamp = useRef<number | null>(null);
 
@@ -162,11 +162,16 @@ export function RootNavigator() {
 
   // Resolve which stack to show after hydration
   function resolveState() {
-    const { isAuthenticated, tenantId } = useAuthStore.getState();
+    const { isAuthenticated, tenantId, setupComplete } = useAuthStore.getState();
     if (!isAuthenticated) {
       setAppState('auth');
-    } else if (!tenantId) {
+    } else if (!setupComplete) {
+      // Authenticated but shop setup not complete — show onboarding wizard.
       setAppState('onboarding');
+    } else if (!tenantId) {
+      // Authenticated, shop set up, but no tenant context on this device
+      // (e.g. after "change shop" — need to re-enter shop ID).
+      setAppState('auth');
     } else {
       setAppState('app');
     }
@@ -177,7 +182,7 @@ export function RootNavigator() {
     if (!hydrateDone.current) return;
     if (appState === 'force_update') return;
     resolveState();
-  }, [isAuthenticated, tenantId]);
+  }, [isAuthenticated, tenantId, setupComplete]);
 
   // Background PIN lock
   useEffect(() => {

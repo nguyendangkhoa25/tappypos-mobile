@@ -11,8 +11,9 @@ type AuthState = {
   tenantId: string | null;
   features: string[];
   deviceSwitchedMessage: string | null;
+  setupComplete: boolean;
 
-  setAuthenticated: (tokens: { accessToken: string; refreshToken?: string }) => Promise<void>;
+  setAuthenticated: (tokens: { accessToken: string; refreshToken?: string; setupComplete?: boolean }) => Promise<void>;
   setStoredPhone: (phone: string) => Promise<void>;
   setPinEnabled: (value: boolean) => Promise<void>;
   setBiometricEnabled: (value: boolean) => Promise<void>;
@@ -29,10 +30,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   tenantId: null,
   features: [],
   deviceSwitchedMessage: null,
+  setupComplete: false,
 
-  setAuthenticated: async ({ accessToken, refreshToken }) => {
+  setAuthenticated: async ({ accessToken, refreshToken, setupComplete }) => {
     const tasks: Promise<void>[] = [SecureStore.setItemAsync('access_token', accessToken)];
     if (refreshToken) tasks.push(SecureStore.setItemAsync('refresh_token', refreshToken));
+    if (setupComplete !== undefined) {
+      tasks.push(SecureStore.setItemAsync('setup_complete', setupComplete ? 'true' : 'false'));
+    }
 
     const jwtTenantId = extractTenantId(accessToken);
     const features = extractFeatures(accessToken);
@@ -52,7 +57,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     await Promise.all(tasks);
-    set({ isAuthenticated: true, tenantId, features });
+    set({
+      isAuthenticated: true,
+      tenantId,
+      features,
+      ...(setupComplete !== undefined ? { setupComplete } : {}),
+    });
   },
 
   setStoredPhone: async (phone) => {
@@ -79,28 +89,29 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    // Keep storedPhone, refresh_token, biometric_enabled so the user lands on PinLoginScreen
-    // and biometric re-login still works after logout.
-    await Promise.all([
-      SecureStore.deleteItemAsync('access_token'),
-      SecureStore.deleteItemAsync('pin_enabled'),
-    ]);
-    set({ isAuthenticated: false, pinEnabled: false, features: [] });
+    // Keep storedPhone, pin_enabled, refresh_token, biometric_enabled, setup_complete so the
+    // user lands on PinLoginScreen and biometric/PIN re-login still works after logout.
+    await SecureStore.deleteItemAsync('access_token');
+    set({ isAuthenticated: false, features: [], tenantId: null });
   },
 
   clearDeviceSwitchedMessage: () => set({ deviceSwitchedMessage: null }),
 
   hydrateFromStorage: async () => {
-    const [accessToken, storedPhone, pinEnabled, biometricEnabled, tenantId] = await Promise.all([
+    const [accessToken, storedPhone, pinEnabled, biometricEnabled, tenantId, setupCompleteStr] = await Promise.all([
       SecureStore.getItemAsync('access_token'),
       SecureStore.getItemAsync('phone'),
       SecureStore.getItemAsync('pin_enabled'),
       SecureStore.getItemAsync('biometric_enabled'),
       SecureStore.getItemAsync('tenant_id'),
+      SecureStore.getItemAsync('setup_complete'),
     ]);
 
     const hasPinOnDevice = storedPhone !== null && pinEnabled === 'true';
     const features = accessToken ? extractFeatures(accessToken) : [];
+    // Existing installs have no setup_complete key yet — default true so they aren't
+    // incorrectly routed to the onboarding wizard on their first app update.
+    const setupComplete = setupCompleteStr !== null ? setupCompleteStr === 'true' : true;
 
     set({
       isAuthenticated: !hasPinOnDevice && !!accessToken,
@@ -109,6 +120,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       biometricEnabled: biometricEnabled === 'true',
       tenantId: tenantId ?? null,
       features,
+      setupComplete,
     });
   },
 }));

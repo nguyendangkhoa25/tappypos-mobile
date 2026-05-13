@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Product Detail & Create Screens</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: #4f46e5; }
+  .s-time { font-size: 15px; font-weight: 700; color: white; }
+  .s-icons { font-size: 12px; color: rgba(255,255,255,0.8); display: flex; gap: 4px; align-items: center; }
+
+  /* Hero header */
+  .hero { background: #4f46e5; padding: 14px 20px 22px; flex-shrink: 0; }
+  .hero-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .back-btn { font-size: 20px; color: white; }
+  .hero-title { font-size: 17px; font-weight: 700; color: white; flex: 1; }
+  .edit-btn { font-size: 18px; color: rgba(255,255,255,0.8); }
+  .hero-hint { font-size: 11px; color: #c7d2fe; margin-bottom: 10px; }
+  .cat-chip { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 3px 12px; font-size: 11px; color: #e0e7ff; font-weight: 500; margin-bottom: 8px; }
+  .prod-name-hero { font-size: 22px; font-weight: 800; color: white; margin-bottom: 10px; line-height: 1.3; }
+  .price-hero { font-size: 28px; font-weight: 800; color: white; }
+  .gold-chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(252,211,77,0.9); border-radius: 12px; padding: 5px 12px; font-size: 13px; font-weight: 700; color: #78350f; }
+  .service-chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(167,139,250,0.5); border-radius: 12px; padding: 5px 12px; font-size: 13px; font-weight: 700; color: white; margin-right: 6px; }
+  .duration-chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.2); border-radius: 12px; padding: 5px 12px; font-size: 13px; font-weight: 600; color: white; }
+
+  /* Body */
+  .scroll-body { flex: 1; overflow: hidden; }
+  .stock-card { display: flex; align-items: center; gap: 10px; border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; }
+  .stock-card.ok { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .stock-card.out { background: #fef2f2; border: 1px solid #fecaca; }
+  .stock-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .stock-icon.ok { background: rgba(5,150,105,0.13); }
+  .stock-icon.out { background: rgba(239,68,68,0.13); }
+  .stock-status { font-size: 15px; font-weight: 700; }
+  .stock-status.ok { color: #065f46; }
+  .stock-status.out { color: #b91c1c; }
+  .stock-qty { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+  .detail-card { background: white; border-radius: 16px; border: 1px solid #f1f5f9; overflow: hidden; margin-bottom: 10px; }
+  .detail-row { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #f9fafb; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-icon-wrap { width: 32px; height: 32px; border-radius: 50%; background: #eef2ff; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 15px; flex-shrink: 0; }
+  .detail-label { font-size: 13px; color: #6b7280; flex: 1; }
+  .detail-val { font-size: 13px; font-weight: 600; color: #1f2937; }
+
+  .desc-card { background: white; border-radius: 16px; border: 1px solid #f1f5f9; padding: 14px; margin-bottom: 10px; }
+  .desc-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .desc-title { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; }
+  .desc-text { font-size: 14px; color: #374151; line-height: 1.5; }
+
+  /* Sticky action */
+  .sticky-action { background: white; border-top: 1px solid #f1f5f9; padding: 12px 16px 20px; flex-shrink: 0; }
+  .add-cart-btn { background: #4f46e5; border-radius: 16px; padding: 14px; text-align: center; color: white; font-size: 15px; font-weight: 700; }
+
+  /* Create form */
+  .create-hero { background: #4f46e5; padding: 14px 20px 18px; flex-shrink: 0; }
+  .create-nav { display: flex; align-items: center; justify-content: space-between; }
+  .create-title { font-size: 18px; font-weight: 800; color: white; }
+  .save-btn { font-size: 15px; font-weight: 700; color: white; }
+  .create-hint { font-size: 11px; color: #c7d2fe; margin-top: 4px; }
+
+  .form-body { flex: 1; overflow: hidden; padding: 0 16px; }
+  .form-card { background: white; border-radius: 16px; border: 1px solid #f1f5f9; padding: 14px; margin-bottom: 10px; }
+  .field-label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .field-input { border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 14px; font-size: 14px; color: #111827; background: #f9fafb; margin-bottom: 12px; width: 100%; }
+  .field-input.placeholder { color: #9ca3af; }
+  .field-input.selected { border-color: #c7d2fe; background: #eef2ff; color: #1f2937; }
+  .hint-text { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+  .gold-notice { background: #fefce8; border: 1px solid #fde68a; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .gold-notice-text { font-size: 13px; color: #a16207; }
+  .type-row { display: flex; align-items: center; gap: 8px; }
+  .type-code-badge { background: #e0e7ff; border-radius: 8px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #3730a3; }
+  .type-name { font-size: 14px; color: #111827; font-weight: 500; }
+  .picker-row { display: flex; align-items: center; justify-content: space-between; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 14px; background: #f9fafb; margin-bottom: 12px; }
+  .picker-placeholder { font-size: 14px; color: #9ca3af; }
+  .picker-val { font-size: 14px; color: #111827; }
+  .chevron-down { font-size: 16px; color: #9ca3af; }
+
+  /* Modal overlay */
+  .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; flex-direction: column; justify-content: flex-end; }
+  .modal-sheet { background: white; border-radius: 28px 28px 0 0; padding: 16px 16px 28px; max-height: 70%; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px; }
+  .modal-title { font-size: 16px; font-weight: 800; color: #111827; }
+  .modal-close { font-size: 20px; color: #9ca3af; }
+  .type-item { display: flex; align-items: center; padding: 12px 12px; border-radius: 12px; margin-bottom: 4px; }
+  .type-item.selected { background: #eef2ff; }
+  .type-item-info { flex: 1; }
+  .type-item-name { font-size: 14px; font-weight: 500; color: #1f2937; }
+  .type-item.selected .type-item-name { color: #4f46e5; }
+  .type-desc { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+  .check-icon { font-size: 16px; color: #4f46e5; }
+</style>
+</head>
+<body>
+
+<h1>Product Detail + Create Screens</h1>
+<p class="subtitle">Chi tiết sản phẩm (hero indigo, stock, details, thêm vào giỏ) + Form tạo mới (chọn loại, giá, danh mục)</p>
+
+<h2>Product Detail — States</h2>
+<div class="phone-row">
+
+  <!-- State 1: Regular product (in stock) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Regular Product (In Stock)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="hero">
+        <div class="hero-nav"><span class="back-btn">←</span><span class="hero-title">Chi tiết sản phẩm</span><span class="edit-btn">✎</span></div>
+        <div class="hero-hint">📋 Nhấn biểu tượng bút chì để chỉnh sửa. Nhấn Thêm vào giỏ để tạo đơn hàng.</div>
+        <div class="cat-chip">Đồ uống</div>
+        <div class="prod-name-hero">Trà sữa trân châu</div>
+        <div class="price-hero">35.000 ₫</div>
+      </div>
+      <div class="scroll-body">
+        <div class="stock-card ok">
+          <div class="stock-icon ok">✅</div>
+          <div>
+            <div class="stock-status ok">Còn hàng</div>
+            <div class="stock-qty">Tồn kho: 48 Ly</div>
+          </div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-row"><div class="detail-icon-wrap">🏷️</div><div class="detail-label">Đơn vị</div><div class="detail-val">Ly</div></div>
+          <div class="detail-row"><div class="detail-icon-wrap">🗂️</div><div class="detail-label">Danh mục</div><div class="detail-val">Đồ uống</div></div>
+          <div class="detail-row"><div class="detail-icon-wrap">📦</div><div class="detail-label">Loại sản phẩm</div><div class="detail-val">Đồ uống & Thức ăn</div></div>
+        </div>
+        <div class="desc-card">
+          <div class="desc-header"><span style="font-size:13px;color:#6b7280;">📄</span><span class="desc-title">Mô tả</span></div>
+          <div class="desc-text">Trà sữa trân châu đen thơm ngon, phục vụ lạnh hoặc nóng tuỳ yêu cầu.</div>
+        </div>
+      </div>
+      <div class="sticky-action">
+        <div class="add-cart-btn">🛒 Thêm vào giỏ hàng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Gold dynamic price product -->
+  <div class="phone-wrap">
+    <div class="phone-label">Gold Price Product</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="hero">
+        <div class="hero-nav"><span class="back-btn">←</span><span class="hero-title">Chi tiết sản phẩm</span><span class="edit-btn">✎</span></div>
+        <div class="hero-hint">📋 Nhấn biểu tượng bút chì để chỉnh sửa.</div>
+        <div class="cat-chip">Nhẫn vàng</div>
+        <div class="prod-name-hero">Nhẫn vàng 24K đơn giản</div>
+        <div class="gold-chip">🥇 Theo giá vàng</div>
+      </div>
+      <div class="scroll-body">
+        <div class="stock-card ok">
+          <div class="stock-icon ok">✅</div>
+          <div>
+            <div class="stock-status ok">Còn hàng</div>
+            <div class="stock-qty">Tồn kho: 8 Chỉ</div>
+          </div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-row"><div class="detail-icon-wrap">🏷️</div><div class="detail-label">Đơn vị</div><div class="detail-val">Chỉ</div></div>
+          <div class="detail-row"><div class="detail-icon-wrap">🗂️</div><div class="detail-label">Danh mục</div><div class="detail-val">Nhẫn vàng</div></div>
+          <div class="detail-row"><div class="detail-icon-wrap">📦</div><div class="detail-label">Loại sản phẩm</div><div class="detail-val">Trang sức (JEWELRY)</div></div>
+        </div>
+      </div>
+      <div class="sticky-action">
+        <div class="add-cart-btn">🛒 Thêm vào giỏ hàng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Service product -->
+  <div class="phone-wrap">
+    <div class="phone-label">Service Product</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="hero">
+        <div class="hero-nav"><span class="back-btn">←</span><span class="hero-title">Chi tiết sản phẩm</span><span class="edit-btn">✎</span></div>
+        <div class="hero-hint">📋 Dịch vụ — thời gian hiển thị độ dài lượt phục vụ.</div>
+        <div class="cat-chip">Cắt tóc</div>
+        <div class="prod-name-hero">Cắt tóc nam cơ bản</div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <div class="service-chip">✂️ Dịch vụ</div>
+          <div class="duration-chip">⏱ 30 phút</div>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="detail-card">
+          <div class="detail-row"><div class="detail-icon-wrap">💵</div><div class="detail-label">Giá</div><div class="detail-val" style="color:#4f46e5;font-size:16px;font-weight:800;">80.000 ₫</div></div>
+          <div class="detail-row"><div class="detail-icon-wrap">🏷️</div><div class="detail-label">Đơn vị</div><div class="detail-val">Lượt</div></div>
+          <div class="detail-row"><div class="detail-icon-wrap">🗂️</div><div class="detail-label">Danh mục</div><div class="detail-val">Cắt tóc</div></div>
+          <div class="detail-row"><div class="detail-icon-wrap">⏱</div><div class="detail-label">Thời gian</div><div class="detail-val">30 phút</div></div>
+        </div>
+        <div class="desc-card">
+          <div class="desc-header"><span style="font-size:13px;color:#6b7280;">📄</span><span class="desc-title">Mô tả</span></div>
+          <div class="desc-text">Cắt tóc nam theo phong cách hiện đại, bao gồm gội đầu và tạo kiểu cơ bản.</div>
+        </div>
+      </div>
+      <div class="sticky-action">
+        <div class="add-cart-btn">📅 Đặt dịch vụ</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2>Product Create — States</h2>
+<div class="phone-row">
+
+  <!-- Create State 1: Empty form (no type selected) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty (No Type)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="create-hero">
+        <div class="create-nav"><span class="back-btn">←</span><span class="create-title">Thêm sản phẩm</span><span class="save-btn">Lưu</span></div>
+        <div class="create-hint">✏️ Điền thông tin sản phẩm. Chọn loại sản phẩm trước — loại sẽ quyết định các trường hiển thị.</div>
+      </div>
+      <div class="form-body">
+        <div class="form-card">
+          <div class="field-label">Loại sản phẩm *</div>
+          <div class="picker-row"><span class="picker-placeholder">Chọn loại sản phẩm</span><span class="chevron-down">▾</span></div>
+        </div>
+        <div class="form-card">
+          <div class="field-label">Tên *</div>
+          <input class="field-input placeholder" placeholder="Tên sản phẩm" readonly />
+          <div class="field-label">Giá</div>
+          <input class="field-input placeholder" placeholder="Giá bán" readonly />
+          <div class="field-label">Đơn vị</div>
+          <input class="field-input placeholder" placeholder="VD: cái, hộp, kg" readonly />
+          <div class="field-label">Danh mục</div>
+          <div class="picker-row"><span class="picker-placeholder">Chọn danh mục</span><span class="chevron-down">▾</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create State 2: Type selected (FOOD) + filled form -->
+  <div class="phone-wrap">
+    <div class="phone-label">Filled (FOOD type)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="create-hero">
+        <div class="create-nav"><span class="back-btn">←</span><span class="create-title">Thêm sản phẩm</span><span class="save-btn">Lưu</span></div>
+        <div class="create-hint">✏️ Điền thông tin sản phẩm. Chọn loại sản phẩm trước.</div>
+      </div>
+      <div class="form-body">
+        <div class="form-card">
+          <div class="field-label">Loại sản phẩm *</div>
+          <div class="picker-row" style="border-color:#c7d2fe;background:#eef2ff;">
+            <div class="type-row"><span class="type-code-badge">FOOD</span><span class="type-name">Đồ uống & Thức ăn</span></div>
+            <span class="chevron-down">▾</span>
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="field-label">Tên *</div>
+          <input class="field-input" value="Trà sữa matcha" readonly />
+          <div class="field-label">Giá</div>
+          <input class="field-input" value="38000" readonly />
+          <div class="hint-text">= 38.000 ₫</div>
+          <div class="field-label">Đơn vị</div>
+          <input class="field-input" value="Ly" readonly />
+          <div class="field-label">Danh mục</div>
+          <div class="picker-row"><span class="picker-val">Đồ uống</span><span class="chevron-down">▾</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create State 3: JEWELRY type (gold notice) -->
+  <div class="phone-wrap">
+    <div class="phone-label">JEWELRY (Gold Notice)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="create-hero">
+        <div class="create-nav"><span class="back-btn">←</span><span class="create-title">Thêm sản phẩm</span><span class="save-btn">Lưu</span></div>
+        <div class="create-hint">✏️ Điền thông tin sản phẩm. Chọn loại sản phẩm trước.</div>
+      </div>
+      <div class="form-body">
+        <div class="form-card">
+          <div class="field-label">Loại sản phẩm *</div>
+          <div class="picker-row" style="border-color:#c7d2fe;background:#eef2ff;">
+            <div class="type-row"><span class="type-code-badge">JEWELRY</span><span class="type-name">Trang sức vàng bạc</span></div>
+            <span class="chevron-down">▾</span>
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="field-label">Tên *</div>
+          <input class="field-input" value="Nhẫn vàng 18K nữ" readonly />
+          <div class="gold-notice"><span>🥇</span><span class="gold-notice-text">Theo giá vàng</span></div>
+          <div class="field-label">Đơn vị</div>
+          <input class="field-input" value="Chỉ" readonly />
+          <div class="field-label">Danh mục</div>
+          <div class="picker-row"><span class="picker-val">Nhẫn vàng</span><span class="chevron-down">▾</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create State 4: Type picker modal open -->
+  <div class="phone-wrap">
+    <div class="phone-label">Type Picker Modal</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="create-hero">
+        <div class="create-nav"><span class="back-btn">←</span><span class="create-title">Thêm sản phẩm</span><span class="save-btn">Lưu</span></div>
+        <div class="create-hint">✏️ Điền thông tin sản phẩm.</div>
+      </div>
+      <div class="form-body" style="opacity:0.3;"></div>
+      <div class="modal-overlay">
+        <div class="modal-sheet">
+          <div class="modal-header"><div class="modal-title">Chọn loại sản phẩm</div><div class="modal-close">✕</div></div>
+          <div class="type-item">
+            <div class="type-code-badge" style="margin-right:12px;">FOOD</div>
+            <div class="type-item-info"><div class="type-item-name">Đồ uống & Thức ăn</div><div class="type-desc">Đồ uống, thức ăn, đồ ăn nhanh</div></div>
+          </div>
+          <div class="type-item selected">
+            <div class="type-code-badge" style="margin-right:12px;">JEWELRY</div>
+            <div class="type-item-info"><div class="type-item-name">Trang sức vàng bạc</div><div class="type-desc">Vàng, bạc, đá quý — giá theo thị trường</div></div>
+            <span class="check-icon">✓</span>
+          </div>
+          <div class="type-item">
+            <div class="type-code-badge" style="margin-right:12px;">SERVICE</div>
+            <div class="type-item-info"><div class="type-item-name">Dịch vụ</div><div class="type-desc">Cắt tóc, massage, tư vấn...</div></div>
+          </div>
+          <div class="type-item">
+            <div class="type-code-badge" style="margin-right:12px;">COSMETICS</div>
+            <div class="type-item-info"><div class="type-item-name">Mỹ phẩm</div><div class="type-desc">Son, phấn, kem dưỡng...</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -10,11 +10,29 @@ curl -Ls "https://get.maestro.mobile.dev" | bash
 Verify: `maestro --version` (requires 2.5+)
 
 ### 2. Build and launch on iOS Simulator
+
+> **Note:** This project uses `expo-dev-client` and cannot use the standard Expo Go app.
+> Expo CLI's `npx expo run:ios` has a signing bug that misdetects the Simulator as a physical
+> device. Use the `run-ios.sh` script instead.
+
+**First time (or after Simulator erase):**
 ```bash
 # From tappy-pos/mobile/
-npx expo run:ios
+./run-ios.sh
 ```
-The app must be running in the Simulator before executing flows.
+This builds the native app with xcodebuild and installs it on the iPhone 15 Simulator.
+
+**Every day after that:**
+```bash
+npx expo start
+# Then press i to open on the iOS Simulator
+```
+The app stays installed between sessions — no rebuild needed unless you add a new native package.
+
+**Only re-run `./run-ios.sh` when:**
+- You add a new Expo package with native modules
+- The Simulator is erased/reset (`Device → Erase All Content and Settings`)
+- The app crashes on launch and won't open
 
 ### 3. Configure environment
 ```bash
@@ -97,6 +115,8 @@ These `testID` props were added to source files for Maestro selectors:
 | `OrderDetailScreen` | `order-cancel-btn` | "Hủy đơn" action button |
 | `CartScreen` | `cart-save-order-btn` | "Lưu đơn" (save as PENDING order) button |
 | `SettingsScreen` | `settings-logout-btn` | Logout button (used by E2E subflow to reset auth state) |
+| `CustomerListScreen` | `customer-search-input` | Search TextInput |
+| `CustomerListScreen` | `customer-row-{index}` | Customer row at given index (0-based) |
 | `CustomerListScreen` | `customer-add-fab` | Add customer FAB (+) button |
 | `CustomerFormScreen` | `customer-name` | Name TextInput |
 | `CustomerFormScreen` | `customer-phone` | Phone TextInput |

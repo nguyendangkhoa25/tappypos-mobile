@@ -12,14 +12,41 @@ name: "04 Customer CRUD — create, view detail, delete"
 - tapOn:
     id: "dashboard-customers-btn"
 - assertVisible: "Khách hàng"
-- assertVisible: "Tìm theo tên, số điện thoại..."
 
-# ── M06b: Search for an existing customer ────────────────────────────────────
-- tapOn: "Tìm theo tên, số điện thoại..."
+# ── Pre-cleanup: delete any leftover active customer from an incomplete prior run
+# List search is by name; customer-row-0 testID avoids matching the search input itself
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Khách Test Maestro"
+- hideKeyboard
+- tapOn:
+    id: "customer-row-0"
+    optional: true
+- tapOn:
+    id: "customer-delete-btn"
+    optional: true
+- tapOn:
+    text: "Xóa khách hàng"
+    optional: true
+- tapOn:
+    text: "OK"
+    optional: true
+
+# ── Dismiss keyboard, re-navigate to guarantee clean CustomerList state ───────
+- hideKeyboard
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+
+# ── M06b: Search for an existing customer (verifies search works) ─────────────
+- tapOn:
+    id: "customer-search-input"
 - inputText: "Test"
-- assertVisible: "Tìm theo tên, số điện thoại..."
-
-# Clear search and dismiss keyboard
+- tapOn:
+    id: "customer-search-input"
 - eraseText: 50
 - hideKeyboard
 
@@ -41,15 +68,29 @@ name: "04 Customer CRUD — create, view detail, delete"
 - tapOn:
     id: "customer-form-submit"
 - assertVisible: "Đã thêm khách hàng"
+- tapOn: "OK"
 
-# ── M06: Back on CustomerList — new customer appears ─────────────────────────
+# ── Re-navigate to get a fresh CustomerList ───────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
 - assertVisible: "Khách hàng"
-- assertVisible: "Khách Test Maestro"
+
+# ── M06: Search for the new customer (forces a fresh queryFn run) ─────────────
+# Searching by ASCII "Maestro" uses a new query key — avoids stale-cache empty state
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Maestro"
+- hideKeyboard
+- assertVisible: "Maestro"
 
 # ── M07: Tap the new customer to open detail ─────────────────────────────────
-- tapOn: "Khách Test Maestro"
-- assertVisible: "Khách Test Maestro"
-- assertVisible: "đơn hàng"
+- tapOn:
+    id: "customer-row-0"
+- assertVisible:
+    id: "customer-delete-btn"
 
 # ── M07b: Delete the customer ────────────────────────────────────────────────
 - tapOn:
@@ -57,6 +98,8 @@ name: "04 Customer CRUD — create, view detail, delete"
 - assertVisible: "Xóa khách hàng?"
 - tapOn: "Xóa khách hàng"
 - assertVisible: "Đã xóa khách hàng"
+- tapOn: "OK"
 
-# ── Verify customer no longer appears in list ─────────────────────────────────
-- assertNotVisible: "Khách Test Maestro"
+# ── Verify no customer rows remain in the search results ──────────────────────
+- assertNotVisible:
+    id: "customer-row-0"

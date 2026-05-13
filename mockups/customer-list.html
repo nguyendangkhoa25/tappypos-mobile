@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Customer List Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  /* Header */
+  .cust-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px; flex-shrink: 0; }
+  .header-top { display: flex; align-items: center; margin-bottom: 2px; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 6px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+  .search-row { display: flex; gap: 8px; }
+  .search-input-wrap { flex: 1; display: flex; align-items: center; gap: 6px; background: #f3f4f6; border-radius: 12px; padding: 8px 12px; }
+  .search-icon { font-size: 16px; color: #9ca3af; }
+  .search-input { flex: 1; font-size: 13px; color: #374151; }
+  .search-input.placeholder { color: #9ca3af; }
+  .clear-btn { font-size: 14px; color: #9ca3af; }
+  .search-btn { background: #4f46e5; border-radius: 12px; padding: 9px 14px; color: white; font-size: 13px; font-weight: 600; }
+
+  /* Customer list */
+  .cust-list { flex: 1; overflow: hidden; padding: 16px 16px 0; }
+  .cust-card { background: white; border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; border: 1px solid #f1f5f9; }
+  .cust-row { display: flex; align-items: center; }
+  .cust-avatar { width: 44px; height: 44px; border-radius: 50%; background: #eef2ff; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; color: #4f46e5; margin-right: 12px; flex-shrink: 0; }
+  .cust-info { flex: 1; }
+  .cust-name { font-size: 15px; font-weight: 600; color: #111827; }
+  .cust-phone { font-size: 13px; color: #6b7280; margin-top: 1px; }
+  .cust-chevron { font-size: 18px; color: #d1d5db; }
+  .cust-stats { display: flex; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f9fafb; gap: 16px; align-items: center; }
+  .stat-item { display: flex; align-items: center; gap: 4px; }
+  .stat-icon { font-size: 13px; color: #9ca3af; }
+  .stat-text { font-size: 11px; color: #6b7280; }
+  .stat-spend { font-size: 12px; font-weight: 700; color: #4f46e5; margin-left: auto; }
+
+  /* Skeleton */
+  .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .skel-card { background: white; border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; border: 1px solid #f1f5f9; }
+
+  /* FAB */
+  .fab { position: absolute; right: 24px; bottom: 32px; width: 52px; height: 52px; border-radius: 50%; background: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; box-shadow: 0 4px 12px rgba(79,70,229,0.4); }
+
+  /* Empty */
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .empty-icon { font-size: 44px; opacity: 0.25; margin-bottom: 12px; }
+  .empty-title { font-size: 15px; font-weight: 600; color: #9ca3af; }
+  .empty-hint { font-size: 13px; color: #9ca3af; margin-top: 4px; text-align: center; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<h1>Customer List Screen</h1>
+<p class="subtitle">Danh sách khách hàng — avatar chữ cái đầu, thống kê đơn/điểm/chi tiêu</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- State 1: Loading -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="cust-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Khách hàng</span></div>
+        <div class="header-hint">👥 Lưu thông tin khách để tra cứu khi thanh toán và theo dõi điểm tích lũy.</div>
+        <div class="search-row">
+          <div class="search-input-wrap"><span class="search-icon">🔍</span><div class="search-input placeholder">Tìm theo tên, số điện thoại...</div></div>
+          <div class="search-btn">Tìm</div>
+        </div>
+      </div>
+      <div class="cust-list">
+        <div class="skel-card"><div style="display:flex;align-items:center;gap:12px;"><div class="skeleton" style="width:44px;height:44px;border-radius:50%;flex-shrink:0;"></div><div style="flex:1;"><div class="skeleton" style="height:14px;width:65%;margin-bottom:6px;"></div><div class="skeleton" style="height:11px;width:45%;"></div></div></div><div style="height:10px;margin-top:10px;"></div><div style="display:flex;gap:16px;margin-top:10px;"><div class="skeleton" style="height:10px;width:60px;"></div><div class="skeleton" style="height:10px;width:50px;"></div><div class="skeleton" style="height:10px;width:80px;margin-left:auto;"></div></div></div>
+        <div class="skel-card"><div style="display:flex;align-items:center;gap:12px;"><div class="skeleton" style="width:44px;height:44px;border-radius:50%;flex-shrink:0;"></div><div style="flex:1;"><div class="skeleton" style="height:14px;width:55%;margin-bottom:6px;"></div><div class="skeleton" style="height:11px;width:40%;"></div></div></div><div style="height:10px;margin-top:10px;"></div><div style="display:flex;gap:16px;margin-top:10px;"><div class="skeleton" style="height:10px;width:60px;"></div><div class="skeleton" style="height:10px;width:50px;"></div><div class="skeleton" style="height:10px;width:90px;margin-left:auto;"></div></div></div>
+        <div class="skel-card"><div style="display:flex;align-items:center;gap:12px;"><div class="skeleton" style="width:44px;height:44px;border-radius:50%;flex-shrink:0;"></div><div style="flex:1;"><div class="skeleton" style="height:14px;width:70%;margin-bottom:6px;"></div><div class="skeleton" style="height:11px;width:45%;"></div></div></div><div style="height:10px;margin-top:10px;"></div><div style="display:flex;gap:16px;margin-top:10px;"><div class="skeleton" style="height:10px;width:60px;"></div><div class="skeleton" style="height:10px;width:50px;"></div><div class="skeleton" style="height:10px;width:75px;margin-left:auto;"></div></div></div>
+      </div>
+      <div class="fab">+</div>
+    </div>
+  </div>
+
+  <!-- State 2: With customers -->
+  <div class="phone-wrap">
+    <div class="phone-label">With Customers</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="cust-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Khách hàng</span></div>
+        <div class="header-hint">👥 Lưu thông tin khách để tra cứu khi thanh toán và theo dõi điểm tích lũy.</div>
+        <div class="search-row">
+          <div class="search-input-wrap"><span class="search-icon">🔍</span><div class="search-input placeholder">Tìm theo tên, số điện thoại...</div></div>
+          <div class="search-btn">Tìm</div>
+        </div>
+      </div>
+      <div class="cust-list">
+        <div class="cust-card">
+          <div class="cust-row">
+            <div class="cust-avatar">N</div>
+            <div class="cust-info"><div class="cust-name">Nguyễn Thị Lan</div><div class="cust-phone">0912 345 678</div></div>
+            <div class="cust-chevron">›</div>
+          </div>
+          <div class="cust-stats">
+            <div class="stat-item"><span class="stat-icon">🛍</span><span class="stat-text">24 đơn hàng</span></div>
+            <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-text">480 điểm</span></div>
+            <div class="stat-spend">1.250.000 ₫</div>
+          </div>
+        </div>
+        <div class="cust-card">
+          <div class="cust-row">
+            <div class="cust-avatar">T</div>
+            <div class="cust-info"><div class="cust-name">Trần Văn Minh</div><div class="cust-phone">0987 654 321</div></div>
+            <div class="cust-chevron">›</div>
+          </div>
+          <div class="cust-stats">
+            <div class="stat-item"><span class="stat-icon">🛍</span><span class="stat-text">8 đơn hàng</span></div>
+            <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-text">160 điểm</span></div>
+            <div class="stat-spend">420.000 ₫</div>
+          </div>
+        </div>
+        <div class="cust-card">
+          <div class="cust-row">
+            <div class="cust-avatar">L</div>
+            <div class="cust-info"><div class="cust-name">Lê Thị Hoa</div><div class="cust-phone">0901 234 567</div></div>
+            <div class="cust-chevron">›</div>
+          </div>
+          <div class="cust-stats">
+            <div class="stat-item"><span class="stat-icon">🛍</span><span class="stat-text">52 đơn hàng</span></div>
+            <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-text">1.040 điểm</span></div>
+            <div class="stat-spend">5.200.000 ₫</div>
+          </div>
+        </div>
+        <div class="cust-card">
+          <div class="cust-row">
+            <div class="cust-avatar">P</div>
+            <div class="cust-info"><div class="cust-name">Phạm Quốc Bảo</div><div class="cust-phone">0936 111 222</div></div>
+            <div class="cust-chevron">›</div>
+          </div>
+          <div class="cust-stats">
+            <div class="stat-item"><span class="stat-icon">🛍</span><span class="stat-text">3 đơn hàng</span></div>
+            <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-text">60 điểm</span></div>
+            <div class="stat-spend">185.000 ₫</div>
+          </div>
+        </div>
+      </div>
+      <div class="fab">+</div>
+    </div>
+  </div>
+
+  <!-- State 3: Search results -->
+  <div class="phone-wrap">
+    <div class="phone-label">Search Results</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="cust-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Khách hàng</span></div>
+        <div class="header-hint">👥 Lưu thông tin khách để tra cứu khi thanh toán và theo dõi điểm tích lũy.</div>
+        <div class="search-row">
+          <div class="search-input-wrap"><span class="search-icon">🔍</span><div class="search-input">lan</div><span class="clear-btn">✕</span></div>
+          <div class="search-btn">Tìm</div>
+        </div>
+      </div>
+      <div class="cust-list">
+        <div class="cust-card">
+          <div class="cust-row">
+            <div class="cust-avatar">N</div>
+            <div class="cust-info"><div class="cust-name">Nguyễn Thị <span style="background:#fef9c3;">Lan</span></div><div class="cust-phone">0912 345 678</div></div>
+            <div class="cust-chevron">›</div>
+          </div>
+          <div class="cust-stats">
+            <div class="stat-item"><span class="stat-icon">🛍</span><span class="stat-text">24 đơn hàng</span></div>
+            <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-text">480 điểm</span></div>
+            <div class="stat-spend">1.250.000 ₫</div>
+          </div>
+        </div>
+        <div class="cust-card">
+          <div class="cust-row">
+            <div class="cust-avatar">H</div>
+            <div class="cust-info"><div class="cust-name">Hoàng Văn <span style="background:#fef9c3;">Lan</span>h</div><div class="cust-phone">0918 777 888</div></div>
+            <div class="cust-chevron">›</div>
+          </div>
+          <div class="cust-stats">
+            <div class="stat-item"><span class="stat-icon">🛍</span><span class="stat-text">11 đơn hàng</span></div>
+            <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-text">220 điểm</span></div>
+            <div class="stat-spend">680.000 ₫</div>
+          </div>
+        </div>
+      </div>
+      <div class="fab">+</div>
+    </div>
+  </div>
+
+  <!-- State 4: Empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="cust-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Khách hàng</span></div>
+        <div class="header-hint">👥 Lưu thông tin khách để tra cứu khi thanh toán và theo dõi điểm tích lũy.</div>
+        <div class="search-row">
+          <div class="search-input-wrap"><span class="search-icon">🔍</span><div class="search-input placeholder">Tìm theo tên, số điện thoại...</div></div>
+          <div class="search-btn">Tìm</div>
+        </div>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">👥</div>
+        <div class="empty-title">Chưa có khách hàng</div>
+        <div class="empty-hint">Lưu thông tin khách để theo dõi lịch sử mua hàng và tích điểm thưởng. Nhấn + để thêm mới, hoặc chọn khách khi tạo đơn hàng để tự động lưu.</div>
+      </div>
+      <div class="fab">+</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

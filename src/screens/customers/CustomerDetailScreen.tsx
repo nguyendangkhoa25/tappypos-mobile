@@ -1,9 +1,12 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { customerApi, orderApi, type CustomerData, type OrderSummary } from '../../services/api';
+import { useAlertStore } from '../../store/alertStore';
+import { useToastStore } from '../../store/toastStore';
+import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { formatVnd, formatDate } from '../../utils/format';
 import { Skeleton } from '../../components/Skeleton';
 import { ErrorState } from '../../components/ErrorState';
@@ -73,6 +76,9 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
   const { top } = useSafeAreaInsets();
   const { customerId } = route.params;
   const queryClient = useQueryClient();
+  const { show: showAlert } = useAlertStore();
+  const { show: showToast } = useToastStore();
+  const showErrorAlert = useErrorAlert();
 
   const { data: customer, isLoading, isError, refetch } = useQuery({
     queryKey: ['customer', customerId],
@@ -91,20 +97,20 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
     mutationFn: () => customerApi.delete(customerId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      Alert.alert('✓', t('customers.deleteSuccess'));
+      showToast(t('customers.deleteSuccess'));
       navigation.goBack();
     },
-    onError: () => Alert.alert(t('common.error'), t('common.errorStateMsg')),
+    onError: showErrorAlert,
   });
 
   function handleDelete() {
-    Alert.alert(
+    showAlert(
       t('customers.deleteConfirmTitle'),
       t('customers.deleteConfirmMsg'),
       [
-        { text: t('common.cancel'), style: 'cancel' },
+        { label: t('common.cancel'), style: 'cancel' },
         {
-          text: t('customers.deleteCustomer'),
+          label: t('customers.deleteCustomer'),
           style: 'destructive',
           onPress: () => deleteMutation.mutate(),
         },
@@ -159,6 +165,7 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
           </View>
         </View>
 
+        <Text className="text-xs text-indigo-200 mb-3">{t('customers.detailHint')}</Text>
         {/* Avatar + name */}
         <View className="flex-row items-center">
           <View className="w-14 h-14 rounded-full bg-white/20 items-center justify-center mr-4">

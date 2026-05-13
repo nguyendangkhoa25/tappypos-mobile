@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Settings Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .phone.dark { background: #111827; border-color: #0f172a; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .phone.dark .notch { background: #0f172a; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: #f9fafb; }
+  .phone.dark .status-bar { background: #111827; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .phone.dark .s-time { color: #f9fafb; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+  .phone.dark .s-icons { color: #d1d5db; }
+
+  .sett-header { padding: 16px 20px 10px; background: #f9fafb; }
+  .phone.dark .sett-header { background: #111827; }
+  .header-top { display: flex; align-items: center; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 6px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; }
+  .phone.dark .header-title { color: #f9fafb; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+
+  .scroll-body { flex: 1; overflow: hidden; }
+
+  /* Profile card */
+  .profile-card { background: white; border-radius: 18px; padding: 14px 16px; margin: 10px 0 0; display: flex; align-items: center; gap: 12px; border: 1px solid #f1f5f9; }
+  .phone.dark .profile-card { background: #1f2937; border-color: #374151; }
+  .avatar { width: 54px; height: 54px; border-radius: 14px; background: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white; flex-shrink: 0; }
+  .profile-info { flex: 1; }
+  .profile-name { font-size: 15px; font-weight: 700; color: #111827; }
+  .phone.dark .profile-name { color: #f9fafb; }
+  .profile-shop { font-size: 13px; color: #9ca3af; margin-top: 2px; }
+  .card-chevron { font-size: 16px; color: #9ca3af; }
+
+  /* Section label */
+  .section-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.08em; margin: 14px 0 6px 4px; }
+  .phone.dark .section-label { color: #6b7280; }
+
+  /* Menu group */
+  .menu-group { background: white; border-radius: 18px; overflow: hidden; border: 1px solid #f1f5f9; }
+  .phone.dark .menu-group { background: #1f2937; border-color: #374151; }
+  .menu-item { display: flex; align-items: center; padding: 12px 16px; gap: 12px; }
+  .menu-item + .menu-item { border-top: 1px solid #f9fafb; }
+  .phone.dark .menu-item + .menu-item { border-top-color: #374151; }
+  .icon-wrap { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .menu-label { flex: 1; font-size: 13px; font-weight: 500; color: #1f2937; }
+  .phone.dark .menu-label { color: #f3f4f6; }
+  .menu-label.danger { color: #dc2626; }
+  .menu-value { font-size: 11px; color: #9ca3af; margin-right: 4px; }
+  .item-chevron { font-size: 14px; color: #c7c7cc; }
+
+  /* Logout */
+  .logout-btn { background: white; border-radius: 16px; padding: 14px; text-align: center; color: #dc2626; font-size: 15px; font-weight: 600; border: 1px solid #f1f5f9; margin-top: 8px; }
+  .phone.dark .logout-btn { background: #1f2937; border-color: #374151; }
+</style>
+</head>
+<body>
+
+<h1>Settings Screen</h1>
+<p class="subtitle">Cài đặt — hồ sơ, cửa hàng, bảo mật, liên hệ, hệ thống</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- State 1: Full (with FEEDBACK + NOTIFICATION features) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Full Features</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="sett-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Cài đặt</span></div>
+        <div class="header-hint">⚙️ Cấu hình cửa hàng, tài khoản và ứng dụng tất cả trong một nơi.</div>
+      </div>
+      <div class="scroll-body">
+        <!-- Profile card -->
+        <div class="profile-card">
+          <div class="avatar">KN</div>
+          <div class="profile-info">
+            <div class="profile-name">Kim Ngân Phát</div>
+            <div class="profile-shop">Shop Trà Sữa Hương Vị</div>
+          </div>
+          <div class="card-chevron">›</div>
+        </div>
+        <!-- Account -->
+        <div class="section-label">Tài khoản</div>
+        <div class="menu-group">
+          <div class="menu-item"><div class="icon-wrap" style="background:#dbeafe;">👤</div><div class="menu-label">Hồ sơ cá nhân</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#ffedd5;">🔑</div><div class="menu-label">Đổi mật khẩu</div><div class="item-chevron">›</div></div>
+        </div>
+        <!-- Shop -->
+        <div class="section-label">Cửa hàng</div>
+        <div class="menu-group">
+          <div class="menu-item"><div class="icon-wrap" style="background:#e0e7ff;">🏪</div><div class="menu-label">Thông tin cửa hàng</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#e0e7ff;">🏦</div><div class="menu-label">Tài khoản ngân hàng</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#ede9fe;">💳</div><div class="menu-label">Cấu hình POS</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#fef3c7;">🧾</div><div class="menu-label">Chi phí mặc định</div><div class="item-chevron">›</div></div>
+        </div>
+        <!-- Preferences -->
+        <div class="section-label">Giao diện & Bảo mật</div>
+        <div class="menu-group">
+          <div class="menu-item"><div class="icon-wrap" style="background:#dcfce7;">🛡️</div><div class="menu-label">Bảo mật & PIN</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#fce7f3;">🎨</div><div class="menu-label">Giao diện & Ngôn ngữ</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#fef9c3;">🔔</div><div class="menu-label">Tùy chỉnh thông báo</div><div class="item-chevron">›</div></div>
+        </div>
+        <!-- Logout -->
+        <div class="logout-btn">Đăng xuất</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Scrolled down (Support + System visible) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Scrolled (Support + System)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="sett-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Cài đặt</span></div>
+        <div class="header-hint">⚙️ Cấu hình cửa hàng, tài khoản và ứng dụng tất cả trong một nơi.</div>
+      </div>
+      <div class="scroll-body">
+        <!-- Tools -->
+        <div class="section-label">Tiện ích</div>
+        <div class="menu-group">
+          <div class="menu-item"><div class="icon-wrap" style="background:#ede9fe;">🧮</div><div class="menu-label">Tiện ích</div><div class="item-chevron">›</div></div>
+        </div>
+        <!-- Support -->
+        <div class="section-label">Liên hệ & Hỗ trợ</div>
+        <div class="menu-group">
+          <div class="menu-item"><div class="icon-wrap" style="background:#e0f2fe;">💬</div><div class="menu-label">Gửi phản hồi</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#f1f5f9;">📋</div><div class="menu-label">Lịch sử phản hồi</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#ccfbf1;">📞</div><div class="menu-label">Hotline</div><div class="menu-value">1900 xxxx</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#dbeafe;">✉️</div><div class="menu-label">Email</div><div class="menu-value">support@...</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#e0f2fe;">💬</div><div class="menu-label">Zalo</div><div class="item-chevron">›</div></div>
+        </div>
+        <!-- System -->
+        <div class="section-label">Hệ thống</div>
+        <div class="menu-group">
+          <div class="menu-item"><div class="icon-wrap" style="background:#f3f4f6;">📋</div><div class="menu-label">Nhật ký hoạt động</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#f3f4f6;">📄</div><div class="menu-label">Điều khoản sử dụng</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#fee2e2;">🗑️</div><div class="menu-label danger">Xóa tài khoản</div><div class="item-chevron">›</div></div>
+        </div>
+        <div class="logout-btn">Đăng xuất</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Dark mode -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dark Mode</div>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="sett-header">
+        <div class="header-top"><span class="back-btn">‹</span><span class="header-title">Cài đặt</span></div>
+        <div class="header-hint">⚙️ Cấu hình cửa hàng, tài khoản và ứng dụng tất cả trong một nơi.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="profile-card">
+          <div class="avatar">KN</div>
+          <div class="profile-info">
+            <div class="profile-name">Kim Ngân Phát</div>
+            <div class="profile-shop">Shop Trà Sữa Hương Vị</div>
+          </div>
+          <div class="card-chevron">›</div>
+        </div>
+        <div class="section-label">Tài khoản</div>
+        <div class="menu-group">
+          <div class="menu-item"><div class="icon-wrap" style="background:#1e3a5f;">👤</div><div class="menu-label">Hồ sơ cá nhân</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#431407;">🔑</div><div class="menu-label">Đổi mật khẩu</div><div class="item-chevron">›</div></div>
+        </div>
+        <div class="section-label">Cửa hàng</div>
+        <div class="menu-group">
+          <div class="menu-item"><div class="icon-wrap" style="background:#312e81;">🏪</div><div class="menu-label">Thông tin cửa hàng</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#312e81;">🏦</div><div class="menu-label">Tài khoản ngân hàng</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#4c1d95;">💳</div><div class="menu-label">Cấu hình POS</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#451a03;">🧾</div><div class="menu-label">Chi phí mặc định</div><div class="item-chevron">›</div></div>
+        </div>
+        <div class="section-label">Giao diện & Bảo mật</div>
+        <div class="menu-group">
+          <div class="menu-item"><div class="icon-wrap" style="background:#052e16;">🛡️</div><div class="menu-label">Bảo mật & PIN</div><div class="item-chevron">›</div></div>
+          <div class="menu-item"><div class="icon-wrap" style="background:#500724;">🎨</div><div class="menu-label">Giao diện & Ngôn ngữ</div><div class="item-chevron">›</div></div>
+        </div>
+        <div class="logout-btn">Đăng xuất</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

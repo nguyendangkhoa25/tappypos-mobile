@@ -11,15 +11,17 @@ import {
 } from 'react-native';
 import { isAxiosError } from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { ClearableInput } from '../../components/ClearableInput';
+import { PhoneInput } from '../../components/PhoneInput';
 import { authExtApi } from '../../services/api';
 import { SUPPORT } from '../../utils/constants';
 import type { AuthScreenProps } from '../../types/navigation';
 
 export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'ForgotPassword'>) {
   const insets = useSafeAreaInsets();
-  const [phone, setPhone] = useState(route.params?.prefillPhone ?? '');
+  const { t } = useTranslation();
+  const [phone, setPhone] = useState(route.params?.prefillPhone?.replace(/\D/g, '') ?? '');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +35,7 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
       setSent(true);
     } catch (err) {
       if (isAxiosError(err) && !err.response) {
-        setError('Không thể kết nối. Kiểm tra mạng và thử lại.');
+        setError(t('auth.forgotPassword.networkError'));
       } else {
         // Always show success-like message to avoid phone enumeration
         setSent(true);
@@ -62,24 +64,22 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
           </TouchableOpacity>
 
           <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-            Quên mật khẩu
+            {t('auth.forgotPassword.title')}
           </Text>
           <Text className="text-sm text-gray-500 dark:text-gray-400 mb-8 leading-5">
-            Nhập số điện thoại đăng ký. Chúng tôi sẽ liên hệ hỗ trợ đặt lại mật khẩu trong vòng 24 giờ.
+            {t('auth.forgotPassword.subtitle')}
           </Text>
 
           {!sent ? (
             <>
               <View className="mb-6">
                 <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Số điện thoại
+                  {t('auth.forgotPassword.phoneLabel')}
                 </Text>
-                <ClearableInput
+                <PhoneInput
                   value={phone}
-                  onChangeText={(v) => { setPhone(v); setError(''); }}
-                  onClear={() => setPhone('')}
+                  onChangeRaw={(v) => { setPhone(v); setError(''); }}
                   placeholder="0901 234 567"
-                  keyboardType="phone-pad"
                   returnKeyType="send"
                   onSubmitEditing={handleSend}
                 />
@@ -101,19 +101,19 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
                   <Text
                     className={`font-bold text-base ${!phone.trim() ? 'text-gray-400 dark:text-gray-500' : 'text-white'}`}
                   >
-                    Gửi yêu cầu
+                    {t('auth.forgotPassword.send')}
                   </Text>
                 )}
               </TouchableOpacity>
             </>
           ) : (
-            <View className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-5 items-center mb-6">
+            <View className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-5 items-center mb-6">
               <Text className="text-3xl mb-3">✅</Text>
-              <Text className="text-base font-bold text-green-700 dark:text-green-300 text-center mb-1">
-                Yêu cầu đã được ghi nhận
+              <Text className="text-base font-bold text-indigo-700 dark:text-indigo-300 text-center mb-1">
+                {t('auth.forgotPassword.sentTitle')}
               </Text>
-              <Text className="text-sm text-green-600 dark:text-green-400 text-center leading-5">
-                Chúng tôi sẽ liên hệ trong vòng 24 giờ để hỗ trợ bạn đặt lại mật khẩu.
+              <Text className="text-sm text-indigo-600 dark:text-indigo-400 text-center leading-5">
+                {t('auth.forgotPassword.sentDesc')}
               </Text>
             </View>
           )}
@@ -121,7 +121,7 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
           {/* Support contacts — always visible */}
           <View className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-2xl p-4">
             <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              Liên hệ hỗ trợ trực tiếp
+              {t('auth.forgotPassword.supportTitle')}
             </Text>
             <TouchableOpacity
               className="flex-row items-center gap-3 py-2"

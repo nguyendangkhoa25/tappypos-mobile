@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { isAxiosError } from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PasswordInput } from '../../components/PasswordInput';
 import { authApi } from '../../services/api';
@@ -21,6 +22,7 @@ type Step = 'verify' | 'new_pin' | 'confirm_pin';
 
 export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { show: showAlert } = useAlertStore();
   const { storedPhone, setAuthenticated, setPinEnabled } = useAuthStore();
   const [step, setStep] = useState<Step>('verify');
@@ -34,14 +36,14 @@ export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
     setLoading(true);
     try {
       const res = await authApi.login(storedPhone, password);
-      const { accessToken, refreshToken } = res.data.data;
-      await setAuthenticated({ accessToken, refreshToken });
+      const { accessToken, refreshToken, setupComplete } = res.data.data;
+      await setAuthenticated({ accessToken, refreshToken, setupComplete });
       setStep('new_pin');
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 401) {
-        showAlert('Sai mật khẩu', 'Mật khẩu không đúng. Vui lòng thử lại.');
+        showAlert(t('auth.forgotPinExt.wrongPasswordTitle'), t('auth.forgotPinExt.wrongPasswordMsg'));
       } else {
-        showAlert('Lỗi', 'Không thể kết nối. Kiểm tra mạng và thử lại.');
+        showAlert(t('auth.forgotPinExt.networkErrorTitle'), t('auth.forgotPinExt.networkErrorMsg'));
       }
     } finally {
       setLoading(false);
@@ -58,8 +60,8 @@ export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
     if (value.length !== 6) return;
 
     if (value !== newPin) {
-      showAlert('Không khớp', 'Mã PIN xác nhận không đúng. Vui lòng thử lại.', [
-        { label: 'OK', onPress: () => { setStep('new_pin'); setNewPin(''); setConfirmPin(''); } },
+      showAlert(t('auth.forgotPinExt.mismatchTitle'), t('auth.forgotPinExt.mismatchMsg'), [
+        { label: t('auth.forgotPinExt.ok'), onPress: () => { setStep('new_pin'); setNewPin(''); setConfirmPin(''); } },
       ]);
       return;
     }
@@ -92,21 +94,21 @@ export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
           <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
         </TouchableOpacity>
 
-        <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Quên mã PIN</Text>
+        <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('auth.forgotPin.title')}</Text>
         <Text className="text-sm text-gray-500 dark:text-gray-400 mb-10 leading-5">
-          Xác thực mật khẩu rồi đặt mã PIN mới
+          {t('auth.forgotPinExt.subtitle')}
         </Text>
 
         {step === 'verify' && (
           <>
             <View className="mb-6">
               <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Mật khẩu hiện tại
+                {t('auth.forgotPinExt.passwordLabel')}
               </Text>
               <PasswordInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Nhập mật khẩu"
+                placeholder={t('auth.forgotPinExt.passwordPlaceholder')}
                 returnKeyType="done"
                 onSubmitEditing={handleVerifyPassword}
               />
@@ -125,7 +127,7 @@ export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
                 <Text
                   className={`font-bold text-base ${!password ? 'text-gray-400 dark:text-gray-500' : 'text-white'}`}
                 >
-                  Xác thực
+                  {t('auth.forgotPinExt.verify')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -135,12 +137,12 @@ export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
         {(step === 'new_pin' || step === 'confirm_pin') && (
           <View className="items-center mt-4">
             <Text className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
-              {step === 'new_pin' ? 'Tạo mã PIN mới' : 'Xác nhận mã PIN'}
+              {step === 'new_pin' ? t('auth.forgotPinExt.newPinTitle') : t('auth.pinSetup.confirmTitle')}
             </Text>
             <Text className="text-sm text-gray-500 dark:text-gray-400 mb-8 text-center">
               {step === 'new_pin'
-                ? 'Đặt mã PIN 6 chữ số'
-                : 'Nhập lại mã PIN để xác nhận'}
+                ? t('auth.forgotPinExt.newPinSubtitle')
+                : t('auth.pinSetup.confirmSubtitle')}
             </Text>
             <PinPad
               value={step === 'new_pin' ? newPin : confirmPin}

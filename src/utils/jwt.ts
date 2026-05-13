@@ -26,7 +26,14 @@ export function extractFeatures(token: string): string[] {
 }
 
 export function extractTenantId(token: string): string | null {
-  return decodeJwt(token)?.tenantId ?? null;
+  const payload = decodeJwt(token) as any;
+  if (!payload) return null;
+  if (typeof payload.tenantId === 'string') return payload.tenantId;
+  // Backend uses 'tid' claim as a single-element array; filter out 'master' (registration placeholder)
+  if (Array.isArray(payload.tid) && payload.tid.length > 0 && payload.tid[0] !== 'master') {
+    return payload.tid[0] as string;
+  }
+  return null;
 }
 
 export function isTokenExpired(token: string): boolean {

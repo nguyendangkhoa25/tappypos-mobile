@@ -48,8 +48,8 @@ export const useUserStore = create<UserState>((set) => ({
       tasks.push(SecureStore.setItemAsync('shop_name', shopName));
       updates.shopName = shopName;
     }
-    await Promise.all(tasks);
     set(updates);
+    await Promise.all(tasks);
   },
 
   hydrate: async () => {

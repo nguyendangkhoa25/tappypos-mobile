@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,20 +8,41 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  StyleSheet,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { ClearableInput } from '../../components/ClearableInput';
+import { FloatingLabelInput } from '../../components/FloatingLabelInput';
+import { LanguageChip } from '../../components/LanguageChip';
 import { tenantApi } from '../../services/api';
 import * as SecureStore from 'expo-secure-store';
 import type { AuthScreenProps } from '../../types/navigation';
 
+const LAST_SHOP_ID_KEY = 'last_tenant_id';
+const LAST_SHOP_NAME_KEY = 'last_shop_name';
+
+type LastShop = { id: string; name: string };
+
 export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [shopId, setShopId] = useState('');
   const [error, setError] = useState<'' | 'not_found' | 'suspended' | 'network'>('');
   const [loading, setLoading] = useState(false);
+  const [lastShop, setLastShop] = useState<LastShop | null>(null);
   const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    AsyncStorage.multiGet([LAST_SHOP_ID_KEY, LAST_SHOP_NAME_KEY]).then(([[, id], [, name]]) => {
+      if (id) {
+        const shop: LastShop = { id, name: name ?? id };
+        setLastShop(shop);
+        setShopId(id);
+      }
+    });
+  }, []);
 
   const handleContinue = async () => {
     const id = shopId.trim().toLowerCase();
@@ -35,6 +56,8 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
         await Promise.all([
           SecureStore.setItemAsync('tenant_id', id),
           SecureStore.setItemAsync('shop_name', shopName),
+          AsyncStorage.setItem(LAST_SHOP_ID_KEY, id),
+          AsyncStorage.setItem(LAST_SHOP_NAME_KEY, shopName),
         ]);
         navigation.replace('Login');
       } else if (status === 'SUSPENDED') {
@@ -50,41 +73,52 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
     }
   };
 
+  const selectLastShop = () => {
+    if (!lastShop) return;
+    setShopId(lastShop.id);
+    setError('');
+  };
+
+  const showLastShopCard = lastShop && shopId.trim().toLowerCase() !== lastShop.id;
+
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-white dark:bg-gray-900"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      {/* Language chip — floats top-right like RegisterScreen */}
+      <View style={[styles.langFloat, { top: insets.top + 10 }]}>
+        <LanguageChip />
+      </View>
+
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 48, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 px-6">
+
           {/* Logo */}
           <View className="items-center mb-12">
-            <View className="w-20 h-20 bg-primary/10 rounded-3xl items-center justify-center mb-4">
-              <MaterialCommunityIcons name="cash-register" size={40} color="#4f46e5" />
+            <View className="w-20 h-20 rounded-3xl items-center justify-center mb-4" style={{ backgroundColor: '#4f46e5' }}>
+              <MaterialCommunityIcons name="store" size={40} color="white" />
             </View>
             <Text className="text-3xl font-bold text-gray-900 dark:text-white">TappyPOS</Text>
             <Text className="text-base text-gray-500 dark:text-gray-400 mt-1">
-              Quản lý cửa hàng thông minh
+              {t('auth.shopId.subtitle')}
             </Text>
           </View>
 
           {/* Input */}
-          <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Mã cửa hàng
-          </Text>
-          <ClearableInput
+          <FloatingLabelInput
             ref={inputRef}
             testID="shop-id-input"
+            label={t('auth.shopId.label')}
             value={shopId}
             onChangeText={(v) => {
               setShopId(v.toLowerCase().replace(/\s/g, ''));
               setError('');
             }}
             onClear={() => { setShopId(''); setError(''); }}
-            placeholder="Nhập mã cửa hàng (vd: pho-a7k2)"
             autoCapitalize="none"
             autoCorrect={false}
             autoFocus
@@ -92,24 +126,47 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
             onSubmitEditing={handleContinue}
           />
 
+          {/* Recently used shop card — shown when input differs from last shop */}
+          {showLastShopCard && (
+            <TouchableOpacity
+              onPress={selectLastShop}
+              activeOpacity={0.7}
+              className="flex-row items-center gap-3 mt-3 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800"
+            >
+              <View className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-800 items-center justify-center flex-shrink-0">
+                <MaterialCommunityIcons name="history" size={20} color="#4f46e5" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs text-indigo-500 dark:text-indigo-400 mb-0.5">
+                  {t('auth.shopId.recentlyUsed')}
+                </Text>
+                <Text className="text-sm font-bold text-indigo-800 dark:text-indigo-200" numberOfLines={1}>
+                  {lastShop.name}
+                </Text>
+                <Text className="text-xs text-indigo-400 dark:text-indigo-500">{lastShop.id}</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={20} color="#6366f1" />
+            </TouchableOpacity>
+          )}
+
           {error === 'not_found' && (
             <Text testID="shop-id-error-not-found" className="text-red-500 text-sm mt-2">
-              Không tìm thấy cửa hàng với mã này. Kiểm tra lại hoặc đăng ký mới.
+              {t('auth.shopId.notFound')}
             </Text>
           )}
           {error === 'suspended' && (
             <View testID="shop-id-error-suspended" className="mt-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3">
               <Text className="text-amber-700 dark:text-amber-300 text-sm font-medium">
-                Cửa hàng đang tạm ngưng hoạt động.
+                {t('auth.shopId.suspended')}
               </Text>
               <Text className="text-amber-600 dark:text-amber-400 text-xs mt-1">
-                Liên hệ hỗ trợ: 0901 234 567
+                {t('auth.shopId.suspendedSupport', { phone: '0901 234 567' })}
               </Text>
             </View>
           )}
           {error === 'network' && (
             <Text testID="shop-id-error-network" className="text-red-500 text-sm mt-2">
-              Không thể kết nối. Kiểm tra mạng và thử lại.
+              {t('auth.shopId.networkError')}
             </Text>
           )}
 
@@ -131,19 +188,43 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
                   !shopId.trim() ? 'text-gray-400 dark:text-gray-500' : 'text-white'
                 }`}
               >
-                Tiếp tục
+                {t('auth.shopId.continue')}
               </Text>
             )}
           </TouchableOpacity>
 
-          <View className="flex-row justify-center mt-6">
-            <Text className="text-gray-500 dark:text-gray-400 text-sm">Chưa có tài khoản? </Text>
+          <TouchableOpacity
+            className="items-center mt-4"
+            onPress={() => navigation.navigate('ForgotShopId')}
+          >
+            <Text className="text-sm text-primary">{t('auth.shopId.forgotShopId')}</Text>
+          </TouchableOpacity>
+
+          <View className="flex-row justify-center mt-4">
+            <Text className="text-gray-500 dark:text-gray-400 text-sm">{t('auth.shopId.noAccount')} </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text className="text-primary font-semibold text-sm">Đăng ký miễn phí</Text>
+              <Text className="text-primary font-semibold text-sm">{t('auth.shopId.register')}</Text>
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity
+            className="items-center mt-3 py-2"
+            onPress={() => navigation.navigate('Login', { noTenantRequired: true })}
+          >
+            <Text className="text-sm text-gray-400 dark:text-gray-500 text-center">
+              {t('auth.shopId.pendingOnboarding')}
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  langFloat: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 10,
+  },
+});

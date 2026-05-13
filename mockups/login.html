@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TappyPOS – Login Screen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f1f5f9;
+      padding: 32px;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      color: #1e293b;
+    }
+    h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+    h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+    .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+
+    /* ── Phone frame ── */
+    .phone {
+      width: 375px;
+      min-height: 812px;
+      background: #ffffff;
+      border-radius: 48px;
+      border: 10px solid #1e293b;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+    .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      height: 44px;
+      padding: 14px 28px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .s-time { font-size: 15px; font-weight: 700; color: #111; }
+    .s-icons { display: flex; gap: 6px; align-items: center; }
+    .s-icons svg { width: 16px; height: 16px; fill: #111; }
+
+    /* ── Screen content ── */
+    .screen {
+      flex: 1;
+      padding: 12px 24px 32px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Language toggle ── */
+    .lang-row { display: flex; justify-content: flex-end; margin-bottom: 28px; }
+    .lang-chip {
+      display: flex; align-items: center; gap: 4px;
+      border: 1.5px solid #e5e7eb; border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 12px; font-weight: 600; color: #374151;
+      background: #f9fafb;
+    }
+    .lang-chip .active { color: #4f46e5; }
+    .lang-chip .sep { color: #d1d5db; }
+
+    /* ── App header ── */
+    .header {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 36px;
+    }
+    .app-icon {
+      width: 68px; height: 68px;
+      background: #4f46e5; border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(79,70,229,0.35);
+    }
+    .app-icon svg { width: 38px; height: 38px; fill: white; }
+    .header h1 { font-size: 28px; font-weight: 800; color: #111827; letter-spacing: -0.5px; }
+    .header p { font-size: 14px; color: #6b7280; margin-top: 4px; }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 7px; }
+    .input-wrap { position: relative; display: flex; align-items: center; }
+    .input-wrap input {
+      width: 100%; padding: 14px 44px 14px 16px;
+      border: 1.5px solid #e5e7eb; border-radius: 14px;
+      font-size: 15px; color: #111827; background: #f9fafb;
+      outline: none;
+    }
+    .input-wrap input::placeholder { color: #9ca3af; }
+    .input-wrap input.has-error { border-color: #ef4444; background: #fff5f5; }
+    .input-icon { position: absolute; right: 14px; color: #9ca3af; display: flex; align-items: center; }
+    .input-icon svg { width: 18px; height: 18px; }
+    .error-text {
+      font-size: 12px; color: #ef4444; margin-top: 6px;
+      display: flex; align-items: flex-start; gap: 4px; line-height: 1.5;
+    }
+    .error-text svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Forgot password ── */
+    .forgot { display: flex; justify-content: flex-end; margin-top: 4px; margin-bottom: 24px; }
+    .forgot a { font-size: 13px; color: #4f46e5; font-weight: 500; text-decoration: none; }
+
+    /* ── Login button ── */
+    .btn-login {
+      width: 100%; padding: 16px;
+      background: #4f46e5; color: white;
+      font-size: 16px; font-weight: 700;
+      border: none; border-radius: 16px;
+      cursor: pointer; letter-spacing: 0.01em;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-login.disabled { background: #e5e7eb; color: #9ca3af; }
+
+    /* ── Spinner (loading state) ── */
+    .spinner {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,0.35);
+      border-top-color: white;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Register link ── */
+    .register-row {
+      display: flex; justify-content: center; align-items: center;
+      gap: 4px; margin-top: 22px; font-size: 14px;
+    }
+    .register-row span { color: #6b7280; }
+    .register-row a { color: #4f46e5; font-weight: 600; text-decoration: none; }
+
+    /* ── Info banner (onboarding redirect) ── */
+    .info-banner {
+      display: flex; gap: 10px; align-items: flex-start;
+      background: #fffbeb; border: 1px solid #fcd34d;
+      border-radius: 12px; padding: 12px 14px;
+      margin-bottom: 20px;
+    }
+    .info-banner-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .info-banner-body {}
+    .info-banner-title { font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 2px; }
+    .info-banner-text { font-size: 12px; color: #b45309; line-height: 1.5; }
+    .btn-continue {
+      width: 100%; padding: 16px;
+      background: #4f46e5; color: white;
+      font-size: 16px; font-weight: 700;
+      border: none; border-radius: 16px;
+      cursor: pointer;
+    }
+
+    /* ── Annotations ── */
+    .annotations {
+      margin-top: 16px; background: #fff;
+      border-radius: 12px; padding: 14px;
+      font-size: 12px; color: #374151;
+      width: 375px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .annotations h3 {
+      font-size: 10px; font-weight: 700; color: #6b7280;
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .annotations ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+    .annotations li { display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+    .annotations li .dot { width: 6px; height: 6px; border-radius: 50%; background: #4f46e5; flex-shrink: 0; margin-top: 4px; }
+    .annotations li .dot.amber { background: #f59e0b; }
+    .annotations li .dot.red { background: #ef4444; }
+
+    /* Dark mode */
+    .phone.dark { background: #111827; }
+    .phone.dark .s-time { color: #f9fafb; }
+    .phone.dark .s-icons svg { fill: #f9fafb; }
+    .phone.dark .lang-chip { border-color: #374151; background: #1f2937; color: #d1d5db; }
+    .phone.dark .header h1 { color: #f9fafb; }
+    .phone.dark .header p { color: #9ca3af; }
+    .phone.dark .field label { color: #d1d5db; }
+    .phone.dark .input-wrap input { background: #1f2937; border-color: #374151; color: #f9fafb; }
+    .phone.dark .register-row span { color: #9ca3af; }
+    .phone.dark .forgot a { color: #818cf8; }
+    .phone.dark .register-row a { color: #818cf8; }
+  </style>
+</head>
+<body>
+
+<h1>Login Screen</h1>
+<p class="subtitle">Đăng nhập bằng số điện thoại + mật khẩu — không cần nhập mã cửa hàng</p>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 1 — Login form states
+══════════════════════════════════════════════════════ -->
+<h2>Form states</h2>
+<div class="phone-row">
+
+  <!-- State 1: Empty / first open -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty — button disabled</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="lang-row">
+          <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+        </div>
+        <div class="header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="white" stroke-width="1.5"/></svg>
+          </div>
+          <h1>Đăng nhập</h1>
+          <p>Quản lý cửa hàng của bạn</p>
+        </div>
+        <div class="field">
+          <label>Số điện thoại</label>
+          <div class="input-wrap">
+            <input type="text" placeholder="Nhập số điện thoại" readonly />
+          </div>
+        </div>
+        <div class="field">
+          <label>Mật khẩu</label>
+          <div class="input-wrap">
+            <input type="password" placeholder="Nhập mật khẩu" readonly />
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          </div>
+        </div>
+        <div class="forgot"><a href="#">Quên mật khẩu?</a></div>
+        <button class="btn-login disabled" disabled>Đăng nhập</button>
+        <div class="register-row">
+          <span>Chưa có tài khoản?</span>
+          <a href="#">Đăng ký ngay</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Filled / ready to submit -->
+  <div class="phone-wrap">
+    <div class="phone-label">Filled — button active</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="lang-row">
+          <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+        </div>
+        <div class="header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="white" stroke-width="1.5"/></svg>
+          </div>
+          <h1>Đăng nhập</h1>
+          <p>Quản lý cửa hàng của bạn</p>
+        </div>
+        <div class="field">
+          <label>Số điện thoại</label>
+          <div class="input-wrap">
+            <input type="text" value="0912 345 678" readonly />
+            <span class="input-icon" style="color:#4f46e5;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Mật khẩu</label>
+          <div class="input-wrap">
+            <input type="password" value="password123" readonly />
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          </div>
+        </div>
+        <div class="forgot"><a href="#">Quên mật khẩu?</a></div>
+        <button class="btn-login">Đăng nhập</button>
+        <div class="register-row">
+          <span>Chưa có tài khoản?</span>
+          <a href="#">Đăng ký ngay</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Loading -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="lang-row">
+          <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+        </div>
+        <div class="header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="white" stroke-width="1.5"/></svg>
+          </div>
+          <h1>Đăng nhập</h1>
+          <p>Quản lý cửa hàng của bạn</p>
+        </div>
+        <div class="field" style="opacity:0.5;">
+          <label>Số điện thoại</label>
+          <div class="input-wrap">
+            <input type="text" value="0912 345 678" readonly />
+          </div>
+        </div>
+        <div class="field" style="opacity:0.5;">
+          <label>Mật khẩu</label>
+          <div class="input-wrap">
+            <input type="password" value="password123" readonly />
+          </div>
+        </div>
+        <div class="forgot" style="opacity:0.4;"><a href="#">Quên mật khẩu?</a></div>
+        <button class="btn-login" style="opacity:0.85;">
+          <div class="spinner"></div>
+          Đang đăng nhập...
+        </button>
+        <div class="register-row" style="opacity:0.4;">
+          <span>Chưa có tài khoản?</span>
+          <a href="#">Đăng ký ngay</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 4: Dark mode / filled -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dark mode</div>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time" style="color:#f9fafb;">9:41</span>
+        <div class="s-icons">
+          <svg viewBox="0 0 24 24" style="fill:#f9fafb;"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24" style="fill:#f9fafb;"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" stroke="#f9fafb" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#f9fafb"/><path d="M20 10v4" stroke="#f9fafb" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="lang-row">
+          <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+        </div>
+        <div class="header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="white" stroke-width="1.5"/></svg>
+          </div>
+          <h1>Đăng nhập</h1>
+          <p>Quản lý cửa hàng của bạn</p>
+        </div>
+        <div class="field">
+          <label>Số điện thoại</label>
+          <div class="input-wrap">
+            <input type="text" value="0912 345 678" readonly />
+            <span class="input-icon" style="color:#6366f1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Mật khẩu</label>
+          <div class="input-wrap">
+            <input type="password" value="password123" readonly />
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          </div>
+        </div>
+        <div class="forgot"><a href="#">Quên mật khẩu?</a></div>
+        <button class="btn-login">Đăng nhập</button>
+        <div class="register-row">
+          <span>Chưa có tài khoản?</span>
+          <a href="#">Đăng ký ngay</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 2 — Login outcomes (3 cases)
+══════════════════════════════════════════════════════ -->
+<h2>Login outcomes — 3 cases after API response</h2>
+<div class="phone-row">
+
+  <!-- Outcome A: User exists + has tenant → navigate to Dashboard -->
+  <div class="phone-wrap">
+    <div class="phone-label" style="background:#d1fae5; color:#065f46;">✓ Case 1 — Has tenant</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen" style="align-items:center; justify-content:center; gap:16px;">
+        <!-- Full-screen loading → navigates to Dashboard -->
+        <div style="width:64px;height:64px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center;font-size:28px;">✓</div>
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:4px;">Đăng nhập thành công</div>
+          <div style="font-size:14px;color:#6b7280;">Đang vào trang chính...</div>
+        </div>
+        <div style="width:200px;height:4px;background:#e5e7eb;border-radius:2px;overflow:hidden;">
+          <div style="width:75%;height:100%;background:#4f46e5;border-radius:2px;"></div>
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:-8px;">→ AppNavigator (Dashboard)</div>
+      </div>
+    </div>
+    <div class="annotations">
+      <h3>Case 1 — User exists + has tenant</h3>
+      <ul>
+        <li><span class="dot"></span>API trả về JWT + <code>onboardingCompleted: true</code> + <code>tenantId</code></li>
+        <li><span class="dot"></span>RootNavigator render AppNavigator → Dashboard</li>
+        <li><span class="dot"></span>Loading screen hiển thị trong ~0.5s rồi tự động chuyển</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Outcome B: User exists + no tenant → continue onboarding -->
+  <div class="phone-wrap">
+    <div class="phone-label" style="background:#fef3c7; color:#92400e;">⚠ Case 2 — Onboarding incomplete</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="lang-row">
+          <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+        </div>
+        <div class="header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="white" stroke-width="1.5"/></svg>
+          </div>
+          <h1>Đăng nhập</h1>
+          <p>Quản lý cửa hàng của bạn</p>
+        </div>
+        <div class="field" style="opacity:0.5;">
+          <label>Số điện thoại</label>
+          <div class="input-wrap"><input type="text" value="0912 345 678" readonly /></div>
+        </div>
+        <div class="field" style="opacity:0.5;">
+          <label>Mật khẩu</label>
+          <div class="input-wrap"><input type="password" value="••••••••" readonly /></div>
+        </div>
+        <div class="forgot" style="opacity:0;margin-bottom:16px;"></div>
+        <!-- Info banner -->
+        <div class="info-banner">
+          <span class="info-banner-icon">🏪</span>
+          <div class="info-banner-body">
+            <div class="info-banner-title">Cửa hàng chưa được thiết lập</div>
+            <div class="info-banner-text">Bạn đã đăng ký tài khoản nhưng chưa hoàn tất thiết lập cửa hàng. Tiếp tục để bắt đầu sử dụng.</div>
+          </div>
+        </div>
+        <button class="btn-continue">Tiếp tục thiết lập cửa hàng →</button>
+        <div style="text-align:center;margin-top:12px;font-size:11px;color:#9ca3af;">→ OnboardingNavigator (Step 1)</div>
+      </div>
+    </div>
+    <div class="annotations">
+      <h3>Case 2 — User exists, no tenant</h3>
+      <ul>
+        <li><span class="dot amber"></span>API trả về JWT + <code>onboardingCompleted: false</code></li>
+        <li><span class="dot amber"></span>Hiển thị banner và nút "Tiếp tục thiết lập"</li>
+        <li><span class="dot amber"></span>Nhấn nút → RootNavigator render OnboardingNavigator</li>
+        <li><span class="dot amber"></span>Tiến trình onboarding được lưu → tiếp tục từ bước đang dở</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Outcome C: User not found -->
+  <div class="phone-wrap">
+    <div class="phone-label" style="background:#fee2e2; color:#991b1b;">✕ Case 3 — Not found</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="lang-row">
+          <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+        </div>
+        <div class="header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="white" stroke-width="1.5"/></svg>
+          </div>
+          <h1>Đăng nhập</h1>
+          <p>Quản lý cửa hàng của bạn</p>
+        </div>
+        <div class="field">
+          <label>Số điện thoại</label>
+          <div class="input-wrap">
+            <input type="text" value="0999 000 111" class="has-error" readonly />
+            <span class="input-icon" style="color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+          </div>
+          <p class="error-text">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Số điện thoại này chưa được đăng ký trong hệ thống
+          </p>
+        </div>
+        <div class="field">
+          <label>Mật khẩu</label>
+          <div class="input-wrap">
+            <input type="password" value="mypassword" readonly />
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          </div>
+        </div>
+        <div class="forgot"><a href="#">Quên mật khẩu?</a></div>
+        <button class="btn-login">Đăng nhập</button>
+        <div class="register-row">
+          <span>Chưa có tài khoản?</span>
+          <a href="#">Đăng ký ngay</a>
+        </div>
+      </div>
+    </div>
+    <div class="annotations">
+      <h3>Case 3 — User not found</h3>
+      <ul>
+        <li><span class="dot red"></span>API trả về 401/404 — số điện thoại không tồn tại</li>
+        <li><span class="dot red"></span>Error hiển thị dưới field số điện thoại</li>
+        <li><span class="dot red"></span>Không tiết lộ "sai mật khẩu" hay "không tìm thấy" → dùng chung thông báo để bảo mật</li>
+        <li><span class="dot red"></span>Link "Đăng ký ngay" dẫn đến RegisterScreen</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Outcome C2: Wrong password (same user, different error) -->
+  <div class="phone-wrap">
+    <div class="phone-label" style="background:#fee2e2; color:#991b1b;">✕ Wrong password</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="lang-row">
+          <div class="lang-chip"><span class="active">VI</span><span class="sep">|</span><span>EN</span></div>
+        </div>
+        <div class="header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="white" stroke-width="1.5"/></svg>
+          </div>
+          <h1>Đăng nhập</h1>
+          <p>Quản lý cửa hàng của bạn</p>
+        </div>
+        <div class="field">
+          <label>Số điện thoại</label>
+          <div class="input-wrap">
+            <input type="text" value="0912 345 678" class="has-error" readonly />
+          </div>
+        </div>
+        <div class="field">
+          <label>Mật khẩu</label>
+          <div class="input-wrap">
+            <input type="password" value="wrongpass" class="has-error" readonly />
+            <span class="input-icon" style="color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
+          </div>
+          <p class="error-text">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Số điện thoại hoặc mật khẩu không đúng
+          </p>
+        </div>
+        <div class="forgot"><a href="#">Quên mật khẩu?</a></div>
+        <button class="btn-login">Thử lại</button>
+        <div class="register-row">
+          <span>Chưa có tài khoản?</span>
+          <a href="#">Đăng ký ngay</a>
+        </div>
+      </div>
+    </div>
+    <div class="annotations">
+      <h3>Wrong password</h3>
+      <ul>
+        <li><span class="dot red"></span>API trả về 401 — user tồn tại nhưng sai mật khẩu</li>
+        <li><span class="dot red"></span>Cả 2 fields đều highlight đỏ (không tiết lộ field nào sai)</li>
+        <li><span class="dot red"></span>Nút đổi thành "Thử lại"</li>
+        <li><span class="dot red"></span>Link "Quên mật khẩu?" nổi bật hơn để người dùng dễ thấy</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

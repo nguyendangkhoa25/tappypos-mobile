@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Product Create & Forgot Shop ID</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: #4f46e5; }
+  .status-bar-white { background: white; }
+  .s-time { font-size: 15px; font-weight: 700; }
+  .s-icons { font-size: 12px; display: flex; gap: 4px; align-items: center; }
+  .s-white .s-time { color: white; }
+  .s-white .s-icons { color: white; }
+  .s-dark .s-time { color: #111827; }
+  .s-dark .s-icons { color: #374151; }
+
+  /* Header */
+  .page-header { background: #4f46e5; padding: 14px 16px 18px; flex-shrink: 0; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .back-btn { font-size: 22px; color: white; }
+  .header-title { font-size: 17px; font-weight: 700; color: white; }
+  .save-btn-text { font-size: 15px; font-weight: 700; color: white; }
+  .header-hint { font-size: 11px; color: rgba(255,255,255,0.75); line-height: 1.4; margin-top: 4px; }
+
+  /* Body */
+  .scroll-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; background: #f9fafb; }
+
+  /* Section cards */
+  .section-card { background: white; border-radius: 16px; border: 1px solid #f3f4f6; padding: 14px; }
+  .field-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .field-input { border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; font-size: 13px; background: #f9fafb; margin-bottom: 10px; }
+  .field-input:last-child { margin-bottom: 0; }
+  .field-input.placeholder { color: #9ca3af; }
+  .field-input.filled { color: #111827; }
+  .field-input.description { min-height: 80px; }
+  .price-hint { font-size: 11px; color: #9ca3af; margin-top: -6px; margin-bottom: 8px; margin-left: 2px; }
+
+  /* Type selector */
+  .type-selector { border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; background: #f9fafb; display: flex; justify-content: space-between; align-items: center; }
+  .type-selector.selected { background: #eef2ff; border-color: #c7d2fe; }
+  .type-tag { background: #e0e7ff; border-radius: 8px; padding: 2px 8px; }
+  .type-tag-text { font-size: 11px; font-weight: 700; color: #4338ca; }
+  .type-name { font-size: 13px; font-weight: 500; color: #111827; flex: 1; margin-left: 8px; }
+  .type-placeholder { font-size: 13px; color: #9ca3af; flex: 1; }
+  .chevron-icon { font-size: 16px; color: #9ca3af; }
+
+  /* Gold price banner */
+  .gold-banner { background: #fef3c7; border: 1px solid #fde68a; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .gold-banner-text { font-size: 13px; color: #92400e; flex: 1; }
+
+  /* Category selector */
+  .category-selector { border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; background: #f9fafb; display: flex; justify-content: space-between; align-items: center; }
+  .category-text { font-size: 13px; color: #9ca3af; }
+  .category-text.selected { color: #111827; }
+
+  /* Type picker overlay */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; z-index: 50; }
+  .bottom-sheet { background: white; border-radius: 28px 28px 0 0; padding: 16px 16px 28px; width: 100%; }
+  .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .sheet-title { font-size: 16px; font-weight: 700; color: #111827; }
+  .close-icon { font-size: 18px; color: #6b7280; }
+  .type-row { display: flex; align-items: center; padding: 10px 12px; border-radius: 12px; margin-bottom: 4px; }
+  .type-row.selected-row { background: #eef2ff; }
+  .type-row-name { font-size: 14px; font-weight: 500; color: #1f2937; flex: 1; margin-left: 10px; }
+  .type-row-name.selected-name { color: #4f46e5; }
+  .type-row-desc { font-size: 11px; color: #9ca3af; }
+  .check-icon { font-size: 14px; color: #4f46e5; }
+
+  /* Forgot shop ID screen */
+  .forgot-body { flex: 1; overflow: hidden; padding: 0 20px 20px; display: flex; flex-direction: column; background: white; }
+  .auth-back { font-size: 22px; color: #374151; margin-bottom: 20px; margin-top: 16px; }
+  .auth-title { font-size: 22px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+  .auth-subtitle { font-size: 13px; color: #6b7280; margin-bottom: 28px; line-height: 1.5; }
+  .auth-field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+  .auth-input { border: 1px solid #e5e7eb; border-radius: 14px; padding: 12px 14px; font-size: 14px; background: #f9fafb; margin-bottom: 16px; }
+  .auth-input.placeholder { color: #9ca3af; }
+  .auth-input.filled { color: #111827; }
+  .submit-btn { background: #4f46e5; border-radius: 16px; padding: 14px; text-align: center; font-size: 15px; font-weight: 700; color: white; margin-bottom: 20px; }
+  .submit-btn.disabled { background: #e5e7eb; color: #9ca3af; }
+  .support-card { background: #f9fafb; border-radius: 16px; padding: 14px; }
+  .support-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; }
+  .support-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .support-icon { font-size: 16px; color: #4f46e5; }
+  .support-text { font-size: 13px; font-weight: 500; color: #4f46e5; }
+
+  /* Success state */
+  .success-card { background: #eef2ff; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+  .success-icon { font-size: 32px; margin-bottom: 10px; }
+  .success-title { font-size: 15px; font-weight: 700; color: #4338ca; text-align: center; margin-bottom: 6px; }
+  .success-desc { font-size: 13px; color: #6366f1; text-align: center; line-height: 1.5; }
+
+  /* Skeleton */
+  .skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+
+<h1>Product Create & Forgot Shop ID</h1>
+<p class="subtitle">ProductCreateScreen + ProductEditScreen + ForgotShopIdScreen</p>
+
+<h2>ProductCreateScreen</h2>
+<div class="phone-row">
+
+  <!-- Empty / no type selected -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty — No Type</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar s-white"><span class="s-time" style="color:white;">9:41</span><div class="s-icons" style="color:white;"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Thêm sản phẩm</span>
+          <span class="save-btn-text">Lưu</span>
+        </div>
+        <div class="header-hint">✏️ Điền thông tin sản phẩm. Chọn loại sản phẩm trước.</div>
+      </div>
+      <div class="scroll-body">
+        <!-- Type selector -->
+        <div class="section-card">
+          <div class="field-label">Loại sản phẩm *</div>
+          <div class="type-selector">
+            <span class="type-placeholder">Chọn loại sản phẩm</span>
+            <span class="chevron-icon">▾</span>
+          </div>
+        </div>
+        <!-- Main fields (empty) -->
+        <div class="section-card">
+          <div class="field-label">Tên *</div>
+          <div class="field-input placeholder">Tên sản phẩm</div>
+          <div class="field-label">Giá</div>
+          <div class="field-input placeholder">Giá bán</div>
+          <div class="field-label">Đơn vị</div>
+          <div class="field-input placeholder">VD: cái, hộp, kg</div>
+          <div class="field-label">Danh mục</div>
+          <div class="category-selector">
+            <span class="category-text">Chọn danh mục</span>
+            <span class="chevron-icon">▾</span>
+          </div>
+        </div>
+        <!-- Description -->
+        <div class="section-card">
+          <div class="field-label">Mô tả</div>
+          <div class="field-input description placeholder">Mô tả tùy chọn...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filled — SERVICE type selected (with duration field) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Filled — Service Type</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar s-white"><span class="s-time" style="color:white;">9:41</span><div class="s-icons" style="color:white;"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Thêm sản phẩm</span>
+          <span class="save-btn-text">Lưu</span>
+        </div>
+        <div class="header-hint">✏️ Điền thông tin sản phẩm. Chọn loại sản phẩm trước.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="section-card">
+          <div class="field-label">Loại sản phẩm *</div>
+          <div class="type-selector selected">
+            <div class="type-tag"><span class="type-tag-text">SERVICE</span></div>
+            <span class="type-name">Dịch vụ</span>
+            <span class="chevron-icon">▾</span>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="field-label">Tên *</div>
+          <div class="field-input filled">Cắt tóc nam</div>
+          <div class="field-label">Giá</div>
+          <div class="field-input filled">80000</div>
+          <div class="price-hint">= 80.000 ₫</div>
+          <div class="field-label">Đơn vị</div>
+          <div class="field-input filled">lần</div>
+          <div class="field-label">Thời gian (phút)</div>
+          <div class="field-input filled">30</div>
+          <div class="field-label">Danh mục</div>
+          <div class="category-selector">
+            <span class="category-text selected">✂️ Cắt tóc</span>
+            <span class="chevron-icon" style="color:#4f46e5;">✓</span>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="field-label">Mô tả</div>
+          <div class="field-input description filled">Dịch vụ cắt tóc nam cơ bản bằng kéo hoặc tông đơ.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Type picker modal -->
+  <div class="phone-wrap">
+    <div class="phone-label">Type Picker Modal</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar s-white"><span class="s-time" style="color:white;">9:41</span><div class="s-icons" style="color:white;"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Thêm sản phẩm</span>
+          <span class="save-btn-text">Lưu</span>
+        </div>
+      </div>
+      <div class="scroll-body" style="opacity:0.3;">
+        <div class="section-card"><div class="type-selector"><span class="type-placeholder">Chọn loại sản phẩm</span></div></div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet">
+          <div class="sheet-header">
+            <span class="sheet-title">Chọn loại sản phẩm</span>
+            <span class="close-icon">✕</span>
+          </div>
+          <div class="type-row selected-row">
+            <div class="type-tag"><span class="type-tag-text">SERVICE</span></div>
+            <span class="type-row-name selected-name">Dịch vụ</span>
+            <span class="check-icon">✓</span>
+          </div>
+          <div class="type-row">
+            <div class="type-tag"><span class="type-tag-text">GENERAL</span></div>
+            <span class="type-row-name">Sản phẩm thông thường</span>
+          </div>
+          <div class="type-row">
+            <div class="type-tag"><span class="type-tag-text">FOOD</span></div>
+            <span class="type-row-name">Thực phẩm & đồ uống</span>
+          </div>
+          <div class="type-row">
+            <div class="type-tag"><span class="type-tag-text">JEWELRY</span></div>
+            <span class="type-row-name">Trang sức & vàng bạc</span>
+          </div>
+          <div class="type-row">
+            <div class="type-tag"><span class="type-tag-text">COMBO</span></div>
+            <span class="type-row-name">Combo dịch vụ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gold/Jewelry type — dynamic price banner -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dynamic Price (Gold)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar s-white"><span class="s-time" style="color:white;">9:41</span><div class="s-icons" style="color:white;"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Thêm sản phẩm</span>
+          <span class="save-btn-text">Lưu</span>
+        </div>
+        <div class="header-hint">✏️ Điền thông tin sản phẩm. Chọn loại sản phẩm trước.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="section-card">
+          <div class="field-label">Loại sản phẩm *</div>
+          <div class="type-selector selected">
+            <div class="type-tag"><span class="type-tag-text">JEWELRY</span></div>
+            <span class="type-name">Trang sức & vàng bạc</span>
+            <span class="chevron-icon">▾</span>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="field-label">Tên *</div>
+          <div class="field-input filled">Nhẫn vàng 18K 1 chỉ</div>
+          <div class="gold-banner">
+            <span style="color:#d97706; font-size:16px;">💛</span>
+            <span class="gold-banner-text">Theo giá vàng — giá sẽ tự động tính khi thêm vào giỏ hàng</span>
+          </div>
+          <div class="field-label">Đơn vị</div>
+          <div class="field-input filled">chỉ</div>
+          <div class="field-label">Danh mục</div>
+          <div class="category-selector">
+            <span class="category-text">Chọn danh mục</span>
+            <span class="chevron-icon">▾</span>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="field-label">Mô tả</div>
+          <div class="field-input description placeholder">Mô tả tùy chọn...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2>ForgotShopIdScreen</h2>
+<div class="phone-row">
+
+  <!-- Empty form -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty Form</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:white;"><span class="s-time" style="color:#111827;">9:41</span><div class="s-icons" style="color:#374151;"><span>●●●</span><span>🔋</span></div></div>
+      <div class="forgot-body">
+        <div class="auth-back">‹</div>
+        <div class="auth-title">Quên mã cửa hàng</div>
+        <div class="auth-subtitle">Nhập tên cửa hàng và số điện thoại bạn đã dùng khi đăng ký. Chúng tôi sẽ tra cứu và gửi lại mã cửa hàng trong vòng 24 giờ.</div>
+        <div class="auth-field-label">Tên cửa hàng</div>
+        <div class="auth-input placeholder">Tên cửa hàng lúc đăng ký</div>
+        <div class="auth-field-label">Số điện thoại đăng ký</div>
+        <div class="auth-input placeholder">0901 234 567</div>
+        <div class="submit-btn disabled">Gửi yêu cầu</div>
+        <div class="support-card">
+          <div class="support-title">Liên hệ hỗ trợ trực tiếp</div>
+          <div class="support-row">
+            <span class="support-icon">📞</span>
+            <span class="support-text">1900 xxxx</span>
+          </div>
+          <div class="support-row">
+            <span class="support-icon">✉️</span>
+            <span class="support-text">support@tappypos.vn</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filled form -->
+  <div class="phone-wrap">
+    <div class="phone-label">Filled — Ready to Submit</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:white;"><span class="s-time" style="color:#111827;">9:41</span><div class="s-icons" style="color:#374151;"><span>●●●</span><span>🔋</span></div></div>
+      <div class="forgot-body">
+        <div class="auth-back">‹</div>
+        <div class="auth-title">Quên mã cửa hàng</div>
+        <div class="auth-subtitle">Nhập tên cửa hàng và số điện thoại bạn đã dùng khi đăng ký.</div>
+        <div class="auth-field-label">Tên cửa hàng</div>
+        <div class="auth-input filled">Kim Ngân Phát</div>
+        <div class="auth-field-label">Số điện thoại đăng ký</div>
+        <div class="auth-input filled">0901 234 567</div>
+        <div class="submit-btn">Gửi yêu cầu</div>
+        <div class="support-card">
+          <div class="support-title">Liên hệ hỗ trợ trực tiếp</div>
+          <div class="support-row">
+            <span class="support-icon">📞</span>
+            <span class="support-text">1900 xxxx</span>
+          </div>
+          <div class="support-row">
+            <span class="support-icon">✉️</span>
+            <span class="support-text">support@tappypos.vn</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sent success state -->
+  <div class="phone-wrap">
+    <div class="phone-label">Sent — Success</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:white;"><span class="s-time" style="color:#111827;">9:41</span><div class="s-icons" style="color:#374151;"><span>●●●</span><span>🔋</span></div></div>
+      <div class="forgot-body">
+        <div class="auth-back">‹</div>
+        <div class="auth-title">Quên mã cửa hàng</div>
+        <div class="auth-subtitle">Nhập tên cửa hàng và số điện thoại bạn đã dùng khi đăng ký.</div>
+        <div class="success-card">
+          <div class="success-icon">✅</div>
+          <div class="success-title">Yêu cầu đã được ghi nhận</div>
+          <div class="success-desc">Chúng tôi sẽ liên hệ trong vòng 24 giờ để cung cấp lại mã cửa hàng của bạn.</div>
+        </div>
+        <div class="support-card">
+          <div class="support-title">Liên hệ hỗ trợ trực tiếp</div>
+          <div class="support-row">
+            <span class="support-icon">📞</span>
+            <span class="support-text">1900 xxxx</span>
+          </div>
+          <div class="support-row">
+            <span class="support-icon">✉️</span>
+            <span class="support-text">support@tappypos.vn</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

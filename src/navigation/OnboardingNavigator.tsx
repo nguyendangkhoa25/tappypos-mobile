@@ -10,7 +10,7 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
 export function OnboardingNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: true }}>
       <Stack.Screen name="ShopType" component={ShopTypeScreen} />
       <Stack.Screen name="Step1" component={Step1Screen} />
       <Stack.Screen name="Step2" component={Step2Screen} />

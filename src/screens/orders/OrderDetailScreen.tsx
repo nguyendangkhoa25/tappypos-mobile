@@ -1,9 +1,11 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { orderApi } from '../../services/api';
+import { useAlertStore } from '../../store/alertStore';
+import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { formatVnd, formatDateTime } from '../../utils/format';
 import { Skeleton } from '../../components/Skeleton';
 import { ErrorState } from '../../components/ErrorState';
@@ -57,6 +59,8 @@ function InfoRow({
 
 export function OrderDetailScreen({ navigation, route }: Props) {
   const { t } = useTranslation();
+  const { show: showAlert } = useAlertStore();
+  const showErrorAlert = useErrorAlert();
   const insets = useSafeAreaInsets();
   const { orderId } = route.params;
   const queryClient = useQueryClient();
@@ -73,7 +77,7 @@ export function OrderDetailScreen({ navigation, route }: Props) {
       queryClient.setQueryData(['order', orderId], updated);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
-    onError: () => Alert.alert(t('common.error'), t('common.errorStateMsg')),
+    onError: showErrorAlert,
   });
 
   const cancelMutation = useMutation({
@@ -82,17 +86,17 @@ export function OrderDetailScreen({ navigation, route }: Props) {
       queryClient.setQueryData(['order', orderId], updated);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
-    onError: () => Alert.alert(t('common.error'), t('common.errorStateMsg')),
+    onError: showErrorAlert,
   });
 
   function handleCancel() {
-    Alert.alert(
+    showAlert(
       t('orders.cancelConfirmTitle'),
       t('orders.cancelConfirmMsg'),
       [
-        { text: t('common.cancel'), style: 'cancel' },
+        { label: t('common.cancel'), style: 'cancel' },
         {
-          text: t('orders.cancelButton'),
+          label: t('orders.cancelButton'),
           style: 'destructive',
           onPress: () => cancelMutation.mutate(),
         },
@@ -238,7 +242,7 @@ export function OrderDetailScreen({ navigation, route }: Props) {
               {order.changeAmount != null && order.changeAmount > 0 && (
                 <View className="flex-row justify-between">
                   <Text className="text-sm text-gray-500">{t('orders.changeAmount')}</Text>
-                  <Text className="text-sm font-semibold" style={{ color: '#059669' }}>
+                  <Text className="text-sm font-semibold" style={{ color: '#4f46e5' }}>
                     {formatVnd(order.changeAmount)}
                   </Text>
                 </View>

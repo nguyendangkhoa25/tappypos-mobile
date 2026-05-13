@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Notification Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #f1f5f9;
+    padding: 32px;
+    color: #1e293b;
+  }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 {
+    font-size: 14px; font-weight: 700; color: #334155;
+    margin: 48px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label {
+    font-size: 11px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+  }
+  .phone {
+    width: 375px; height: 812px;
+    background: #f9fafb;
+    border-radius: 48px;
+    border: 10px solid #1e293b;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .phone.dark { background: #111827; border-color: #0f172a; }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 34px; background: #1e293b;
+    border-radius: 0 0 22px 22px; z-index: 100;
+  }
+  .phone.dark .notch { background: #0f172a; }
+  .status-bar {
+    height: 44px; flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 20px 6px; position: relative; z-index: 10; background: white;
+  }
+  .phone.dark .status-bar { background: #1f2937; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .phone.dark .s-time { color: #f9fafb; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+  .phone.dark .s-icons { color: #d1d5db; }
+
+  /* Header */
+  .notif-header {
+    background: white;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 12px 16px 0;
+    flex-shrink: 0;
+  }
+  .phone.dark .notif-header { background: #1f2937; border-bottom-color: #374151; }
+  .header-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .header-left { display: flex; align-items: center; gap: 8px; }
+  .back-btn { font-size: 22px; color: #4f46e5; cursor: pointer; margin-right: 2px; }
+  .notif-title { font-size: 19px; font-weight: 800; color: #111827; }
+  .phone.dark .notif-title { color: #f9fafb; }
+  .unread-badge {
+    background: #4f46e5; color: white;
+    font-size: 11px; font-weight: 700;
+    padding: 1px 8px; border-radius: 20px;
+  }
+  .mark-all-btn { font-size: 13px; font-weight: 600; color: #4f46e5; }
+  .notif-hint { font-size: 11px; color: #6b7280; margin-bottom: 8px; line-height: 1.4; }
+  .phone.dark .notif-hint { color: #9ca3af; }
+
+  /* Filter chips */
+  .filter-row { display: flex; gap: 8px; padding-bottom: 10px; overflow: hidden; }
+  .chip {
+    padding: 6px 14px; border-radius: 20px; border: 1px solid #e5e7eb;
+    font-size: 12px; font-weight: 500; color: #6b7280; background: white; white-space: nowrap;
+  }
+  .phone.dark .chip { background: #374151; border-color: #4b5563; color: #9ca3af; }
+  .chip.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+  /* Notification list */
+  .notif-list { flex: 1; overflow: hidden; padding: 12px 0 0; }
+  .notif-item {
+    margin: 0 16px 8px;
+    border-radius: 16px;
+    padding: 12px 16px;
+    background: white;
+    border: 1px solid transparent;
+  }
+  .phone.dark .notif-item { background: #1f2937; }
+  .notif-item.unread { background: #eef2ff; border-color: #c7d2fe; }
+  .phone.dark .notif-item.unread { background: rgba(79,70,229,0.12); border-color: #3730a3; }
+  .notif-inner { display: flex; align-items: flex-start; gap: 10px; }
+  .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #4f46e5; margin-top: 6px; flex-shrink: 0; }
+  .read-spacer { width: 8px; flex-shrink: 0; }
+  .notif-content { flex: 1; }
+  .notif-item-title { font-size: 13px; font-weight: 600; color: #374151; }
+  .notif-item.unread .notif-item-title { color: #111827; }
+  .phone.dark .notif-item-title { color: #d1d5db; }
+  .phone.dark .notif-item.unread .notif-item-title { color: #f9fafb; }
+  .notif-body { font-size: 12px; color: #6b7280; margin-top: 3px; line-height: 1.45; }
+  .notif-time { font-size: 11px; color: #9ca3af; margin-top: 5px; }
+
+  /* Loading spinner */
+  .loading-center { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .spinner {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 3px solid #e0e7ff; border-top-color: #4f46e5;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Empty state */
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.35; }
+  .empty-title { font-size: 15px; font-weight: 600; color: #9ca3af; text-align: center; }
+  .empty-hint { font-size: 13px; color: #9ca3af; margin-top: 4px; text-align: center; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<h1>Notification Screen</h1>
+<p class="subtitle">Màn hình thông báo — đơn hàng, hệ thống, lọc theo loại</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- State 1: Loading -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="notif-header">
+        <div class="header-row">
+          <div class="header-left">
+            <span class="back-btn">‹</span>
+            <span class="notif-title">Thông báo</span>
+          </div>
+        </div>
+        <div class="notif-hint">🔔 Thông báo đơn hàng mới, tồn kho sắp hết và cập nhật hệ thống. Nhấn vào để xem chi tiết hoặc chuyển đến màn hình liên quan.</div>
+        <div class="filter-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Chưa đọc</div>
+          <div class="chip">Đơn hàng</div>
+          <div class="chip">Hệ thống</div>
+        </div>
+      </div>
+      <div class="loading-center"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- State 2: Mixed unread + read -->
+  <div class="phone-wrap">
+    <div class="phone-label">With Unread (5)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="notif-header">
+        <div class="header-row">
+          <div class="header-left">
+            <span class="back-btn">‹</span>
+            <span class="notif-title">Thông báo</span>
+            <span class="unread-badge">5</span>
+          </div>
+          <span class="mark-all-btn">Đọc tất cả</span>
+        </div>
+        <div class="notif-hint">🔔 Thông báo đơn hàng mới, tồn kho sắp hết và cập nhật hệ thống. Nhấn vào để xem chi tiết hoặc chuyển đến màn hình liên quan.</div>
+        <div class="filter-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Chưa đọc</div>
+          <div class="chip">Đơn hàng</div>
+          <div class="chip">Hệ thống</div>
+        </div>
+      </div>
+      <div class="notif-list">
+        <div class="notif-item unread">
+          <div class="notif-inner">
+            <div class="unread-dot"></div>
+            <div class="notif-content">
+              <div class="notif-item-title">Đơn hàng mới #TPS-00298</div>
+              <div class="notif-body">Khách hàng Nguyễn Thị Lan vừa đặt đơn 285.000 ₫ qua kênh online.</div>
+              <div class="notif-time">14:32 · 13/05/2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-inner">
+            <div class="unread-dot"></div>
+            <div class="notif-content">
+              <div class="notif-item-title">Tồn kho thấp — Trà sữa trân châu</div>
+              <div class="notif-body">Sản phẩm còn 3 phần, cần nhập thêm hàng sớm.</div>
+              <div class="notif-time">11:05 · 13/05/2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-inner">
+            <div class="unread-dot"></div>
+            <div class="notif-content">
+              <div class="notif-item-title">Đơn hàng mới #TPS-00297</div>
+              <div class="notif-body">Trần Văn Minh vừa đặt đơn 140.000 ₫ tại quầy.</div>
+              <div class="notif-time">09:18 · 13/05/2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-inner">
+            <div class="read-spacer"></div>
+            <div class="notif-content">
+              <div class="notif-item-title">Cập nhật hệ thống v2.4.1</div>
+              <div class="notif-body">Đã thêm tính năng lọc báo cáo theo khoảng ngày tùy chỉnh.</div>
+              <div class="notif-time">08:00 · 12/05/2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-inner">
+            <div class="read-spacer"></div>
+            <div class="notif-content">
+              <div class="notif-item-title">Đơn hàng mới #TPS-00291</div>
+              <div class="notif-body">Lê Thị Hoa vừa đặt đơn 520.000 ₫ qua kênh online.</div>
+              <div class="notif-time">16:44 · 11/05/2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-inner">
+            <div class="read-spacer"></div>
+            <div class="notif-content">
+              <div class="notif-item-title">Gói đăng ký sắp hết hạn</div>
+              <div class="notif-body">Gói Pro của cửa hàng còn 5 ngày. Gia hạn để không gián đoạn.</div>
+              <div class="notif-time">09:00 · 10/05/2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Filtered by Unread -->
+  <div class="phone-wrap">
+    <div class="phone-label">Filter: Chưa đọc</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="notif-header">
+        <div class="header-row">
+          <div class="header-left">
+            <span class="back-btn">‹</span>
+            <span class="notif-title">Thông báo</span>
+            <span class="unread-badge">3</span>
+          </div>
+          <span class="mark-all-btn">Đọc tất cả</span>
+        </div>
+        <div class="notif-hint">🔔 Thông báo đơn hàng mới, tồn kho sắp hết và cập nhật hệ thống. Nhấn vào để xem chi tiết hoặc chuyển đến màn hình liên quan.</div>
+        <div class="filter-row">
+          <div class="chip">Tất cả</div>
+          <div class="chip active">Chưa đọc</div>
+          <div class="chip">Đơn hàng</div>
+          <div class="chip">Hệ thống</div>
+        </div>
+      </div>
+      <div class="notif-list">
+        <div class="notif-item unread">
+          <div class="notif-inner">
+            <div class="unread-dot"></div>
+            <div class="notif-content">
+              <div class="notif-item-title">Đơn hàng mới #TPS-00298</div>
+              <div class="notif-body">Khách hàng Nguyễn Thị Lan vừa đặt đơn 285.000 ₫ qua kênh online.</div>
+              <div class="notif-time">14:32 · 13/05/2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-inner">
+            <div class="unread-dot"></div>
+            <div class="notif-content">
+              <div class="notif-item-title">Tồn kho thấp — Trà sữa trân châu</div>
+              <div class="notif-body">Sản phẩm còn 3 phần, cần nhập thêm hàng sớm.</div>
+              <div class="notif-time">11:05 · 13/05/2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-inner">
+            <div class="unread-dot"></div>
+            <div class="notif-content">
+              <div class="notif-item-title">Đơn hàng mới #TPS-00297</div>
+              <div class="notif-body">Trần Văn Minh vừa đặt đơn 140.000 ₫ tại quầy.</div>
+              <div class="notif-time">09:18 · 13/05/2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 4: Empty (no notifications) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="notif-header">
+        <div class="header-row">
+          <div class="header-left">
+            <span class="back-btn">‹</span>
+            <span class="notif-title">Thông báo</span>
+          </div>
+        </div>
+        <div class="notif-hint">🔔 Thông báo đơn hàng mới, tồn kho sắp hết và cập nhật hệ thống. Nhấn vào để xem chi tiết hoặc chuyển đến màn hình liên quan.</div>
+        <div class="filter-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Chưa đọc</div>
+          <div class="chip">Đơn hàng</div>
+          <div class="chip">Hệ thống</div>
+        </div>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">🔔</div>
+        <div class="empty-title">Chưa có thông báo nào</div>
+        <div class="empty-hint">Các thông báo về đơn hàng và hệ thống sẽ xuất hiện ở đây</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 5: Empty filter -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty Filter (Hệ thống)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="notif-header">
+        <div class="header-row">
+          <div class="header-left">
+            <span class="back-btn">‹</span>
+            <span class="notif-title">Thông báo</span>
+          </div>
+        </div>
+        <div class="notif-hint">🔔 Thông báo đơn hàng mới, tồn kho sắp hết và cập nhật hệ thống. Nhấn vào để xem chi tiết hoặc chuyển đến màn hình liên quan.</div>
+        <div class="filter-row">
+          <div class="chip">Tất cả</div>
+          <div class="chip">Chưa đọc</div>
+          <div class="chip">Đơn hàng</div>
+          <div class="chip active">Hệ thống</div>
+        </div>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">🔔</div>
+        <div class="empty-title">Chưa có thông báo nào</div>
+        <div class="empty-hint">Không có thông báo nào trong mục này</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

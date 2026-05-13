@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Default Expenses &amp; Display Settings</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  .page-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px; flex-shrink: 0; }
+  .header-row { display: flex; align-items: center; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 8px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .add-btn { font-size: 22px; color: #4f46e5; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+
+  .scroll-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+
+  /* Info banner */
+  .info-banner { background: #eef2ff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; }
+  .info-text { font-size: 12px; color: #4338ca; line-height: 1.45; }
+
+  /* Expense rows */
+  .expense-row { background: white; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; }
+  .expense-info { flex: 1; }
+  .expense-name { font-size: 14px; font-weight: 500; color: #111827; }
+  .expense-amount { font-size: 13px; font-weight: 600; color: #4f46e5; margin-top: 2px; }
+  .expense-date { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+  .expense-actions { display: flex; align-items: center; gap: 12px; margin-left: 8px; }
+  .edit-icon { font-size: 17px; color: #6b7280; }
+  .del-icon { font-size: 17px; color: #ef4444; }
+
+  /* Empty */
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 24px; }
+  .empty-icon { font-size: 48px; opacity: 0.2; margin-bottom: 12px; }
+  .empty-title { font-size: 14px; font-weight: 600; color: #9ca3af; text-align: center; }
+  .empty-hint { font-size: 13px; color: #9ca3af; margin-top: 4px; text-align: center; line-height: 1.5; }
+  .empty-btn { margin-top: 20px; background: #4f46e5; border-radius: 14px; padding: 11px 22px; }
+  .empty-btn-text { color: white; font-size: 13px; font-weight: 600; }
+
+  /* Modal */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; z-index: 50; }
+  .bottom-sheet { background: white; border-radius: 28px 28px 0 0; padding: 22px 20px 28px; width: 100%; }
+  .sheet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .sheet-title { font-size: 16px; font-weight: 700; color: #111827; }
+  .close-btn { font-size: 18px; color: #6b7280; }
+  .field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .field-input { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #111827; background: #f9fafb; margin-bottom: 12px; }
+  .field-input.placeholder { color: #9ca3af; }
+  .save-btn { background: #4f46e5; border-radius: 16px; padding: 14px; text-align: center; color: white; font-size: 15px; font-weight: 700; margin-top: 4px; }
+  .save-btn.disabled { background: #e5e7eb; color: #9ca3af; }
+
+  /* Display screen */
+  .card { background: white; border-radius: 16px; padding: 14px; }
+  .section-label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .theme-row { display: flex; gap: 8px; }
+  .theme-opt { flex: 1; border-radius: 12px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; border: 2px solid #e5e7eb; background: #f9fafb; }
+  .theme-opt.selected { border-color: #4f46e5; background: #eef2ff; }
+  .theme-icon { font-size: 20px; margin-bottom: 4px; }
+  .theme-label { font-size: 11px; font-weight: 500; color: #6b7280; }
+  .theme-opt.selected .theme-label { color: #4f46e5; }
+  .check-icon { font-size: 12px; color: #4f46e5; margin-top: 3px; }
+  .lang-row { display: flex; gap: 10px; }
+  .lang-opt { flex: 1; border-radius: 12px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; border: 2px solid #e5e7eb; background: #f9fafb; }
+  .lang-opt.selected { border-color: #4f46e5; background: #eef2ff; }
+  .lang-flag { font-size: 26px; margin-bottom: 4px; }
+  .lang-label { font-size: 11px; font-weight: 500; color: #6b7280; }
+  .lang-opt.selected .lang-label { color: #4f46e5; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle-info { flex: 1; margin-right: 12px; }
+  .toggle-title { font-size: 13px; font-weight: 600; color: #111827; }
+  .toggle-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+  .toggle { width: 44px; height: 24px; border-radius: 12px; background: #4f46e5; position: relative; flex-shrink: 0; }
+  .toggle-thumb { width: 20px; height: 20px; border-radius: 50%; background: white; position: absolute; top: 2px; right: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle.off { background: #d1d5db; }
+  .toggle.off .toggle-thumb { right: auto; left: 2px; }
+</style>
+</head>
+<body>
+
+<h1>Default Expenses &amp; Display Settings</h1>
+<p class="subtitle">Chi phí mặc định (danh sách + modal) và Giao diện &amp; Ngôn ngữ (theme/lang/privacy)</p>
+
+<h2>Default Expenses Screen</h2>
+<div class="phone-row">
+
+  <!-- Expenses: With items -->
+  <div class="phone-wrap">
+    <div class="phone-label">With Items</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Chi phí mặc định</span>
+          <span class="add-btn">＋</span>
+        </div>
+        <div class="header-hint">💡 Thêm các khoản cố định như tiền thuê, điện nước — áp dụng mỗi tháng chỉ một chạm.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="info-banner">
+          <span style="font-size:14px;color:#4f46e5;">ℹ️</span>
+          <span class="info-text">Chi phí mặc định sẽ được gợi ý khi bạn thêm chi phí mỗi tháng</span>
+        </div>
+        <div class="expense-row">
+          <div class="expense-info">
+            <div class="expense-name">Thuê mặt bằng</div>
+            <div class="expense-amount">5.000.000 ₫</div>
+            <div class="expense-date">Ngày 5 hàng tháng</div>
+          </div>
+          <div class="expense-actions"><span class="edit-icon">✎</span><span class="del-icon">🗑</span></div>
+        </div>
+        <div class="expense-row">
+          <div class="expense-info">
+            <div class="expense-name">Tiền điện</div>
+            <div class="expense-amount">1.200.000 ₫</div>
+            <div class="expense-date">Ngày 15 hàng tháng</div>
+          </div>
+          <div class="expense-actions"><span class="edit-icon">✎</span><span class="del-icon">🗑</span></div>
+        </div>
+        <div class="expense-row">
+          <div class="expense-info">
+            <div class="expense-name">Tiền nước</div>
+            <div class="expense-amount">300.000 ₫</div>
+            <div class="expense-date" style="color:transparent;">—</div>
+          </div>
+          <div class="expense-actions"><span class="edit-icon">✎</span><span class="del-icon">🗑</span></div>
+        </div>
+        <div class="expense-row">
+          <div class="expense-info">
+            <div class="expense-name">Internet</div>
+            <div class="expense-amount">250.000 ₫</div>
+            <div class="expense-date" style="color:transparent;">—</div>
+          </div>
+          <div class="expense-actions"><span class="edit-icon">✎</span><span class="del-icon">🗑</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expenses: Empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Chi phí mặc định</span>
+          <span class="add-btn">＋</span>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="info-banner">
+          <span style="font-size:14px;color:#4f46e5;">ℹ️</span>
+          <span class="info-text">Chi phí mặc định sẽ được gợi ý khi bạn thêm chi phí mỗi tháng</span>
+        </div>
+        <div class="empty-state">
+          <div class="empty-icon">💸</div>
+          <div class="empty-title">Chưa có chi phí mặc định nào</div>
+          <div class="empty-hint">Thêm các chi phí cố định hàng tháng như thuê mặt bằng, điện nước...</div>
+          <div class="empty-btn"><div class="empty-btn-text">Thêm chi phí</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expenses: Add modal -->
+  <div class="phone-wrap">
+    <div class="phone-label">Add Modal</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Chi phí mặc định</span>
+          <span class="add-btn">＋</span>
+        </div>
+      </div>
+      <div class="scroll-body" style="opacity:0.3; padding:8px;"></div>
+      <div class="overlay">
+        <div class="bottom-sheet">
+          <div class="sheet-header">
+            <span class="sheet-title">Chi phí mặc định</span>
+            <span class="close-btn">✕</span>
+          </div>
+          <div class="field-label">Tên chi phí</div>
+          <div class="field-input">Thuê mặt bằng</div>
+          <div class="field-label">Số tiền hàng tháng (₫)</div>
+          <div class="field-input">5000000</div>
+          <div class="field-label">Ngày thanh toán hàng tháng</div>
+          <div class="field-input placeholder">1-28 (tuỳ chọn)</div>
+          <div class="save-btn">Lưu</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2>Display &amp; Language Screen</h2>
+<div class="phone-row">
+
+  <!-- Display: Light theme, Vietnamese -->
+  <div class="phone-wrap">
+    <div class="phone-label">Light / VI</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Giao diện &amp; Ngôn ngữ</span>
+        </div>
+        <div class="header-hint">🎨 Chuyển đổi giữa chủ đề Sáng, Tối hoặc Tự động theo sở thích.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="section-label">Chủ đề</div>
+          <div class="theme-row">
+            <div class="theme-opt selected">
+              <span class="theme-icon">☀️</span>
+              <span class="theme-label">Sáng</span>
+              <span class="check-icon">✓</span>
+            </div>
+            <div class="theme-opt">
+              <span class="theme-icon">🌙</span>
+              <span class="theme-label">Tối</span>
+            </div>
+            <div class="theme-opt">
+              <span class="theme-icon">📱</span>
+              <span class="theme-label">Tự động</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Ngôn ngữ</div>
+          <div class="lang-row">
+            <div class="lang-opt selected">
+              <span class="lang-flag">🇻🇳</span>
+              <span class="lang-label">Tiếng Việt</span>
+              <span class="check-icon">✓</span>
+            </div>
+            <div class="lang-opt">
+              <span class="lang-flag">🇬🇧</span>
+              <span class="lang-label">English</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Quyền riêng tư</div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Ẩn số tiền</div>
+              <div class="toggle-sub">Che giá trị doanh thu và tiền trên màn hình</div>
+            </div>
+            <div class="toggle off"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Display: Dark theme, English, Privacy on -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dark / EN / Privacy</div>
+    <div class="phone" style="background: #111827;">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#1f2937;"><span class="s-time" style="color:white;">9:41</span><div class="s-icons" style="color:rgba(255,255,255,0.8);"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header" style="background:#1f2937;border-color:#374151;">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title" style="color:white;">Giao diện &amp; Ngôn ngữ</span>
+        </div>
+        <div class="header-hint" style="color:#9ca3af;">🎨 Thay đổi ngôn ngữ ứng dụng giữa Tiếng Việt và Tiếng Anh.</div>
+      </div>
+      <div class="scroll-body" style="background:#111827;">
+        <div class="card" style="background:#1f2937;">
+          <div class="section-label" style="color:#9ca3af;">Chủ đề</div>
+          <div class="theme-row">
+            <div class="theme-opt" style="background:#374151;border-color:#374151;">
+              <span class="theme-icon">☀️</span>
+              <span class="theme-label" style="color:#9ca3af;">Sáng</span>
+            </div>
+            <div class="theme-opt selected">
+              <span class="theme-icon">🌙</span>
+              <span class="theme-label">Tối</span>
+              <span class="check-icon">✓</span>
+            </div>
+            <div class="theme-opt" style="background:#374151;border-color:#374151;">
+              <span class="theme-icon">📱</span>
+              <span class="theme-label" style="color:#9ca3af;">Tự động</span>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="background:#1f2937;">
+          <div class="section-label" style="color:#9ca3af;">Ngôn ngữ</div>
+          <div class="lang-row">
+            <div class="lang-opt" style="background:#374151;border-color:#374151;">
+              <span class="lang-flag">🇻🇳</span>
+              <span class="lang-label" style="color:#9ca3af;">Tiếng Việt</span>
+            </div>
+            <div class="lang-opt selected">
+              <span class="lang-flag">🇬🇧</span>
+              <span class="lang-label">English</span>
+              <span class="check-icon">✓</span>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="background:#1f2937;">
+          <div class="section-label" style="color:#9ca3af;">Quyền riêng tư</div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title" style="color:white;">Ẩn số tiền</div>
+              <div class="toggle-sub">Che giá trị doanh thu và tiền trên màn hình</div>
+            </div>
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

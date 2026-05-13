@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Combo Edit Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  /* Header */
+  .combo-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px; flex-shrink: 0; }
+  .header-row { display: flex; align-items: center; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 8px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .save-link { font-size: 15px; font-weight: 600; color: #4f46e5; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+
+  /* Scroll */
+  .scroll-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: white; border-radius: 16px; padding: 14px; }
+  .field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .field-input { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #111827; background: #f9fafb; }
+  .field-input.placeholder { color: #9ca3af; }
+  .field-input.multiline { height: 56px; display: flex; align-items: flex-start; }
+  .gap-top { margin-top: 12px; }
+
+  /* Products section */
+  .products-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .add-prod-link { display: flex; align-items: center; gap: 4px; }
+  .add-prod-text { font-size: 13px; font-weight: 600; color: #4f46e5; }
+  .prod-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid #f3f4f6; }
+  .prod-row:first-of-type { border-top: none; }
+  .prod-info { flex: 1; }
+  .prod-name { font-size: 13px; font-weight: 600; color: #111827; }
+  .prod-price { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .qty-btn { width: 30px; height: 30px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #6b7280; flex-shrink: 0; }
+  .qty-val { font-size: 14px; font-weight: 700; color: #111827; width: 22px; text-align: center; }
+  .remove-btn { font-size: 16px; color: #ef4444; margin-left: 4px; }
+  .no-products { font-size: 13px; color: #9ca3af; text-align: center; padding: 12px 0; }
+
+  /* Price section */
+  .totals-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .totals-label { font-size: 13px; color: #6b7280; }
+  .totals-val { font-size: 13px; color: #374151; }
+  .savings-val { font-size: 13px; font-weight: 600; color: #4f46e5; }
+
+  /* Toggle row */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle-label { font-size: 14px; color: #111827; font-weight: 500; }
+  .toggle { width: 46px; height: 26px; border-radius: 13px; background: #4f46e5; position: relative; flex-shrink: 0; }
+  .toggle-thumb { width: 22px; height: 22px; border-radius: 50%; background: white; position: absolute; top: 2px; right: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle.off { background: #d1d5db; }
+  .toggle.off .toggle-thumb { right: auto; left: 2px; }
+
+  /* Error msg */
+  .error-msg { font-size: 13px; color: #ef4444; padding: 0 2px; }
+
+  /* Loading */
+  .loader { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #e0e7ff; border-top-color: #4f46e5; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Product picker modal */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: flex-end; z-index: 50; }
+  .picker-sheet { background: white; border-radius: 28px 28px 0 0; width: 100%; max-height: 70%; display: flex; flex-direction: column; }
+  .picker-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 12px; }
+  .picker-title { font-size: 16px; font-weight: 700; color: #111827; }
+  .picker-close { font-size: 18px; color: #6b7280; }
+  .picker-search { margin: 0 16px 10px; border: 1px solid #e5e7eb; border-radius: 10px; padding: 9px 12px; font-size: 13px; color: #9ca3af; background: #f9fafb; }
+  .picker-list { overflow: hidden; padding: 0 16px 16px; display: flex; flex-direction: column; }
+  .picker-item { display: flex; align-items: center; padding: 11px 0; border-bottom: 1px solid #f3f4f6; }
+  .picker-item-info { flex: 1; }
+  .picker-item-name { font-size: 13px; color: #111827; font-weight: 500; }
+  .picker-item-price { font-size: 12px; color: #4f46e5; margin-top: 2px; }
+  .picker-item-icon { font-size: 18px; color: #4f46e5; }
+  .picker-item.added { opacity: 0.4; }
+</style>
+</head>
+<body>
+
+<h1>Combo Edit Screen</h1>
+<p class="subtitle">Tạo / sửa combo — thông tin cơ bản, sản phẩm + qty, giá, trạng thái, picker sản phẩm</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- State 1: Create — empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Create – Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="combo-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Tạo combo mới</span>
+          <span class="save-link">Lưu</span>
+        </div>
+        <div class="header-hint">🎁 Tìm và thêm sản phẩm vào combo, đặt số lượng cho từng sản phẩm.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="field-label">Tên combo</div>
+          <div class="field-input placeholder">VD: Combo bữa trưa, Set A...</div>
+          <div class="field-label gap-top">Mô tả</div>
+          <div class="field-input multiline placeholder">Mô tả ngắn về combo</div>
+        </div>
+        <div class="card">
+          <div class="products-header">
+            <span style="font-size:13px;font-weight:600;color:#374151;">Sản phẩm trong combo (0)</span>
+            <div class="add-prod-link"><span style="color:#4f46e5;font-size:15px;">＋</span><span class="add-prod-text">Thêm sản phẩm</span></div>
+          </div>
+          <div class="no-products">Combo cần ít nhất 2 sản phẩm</div>
+        </div>
+        <div class="card">
+          <div class="field-label">Giá combo (₫)</div>
+          <div class="field-input placeholder">0</div>
+        </div>
+        <div class="card">
+          <div class="toggle-row">
+            <span class="toggle-label">Đang bán</span>
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 2: Filled with products + savings -->
+  <div class="phone-wrap">
+    <div class="phone-label">Filled with Products</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="combo-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Tạo combo mới</span>
+          <span class="save-link">Lưu</span>
+        </div>
+        <div class="header-hint">🎁 Đặt giá combo thấp hơn tổng giá lẻ để khách hàng thấy được mức tiết kiệm.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="field-label">Tên combo</div>
+          <div class="field-input">Combo Bữa Trưa</div>
+          <div class="field-label gap-top">Mô tả</div>
+          <div class="field-input multiline">Cơm + canh + tráng miệng</div>
+        </div>
+        <div class="card">
+          <div class="products-header">
+            <span style="font-size:13px;font-weight:600;color:#374151;">Sản phẩm trong combo (3)</span>
+            <div class="add-prod-link"><span style="color:#4f46e5;font-size:15px;">＋</span><span class="add-prod-text">Thêm sản phẩm</span></div>
+          </div>
+          <div class="prod-row">
+            <div class="prod-info"><div class="prod-name">Cơm sườn nướng</div><div class="prod-price">45.000 ₫ × 1</div></div>
+            <div class="qty-btn">−</div>
+            <div class="qty-val">1</div>
+            <div class="qty-btn">＋</div>
+            <div class="remove-btn">✕</div>
+          </div>
+          <div class="prod-row">
+            <div class="prod-info"><div class="prod-name">Canh chua cá</div><div class="prod-price">25.000 ₫ × 1</div></div>
+            <div class="qty-btn">−</div>
+            <div class="qty-val">1</div>
+            <div class="qty-btn">＋</div>
+            <div class="remove-btn">✕</div>
+          </div>
+          <div class="prod-row">
+            <div class="prod-info"><div class="prod-name">Chè đậu đỏ</div><div class="prod-price">20.000 ₫ × 2</div></div>
+            <div class="qty-btn">−</div>
+            <div class="qty-val">2</div>
+            <div class="qty-btn">＋</div>
+            <div class="remove-btn">✕</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="field-label">Giá combo (₫)</div>
+          <div class="field-input">99000</div>
+          <div class="totals-row" style="margin-top:10px;">
+            <span class="totals-label">Tổng giá lẻ</span>
+            <span class="totals-val">115.000 ₫</span>
+          </div>
+          <div class="totals-row">
+            <span style="font-size:13px;color:#4f46e5;">Tiết kiệm</span>
+            <span class="savings-val">16.000 ₫</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="toggle-row">
+            <span class="toggle-label">Đang bán</span>
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 3: Edit mode + validation error -->
+  <div class="phone-wrap">
+    <div class="phone-label">Validation Error</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="combo-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Sửa combo</span>
+          <span class="save-link">Lưu</span>
+        </div>
+        <div class="header-hint">🎁 Tìm và thêm sản phẩm vào combo.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="field-label">Tên combo</div>
+          <div class="field-input placeholder">VD: Combo bữa trưa, Set A...</div>
+          <div class="field-label gap-top">Mô tả</div>
+          <div class="field-input multiline placeholder">Mô tả ngắn về combo</div>
+        </div>
+        <div class="card">
+          <div class="products-header">
+            <span style="font-size:13px;font-weight:600;color:#374151;">Sản phẩm trong combo (1)</span>
+            <div class="add-prod-link"><span style="color:#4f46e5;font-size:15px;">＋</span><span class="add-prod-text">Thêm sản phẩm</span></div>
+          </div>
+          <div class="prod-row">
+            <div class="prod-info"><div class="prod-name">Cà phê sữa đá</div><div class="prod-price">35.000 ₫ × 1</div></div>
+            <div class="qty-btn">−</div>
+            <div class="qty-val">1</div>
+            <div class="qty-btn">＋</div>
+            <div class="remove-btn">✕</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="field-label">Giá combo (₫)</div>
+          <div class="field-input placeholder">0</div>
+        </div>
+        <div class="card">
+          <div class="toggle-row">
+            <span class="toggle-label">Đang bán</span>
+            <div class="toggle off"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="error-msg">Vui lòng nhập tên combo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 4: Product picker modal -->
+  <div class="phone-wrap">
+    <div class="phone-label">Product Picker</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="combo-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Tạo combo mới</span>
+          <span class="save-link">Lưu</span>
+        </div>
+      </div>
+      <div class="scroll-body" style="opacity:0.3;">
+        <div class="card"><div class="field-input">Combo Bữa Trưa</div></div>
+      </div>
+      <div class="overlay">
+        <div class="picker-sheet">
+          <div class="picker-header">
+            <span class="picker-title">Thêm sản phẩm</span>
+            <span class="picker-close">✕</span>
+          </div>
+          <div class="picker-search">Tìm sản phẩm...</div>
+          <div class="picker-list">
+            <div class="picker-item added">
+              <div class="picker-item-info"><div class="picker-item-name">Cơm sườn nướng</div><div class="picker-item-price">45.000 ₫</div></div>
+              <span style="font-size:16px;color:#4f46e5;">✓</span>
+            </div>
+            <div class="picker-item">
+              <div class="picker-item-info"><div class="picker-item-name">Bún bò Huế</div><div class="picker-item-price">55.000 ₫</div></div>
+              <span class="picker-item-icon">⊕</span>
+            </div>
+            <div class="picker-item">
+              <div class="picker-item-info"><div class="picker-item-name">Cà phê sữa đá</div><div class="picker-item-price">35.000 ₫</div></div>
+              <span class="picker-item-icon">⊕</span>
+            </div>
+            <div class="picker-item">
+              <div class="picker-item-info"><div class="picker-item-name">Chè đậu đỏ</div><div class="picker-item-price">20.000 ₫</div></div>
+              <span class="picker-item-icon">⊕</span>
+            </div>
+            <div class="picker-item">
+              <div class="picker-item-info"><div class="picker-item-name">Nước cam ép</div><div class="picker-item-price">30.000 ₫</div></div>
+              <span class="picker-item-icon">⊕</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State 5: Loading (edit fetch) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading (Edit)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="combo-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Sửa combo</span>
+          <span class="save-link">Lưu</span>
+        </div>
+      </div>
+      <div class="loader"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

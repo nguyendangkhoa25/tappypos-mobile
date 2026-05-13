@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -15,10 +15,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { cartApi } from '../../services/api';
 import { useCartStore } from '../../store/cartStore';
+import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { formatVnd } from '../../utils/format';
 import type { POSScreenProps } from '../../types/navigation';
 
 type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CARD';
+const LAST_PAYMENT_KEY = 'last_payment_method';
 
 const PAYMENT_METHODS: { key: PaymentMethod; icon: string; labelKey: string }[] = [
   { key: 'CASH', icon: 'cash', labelKey: 'pos.cash' },
@@ -29,7 +31,8 @@ const PAYMENT_METHODS: { key: PaymentMethod; icon: string; labelKey: string }[] 
 export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { items, discount, getTotal, clearCart, promoCode, setPromo } = useCartStore();
+  const showErrorAlert = useErrorAlert();
+  const { items, discount, getTotal, clearCart, promoCode, setPromo, selectedCustomer } = useCartStore();
   const total = getTotal();
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
 
@@ -37,34 +40,44 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
   const [cashReceived, setCashReceived] = useState('');
   const [promoInput, setPromoInput] = useState('');
   const [applyingPromo, setApplyingPromo] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
+  const submittingRef = useRef(false);
+
+  // US-132: load last payment method on mount (never pre-select CARD)
+  useEffect(() => {
+    AsyncStorage.getItem(LAST_PAYMENT_KEY).then((saved) => {
+      if (saved === 'CASH' || saved === 'BANK_TRANSFER') {
+        setPaymentMethod(saved);
+      }
+    });
+  }, []);
 
   const cashReceivedNum = parseFloat(cashReceived.replace(/[^0-9]/g, '')) || 0;
   const change = paymentMethod === 'CASH' ? Math.max(0, cashReceivedNum - total) : 0;
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
-      // 1. Create a server-side cart session
       const initRes = await cartApi.init();
       const cartId = initRes.data.data.cartId;
 
-      // 2. Push all local cart items to the server cart
       for (const item of items) {
-        await cartApi.addItem(cartId, item.productId, item.quantity);
+        await cartApi.addItem(cartId, item.productId, item.quantity, item.price);
       }
 
-      // 3. Apply promo code if one was entered
       if (promoCode) {
         await cartApi.applyPromo(cartId, promoCode);
       }
 
-      // 4. Checkout
       const res = await cartApi.checkout(cartId, {
         paymentMethod,
         amountPaid: cashReceivedNum || undefined,
+        customerId: selectedCustomer?.id,
       });
       return res.data.data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      submittingRef.current = false;
+      await AsyncStorage.setItem(LAST_PAYMENT_KEY, paymentMethod);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       clearCart();
       navigation.replace('OrderSuccess', {
@@ -74,7 +87,9 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
       });
     },
     onError: () => {
-      Alert.alert(t('common.error'), t('common.errorStateMsg'));
+      submittingRef.current = false;
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setCheckoutError(t('pos.checkoutError'));
     },
   });
 
@@ -82,10 +97,9 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
     if (!promoInput.trim()) return;
     setApplyingPromo(true);
     try {
-      // Validate promo code by checking discount — actual apply happens at checkout time
       setPromo(promoInput.trim(), 0);
-    } catch {
-      Alert.alert(t('common.error'), t('common.errorStateMsg'));
+    } catch (err) {
+      showErrorAlert(err);
     } finally {
       setApplyingPromo(false);
     }
@@ -145,19 +159,30 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
               {applyingPromo ? (
                 <ActivityIndicator size="small" color="#4f46e5" />
               ) : (
-                <Text className="text-primary font-semibold">{t('pos.applyPromo')}</Text>
+                <Text className="text-indigo-600 font-semibold">{t('pos.applyPromo')}</Text>
               )}
             </TouchableOpacity>
           </View>
         )}
 
         {promoCode && (
-          <View className="flex-row items-center bg-primary-light rounded-xl px-4 py-3 mb-4">
+          <View className="flex-row items-center bg-indigo-50 rounded-xl px-4 py-3 mb-4">
             <MaterialCommunityIcons name="tag-outline" size={18} color="#4f46e5" />
-            <Text className="flex-1 ml-2 text-primary font-semibold">{promoCode}</Text>
+            <Text className="flex-1 ml-2 text-indigo-700 font-semibold">{promoCode}</Text>
             <TouchableOpacity onPress={() => setPromo(null, 0)}>
               <MaterialCommunityIcons name="close" size={18} color="#4f46e5" />
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Customer summary (read-only, selected in CartScreen) */}
+        {selectedCustomer && (
+          <View className="flex-row items-center bg-indigo-50 rounded-xl px-4 py-3 mb-4">
+            <MaterialCommunityIcons name="account-outline" size={18} color="#4f46e5" />
+            <View className="flex-1 ml-2">
+              <Text className="text-indigo-700 font-semibold">{selectedCustomer.name}</Text>
+              <Text className="text-xs text-indigo-600">{selectedCustomer.phone}</Text>
+            </View>
           </View>
         )}
 
@@ -170,7 +195,7 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
               testID={`payment-method-${key}`}
               className={`flex-1 py-4 rounded-2xl items-center border-2 ${
                 paymentMethod === key
-                  ? 'border-primary bg-primary-light'
+                  ? 'border-indigo-600 bg-indigo-50'
                   : 'border-gray-200 bg-white'
               }`}
               onPress={() => setPaymentMethod(key)}
@@ -182,7 +207,7 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
               />
               <Text
                 className={`text-xs font-semibold mt-1 ${
-                  paymentMethod === key ? 'text-primary' : 'text-gray-500'
+                  paymentMethod === key ? 'text-indigo-600' : 'text-gray-500'
                 }`}
               >
                 {t(labelKey)}
@@ -194,7 +219,16 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
         {/* Cash change calculator */}
         {paymentMethod === 'CASH' && (
           <View className="bg-gray-50 rounded-2xl p-4 mb-6">
-            <Text className="text-sm text-gray-500 mb-2">{t('pos.cashReceived')}</Text>
+            {/* US-133: "Đúng tiền" chip next to label */}
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-sm text-gray-500">{t('pos.cashReceived')}</Text>
+              <TouchableOpacity
+                onPress={() => setCashReceived(String(total))}
+                className="px-3 py-1 bg-indigo-100 rounded-full"
+              >
+                <Text className="text-xs font-semibold text-indigo-700">Đúng tiền</Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-xl font-bold text-gray-900 mb-3"
               value={cashReceived}
@@ -206,7 +240,7 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
               <View className="flex-row justify-between items-center">
                 <Text className="text-gray-600 font-medium">{t('pos.change')}</Text>
                 <Text
-                  className={`text-xl font-bold ${change >= 0 ? 'text-primary' : 'text-danger'}`}
+                  className={`text-xl font-bold ${change >= 0 ? 'text-indigo-600' : 'text-red-500'}`}
                 >
                   {formatVnd(change)}
                 </Text>
@@ -221,11 +255,29 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
         className="px-4 pt-3 bg-white border-t border-gray-100"
         style={{ paddingBottom: insets.bottom + 16 }}
       >
+        {/* Sticky error banner — stays visible above the button */}
+        {checkoutError ? (
+          <View className="flex-row items-center bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-3 gap-2">
+            <MaterialCommunityIcons name="alert-outline" size={18} color="#d97706" />
+            <Text className="text-amber-800 text-sm font-medium flex-1">{checkoutError}</Text>
+            <TouchableOpacity
+              onPress={() => setCheckoutError('')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MaterialCommunityIcons name="close" size={16} color="#d97706" />
+            </TouchableOpacity>
+          </View>
+        ) : null}
         <TouchableOpacity
           className={`rounded-2xl py-4 items-center ${
-            checkoutMutation.isPending ? 'bg-gray-300' : 'bg-primary active:opacity-80'
+            checkoutMutation.isPending ? 'bg-gray-300' : 'bg-indigo-600 active:opacity-80'
           }`}
-          onPress={() => checkoutMutation.mutate()}
+          onPress={() => {
+            if (submittingRef.current || checkoutMutation.isPending) return;
+            submittingRef.current = true;
+            setCheckoutError('');
+            checkoutMutation.mutate();
+          }}
           disabled={checkoutMutation.isPending}
         >
           {checkoutMutation.isPending ? (

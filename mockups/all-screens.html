@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – All Screens</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; display: flex; background: #f1f5f9; }
+
+#progress-bar { position: fixed; top: 0; left: 0; width: 0%; height: 3px; background: #4f46e5; z-index: 9999; transition: width 0.15s; }
+
+/* Sidebar */
+.sidebar {
+  width: 224px; min-height: 100vh; background: #1e293b;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  flex-shrink: 0; padding: 16px 0 40px;
+  scrollbar-width: thin; scrollbar-color: #334155 transparent;
+}
+.sidebar-title { font-size: 13px; font-weight: 800; color: #f1f5f9; padding: 0 16px 4px; letter-spacing: 0.02em; }
+.sidebar-count { font-size: 11px; color: #64748b; padding: 0 16px 14px; border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 8px; }
+.nav-group { margin-bottom: 2px; }
+.nav-group-label { font-size: 9px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 16px 3px; }
+.nav-group-link { display: block; text-decoration: none; color: #64748b; transition: color 0.12s; }
+.nav-group-link:hover { color: #94a3b8; }
+.nav-link { display: block; font-size: 12px; color: #94a3b8; padding: 5px 16px; text-decoration: none; line-height: 1.35; transition: color 0.12s, background 0.12s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav-link:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+.nav-link.active { color: #a5b4fc; font-weight: 600; background: rgba(99,102,241,0.18); border-left: 2px solid #818cf8; padding-left: 14px; }
+
+/* Main */
+.main { flex: 1; overflow-x: hidden; min-width: 0; }
+.screen-section { padding: 40px 40px 20px; border-bottom: 2px solid #e2e8f0; }
+.section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.section-badge { font-size: 10px; font-weight: 700; color: #64748b; background: #e2e8f0; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+.section-name { font-size: 18px; font-weight: 700; color: #1e293b; }
+.section-file { font-size: 11px; color: #94a3b8; font-family: monospace; margin-left: auto; }
+
+/* Group header */
+.group-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 28px 40px 20px;
+  background: #e2e8f0;
+  border-bottom: 3px solid #cbd5e1;
+  position: sticky; top: 0; z-index: 10;
+}
+.group-icon { font-size: 22px; line-height: 1; }
+.group-title { font-size: 20px; font-weight: 800; color: #1e293b; }
+.group-count { font-size: 12px; color: #64748b; margin-left: 4px; font-weight: 500; }
+
+/* Screen section */
+.screen-section { padding: 32px 40px 16px; border-bottom: 1px solid #e2e8f0; }
+.section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.section-name { font-size: 16px; font-weight: 700; color: #1e293b; }
+.section-file { font-size: 11px; color: #94a3b8; font-family: monospace; margin-left: auto; }
+
+/* iframe */
+.mockup-frame {
+  display: block;
+  width: 100%;
+  border: none;
+  background: #f8fafc;
+  height: 900px;
+}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div class="sidebar">
+<div class="sidebar-title">TappyPOS Mockups</div>
+<div class="sidebar-count">49 screens</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_auth" data-target="group_auth">🔐 Auth</a>
+<a class="nav-link" href="#login" data-target="login">Đăng nhập</a>
+<a class="nav-link" href="#forgot_password" data-target="forgot_password">Quên mật khẩu</a>
+<a class="nav-link" href="#register" data-target="register">Đăng ký</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_pin" data-target="group_pin">🔢 PIN</a>
+<a class="nav-link" href="#pin_setup" data-target="pin_setup">Thiết lập PIN</a>
+<a class="nav-link" href="#pin_login" data-target="pin_login">Đăng nhập PIN</a>
+<a class="nav-link" href="#forgot_pin" data-target="forgot_pin">Quên PIN</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_onboarding" data-target="group_onboarding">🚀 Onboarding</a>
+<a class="nav-link" href="#onboarding" data-target="onboarding">Onboarding</a>
+<a class="nav-link" href="#onboarding_pawn_types" data-target="onboarding_pawn_types">Onboarding – Loại tài sản cầm đồ</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_dashboard" data-target="group_dashboard">🏠 Dashboard</a>
+<a class="nav-link" href="#dashboard" data-target="dashboard">Dashboard</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_pos_and_orders" data-target="group_pos_and_orders">🛒 POS & Orders</a>
+<a class="nav-link" href="#pos" data-target="pos">Màn hình bán hàng</a>
+<a class="nav-link" href="#pos_config" data-target="pos_config">Cấu hình POS</a>
+<a class="nav-link" href="#cart" data-target="cart">Giỏ hàng</a>
+<a class="nav-link" href="#checkout" data-target="checkout">Thanh toán</a>
+<a class="nav-link" href="#order_success" data-target="order_success">Đặt hàng thành công</a>
+<a class="nav-link" href="#order_list" data-target="order_list">Danh sách đơn hàng</a>
+<a class="nav-link" href="#order_detail" data-target="order_detail">Chi tiết đơn hàng</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_products" data-target="group_products">📦 Products</a>
+<a class="nav-link" href="#product_list" data-target="product_list">Danh sách sản phẩm</a>
+<a class="nav-link" href="#product_detail" data-target="product_detail">Chi tiết sản phẩm</a>
+<a class="nav-link" href="#product_create_forgot_shop" data-target="product_create_forgot_shop">Tạo SP – Quên cửa hàng</a>
+<a class="nav-link" href="#category_list" data-target="category_list">Danh mục</a>
+<a class="nav-link" href="#combo_list" data-target="combo_list">Combo</a>
+<a class="nav-link" href="#combo_edit" data-target="combo_edit">Sửa Combo</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_inventory" data-target="group_inventory">📋 Inventory</a>
+<a class="nav-link" href="#inventory_list" data-target="inventory_list">Tồn kho</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_customers" data-target="group_customers">👥 Customers</a>
+<a class="nav-link" href="#customer_list" data-target="customer_list">Danh sách khách hàng</a>
+<a class="nav-link" href="#customer_form" data-target="customer_form">Thêm/Sửa khách hàng</a>
+<a class="nav-link" href="#customer_detail" data-target="customer_detail">Chi tiết khách hàng</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_reports_and_finance" data-target="group_reports_and_finance">📊 Reports & Finance</a>
+<a class="nav-link" href="#report" data-target="report">Báo cáo</a>
+<a class="nav-link" href="#expenses" data-target="expenses">Chi phí</a>
+<a class="nav-link" href="#expenses_display" data-target="expenses_display">Hiển thị chi phí</a>
+<a class="nav-link" href="#gold_price" data-target="gold_price">Giá vàng</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_tools" data-target="group_tools">🔧 Tools</a>
+<a class="nav-link" href="#tools" data-target="tools">Tiện ích (Hub + Lãi/Vay/Ngân sách)</a>
+<a class="nav-link" href="#tools_2" data-target="tools_2">Tiện ích (Chia tiền/Tỷ giá/Thuế)</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_notifications_and_my_work" data-target="group_notifications_and_my_work">🔔 Notifications & My Work</a>
+<a class="nav-link" href="#notification" data-target="notification">Thông báo</a>
+<a class="nav-link" href="#notif_prefs_activity" data-target="notif_prefs_activity">Tuỳ chọn thông báo</a>
+<a class="nav-link" href="#my_work" data-target="my_work">Việc của tôi</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_settings_and_profile" data-target="group_settings_and_profile">⚙️ Settings & Profile</a>
+<a class="nav-link" href="#more" data-target="more">Menu thêm</a>
+<a class="nav-link" href="#profile" data-target="profile">Hồ sơ</a>
+<a class="nav-link" href="#profile_security" data-target="profile_security">Bảo mật</a>
+<a class="nav-link" href="#settings" data-target="settings">Cài đặt</a>
+<a class="nav-link" href="#shop_info" data-target="shop_info">Thông tin cửa hàng</a>
+<a class="nav-link" href="#table_setup" data-target="table_setup">Quản lý bàn</a>
+<a class="nav-link" href="#shelf_setup" data-target="shelf_setup">Kệ & tủ hàng</a>
+<a class="nav-link" href="#bank_accounts" data-target="bank_accounts">Tài khoản ngân hàng</a>
+<a class="nav-link" href="#print_template_list" data-target="print_template_list">Mẫu in</a>
+<a class="nav-link" href="#print_template_detail" data-target="print_template_detail">Chi tiết mẫu in</a>
+<a class="nav-link" href="#subscription_delete_tnc" data-target="subscription_delete_tnc">Gói đăng ký & Xóa</a>
+<a class="nav-link" href="#feedback" data-target="feedback">Phản hồi</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_barber_service" data-target="group_barber_service">✂️ Barber Service</a>
+<a class="nav-link" href="#barber_scan" data-target="barber_scan">Chọn dịch vụ & Quét mã</a>
+</div>
+<div class="nav-group">
+<a class="nav-group-label nav-group-link" href="#group_restaurant_/_table_pos" data-target="group_restaurant_/_table_pos">🍜 Restaurant / Table POS</a>
+<a class="nav-link" href="#restaurant_pos" data-target="restaurant_pos">Bán hàng theo bàn</a>
+</div>
+</div>
+
+<div class="main">
+
+<div class="group-header" id="group_auth">
+  <span class="group-icon">🔐</span>
+  <span class="group-title">Auth</span>
+  <span class="group-count">3 screens</span>
+</div>
+<div class="screen-section" id="login">
+  <div class="section-header">
+    <span class="section-name">Đăng nhập</span>
+    <span class="section-file">login.html</span>
+  </div>
+  <iframe src="login.html" class="mockup-frame" data-src="login.html"></iframe>
+</div>
+<div class="screen-section" id="forgot_password">
+  <div class="section-header">
+    <span class="section-name">Quên mật khẩu</span>
+    <span class="section-file">forgot-password.html</span>
+  </div>
+  <iframe src="forgot-password.html" class="mockup-frame" data-src="forgot-password.html"></iframe>
+</div>
+<div class="screen-section" id="register">
+  <div class="section-header">
+    <span class="section-name">Đăng ký</span>
+    <span class="section-file">register.html</span>
+  </div>
+  <iframe src="register.html" class="mockup-frame" data-src="register.html"></iframe>
+</div>
+<div class="group-header" id="group_pin">
+  <span class="group-icon">🔢</span>
+  <span class="group-title">PIN</span>
+  <span class="group-count">3 screens</span>
+</div>
+<div class="screen-section" id="pin_setup">
+  <div class="section-header">
+    <span class="section-name">Thiết lập PIN</span>
+    <span class="section-file">pin-setup.html</span>
+  </div>
+  <iframe src="pin-setup.html" class="mockup-frame" data-src="pin-setup.html"></iframe>
+</div>
+<div class="screen-section" id="pin_login">
+  <div class="section-header">
+    <span class="section-name">Đăng nhập PIN</span>
+    <span class="section-file">pin-login.html</span>
+  </div>
+  <iframe src="pin-login.html" class="mockup-frame" data-src="pin-login.html"></iframe>
+</div>
+<div class="screen-section" id="forgot_pin">
+  <div class="section-header">
+    <span class="section-name">Quên PIN</span>
+    <span class="section-file">forgot-pin.html</span>
+  </div>
+  <iframe src="forgot-pin.html" class="mockup-frame" data-src="forgot-pin.html"></iframe>
+</div>
+<div class="group-header" id="group_onboarding">
+  <span class="group-icon">🚀</span>
+  <span class="group-title">Onboarding</span>
+  <span class="group-count">2 screens</span>
+</div>
+<div class="screen-section" id="onboarding">
+  <div class="section-header">
+    <span class="section-name">Onboarding</span>
+    <span class="section-file">onboarding.html</span>
+  </div>
+  <iframe src="onboarding.html" class="mockup-frame" data-src="onboarding.html"></iframe>
+</div>
+<div class="screen-section" id="onboarding_pawn_types">
+  <div class="section-header">
+    <span class="section-name">Onboarding – Loại tài sản cầm đồ</span>
+    <span class="section-file">onboarding-pawn-types.html</span>
+  </div>
+  <iframe src="onboarding-pawn-types.html" class="mockup-frame" data-src="onboarding-pawn-types.html"></iframe>
+</div>
+<div class="group-header" id="group_dashboard">
+  <span class="group-icon">🏠</span>
+  <span class="group-title">Dashboard</span>
+  <span class="group-count">1 screens</span>
+</div>
+<div class="screen-section" id="dashboard">
+  <div class="section-header">
+    <span class="section-name">Dashboard</span>
+    <span class="section-file">dashboard.html</span>
+  </div>
+  <iframe src="dashboard.html" class="mockup-frame" data-src="dashboard.html"></iframe>
+</div>
+<div class="group-header" id="group_pos_and_orders">
+  <span class="group-icon">🛒</span>
+  <span class="group-title">POS & Orders</span>
+  <span class="group-count">7 screens</span>
+</div>
+<div class="screen-section" id="pos">
+  <div class="section-header">
+    <span class="section-name">Màn hình bán hàng</span>
+    <span class="section-file">pos.html</span>
+  </div>
+  <iframe src="pos.html" class="mockup-frame" data-src="pos.html"></iframe>
+</div>
+<div class="screen-section" id="pos_config">
+  <div class="section-header">
+    <span class="section-name">Cấu hình POS</span>
+    <span class="section-file">pos-config.html</span>
+  </div>
+  <iframe src="pos-config.html" class="mockup-frame" data-src="pos-config.html"></iframe>
+</div>
+<div class="screen-section" id="cart">
+  <div class="section-header">
+    <span class="section-name">Giỏ hàng</span>
+    <span class="section-file">cart.html</span>
+  </div>
+  <iframe src="cart.html" class="mockup-frame" data-src="cart.html"></iframe>
+</div>
+<div class="screen-section" id="checkout">
+  <div class="section-header">
+    <span class="section-name">Thanh toán</span>
+    <span class="section-file">checkout.html</span>
+  </div>
+  <iframe src="checkout.html" class="mockup-frame" data-src="checkout.html"></iframe>
+</div>
+<div class="screen-section" id="order_success">
+  <div class="section-header">
+    <span class="section-name">Đặt hàng thành công</span>
+    <span class="section-file">order-success.html</span>
+  </div>
+  <iframe src="order-success.html" class="mockup-frame" data-src="order-success.html"></iframe>
+</div>
+<div class="screen-section" id="order_list">
+  <div class="section-header">
+    <span class="section-name">Danh sách đơn hàng</span>
+    <span class="section-file">order-list.html</span>
+  </div>
+  <iframe src="order-list.html" class="mockup-frame" data-src="order-list.html"></iframe>
+</div>
+<div class="screen-section" id="order_detail">
+  <div class="section-header">
+    <span class="section-name">Chi tiết đơn hàng</span>
+    <span class="section-file">order-detail.html</span>
+  </div>
+  <iframe src="order-detail.html" class="mockup-frame" data-src="order-detail.html"></iframe>
+</div>
+<div class="group-header" id="group_products">
+  <span class="group-icon">📦</span>
+  <span class="group-title">Products</span>
+  <span class="group-count">6 screens</span>
+</div>
+<div class="screen-section" id="product_list">
+  <div class="section-header">
+    <span class="section-name">Danh sách sản phẩm</span>
+    <span class="section-file">product-list.html</span>
+  </div>
+  <iframe src="product-list.html" class="mockup-frame" data-src="product-list.html"></iframe>
+</div>
+<div class="screen-section" id="product_detail">
+  <div class="section-header">
+    <span class="section-name">Chi tiết sản phẩm</span>
+    <span class="section-file">product-detail.html</span>
+  </div>
+  <iframe src="product-detail.html" class="mockup-frame" data-src="product-detail.html"></iframe>
+</div>
+<div class="screen-section" id="product_create_forgot_shop">
+  <div class="section-header">
+    <span class="section-name">Tạo SP – Quên cửa hàng</span>
+    <span class="section-file">product-create-forgot-shop.html</span>
+  </div>
+  <iframe src="product-create-forgot-shop.html" class="mockup-frame" data-src="product-create-forgot-shop.html"></iframe>
+</div>
+<div class="screen-section" id="category_list">
+  <div class="section-header">
+    <span class="section-name">Danh mục</span>
+    <span class="section-file">category-list.html</span>
+  </div>
+  <iframe src="category-list.html" class="mockup-frame" data-src="category-list.html"></iframe>
+</div>
+<div class="screen-section" id="combo_list">
+  <div class="section-header">
+    <span class="section-name">Combo</span>
+    <span class="section-file">combo-list.html</span>
+  </div>
+  <iframe src="combo-list.html" class="mockup-frame" data-src="combo-list.html"></iframe>
+</div>
+<div class="screen-section" id="combo_edit">
+  <div class="section-header">
+    <span class="section-name">Sửa Combo</span>
+    <span class="section-file">combo-edit.html</span>
+  </div>
+  <iframe src="combo-edit.html" class="mockup-frame" data-src="combo-edit.html"></iframe>
+</div>
+<div class="group-header" id="group_inventory">
+  <span class="group-icon">📋</span>
+  <span class="group-title">Inventory</span>
+  <span class="group-count">1 screens</span>
+</div>
+<div class="screen-section" id="inventory_list">
+  <div class="section-header">
+    <span class="section-name">Tồn kho</span>
+    <span class="section-file">inventory-list.html</span>
+  </div>
+  <iframe src="inventory-list.html" class="mockup-frame" data-src="inventory-list.html"></iframe>
+</div>
+<div class="group-header" id="group_customers">
+  <span class="group-icon">👥</span>
+  <span class="group-title">Customers</span>
+  <span class="group-count">3 screens</span>
+</div>
+<div class="screen-section" id="customer_list">
+  <div class="section-header">
+    <span class="section-name">Danh sách khách hàng</span>
+    <span class="section-file">customer-list.html</span>
+  </div>
+  <iframe src="customer-list.html" class="mockup-frame" data-src="customer-list.html"></iframe>
+</div>
+<div class="screen-section" id="customer_form">
+  <div class="section-header">
+    <span class="section-name">Thêm/Sửa khách hàng</span>
+    <span class="section-file">customer-form.html</span>
+  </div>
+  <iframe src="customer-form.html" class="mockup-frame" data-src="customer-form.html"></iframe>
+</div>
+<div class="screen-section" id="customer_detail">
+  <div class="section-header">
+    <span class="section-name">Chi tiết khách hàng</span>
+    <span class="section-file">customer-detail.html</span>
+  </div>
+  <iframe src="customer-detail.html" class="mockup-frame" data-src="customer-detail.html"></iframe>
+</div>
+<div class="group-header" id="group_reports_and_finance">
+  <span class="group-icon">📊</span>
+  <span class="group-title">Reports & Finance</span>
+  <span class="group-count">4 screens</span>
+</div>
+<div class="screen-section" id="report">
+  <div class="section-header">
+    <span class="section-name">Báo cáo</span>
+    <span class="section-file">report.html</span>
+  </div>
+  <iframe src="report.html" class="mockup-frame" data-src="report.html"></iframe>
+</div>
+<div class="screen-section" id="expenses">
+  <div class="section-header">
+    <span class="section-name">Chi phí</span>
+    <span class="section-file">expenses.html</span>
+  </div>
+  <iframe src="expenses.html" class="mockup-frame" data-src="expenses.html"></iframe>
+</div>
+<div class="screen-section" id="expenses_display">
+  <div class="section-header">
+    <span class="section-name">Hiển thị chi phí</span>
+    <span class="section-file">expenses-display.html</span>
+  </div>
+  <iframe src="expenses-display.html" class="mockup-frame" data-src="expenses-display.html"></iframe>
+</div>
+<div class="screen-section" id="gold_price">
+  <div class="section-header">
+    <span class="section-name">Giá vàng</span>
+    <span class="section-file">gold-price.html</span>
+  </div>
+  <iframe src="gold-price.html" class="mockup-frame" data-src="gold-price.html"></iframe>
+</div>
+<div class="group-header" id="group_tools">
+  <span class="group-icon">🔧</span>
+  <span class="group-title">Tools</span>
+  <span class="group-count">2 screens</span>
+</div>
+<div class="screen-section" id="tools">
+  <div class="section-header">
+    <span class="section-name">Tiện ích (Hub + Lãi/Vay/Ngân sách)</span>
+    <span class="section-file">tools.html</span>
+  </div>
+  <iframe src="tools.html" class="mockup-frame" data-src="tools.html"></iframe>
+</div>
+<div class="screen-section" id="tools_2">
+  <div class="section-header">
+    <span class="section-name">Tiện ích (Chia tiền/Tỷ giá/Thuế)</span>
+    <span class="section-file">tools-2.html</span>
+  </div>
+  <iframe src="tools-2.html" class="mockup-frame" data-src="tools-2.html"></iframe>
+</div>
+<div class="group-header" id="group_notifications_and_my_work">
+  <span class="group-icon">🔔</span>
+  <span class="group-title">Notifications & My Work</span>
+  <span class="group-count">3 screens</span>
+</div>
+<div class="screen-section" id="notification">
+  <div class="section-header">
+    <span class="section-name">Thông báo</span>
+    <span class="section-file">notification.html</span>
+  </div>
+  <iframe src="notification.html" class="mockup-frame" data-src="notification.html"></iframe>
+</div>
+<div class="screen-section" id="notif_prefs_activity">
+  <div class="section-header">
+    <span class="section-name">Tuỳ chọn thông báo</span>
+    <span class="section-file">notif-prefs-activity.html</span>
+  </div>
+  <iframe src="notif-prefs-activity.html" class="mockup-frame" data-src="notif-prefs-activity.html"></iframe>
+</div>
+<div class="screen-section" id="my_work">
+  <div class="section-header">
+    <span class="section-name">Việc của tôi</span>
+    <span class="section-file">my-work.html</span>
+  </div>
+  <iframe src="my-work.html" class="mockup-frame" data-src="my-work.html"></iframe>
+</div>
+<div class="group-header" id="group_settings_and_profile">
+  <span class="group-icon">⚙️</span>
+  <span class="group-title">Settings & Profile</span>
+  <span class="group-count">12 screens</span>
+</div>
+<div class="screen-section" id="more">
+  <div class="section-header">
+    <span class="section-name">Menu thêm</span>
+    <span class="section-file">more.html</span>
+  </div>
+  <iframe src="more.html" class="mockup-frame" data-src="more.html"></iframe>
+</div>
+<div class="screen-section" id="profile">
+  <div class="section-header">
+    <span class="section-name">Hồ sơ</span>
+    <span class="section-file">profile.html</span>
+  </div>
+  <iframe src="profile.html" class="mockup-frame" data-src="profile.html"></iframe>
+</div>
+<div class="screen-section" id="profile_security">
+  <div class="section-header">
+    <span class="section-name">Bảo mật</span>
+    <span class="section-file">profile-security.html</span>
+  </div>
+  <iframe src="profile-security.html" class="mockup-frame" data-src="profile-security.html"></iframe>
+</div>
+<div class="screen-section" id="settings">
+  <div class="section-header">
+    <span class="section-name">Cài đặt</span>
+    <span class="section-file">settings.html</span>
+  </div>
+  <iframe src="settings.html" class="mockup-frame" data-src="settings.html"></iframe>
+</div>
+<div class="screen-section" id="shop_info">
+  <div class="section-header">
+    <span class="section-name">Thông tin cửa hàng</span>
+    <span class="section-file">shop-info.html</span>
+  </div>
+  <iframe src="shop-info.html" class="mockup-frame" data-src="shop-info.html"></iframe>
+</div>
+<div class="screen-section" id="table_setup">
+  <div class="section-header">
+    <span class="section-name">Quản lý bàn</span>
+    <span class="section-file">table-setup.html</span>
+  </div>
+  <iframe src="table-setup.html" class="mockup-frame" data-src="table-setup.html"></iframe>
+</div>
+<div class="screen-section" id="shelf_setup">
+  <div class="section-header">
+    <span class="section-name">Kệ & tủ hàng</span>
+    <span class="section-file">shelf-setup.html</span>
+  </div>
+  <iframe src="shelf-setup.html" class="mockup-frame" data-src="shelf-setup.html"></iframe>
+</div>
+<div class="screen-section" id="bank_accounts">
+  <div class="section-header">
+    <span class="section-name">Tài khoản ngân hàng</span>
+    <span class="section-file">bank-accounts.html</span>
+  </div>
+  <iframe src="bank-accounts.html" class="mockup-frame" data-src="bank-accounts.html"></iframe>
+</div>
+<div class="screen-section" id="print_template_list">
+  <div class="section-header">
+    <span class="section-name">Mẫu in</span>
+    <span class="section-file">print-template-list.html</span>
+  </div>
+  <iframe src="print-template-list.html" class="mockup-frame" data-src="print-template-list.html"></iframe>
+</div>
+<div class="screen-section" id="print_template_detail">
+  <div class="section-header">
+    <span class="section-name">Chi tiết mẫu in</span>
+    <span class="section-file">print-template-detail.html</span>
+  </div>
+  <iframe src="print-template-detail.html" class="mockup-frame" data-src="print-template-detail.html"></iframe>
+</div>
+<div class="screen-section" id="subscription_delete_tnc">
+  <div class="section-header">
+    <span class="section-name">Gói đăng ký & Xóa</span>
+    <span class="section-file">subscription-delete-tnc.html</span>
+  </div>
+  <iframe src="subscription-delete-tnc.html" class="mockup-frame" data-src="subscription-delete-tnc.html"></iframe>
+</div>
+<div class="screen-section" id="feedback">
+  <div class="section-header">
+    <span class="section-name">Phản hồi</span>
+    <span class="section-file">feedback.html</span>
+  </div>
+  <iframe src="feedback.html" class="mockup-frame" data-src="feedback.html"></iframe>
+</div>
+<div class="group-header" id="group_barber_service">
+  <span class="group-icon">✂️</span>
+  <span class="group-title">Barber Service</span>
+  <span class="group-count">1 screens</span>
+</div>
+<div class="screen-section" id="barber_scan">
+  <div class="section-header">
+    <span class="section-name">Chọn dịch vụ & Quét mã</span>
+    <span class="section-file">barber-scan.html</span>
+  </div>
+  <iframe src="barber-scan.html" class="mockup-frame" data-src="barber-scan.html"></iframe>
+</div>
+<div class="group-header" id="group_restaurant_/_table_pos">
+  <span class="group-icon">🍜</span>
+  <span class="group-title">Restaurant / Table POS</span>
+  <span class="group-count">1 screens</span>
+</div>
+<div class="screen-section" id="restaurant_pos">
+  <div class="section-header">
+    <span class="section-name">Bán hàng theo bàn</span>
+    <span class="section-file">restaurant-pos.html</span>
+  </div>
+  <iframe src="restaurant-pos.html" class="mockup-frame" data-src="restaurant-pos.html"></iframe>
+</div>
+</div>
+<script>
+// Auto-size iframes: retry several times to catch late font/image loads
+function resizeFrame(iframe) {
+  try {
+    var doc = iframe.contentWindow.document;
+    var h = Math.max(
+      doc.body.scrollHeight, doc.body.offsetHeight,
+      doc.documentElement.scrollHeight, doc.documentElement.offsetHeight
+    );
+    if (h > 200) iframe.style.height = (h + 32) + 'px';
+  } catch(e) {}
+}
+
+document.querySelectorAll('.mockup-frame').forEach(function(f) {
+  f.addEventListener('load', function() {
+    resizeFrame(f);
+    // Retry after fonts / MDI icon font loads
+    setTimeout(function() { resizeFrame(f); }, 300);
+    setTimeout(function() { resizeFrame(f); }, 1200);
+    setTimeout(function() { resizeFrame(f); }, 3000);
+  });
+});
+
+// Final sweep after everything settles
+window.addEventListener('load', function() {
+  document.querySelectorAll('.mockup-frame').forEach(function(f) {
+    resizeFrame(f);
+    setTimeout(function() { resizeFrame(f); }, 500);
+  });
+});
+
+// Progress bar
+window.addEventListener('scroll', function() {
+  var bar = document.getElementById('progress-bar');
+  var scrolled = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+  bar.style.width = (scrolled * 100) + '%';
+});
+
+// Active nav highlight via IntersectionObserver
+var allTargets = document.querySelectorAll('.screen-section, .group-header');
+var allLinks = document.querySelectorAll('.nav-link, .nav-group-link');
+var io = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) {
+      var id = e.target.id;
+      allLinks.forEach(function(l) { l.classList.toggle('active', l.dataset.target === id); });
+      var active = document.querySelector('.nav-link.active, .nav-group-link.active');
+      if (active) active.scrollIntoView({ block: 'nearest' });
+    }
+  });
+}, { threshold: 0.05, rootMargin: '-60px 0px -70% 0px' });
+allTargets.forEach(function(s) { io.observe(s); });
+
+// Smooth scroll on link click
+allLinks.forEach(function(l) {
+  l.addEventListener('click', function(e) {
+    e.preventDefault();
+    var t = document.getElementById(l.dataset.target);
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>

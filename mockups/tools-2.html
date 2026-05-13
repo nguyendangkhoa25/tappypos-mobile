@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Tools Part 2 (Bill Split, Currency, Tax)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white;}
+  .s-time { font-size: 15px; font-weight: 700; color: white; }
+  .s-icons { font-size: 12px; color: white; display: flex; gap: 4px; align-items: center; }
+
+  .calc-header { flex-shrink: 0; padding: 14px 16px 18px; }
+  .calc-back { font-size: 22px; color: white; margin-bottom: 8px; }
+  .calc-title { font-size: 20px; font-weight: 700; color: white; }
+  .calc-body { flex: 1; overflow: hidden; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: #f9fafb; }
+
+  .input-card { background: white; border-radius: 14px; border: 1px solid #f3f4f6; padding: 12px 14px; }
+  .field-label { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .field-input { border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #9ca3af; background: #fff; }
+  .field-input.filled { color: #111827; }
+  .money-input { display: flex; align-items: center; justify-content: space-between; border: 1.5px solid #e5e7eb; border-radius: 12px; background: #fff; padding: 10px 12px; }
+  .money-val { flex: 1; font-size: 13px; color: #9ca3af; }
+  .money-val.filled { color: #111827; font-weight: 600; }
+  .money-sfx { font-size: 13px; color: #6b7280; font-weight: 600; flex-shrink: 0; }
+
+  /* Info banner */
+  .info-banner { border-radius: 12px; padding: 10px 12px; display: flex; gap: 8px; flex-shrink: 0; }
+  .info-banner.indigo { background: #eef2ff; border: 1px solid #c7d2fe; }
+  .info-banner.amber { background: #fffbeb; border: 1px solid #fde68a; }
+  .banner-text { font-size: 11px; line-height: 1.5; }
+  .banner-text.indigo { color: #4338ca; }
+  .banner-text.amber { color: #92400e; }
+
+  /* Bill Splitter */
+  .people-stepper { display: flex; align-items: center; justify-content: center; gap: 28px; padding: 8px 0; }
+  .step-btn { width: 46px; height: 46px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #374151; }
+  .step-btn.disabled { color: #d1d5db; }
+  .step-count { font-size: 40px; font-weight: 700; color: #111827; width: 56px; text-align: center; }
+  .result-card-cyan { background: #ecfeff; border: 1px solid #a5f3fc; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .result-label-cyan { font-size: 13px; font-weight: 600; color: #0e7490; }
+  .result-big-cyan { font-size: 36px; font-weight: 700; color: #0e7490; }
+
+  /* Currency Converter */
+  .currency-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .currency-chip { border: 1px solid #e5e7eb; border-radius: 10px; padding: 7px 10px; display: flex; align-items: center; gap: 6px; background: white; }
+  .currency-chip.active { background: #7c3aed; border-color: #7c3aed; }
+  .currency-flag { font-size: 16px; }
+  .currency-code { font-size: 12px; font-weight: 600; color: #374151; }
+  .currency-chip.active .currency-code { color: white; }
+  .currency-rate { font-size: 10px; color: #9ca3af; }
+  .currency-chip.active .currency-rate { color: rgba(255,255,255,0.7); }
+
+  .direction-toggle { display: flex; gap: 8px; }
+  .dir-btn { flex: 1; padding: 9px 0; border-radius: 12px; border: 1px solid #e5e7eb; text-align: center; font-size: 12px; font-weight: 600; color: #6b7280; background: white; }
+  .dir-btn.active { background: #7c3aed; border-color: #7c3aed; color: white; }
+
+  .conversion-result { background: #ede9fe; border: 1px solid #ddd6fe; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .conversion-from { font-size: 13px; color: #6d28d9; }
+  .conversion-arrow { font-size: 16px; color: #a78bfa; }
+  .conversion-to { font-size: 28px; font-weight: 700; color: #6d28d9; }
+
+  .rates-table { background: white; border-radius: 14px; border: 1px solid #f3f4f6; overflow: hidden; }
+  .rates-header { display: flex; padding: 8px 12px; background: #f9fafb; border-bottom: 1px solid #f3f4f6; }
+  .rates-row { display: flex; padding: 8px 12px; border-bottom: 1px solid #f9fafb; align-items: center; }
+  .rates-row:last-child { border-bottom: none; }
+  .rates-flag { font-size: 16px; margin-right: 8px; }
+  .rates-code { font-size: 13px; font-weight: 600; color: #1f2937; width: 36px; }
+  .rates-col { flex: 1; font-size: 11px; text-align: right; }
+  .rates-col.header { font-weight: 700; color: #6b7280; }
+  .rates-col.value { color: #374151; }
+
+  /* Tax Calculator */
+  .tab-toggle { display: flex; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin-top: 6px; }
+  .tab-btn { flex: 1; padding: 8px 0; text-align: center; font-size: 12px; font-weight: 600; color: #6b7280; background: white; }
+  .tab-btn.active-amber { background: #d97706; color: white; }
+
+  .result-card-amber { background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 12px 14px; }
+  .result-title-amber { font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 10px; }
+  .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .result-label { font-size: 12px; color: #4b5563; }
+  .result-val { font-size: 12px; font-weight: 600; color: #1f2937; }
+  .result-val.red { color: #dc2626; }
+  .result-val.green { color: #059669; }
+  .result-val.highlight { font-size: 13px; font-weight: 700; color: #92400e; }
+  .result-divider { height: 1px; background: #fde68a; margin: 6px 0; }
+
+  .brackets-card { background: white; border-radius: 14px; border: 1px solid #f3f4f6; overflow: hidden; }
+  .brackets-header { display: flex; padding: 8px 12px; background: #f9fafb; border-bottom: 1px solid #f3f4f6; }
+  .brackets-row { display: flex; padding: 7px 12px; border-bottom: 1px solid #f9fafb; }
+  .brackets-row:last-child { border-bottom: none; }
+  .br-col { font-size: 11px; }
+  .br-col.header { font-weight: 700; color: #6b7280; }
+  .br-col.rate { color: #d97706; font-weight: 600; }
+  .br-col.slice { color: #7c3aed; }
+  .br-col.tax { color: #dc2626; font-weight: 600; }
+  .br-grow { flex: 1; text-align: right; }
+
+  .dependents-stepper { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 4px 0; }
+  .dep-btn { width: 38px; height: 38px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #374151; }
+  .dep-count { font-size: 32px; font-weight: 700; color: #111827; width: 40px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>Tools Part 2 — Bill Split, Currency, Tax</h1>
+<p class="subtitle">Chia tiền nhóm · Tỷ giá ngoại tệ · Thuế TNCN</p>
+
+<h2>BillSplitterScreen</h2>
+<div class="phone-row">
+
+  <!-- Empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#0891b2;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#0891b2;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Chia tiền nhóm</div>
+      </div>
+      <div class="calc-body">
+        <div class="info-banner indigo"><span>💡</span><span class="banner-text indigo">Nhập tổng hoá đơn và số người tham dự. Kết quả là số tiền mỗi người cần trả đều nhau.</span></div>
+        <div class="input-card">
+          <div class="field-label">Tổng hoá đơn</div>
+          <div class="money-input"><span class="money-val">0</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Số người</div>
+          <div class="people-stepper">
+            <div class="step-btn disabled">−</div>
+            <span class="step-count">2</span>
+            <div class="step-btn">+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- With results -->
+  <div class="phone-wrap">
+    <div class="phone-label">With Result</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#0891b2;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#0891b2;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Chia tiền nhóm</div>
+      </div>
+      <div class="calc-body">
+        <div class="input-card">
+          <div class="field-label">Tổng hoá đơn</div>
+          <div class="money-input"><span class="money-val filled">750.000</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Số người</div>
+          <div class="people-stepper">
+            <div class="step-btn">−</div>
+            <span class="step-count">4</span>
+            <div class="step-btn">+</div>
+          </div>
+        </div>
+        <div class="result-card-cyan">
+          <span class="result-label-cyan">Mỗi người trả</span>
+          <span class="result-big-cyan">187.500 ₫</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 people large amount -->
+  <div class="phone-wrap">
+    <div class="phone-label">10 People</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#0891b2;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#0891b2;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Chia tiền nhóm</div>
+      </div>
+      <div class="calc-body">
+        <div class="input-card">
+          <div class="field-label">Tổng hoá đơn</div>
+          <div class="money-input"><span class="money-val filled">3.500.000</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Số người</div>
+          <div class="people-stepper">
+            <div class="step-btn">−</div>
+            <span class="step-count">10</span>
+            <div class="step-btn">+</div>
+          </div>
+        </div>
+        <div class="result-card-cyan">
+          <span class="result-label-cyan">Mỗi người trả</span>
+          <span class="result-big-cyan">350.000 ₫</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2>CurrencyConverterScreen</h2>
+<div class="phone-row">
+
+  <!-- Rates loaded, USD selected -->
+  <div class="phone-wrap">
+    <div class="phone-label">USD Selected</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#7c3aed;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#7c3aed;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tỷ giá ngoại tệ</div>
+      </div>
+      <div class="calc-body">
+        <div class="info-banner indigo"><span>💡</span><span class="banner-text indigo">Tỷ giá được cập nhật từ Vietcombank mỗi 30 phút.</span></div>
+        <!-- Currency chips -->
+        <div class="input-card" style="padding:10px;">
+          <div class="currency-grid">
+            <div class="currency-chip active">
+              <span class="currency-flag">🇺🇸</span>
+              <div>
+                <div class="currency-code">USD</div>
+                <div class="currency-rate">25.465</div>
+              </div>
+            </div>
+            <div class="currency-chip">
+              <span class="currency-flag">🇪🇺</span>
+              <div>
+                <div class="currency-code">EUR</div>
+                <div class="currency-rate">27.845</div>
+              </div>
+            </div>
+            <div class="currency-chip">
+              <span class="currency-flag">🇯🇵</span>
+              <div>
+                <div class="currency-code">JPY</div>
+                <div class="currency-rate">170</div>
+              </div>
+            </div>
+            <div class="currency-chip">
+              <span class="currency-flag">🇨🇳</span>
+              <div>
+                <div class="currency-code">CNY</div>
+                <div class="currency-rate">3.512</div>
+              </div>
+            </div>
+            <div class="currency-chip">
+              <span class="currency-flag">🇬🇧</span>
+              <div>
+                <div class="currency-code">GBP</div>
+                <div class="currency-rate">32.150</div>
+              </div>
+            </div>
+            <div class="currency-chip">
+              <span class="currency-flag">🇰🇷</span>
+              <div>
+                <div class="currency-code">KRW</div>
+                <div class="currency-rate">18.5</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Amount input + direction -->
+        <div class="input-card">
+          <div class="field-label">Số tiền</div>
+          <div class="field-input filled">100</div>
+          <div class="field-label" style="margin-top:8px;">Chiều quy đổi</div>
+          <div class="direction-toggle">
+            <div class="dir-btn active">USD → VNĐ</div>
+            <div class="dir-btn">VNĐ → USD</div>
+          </div>
+        </div>
+        <!-- Result -->
+        <div class="conversion-result">
+          <span class="conversion-from">100 USD</span>
+          <span class="conversion-arrow">↓</span>
+          <span class="conversion-to">2.546.500 ₫</span>
+        </div>
+        <!-- Rates table -->
+        <div class="rates-table">
+          <div class="rates-header">
+            <span style="width:80px; font-size:11px; font-weight:700; color:#6b7280;">Tiền tệ</span>
+            <span class="rates-col header">Mua</span>
+            <span class="rates-col header">CK</span>
+            <span class="rates-col header">Bán</span>
+          </div>
+          <div class="rates-row">
+            <span class="rates-flag">🇺🇸</span>
+            <span class="rates-code">USD</span>
+            <span class="rates-col value">25.410</span>
+            <span class="rates-col value">25.440</span>
+            <span class="rates-col value">25.465</span>
+          </div>
+          <div class="rates-row">
+            <span class="rates-flag">🇪🇺</span>
+            <span class="rates-code">EUR</span>
+            <span class="rates-col value">27.700</span>
+            <span class="rates-col value">27.800</span>
+            <span class="rates-col value">27.845</span>
+          </div>
+          <div class="rates-row">
+            <span class="rates-flag">🇯🇵</span>
+            <span class="rates-code">JPY</span>
+            <span class="rates-col value">165</span>
+            <span class="rates-col value">168</span>
+            <span class="rates-col value">170</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VND → USD direction, JPY selected -->
+  <div class="phone-wrap">
+    <div class="phone-label">VND→JPY Direction</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#7c3aed;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#7c3aed;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tỷ giá ngoại tệ</div>
+      </div>
+      <div class="calc-body">
+        <div class="input-card" style="padding:10px;">
+          <div class="currency-grid">
+            <div class="currency-chip">
+              <span class="currency-flag">🇺🇸</span>
+              <div><div class="currency-code">USD</div><div class="currency-rate">25.465</div></div>
+            </div>
+            <div class="currency-chip">
+              <span class="currency-flag">🇪🇺</span>
+              <div><div class="currency-code">EUR</div><div class="currency-rate">27.845</div></div>
+            </div>
+            <div class="currency-chip active">
+              <span class="currency-flag">🇯🇵</span>
+              <div><div class="currency-code" style="color:white;">JPY</div><div class="currency-rate" style="color:rgba(255,255,255,0.7);">170</div></div>
+            </div>
+            <div class="currency-chip">
+              <span class="currency-flag">🇨🇳</span>
+              <div><div class="currency-code">CNY</div><div class="currency-rate">3.512</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Số tiền (VNĐ)</div>
+          <div class="field-input filled">1.000.000</div>
+          <div class="direction-toggle" style="margin-top:8px;">
+            <div class="dir-btn">JPY → VNĐ</div>
+            <div class="dir-btn active">VNĐ → JPY</div>
+          </div>
+        </div>
+        <div class="conversion-result">
+          <span class="conversion-from">1.000.000 ₫</span>
+          <span class="conversion-arrow">↓</span>
+          <span class="conversion-to">5.882 JPY</span>
+        </div>
+        <div class="info-banner amber"><span>ℹ️</span><span class="banner-text amber">Tỷ giá chỉ mang tính tham khảo. Tỷ giá thực tế tại ngân hàng có thể khác.</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2>TaxCalculatorScreen</h2>
+<div class="phone-row">
+
+  <!-- Empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#b45309;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#b45309;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tính thuế TNCN</div>
+      </div>
+      <div class="calc-body">
+        <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:10px; padding:8px 12px; font-size:11px; color:#92400e;">Áp dụng quy định thuế TNCN 2026</div>
+        <div class="info-banner amber"><span>💡</span><span class="banner-text amber">Nhập thu nhập gộp trước thuế và BHXH. Mức giảm trừ mặc định 2026: bản thân 15,5 triệu, người phụ thuộc 6,2 triệu.</span></div>
+        <div class="input-card">
+          <div class="field-label">Thu nhập tháng (gộp, trước thuế)</div>
+          <div class="money-input"><span class="money-val">0</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Người phụ thuộc</div>
+          <div class="dependents-stepper">
+            <div class="dep-btn disabled">−</div>
+            <span class="dep-count">0</span>
+            <div class="dep-btn">+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- With results (20M income, 1 dependent) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Results — 20M, 1 Dep</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#b45309;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#b45309;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tính thuế TNCN</div>
+      </div>
+      <div class="calc-body" style="gap:8px;">
+        <div class="input-card">
+          <div class="field-label">Thu nhập tháng (gộp, trước thuế)</div>
+          <div class="money-input"><span class="money-val filled">20.000.000</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Người phụ thuộc</div>
+          <div class="dependents-stepper" style="gap:16px; padding:2px 0;">
+            <div class="dep-btn">−</div>
+            <span class="dep-count">1</span>
+            <div class="dep-btn">+</div>
+          </div>
+        </div>
+        <!-- Deductions summary -->
+        <div class="result-card-amber">
+          <div class="result-title-amber">Bảng tính khấu trừ</div>
+          <div class="result-row"><span class="result-label">Tổng khấu trừ BH</span><span class="result-val red">−2.265.000 ₫</span></div>
+          <div class="result-row"><span class="result-label">Giảm trừ bản thân</span><span class="result-val">−15.500.000 ₫</span></div>
+          <div class="result-row"><span class="result-label">Giảm trừ người phụ thuộc</span><span class="result-val">−6.200.000 ₫</span></div>
+          <div class="result-divider"></div>
+          <div class="result-row"><span class="result-label" style="font-weight:700;">Thu nhập tính thuế</span><span class="result-val" style="font-weight:700;">-3.965.000 ₫</span></div>
+          <div style="margin-top:6px; font-size:11px; color:#059669; font-weight:600;">✓ Không có thuế — thu nhập tính thuế âm</div>
+        </div>
+        <!-- Net income highlight -->
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:14px; padding:14px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:13px; color:#166534;">Lương thực nhận</span>
+          <span style="font-size:16px; font-weight:700; color:#16a34a;">17.735.000 ₫</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- High income — with brackets -->
+  <div class="phone-wrap">
+    <div class="phone-label">High Income + Brackets</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#b45309;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#b45309;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tính thuế TNCN</div>
+      </div>
+      <div class="calc-body" style="gap:8px;">
+        <div class="input-card">
+          <div class="field-label">Thu nhập tháng (gộp, trước thuế)</div>
+          <div class="money-input"><span class="money-val filled">60.000.000</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card">
+          <div class="dependents-stepper" style="gap:16px; padding:2px 0;">
+            <div class="dep-btn">−</div>
+            <span class="dep-count">2</span>
+            <div class="dep-btn">+</div>
+          </div>
+        </div>
+        <div class="result-card-amber">
+          <div class="result-title-amber">Kết quả</div>
+          <div class="result-row"><span class="result-label">Tổng khấu trừ BH</span><span class="result-val red">−3.240.000 ₫</span></div>
+          <div class="result-row"><span class="result-label">Thu nhập tính thuế</span><span class="result-val">26.160.000 ₫</span></div>
+          <div class="result-divider"></div>
+          <div class="result-row"><span class="result-label">Thuế phải nộp</span><span class="result-val red">3.624.000 ₫</span></div>
+          <div class="result-row"><span class="result-label">Thuế suất hiệu quả</span><span class="result-val red">6.04%</span></div>
+          <div class="result-divider"></div>
+          <div class="result-row"><span class="result-label" style="font-weight:700;">Lương thực nhận</span><span class="result-val highlight">53.136.000 ₫</span></div>
+        </div>
+        <!-- Brackets detail -->
+        <div class="brackets-card">
+          <div style="padding:9px 12px; font-size:12px; font-weight:700; color:#374151; border-bottom:1px solid #f3f4f6;">Chi tiết thuế theo bậc</div>
+          <div class="brackets-header">
+            <span class="br-col header" style="flex:1.5;">Bậc</span>
+            <span class="br-col header br-grow">Thu nhập</span>
+            <span class="br-col header br-grow">Thuế</span>
+          </div>
+          <div class="brackets-row">
+            <span class="br-col rate" style="flex:1.5;">5%</span>
+            <span class="br-col slice br-grow">10.000.000</span>
+            <span class="br-col tax br-grow">500.000</span>
+          </div>
+          <div class="brackets-row">
+            <span class="br-col rate" style="flex:1.5;">10%</span>
+            <span class="br-col slice br-grow">10.000.000</span>
+            <span class="br-col tax br-grow">1.000.000</span>
+          </div>
+          <div class="brackets-row">
+            <span class="br-col rate" style="flex:1.5;">15%</span>
+            <span class="br-col slice br-grow">6.160.000</span>
+            <span class="br-col tax br-grow">924.000</span>
+          </div>
+          <div class="brackets-row" style="background:#fffbeb;">
+            <span class="br-col" style="flex:1.5; font-weight:700; font-size:11px; color:#92400e;">Tổng</span>
+            <span class="br-col br-grow" style="font-size:11px; color:#374151;">26.160.000</span>
+            <span class="br-col br-grow" style="font-size:11px; font-weight:700; color:#dc2626;">3.624.000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

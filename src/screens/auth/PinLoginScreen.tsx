@@ -4,6 +4,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { isAxiosError } from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { PinPad } from '../../components/PinPad';
 import { authApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
@@ -17,6 +18,7 @@ const LOCKOUT_MS = 30 * 60 * 1000;
 
 export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { show: showAlert } = useAlertStore();
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -75,34 +77,34 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
     setLoading(true);
     try {
       const res = await authApi.loginWithPin(storedPhone, enteredPin);
-      const { accessToken, refreshToken } = res.data.data;
+      const { accessToken, refreshToken, setupComplete } = res.data.data;
       setAttempts(0);
-      await setAuthenticated({ accessToken, refreshToken });
+      await setAuthenticated({ accessToken, refreshToken, setupComplete });
     } catch (err) {
       setPin('');
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
 
       if (isAxiosError(err) && err.response?.status === 423) {
-        showAlert('Tài khoản bị khóa', 'Quá nhiều lần nhập sai. Vui lòng đăng nhập bằng mật khẩu.', [
-          { label: 'Đăng nhập', onPress: () => navigation.navigate('Login') },
+        showAlert(t('auth.pinLogin.lockedTitle'), t('auth.pinLogin.lockedMsg'), [
+          { label: t('auth.pinLoginExt.loginLabel'), onPress: () => navigation.navigate('Login') },
         ]);
       } else if (newAttempts >= MAX_ATTEMPTS) {
         const until = Date.now() + LOCKOUT_MS;
         setLockedUntil(until);
         showAlert(
-          'Tạm khóa 30 phút',
-          'Nhập sai quá nhiều lần. Thử lại sau 30 phút hoặc đăng nhập bằng mật khẩu.',
+          t('auth.pinLoginExt.lockAlertTitle'),
+          t('auth.pinLoginExt.lockAlertMsg'),
           [
-            { label: 'Đăng nhập', onPress: () => navigation.navigate('Login') },
-            { label: 'Đợi', style: 'cancel' },
+            { label: t('auth.pinLoginExt.loginLabel'), onPress: () => navigation.navigate('Login') },
+            { label: t('auth.pinLoginExt.waitLabel'), style: 'cancel' },
           ],
         );
       } else {
         showAlert(
-          'Sai mã PIN',
-          `Còn ${MAX_ATTEMPTS - newAttempts} lần thử trước khi tạm khóa.`,
-          [{ label: 'Thử lại' }],
+          t('auth.pinLogin.wrongPinTitle'),
+          t('auth.pinLoginExt.wrongPinCountMsg', { count: MAX_ATTEMPTS - newAttempts }),
+          [{ label: t('auth.pinLoginExt.retryLabel') }],
         );
       }
     } finally {
@@ -113,8 +115,8 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
   const handleBiometric = async () => {
     try {
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Xác thực để đăng nhập',
-        cancelLabel: 'Hủy',
+        promptMessage: t('auth.pinLogin.biometricPrompt'),
+        cancelLabel: t('auth.pinLogin.biometricCancel'),
         disableDeviceFallback: false,
       });
       if (!result.success) return;
@@ -122,21 +124,21 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
       const refreshToken = await SecureStore.getItemAsync('refresh_token');
       if (!refreshToken) {
         setCanBiometric(false);
-        showAlert('Lỗi', 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        showAlert(t('auth.pinLoginExt.biometricExpiredTitle'), t('auth.pinLoginExt.biometricExpiredMsg'));
         return;
       }
 
       setLoading(true);
       const res = await authApi.refresh(refreshToken, storedPhone ?? undefined);
-      const { accessToken, refreshToken: newRefresh } = res.data.data;
-      await setAuthenticated({ accessToken, refreshToken: newRefresh });
+      const { accessToken, refreshToken: newRefresh, setupComplete } = res.data.data;
+      await setAuthenticated({ accessToken, refreshToken: newRefresh, setupComplete });
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 401) {
         await SecureStore.deleteItemAsync('refresh_token');
         setCanBiometric(false);
-        showAlert('Phiên hết hạn', 'Vui lòng nhập mã PIN hoặc đăng nhập lại.');
+        showAlert(t('auth.pinLoginExt.sessionExpiredTitle'), t('auth.pinLoginExt.sessionExpiredMsg'));
       } else {
-        showAlert('Lỗi xác thực', 'Không thể xác thực. Vui lòng dùng mã PIN.');
+        showAlert(t('auth.pinLoginExt.biometricErrorTitle'), t('auth.pinLoginExt.biometricErrorMsg'));
       }
     } finally {
       setLoading(false);
@@ -176,12 +178,12 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
       <View className="w-full flex-row justify-between items-center mb-8">
         <View />
         <TouchableOpacity onPress={handleChangeShop}>
-          <Text className="text-sm text-primary font-semibold">Đổi cửa hàng</Text>
+          <Text className="text-sm text-primary font-semibold">{t('auth.pinLoginExt.changeShop')}</Text>
         </TouchableOpacity>
       </View>
 
       <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-        {nickname ? `Xin chào, ${nickname} 👋` : 'Nhập mã PIN'}
+        {nickname ? t('auth.pinLoginExt.greeting', { name: nickname }) : t('auth.pinLogin.title')}
       </Text>
       {storedPhone && (
         <Text className="text-base text-gray-500 dark:text-gray-400 mb-12">
@@ -193,13 +195,15 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
         <View className="items-center mt-8">
           <Text className="text-4xl mb-4">🔒</Text>
           <Text className="text-base font-semibold text-gray-700 dark:text-gray-300 text-center mb-2">
-            Tạm khóa {Math.floor(remainingSecs / 60)}:{String(remainingSecs % 60).padStart(2, '0')}
+            {t('auth.pinLoginExt.lockedTimer', {
+              time: `${Math.floor(remainingSecs / 60)}:${String(remainingSecs % 60).padStart(2, '0')}`,
+            })}
           </Text>
           <Text className="text-sm text-gray-500 dark:text-gray-400 text-center">
-            Quá nhiều lần nhập sai
+            {t('auth.pinLoginExt.lockedDesc')}
           </Text>
           <TouchableOpacity className="mt-6" onPress={() => navigation.navigate('Login')}>
-            <Text className="text-primary font-semibold">Đăng nhập bằng mật khẩu</Text>
+            <Text className="text-primary font-semibold">{t('auth.pinLoginExt.loginByPassword')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -214,10 +218,10 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
       {!isLocked && (
         <>
           <TouchableOpacity className="mt-8" onPress={() => navigation.navigate('ForgotPin')}>
-            <Text className="text-primary text-base">Quên mã PIN?</Text>
+            <Text className="text-primary text-base">{t('auth.pinLogin.forgotPin')}</Text>
           </TouchableOpacity>
           <TouchableOpacity className="mt-4" onPress={() => navigation.navigate('Login')}>
-            <Text className="text-gray-400 dark:text-gray-500 text-sm">Đăng nhập bằng mật khẩu</Text>
+            <Text className="text-gray-400 dark:text-gray-500 text-sm">{t('auth.pinLoginExt.loginByPassword')}</Text>
           </TouchableOpacity>
         </>
       )}

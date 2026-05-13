@@ -1,19 +1,23 @@
 import { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PinPad } from '../../components/PinPad';
 import { authApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useAlertStore } from '../../store/alertStore';
-import type { AuthScreenProps } from '../../types/navigation';
 
 type Step = 'enter' | 'confirm';
 
-export function PinSetupScreen({ navigation, route }: AuthScreenProps<'PinSetup'>) {
+// Used in both Auth stack (pendingAccessToken present) and Settings stack (mode present)
+export function PinSetupScreen({ navigation, route }: any) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { show: showAlert } = useAlertStore();
   const { setAuthenticated, setPinEnabled } = useAuthStore();
-  const { pendingAccessToken, pendingRefreshToken, isFirstSetup } = route.params ?? {};
+  const { pendingAccessToken, pendingRefreshToken, isFirstSetup, mode } = route.params ?? {};
+  const isSettingsMode = !!mode;
 
   const [step, setStep] = useState<Step>('enter');
   const [firstPin, setFirstPin] = useState('');
@@ -30,8 +34,8 @@ export function PinSetupScreen({ navigation, route }: AuthScreenProps<'PinSetup'
     if (value.length !== 6) return;
 
     if (value !== firstPin) {
-      showAlert('Không khớp', 'Mã PIN xác nhận không đúng. Vui lòng thử lại.', [
-        { label: 'OK', onPress: () => { setStep('enter'); setFirstPin(''); setConfirmPin(''); } },
+      showAlert(t('auth.pinSetupExt.mismatchTitle'), t('auth.pinSetupExt.mismatchMsg'), [
+        { label: t('auth.pinSetupExt.ok'), onPress: () => { setStep('enter'); setFirstPin(''); setConfirmPin(''); } },
       ]);
       return;
     }
@@ -39,11 +43,21 @@ export function PinSetupScreen({ navigation, route }: AuthScreenProps<'PinSetup'
     setLoading(true);
     try {
       await authApi.setupPin(value, pendingAccessToken);
+      await setPinEnabled(true);
     } catch {
-      // Endpoint may not be implemented yet — PIN stored locally only, proceed
+      setLoading(false);
+      showAlert(t('auth.pinSetupExt.errorTitle'), t('auth.pinSetupExt.errorMsg'), [
+        { label: t('auth.pinSetupExt.ok'), onPress: () => { setStep('enter'); setFirstPin(''); setConfirmPin(''); } },
+      ]);
+      return;
     }
 
-    await setPinEnabled(true);
+    if (isSettingsMode) {
+      setLoading(false);
+      navigation.goBack();
+      return;
+    }
+
     if (pendingAccessToken) {
       await setAuthenticated({ accessToken: pendingAccessToken, refreshToken: pendingRefreshToken });
     }
@@ -51,6 +65,7 @@ export function PinSetupScreen({ navigation, route }: AuthScreenProps<'PinSetup'
   };
 
   const handleSkip = async () => {
+    if (isSettingsMode) { navigation.goBack(); return; }
     await setPinEnabled(false);
     if (pendingAccessToken) {
       await setAuthenticated({ accessToken: pendingAccessToken, refreshToken: pendingRefreshToken });
@@ -61,7 +76,6 @@ export function PinSetupScreen({ navigation, route }: AuthScreenProps<'PinSetup'
   const hiddenRef = useRef<TextInput>(null);
 
   const handleKeyInput = (text: string) => {
-    // Route each typed digit to the active PIN handler; 'q' = quick skip
     if (text === 'q') { handleSkip(); return; }
     const digit = text.slice(-1);
     if (!/^[0-9]$/.test(digit)) return;
@@ -75,50 +89,59 @@ export function PinSetupScreen({ navigation, route }: AuthScreenProps<'PinSetup'
       className="flex-1 bg-white dark:bg-gray-900"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-    <View
-      className="flex-1 px-6 items-center"
-      style={{ paddingTop: insets.top + 48 }}
-    >
-      {/* Hidden input so hardware keyboard digits route to PinPad; 'q' = skip */}
-      <TextInput
-        ref={hiddenRef}
-        autoFocus
-        keyboardType="number-pad"
-        onChangeText={handleKeyInput}
-        style={{ position: 'absolute', opacity: 0, width: 1, height: 1 }}
-      />
-      <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-        {isConfirmStep ? 'Xác nhận mã PIN' : 'Tạo mã PIN'}
-      </Text>
-      <Text className="text-base text-gray-500 dark:text-gray-400 mb-12 text-center">
-        {isConfirmStep
-          ? 'Nhập lại mã PIN để xác nhận'
-          : 'Đặt mã PIN 6 chữ số để đăng nhập nhanh lần sau'}
-      </Text>
+      <View
+        className="flex-1 px-6 items-center"
+        style={{ paddingTop: insets.top + (isSettingsMode ? 16 : 48) }}
+      >
+        {/* Settings mode back button */}
+        {isSettingsMode && (
+          <TouchableOpacity
+            className="self-start mb-8"
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
+          </TouchableOpacity>
+        )}
 
-      <PinPad
-        value={isConfirmStep ? confirmPin : firstPin}
-        onChange={isConfirmStep ? handleConfirmPin : handleFirstPin}
-        loading={loading}
-      />
+        {/* Hidden input so hardware keyboard digits route to PinPad; 'q' = skip */}
+        <TextInput
+          ref={hiddenRef}
+          autoFocus
+          keyboardType="number-pad"
+          onChangeText={handleKeyInput}
+          style={{ position: 'absolute', opacity: 0, width: 1, height: 1 }}
+        />
+        <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          {isConfirmStep ? t('auth.pinSetup.confirmTitle') : (mode === 'change' ? t('settings.securitySettings.changePinTitle') : t('auth.pinSetup.title'))}
+        </Text>
+        <Text className="text-base text-gray-500 dark:text-gray-400 mb-12 text-center">
+          {isConfirmStep ? t('auth.pinSetup.confirmSubtitle') : t('auth.pinSetup.subtitle')}
+        </Text>
 
-      {!isConfirmStep && isFirstSetup && (
-        <TouchableOpacity className="mt-8" onPress={handleSkip}>
-          <Text className="text-gray-400 dark:text-gray-500 text-base">
-            Bỏ qua, thiết lập sau
-          </Text>
-        </TouchableOpacity>
-      )}
+        <PinPad
+          value={isConfirmStep ? confirmPin : firstPin}
+          onChange={isConfirmStep ? handleConfirmPin : handleFirstPin}
+          loading={loading}
+        />
 
-      {isConfirmStep && (
-        <TouchableOpacity
-          className="mt-8"
-          onPress={() => { setStep('enter'); setFirstPin(''); setConfirmPin(''); }}
-        >
-          <Text className="text-gray-400 dark:text-gray-500 text-base">Quay lại</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+        {!isConfirmStep && isFirstSetup && !isSettingsMode && (
+          <TouchableOpacity className="mt-8" onPress={handleSkip}>
+            <Text className="text-gray-400 dark:text-gray-500 text-base">
+              {t('auth.pinSetupExt.skipFull')}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {isConfirmStep && (
+          <TouchableOpacity
+            className="mt-8"
+            onPress={() => { setStep('enter'); setFirstPin(''); setConfirmPin(''); }}
+          >
+            <Text className="text-gray-400 dark:text-gray-500 text-base">{t('auth.pinSetupExt.back')}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </KeyboardAvoidingView>
   );
 }

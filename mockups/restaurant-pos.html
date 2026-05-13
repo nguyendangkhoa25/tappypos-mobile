@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Restaurant POS (Table Mode)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  /* Header */
+  .page-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px; flex-shrink: 0; }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .header-subtitle { font-size: 12px; color: #6b7280; margin-top: 1px; }
+  .header-icon-btn { background: #f3f4f6; border-radius: 10px; padding: 8px; font-size: 18px; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+
+  /* Stats row */
+  .stats-row { display: flex; gap: 6px; margin-top: 8px; }
+  .stat-chip { flex: 1; display: flex; align-items: center; gap: 5px; border-radius: 10px; padding: 5px 8px; }
+  .stat-chip-gray { background: #f3f4f6; }
+  .stat-chip-green { background: #f0fdf4; }
+  .stat-chip-amber { background: #fffbeb; }
+  .stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot-gray { background: #9ca3af; }
+  .dot-green { background: #22c55e; }
+  .dot-amber { background: #f59e0b; }
+  .stat-text { font-size: 11px; font-weight: 600; }
+  .stat-text-gray { color: #6b7280; }
+  .stat-text-green { color: #15803d; }
+  .stat-text-amber { color: #b45309; }
+
+  /* Search bar */
+  .search-bar { display: flex; gap: 8px; margin-bottom: 10px; }
+  .search-input { flex: 1; display: flex; align-items: center; gap: 8px; background: #f3f4f6; border-radius: 12px; padding: 9px 12px; }
+  .search-placeholder { font-size: 13px; color: #9ca3af; }
+  .search-icon { font-size: 16px; color: #9ca3af; }
+  .search-btn { background: #4f46e5; border-radius: 12px; padding: 9px 16px; font-size: 13px; font-weight: 600; color: white; white-space: nowrap; }
+
+  /* Category chips */
+  .cat-chips { display: flex; gap: 6px; overflow: hidden; padding: 2px 0 4px; }
+  .cat-chip { padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 600; white-space: nowrap; border: 1.5px solid #e5e7eb; background: white; color: #6b7280; flex-shrink: 0; }
+  .cat-chip.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+  /* Body */
+  .scroll-body { flex: 1; overflow: hidden; }
+
+  /* ── TABLE GRID ── */
+  .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 14px; }
+  .table-card { border-radius: 16px; padding: 10px 10px 8px; border: 1.5px solid; display: flex; flex-direction: column; gap: 3px; position: relative; }
+  .table-card-empty { background: white; border-color: #e5e7eb; }
+  .table-card-active { background: #f0fdf4; border-color: #86efac; }
+  .table-card-waiting { background: #fffbeb; border-color: #fcd34d; }
+  .table-card-reserved { background: #eef2ff; border-color: #c7d2fe; }
+  .table-num { font-size: 16px; font-weight: 800; color: #111827; }
+  .table-status-tag { font-size: 10px; font-weight: 600; border-radius: 6px; padding: 2px 6px; align-self: flex-start; }
+  .tag-empty { background: #f3f4f6; color: #6b7280; }
+  .tag-active { background: #dcfce7; color: #15803d; }
+  .tag-waiting { background: #fef3c7; color: #92400e; }
+  .tag-reserved { background: #e0e7ff; color: #3730a3; }
+  .table-meta { font-size: 10px; color: #6b7280; }
+  .table-meta-green { font-size: 10px; color: #15803d; font-weight: 500; }
+  .table-meta-amber { font-size: 10px; color: #b45309; font-weight: 500; }
+
+  /* ── MENU ITEMS ── */
+  .menu-grid { display: flex; flex-wrap: wrap; padding: 8px 10px; }
+  .menu-section-header { width: 100%; padding: 8px 4px 4px; font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.07em; }
+  .menu-card { width: calc(50% - 6px); background: white; border-radius: 14px; border: 1px solid #f3f4f6; padding: 12px; margin: 3px; }
+  .menu-card.selected { border-color: #c7d2fe; background: #f5f3ff; }
+  .menu-name { font-size: 13px; font-weight: 600; color: #1f2937; line-height: 1.35; margin-bottom: 4px; }
+  .menu-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .menu-price { font-size: 14px; font-weight: 700; color: #4f46e5; }
+  .add-btn { background: #eef2ff; border-radius: 99px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #4f46e5; flex-shrink: 0; }
+  .add-btn.added { background: #4f46e5; color: white; }
+  .qty-badge { background: #4f46e5; color: white; font-size: 10px; font-weight: 700; border-radius: 99px; padding: 1px 6px; }
+
+  /* Combo card */
+  .combo-card { width: calc(100% - 6px); margin: 3px; background: white; border-radius: 16px; border: 1.5px solid #eef2ff; padding: 12px 14px; }
+  .combo-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+  .combo-name { font-size: 14px; font-weight: 700; color: #1f2937; }
+  .combo-price { font-size: 15px; font-weight: 800; color: #4f46e5; }
+  .combo-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .combo-tag { background: #f3f4f6; border-radius: 99px; padding: 3px 10px; font-size: 11px; color: #374151; }
+  .combo-footer { display: flex; justify-content: flex-end; }
+  .combo-add-btn { background: #eef2ff; border-radius: 99px; padding: 5px 14px; font-size: 12px; font-weight: 700; color: #4f46e5; }
+
+  /* Cart bar */
+  .cart-bar { background: #4f46e5; padding: 10px 14px 18px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
+  .cart-count { width: 24px; height: 24px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #4f46e5; flex-shrink: 0; }
+  .cart-info { flex: 1; min-width: 0; }
+  .cart-table-tag { font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 1px; }
+  .cart-total { font-size: 14px; font-weight: 700; color: white; }
+  .checkout-btn { background: white; border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 700; color: #4f46e5; white-space: nowrap; flex-shrink: 0; }
+  .trash-icon { font-size: 16px; color: rgba(255,255,255,0.55); margin-right: 2px; flex-shrink: 0; }
+
+  /* Expanded cart bar */
+  .cart-bar-expanded { background: #4f46e5; flex-shrink: 0; }
+  .cart-exp-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px 8px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+  .cart-exp-items { padding: 4px 14px 0; }
+  .cart-exp-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .cart-exp-item-name { flex: 1; font-size: 12px; color: rgba(255,255,255,0.9); line-height: 1.3; }
+  .cart-exp-item-qty { font-size: 11px; color: rgba(255,255,255,0.6); margin-right: 2px; }
+  .cart-exp-item-price { font-size: 12px; font-weight: 700; color: white; }
+  .cart-exp-item-remove { font-size: 13px; color: rgba(255,255,255,0.35); padding: 2px 6px; }
+  .cart-exp-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 18px; }
+  .cart-exp-total { display: flex; flex-direction: column; }
+  .cart-exp-total-label { font-size: 10px; color: rgba(255,255,255,0.65); margin-bottom: 1px; }
+  .cart-exp-total-val { font-size: 17px; font-weight: 800; color: white; }
+  .cart-exp-checkout-btn { background: white; border-radius: 12px; padding: 9px 18px; font-size: 13px; font-weight: 700; color: #4f46e5; }
+
+  /* Overlay & bottom sheet */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; z-index: 50; }
+  .bottom-sheet { background: white; border-radius: 28px 28px 0 0; padding: 16px 18px 28px; width: 100%; }
+  .sheet-drag { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 0 auto 14px; }
+  .sheet-title { font-size: 17px; font-weight: 700; color: #111827; margin-bottom: 14px; }
+
+  /* Add item sheet */
+  .field-section { margin-bottom: 12px; }
+  .field-label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; display: flex; gap: 6px; align-items: center; }
+  .optional-tag { font-size: 11px; color: #9ca3af; font-weight: 400; }
+
+  /* Quantity stepper */
+  .qty-stepper { display: flex; align-items: center; gap: 0; border: 1.5px solid #e5e7eb; border-radius: 12px; overflow: hidden; align-self: flex-start; }
+  .qty-btn { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #4f46e5; background: #f5f3ff; font-weight: 700; }
+  .qty-val { width: 44px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #111827; border-left: 1.5px solid #e5e7eb; border-right: 1.5px solid #e5e7eb; }
+  .note-area { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #9ca3af; min-height: 56px; }
+  .sheet-btns { display: flex; gap: 10px; margin-top: 14px; }
+  .sheet-cancel { flex: 1; padding: 13px 0; border-radius: 16px; border: 1px solid #e5e7eb; text-align: center; font-size: 14px; font-weight: 600; color: #4b5563; }
+  .sheet-add { flex: 2; padding: 13px 0; border-radius: 16px; background: #4f46e5; text-align: center; font-size: 14px; font-weight: 700; color: white; }
+
+  /* Checkout sheet */
+  .item-row { display: flex; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #f9fafb; }
+  .item-info { flex: 1; }
+  .item-name { font-size: 13px; font-weight: 600; color: #111827; }
+  .item-note { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .item-price { font-size: 13px; font-weight: 700; color: #4f46e5; margin-right: 10px; margin-top: 2px; }
+  .item-remove { font-size: 16px; color: #d1d5db; }
+  .order-total-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-bottom: 10px; }
+  .total-label { font-size: 15px; font-weight: 700; color: #111827; }
+  .total-amount { font-size: 15px; font-weight: 700; color: #4f46e5; }
+  .section-label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 8px; }
+
+  /* Table pill in checkout */
+  .table-pill { display: inline-flex; align-items: center; gap: 6px; background: #eef2ff; border: 1.5px solid #c7d2fe; border-radius: 10px; padding: 6px 12px; }
+  .table-pill-num { font-size: 15px; font-weight: 800; color: #4f46e5; }
+  .table-pill-label { font-size: 12px; color: #6366f1; }
+
+  /* Payment methods */
+  .payment-methods { display: flex; gap: 8px; margin-bottom: 12px; }
+  .pay-btn { flex: 1; padding: 9px 0; border-radius: 12px; border: 1px solid #e5e7eb; text-align: center; font-size: 12px; font-weight: 600; color: #4b5563; background: white; }
+  .pay-btn.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+  .place-order-btn { background: #4f46e5; border-radius: 16px; padding: 14px; text-align: center; font-size: 15px; font-weight: 700; color: white; }
+
+  /* Skeleton */
+  .skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 14px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* Table seat count */
+  .table-seats { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+  .table-seats-busy { font-size: 10px; color: #6b7280; margin-top: 1px; }
+
+  /* Setup link in header */
+  .setup-link { font-size: 11px; font-weight: 600; color: #4f46e5; display: flex; align-items: center; gap: 3px; margin-top: 4px; }
+
+  /* Busy table warning sheet info row */
+  .warn-info-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .warn-info-chip { flex: 1; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .warn-chip-icon { font-size: 16px; }
+  .warn-chip-val { font-size: 13px; font-weight: 700; color: #111827; }
+  .warn-chip-lbl { font-size: 10px; color: #9ca3af; }
+  .warn-notice { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 10px 12px; font-size: 12px; color: #92400e; line-height: 1.5; margin-bottom: 14px; }
+
+  /* Tab Bar */
+  .tab-bar { height: 82px; flex-shrink: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; align-items: flex-start; padding-top: 10px; }
+  .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .tab-icon { font-size: 22px; line-height: 1; }
+  .tab-lbl { font-size: 10px; font-weight: 600; color: #9ca3af; }
+  .tab-item.active .tab-lbl { color: #4f46e5; font-weight: 700; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</head>
+<body>
+
+<h1>Restaurant POS – Table Mode</h1>
+<p class="subtitle">RestaurantPOSScreen — chọn bàn → chọn món → tạo đơn (Phở / Cơm / Quán ăn nhỏ)</p>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>1. Sơ đồ bàn (Table Overview)</h2>
+<!-- ═══════════════════════════════════════ -->
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Sơ đồ bàn</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <div>
+            <div class="header-title">Bán hàng</div>
+            <div class="header-subtitle">Thứ Tư, 14/05/2025</div>
+            <div class="setup-link"><i class="mdi mdi-table-settings"></i> Cấu hình bàn</div>
+          </div>
+          <div class="header-icon-btn">📋</div>
+        </div>
+        <div class="header-hint">🪑 Chọn bàn để xem đơn hoặc thêm món. Nhấn bàn trống để tạo đơn mới.</div>
+        <div class="stats-row">
+          <div class="stat-chip stat-chip-gray">
+            <div class="stat-dot dot-gray"></div>
+            <span class="stat-text stat-text-gray">5 trống</span>
+          </div>
+          <div class="stat-chip stat-chip-green">
+            <div class="stat-dot dot-green"></div>
+            <span class="stat-text stat-text-green">3 đang phục vụ</span>
+          </div>
+          <div class="stat-chip stat-chip-amber">
+            <div class="stat-dot dot-amber"></div>
+            <span class="stat-text stat-text-amber">2 chờ thanh toán</span>
+          </div>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="table-grid">
+          <!-- Row 1 -->
+          <div class="table-card table-card-active">
+            <div class="table-num">Bàn 1</div>
+            <div class="table-status-tag tag-active">Đang phục vụ</div>
+            <div class="table-meta-green">4 món · 28 phút</div>
+            <div class="table-seats-busy">🪑 4 chỗ</div>
+          </div>
+          <div class="table-card table-card-empty">
+            <div class="table-num">Bàn 2</div>
+            <div class="table-status-tag tag-empty">Trống</div>
+            <div class="table-meta">—</div>
+            <div class="table-seats">🪑 4 chỗ</div>
+          </div>
+          <div class="table-card table-card-active" style="border-color:#6366f1; background:#f5f3ff;">
+            <div class="table-num">Bàn 3</div>
+            <div class="table-status-tag" style="background:#e0e7ff; color:#3730a3;">Đang chọn</div>
+            <div class="table-meta" style="color:#4f46e5; font-weight:600;">3 món · 12 phút</div>
+            <div class="table-seats-busy">🪑 4 chỗ</div>
+          </div>
+          <!-- Row 2 -->
+          <div class="table-card table-card-waiting">
+            <div class="table-num">Bàn 4</div>
+            <div class="table-status-tag tag-waiting">Chờ thanh toán</div>
+            <div class="table-meta-amber">2 món · 52 phút</div>
+            <div class="table-seats-busy">🪑 6 chỗ</div>
+          </div>
+          <div class="table-card table-card-active">
+            <div class="table-num">Bàn 5</div>
+            <div class="table-status-tag tag-active">Đang phục vụ</div>
+            <div class="table-meta-green">6 món · 35 phút</div>
+            <div class="table-seats-busy">🪑 4 chỗ</div>
+          </div>
+          <div class="table-card table-card-empty">
+            <div class="table-num">Bàn 6</div>
+            <div class="table-status-tag tag-empty">Trống</div>
+            <div class="table-meta">—</div>
+            <div class="table-seats">🪑 4 chỗ</div>
+          </div>
+          <!-- Row 3 -->
+          <div class="table-card table-card-empty">
+            <div class="table-num">Bàn 7</div>
+            <div class="table-status-tag tag-empty">Trống</div>
+            <div class="table-meta">—</div>
+            <div class="table-seats">🪑 6 chỗ</div>
+          </div>
+          <div class="table-card table-card-waiting">
+            <div class="table-num">Bàn 8</div>
+            <div class="table-status-tag tag-waiting">Chờ thanh toán</div>
+            <div class="table-meta-amber">5 món · 48 phút</div>
+            <div class="table-seats-busy">🪑 4 chỗ</div>
+          </div>
+          <div class="table-card table-card-empty">
+            <div class="table-num">Bàn 9</div>
+            <div class="table-status-tag tag-empty">Trống</div>
+            <div class="table-meta">—</div>
+            <div class="table-seats">🪑 4 chỗ</div>
+          </div>
+          <!-- Row 4 -->
+          <div class="table-card table-card-empty">
+            <div class="table-num">Bàn 10</div>
+            <div class="table-status-tag tag-empty">Trống</div>
+            <div class="table-meta">—</div>
+            <div class="table-seats">🪑 4 chỗ</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Busy table warning -->
+  <div class="phone-wrap">
+    <div class="phone-label">Chọn bàn đang bận</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header" style="opacity:0.3;">
+        <div class="header-title">Bán hàng</div>
+        <div class="header-subtitle">Thứ Tư, 14/05/2025</div>
+      </div>
+      <div class="scroll-body" style="opacity:0.3; padding:4px;">
+        <div class="table-grid">
+          <div class="table-card table-card-active" style="border-color:#6366f1; background:#f5f3ff;">
+            <div class="table-num">Bàn 1</div>
+            <div class="table-status-tag" style="background:#e0e7ff; color:#3730a3;">Đang chọn</div>
+            <div class="table-seats-busy">🪑 4 chỗ</div>
+          </div>
+          <div class="table-card table-card-empty">
+            <div class="table-num">Bàn 2</div>
+            <div class="table-status-tag tag-empty">Trống</div>
+            <div class="table-seats">🪑 4 chỗ</div>
+          </div>
+          <div class="table-card table-card-active">
+            <div class="table-num">Bàn 3</div>
+            <div class="table-status-tag tag-active">Đang phục vụ</div>
+            <div class="table-seats-busy">🪑 4 chỗ</div>
+          </div>
+          <div class="table-card table-card-waiting">
+            <div class="table-num">Bàn 4</div>
+            <div class="table-status-tag tag-waiting">Chờ thanh toán</div>
+            <div class="table-seats-busy">🪑 6 chỗ</div>
+          </div>
+          <div class="table-card table-card-empty">
+            <div class="table-num">Bàn 5</div>
+            <div class="table-status-tag tag-empty">Trống</div>
+            <div class="table-seats">🪑 4 chỗ</div>
+          </div>
+          <div class="table-card table-card-empty">
+            <div class="table-num">Bàn 6</div>
+            <div class="table-status-tag tag-empty">Trống</div>
+            <div class="table-seats">🪑 4 chỗ</div>
+          </div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet">
+          <div class="sheet-drag"></div>
+          <div class="sheet-title">⚠️ Bàn 1 đang bận</div>
+          <div class="warn-info-row">
+            <div class="warn-info-chip">
+              <span class="warn-chip-icon">🪑</span>
+              <span class="warn-chip-val">4 chỗ</span>
+              <span class="warn-chip-lbl">Sức chứa</span>
+            </div>
+            <div class="warn-info-chip">
+              <span class="warn-chip-icon">🍜</span>
+              <span class="warn-chip-val">3 món</span>
+              <span class="warn-chip-lbl">145.000 ₫</span>
+            </div>
+            <div class="warn-info-chip">
+              <span class="warn-chip-icon">⏱</span>
+              <span class="warn-chip-val">28 phút</span>
+              <span class="warn-chip-lbl">Đang phục vụ</span>
+            </div>
+          </div>
+          <div class="warn-notice">⚠️ Bàn 1 đang phục vụ khách. Bạn vẫn có thể thêm món vào đơn đang mở hoặc chọn bàn trống khác.</div>
+          <div class="sheet-btns">
+            <div class="sheet-cancel">Chọn bàn khác</div>
+            <div class="sheet-add">Thêm món vào Bàn 1 →</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>2. Chọn món cho bàn</h2>
+<!-- ═══════════════════════════════════════ -->
+<div class="phone-row">
+
+  <!-- Menu with cart bar -->
+  <div class="phone-wrap">
+    <div class="phone-label">Chọn món – Bàn 3</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row" style="margin-bottom:6px;">
+          <div>
+            <div class="header-title">Bàn 3 <span style="font-size:13px; font-weight:500; color:#6b7280;">· Đang phục vụ</span></div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <div class="header-icon-btn" style="font-size:14px; padding:6px 10px; color:#6b7280;">← Đổi bàn</div>
+          </div>
+        </div>
+        <div class="header-hint">🍜 Chọn món để thêm vào đơn của Bàn 3. Món đã chọn hiển thị ở thanh dưới.</div>
+        <div class="search-bar" style="margin-top:8px;">
+          <div class="search-input">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm món...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+        <div class="cat-chips">
+          <div class="cat-chip active">Tất cả</div>
+          <div class="cat-chip">🍜 Phở</div>
+          <div class="cat-chip">🍚 Cơm</div>
+          <div class="cat-chip">🥗 Khai vị</div>
+          <div class="cat-chip">🥤 Đồ uống</div>
+          <div class="cat-chip">📦 Combo</div>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="menu-grid">
+          <!-- Phở -->
+          <div class="menu-section-header">🍜 Phở</div>
+          <div class="menu-card selected">
+            <div class="menu-name">Phở bò tái</div>
+            <div class="menu-footer">
+              <span class="menu-price">65.000 ₫</span>
+              <span class="qty-badge">×2</span>
+            </div>
+          </div>
+          <div class="menu-card">
+            <div class="menu-name">Phở gà</div>
+            <div class="menu-footer">
+              <span class="menu-price">55.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <div class="menu-card">
+            <div class="menu-name">Phở bò đặc biệt</div>
+            <div class="menu-footer">
+              <span class="menu-price">75.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <div class="menu-card">
+            <div class="menu-name">Phở bò chín</div>
+            <div class="menu-footer">
+              <span class="menu-price">65.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <!-- Cơm -->
+          <div class="menu-section-header">🍚 Cơm</div>
+          <div class="menu-card selected">
+            <div class="menu-name">Cơm tấm sườn</div>
+            <div class="menu-footer">
+              <span class="menu-price">55.000 ₫</span>
+              <span class="qty-badge">×1</span>
+            </div>
+          </div>
+          <div class="menu-card">
+            <div class="menu-name">Cơm gà xối mỡ</div>
+            <div class="menu-footer">
+              <span class="menu-price">60.000 ₫</span>
+              <div class="add-btn">＋</div>
+            </div>
+          </div>
+          <!-- Combo -->
+          <div class="menu-section-header">📦 Combo</div>
+          <div class="combo-card">
+            <div class="combo-header">
+              <div class="combo-name">Combo Gia đình</div>
+              <div class="combo-price">220.000 ₫</div>
+            </div>
+            <div class="combo-tags">
+              <span class="combo-tag">2× Phở bò tái</span>
+              <span class="combo-tag">2× Cơm tấm sườn</span>
+              <span class="combo-tag">2× Trà đá</span>
+            </div>
+            <div class="combo-footer"><div class="combo-add-btn">Thêm combo</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Cart bar: Bàn 3 context -->
+      <div class="cart-bar">
+        <div class="cart-count">3</div>
+        <div class="cart-info">
+          <div class="cart-table-tag">Bàn 3 · 3 món</div>
+          <div class="cart-total">185.000 ₫</div>
+        </div>
+        <span class="trash-icon">🗑</span>
+        <div class="checkout-btn">Xem đơn</div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart expanded -->
+  <div class="phone-wrap">
+    <div class="phone-label">Cart mở rộng</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row" style="margin-bottom:6px;">
+          <div class="header-title">Bàn 3 <span style="font-size:13px; font-weight:500; color:#6b7280;">· Đang phục vụ</span></div>
+          <div class="header-icon-btn" style="font-size:14px; padding:6px 10px; color:#6b7280;">← Đổi bàn</div>
+        </div>
+        <div class="search-bar" style="margin-top:6px;">
+          <div class="search-input">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm món...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+        <div class="cat-chips">
+          <div class="cat-chip active">Tất cả</div>
+          <div class="cat-chip">🍜 Phở</div>
+          <div class="cat-chip">🍚 Cơm</div>
+          <div class="cat-chip">🥤 Đồ uống</div>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="menu-grid">
+          <div class="menu-section-header">🍜 Phở</div>
+          <div class="menu-card selected">
+            <div class="menu-name">Phở bò tái</div>
+            <div class="menu-footer"><span class="menu-price">65.000 ₫</span><span class="qty-badge">×2</span></div>
+          </div>
+          <div class="menu-card">
+            <div class="menu-name">Phở gà</div>
+            <div class="menu-footer"><span class="menu-price">55.000 ₫</span><div class="add-btn">＋</div></div>
+          </div>
+          <div class="menu-section-header">🍚 Cơm</div>
+          <div class="menu-card selected">
+            <div class="menu-name">Cơm tấm sườn</div>
+            <div class="menu-footer"><span class="menu-price">55.000 ₫</span><span class="qty-badge">×1</span></div>
+          </div>
+          <div class="menu-card">
+            <div class="menu-name">Cơm gà xối mỡ</div>
+            <div class="menu-footer"><span class="menu-price">60.000 ₫</span><div class="add-btn">＋</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Expanded cart -->
+      <div class="cart-bar-expanded">
+        <div class="cart-exp-header">
+          <div class="cart-count">3</div>
+          <div style="flex:1;">
+            <div style="font-size:11px; color:rgba(255,255,255,0.7);">Bàn 3 · Đang chọn món</div>
+          </div>
+          <span style="font-size:12px; color:rgba(255,255,255,0.6);">▲ Thu gọn</span>
+        </div>
+        <div class="cart-exp-items">
+          <div class="cart-exp-item">
+            <div class="cart-exp-item-name">Phở bò tái</div>
+            <span class="cart-exp-item-qty">×2</span>
+            <div class="cart-exp-item-price">130.000 ₫</div>
+            <span class="cart-exp-item-remove">✕</span>
+          </div>
+          <div class="cart-exp-item" style="border-bottom:none;">
+            <div class="cart-exp-item-name">Cơm tấm sườn</div>
+            <span class="cart-exp-item-qty">×1</span>
+            <div class="cart-exp-item-price">55.000 ₫</div>
+            <span class="cart-exp-item-remove">✕</span>
+          </div>
+        </div>
+        <div class="cart-exp-footer">
+          <div class="cart-exp-total">
+            <span class="cart-exp-total-label">Tổng cộng</span>
+            <span class="cart-exp-total-val">185.000 ₫</span>
+          </div>
+          <div class="cart-exp-checkout-btn">Xem đơn</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>3. Thêm món (Add Item Sheet)</h2>
+<!-- ═══════════════════════════════════════ -->
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Thêm món</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header" style="opacity:0.25;">
+        <div class="header-title">Bàn 3</div>
+      </div>
+      <div class="scroll-body" style="opacity:0.25; padding:6px;">
+        <div class="menu-grid">
+          <div class="menu-card"><div class="menu-name">Phở bò tái</div></div>
+          <div class="menu-card"><div class="menu-name">Phở gà</div></div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet">
+          <div class="sheet-drag"></div>
+          <!-- Item info -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+            <div>
+              <div style="font-size:17px; font-weight:700; color:#111827;">Phở bò đặc biệt</div>
+              <div style="font-size:13px; color:#6b7280; margin-top:3px;">Thêm vào đơn · Bàn 3</div>
+            </div>
+            <div style="font-size:17px; font-weight:700; color:#4f46e5;">75.000 ₫</div>
+          </div>
+          <!-- Quantity stepper -->
+          <div class="field-section">
+            <div class="field-label">Số lượng</div>
+            <div class="qty-stepper">
+              <div class="qty-btn">−</div>
+              <div class="qty-val">1</div>
+              <div class="qty-btn">＋</div>
+            </div>
+          </div>
+          <!-- Note -->
+          <div class="field-section">
+            <div class="field-label">Ghi chú <span class="optional-tag">(tuỳ chọn)</span></div>
+            <div class="note-area">Ví dụ: ít mỡ, thêm hành, không rau...</div>
+          </div>
+          <div class="sheet-btns">
+            <div class="sheet-cancel">Huỷ</div>
+            <div class="sheet-add">Thêm vào Bàn 3</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>4. Xem đơn & Thanh toán</h2>
+<!-- ═══════════════════════════════════════ -->
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Xem đơn – Bàn 3</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="scroll-body" style="opacity:0.2; padding:6px;">
+        <div class="menu-grid">
+          <div class="menu-card"><div class="menu-name">Phở</div></div>
+        </div>
+      </div>
+      <div class="overlay">
+        <div class="bottom-sheet" style="max-height:690px; overflow:hidden;">
+          <div class="sheet-drag"></div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <div class="sheet-title" style="margin:0; flex:1;">Đơn hàng</div>
+            <div class="table-pill">
+              <span class="table-pill-num">Bàn 3</span>
+              <span class="table-pill-label">· 12 phút</span>
+            </div>
+          </div>
+          <!-- Items -->
+          <div class="item-row">
+            <div class="item-info">
+              <div class="item-name">Phở bò tái ×2</div>
+              <div class="item-note">— ít mỡ</div>
+            </div>
+            <span class="item-price">130.000 ₫</span>
+            <span class="item-remove">✕</span>
+          </div>
+          <div class="item-row">
+            <div class="item-info">
+              <div class="item-name">Cơm tấm sườn ×1</div>
+            </div>
+            <span class="item-price">55.000 ₫</span>
+            <span class="item-remove">✕</span>
+          </div>
+          <div class="item-row" style="border-bottom:none;">
+            <div class="item-info">
+              <div class="item-name">Trà đá ×2</div>
+            </div>
+            <span class="item-price">20.000 ₫</span>
+            <span class="item-remove">✕</span>
+          </div>
+          <div style="text-align:right; margin:6px 0 2px;">
+            <span style="font-size:12px; color:#4f46e5; font-weight:600;">＋ Thêm món</span>
+          </div>
+          <div class="order-total-row">
+            <span class="total-label">Tổng cộng</span>
+            <span class="total-amount">205.000 ₫</span>
+          </div>
+          <!-- Payment -->
+          <div style="margin-bottom:10px;">
+            <div class="section-label">Phương thức thanh toán</div>
+            <div class="payment-methods">
+              <div class="pay-btn active">Tiền mặt</div>
+              <div class="pay-btn">Chuyển khoản</div>
+              <div class="pay-btn">Thẻ</div>
+            </div>
+          </div>
+          <div class="place-order-btn">Đặt đơn · 205.000 ₫</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-title" style="margin-bottom:8px;">Bán hàng</div>
+        <div class="stats-row">
+          <div class="skeleton" style="height:28px; flex:1; border-radius:10px;"></div>
+          <div class="skeleton" style="height:28px; flex:1; border-radius:10px;"></div>
+          <div class="skeleton" style="height:28px; flex:1; border-radius:10px;"></div>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="table-grid">
+          <div class="skeleton" style="height:72px; border-radius:16px;"></div>
+          <div class="skeleton" style="height:72px; border-radius:16px;"></div>
+          <div class="skeleton" style="height:72px; border-radius:16px;"></div>
+          <div class="skeleton" style="height:72px; border-radius:16px;"></div>
+          <div class="skeleton" style="height:72px; border-radius:16px;"></div>
+          <div class="skeleton" style="height:72px; border-radius:16px;"></div>
+          <div class="skeleton" style="height:72px; border-radius:16px;"></div>
+          <div class="skeleton" style="height:72px; border-radius:16px;"></div>
+          <div class="skeleton" style="height:72px; border-radius:16px;"></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

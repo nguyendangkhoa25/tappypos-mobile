@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Subscription / Delete Account / TnC</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: white; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  .page-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 12px 16px; flex-shrink: 0; }
+  .header-row { display: flex; align-items: center; }
+  .back-btn { font-size: 22px; color: #4f46e5; margin-right: 8px; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .header-hint { font-size: 11px; color: #6b7280; line-height: 1.4; margin-top: 4px; }
+
+  .scroll-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: white; border-radius: 16px; padding: 14px; }
+  .loader { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #e0e7ff; border-top-color: #4f46e5; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Subscription */
+  .plan-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; }
+  .plan-badge.active { background: #dcfce7; }
+  .plan-badge-text { font-size: 12px; font-weight: 600; }
+  .plan-badge.active .plan-badge-text { color: #15803d; }
+  .plan-badge.expired { background: #fee2e2; }
+  .plan-badge.expired .plan-badge-text { color: #dc2626; }
+  .plan-name { font-size: 20px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+  .plan-dates { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+  .plan-days { font-size: 12px; font-weight: 600; color: #4f46e5; }
+  .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { font-size: 13px; color: #6b7280; }
+  .info-val { font-size: 13px; font-weight: 500; color: #111827; }
+  .feature-tag { display: inline-block; background: #f3f4f6; border-radius: 6px; padding: 3px 8px; font-size: 11px; color: #374151; margin: 3px; }
+  .contact-btn { border: 1.5px solid #4f46e5; border-radius: 14px; padding: 13px; text-align: center; }
+  .contact-text { font-size: 13px; font-weight: 600; color: #4f46e5; }
+  .upgrade-hint { font-size: 11px; color: #9ca3af; text-align: center; margin-top: 6px; }
+
+  /* Delete Account */
+  .warning-card { background: #fff1f2; border: 1px solid #fecaca; border-radius: 16px; padding: 14px; }
+  .warn-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .warn-icon { font-size: 16px; }
+  .warn-title { font-size: 14px; font-weight: 700; color: #b91c1c; }
+  .warn-item { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 6px; }
+  .warn-bullet { font-size: 13px; color: #f87171; }
+  .warn-text { font-size: 12px; color: #dc2626; line-height: 1.45; flex: 1; }
+  .confirm-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .confirm-input { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-family: monospace; color: #111827; background: #f9fafb; }
+  .confirm-input.placeholder { color: #9ca3af; }
+  .delete-btn { background: #dc2626; border-radius: 16px; padding: 14px; text-align: center; color: white; font-size: 15px; font-weight: 700; }
+  .delete-btn.disabled { background: #e5e7eb; color: #9ca3af; }
+
+  /* Overlay */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 24px; }
+  .alert-box { background: white; border-radius: 20px; padding: 22px 20px 16px; width: 100%; }
+  .alert-title { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 8px; text-align: center; }
+  .alert-msg { font-size: 13px; color: #4b5563; text-align: center; line-height: 1.5; margin-bottom: 16px; }
+  .alert-btns { display: flex; gap: 8px; }
+  .alert-btn { flex: 1; padding: 12px; border-radius: 14px; text-align: center; font-size: 13px; font-weight: 600; }
+  .alert-btn.cancel { background: #f3f4f6; color: #6b7280; }
+  .alert-btn.destruct { background: #fee2e2; color: #dc2626; }
+
+  /* TnC */
+  .tnc-meta { font-size: 11px; color: #9ca3af; text-align: center; margin-bottom: 10px; }
+  .tnc-section { margin-bottom: 14px; }
+  .tnc-h { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 6px; }
+  .tnc-p { font-size: 12px; color: #4b5563; line-height: 1.55; }
+  .tnc-error { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 24px; }
+  .tnc-error-text { font-size: 13px; color: #6b7280; text-align: center; margin-top: 10px; }
+  .retry-btn { margin-top: 14px; border: 1.5px solid #4f46e5; border-radius: 14px; padding: 10px 20px; }
+  .retry-text { font-size: 13px; font-weight: 500; color: #4f46e5; }
+</style>
+</head>
+<body>
+
+<h1>Subscription / Delete Account / Terms &amp; Conditions</h1>
+<p class="subtitle">Gói dịch vụ, Xóa tài khoản và Điều khoản sử dụng</p>
+
+<h2>Subscription Screen</h2>
+<div class="phone-row">
+
+  <!-- Subscription: Active -->
+  <div class="phone-wrap">
+    <div class="phone-label">Active Plan</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Gói dịch vụ</span>
+        </div>
+        <div class="header-hint">⭐ Liên hệ hỗ trợ trước khi gói hết hạn để tránh mất quyền truy cập.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="plan-badge active" style="margin-bottom:10px;">
+            <span style="font-size:12px;">✓</span>
+            <span class="plan-badge-text">Đang hoạt động</span>
+          </div>
+          <div class="plan-name">Gói Chuẩn</div>
+          <div class="plan-dates">Hết hạn ngày 31/12/2026</div>
+          <div class="plan-days">Còn 232 ngày</div>
+        </div>
+        <div class="card">
+          <div class="info-row">
+            <span class="info-label">Số tài khoản</span>
+            <span class="info-val">3/5 tài khoản</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Tính năng bao gồm</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;margin-top:6px;">
+            <span class="feature-tag">Bán hàng POS</span>
+            <span class="feature-tag">Khách hàng</span>
+            <span class="feature-tag">Sản phẩm</span>
+            <span class="feature-tag">Kho hàng</span>
+            <span class="feature-tag">Báo cáo</span>
+            <span class="feature-tag">In hóa đơn</span>
+          </div>
+        </div>
+        <div class="contact-btn">
+          <div class="contact-text">Liên hệ hỗ trợ</div>
+        </div>
+        <div class="upgrade-hint">Liên hệ để nâng cấp gói hoặc gia hạn</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subscription: Expired -->
+  <div class="phone-wrap">
+    <div class="phone-label">Expired</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Gói dịch vụ</span>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="plan-badge expired" style="margin-bottom:10px;">
+            <span style="font-size:12px;">⚠</span>
+            <span class="plan-badge-text">Đã hết hạn</span>
+          </div>
+          <div class="plan-name">Gói Chuẩn</div>
+          <div class="plan-dates">Hết hạn ngày 01/05/2026</div>
+          <div class="plan-days" style="color:#dc2626;">Còn 0 ngày</div>
+        </div>
+        <div class="contact-btn" style="background:#4f46e5;">
+          <div class="contact-text" style="color:white;">Liên hệ hỗ trợ</div>
+        </div>
+        <div class="upgrade-hint">Liên hệ để nâng cấp gói hoặc gia hạn</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2>Delete Account Screen</h2>
+<div class="phone-row">
+
+  <!-- Delete: Empty (no confirm text) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty – Disabled</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Xóa tài khoản</span>
+        </div>
+        <div class="header-hint">⚠️ Gõ từ xác nhận chính xác như hiển thị bên dưới, sau đó nhấn nút xóa.</div>
+      </div>
+      <div class="scroll-body">
+        <div class="warning-card">
+          <div class="warn-header">
+            <span class="warn-icon">⚠️</span>
+            <span class="warn-title">Cảnh báo quan trọng</span>
+          </div>
+          <div class="warn-item"><span class="warn-bullet">•</span><span class="warn-text">Toàn bộ dữ liệu cửa hàng và lịch sử giao dịch sẽ bị xóa vĩnh viễn</span></div>
+          <div class="warn-item"><span class="warn-bullet">•</span><span class="warn-text">Tài khoản không thể khôi phục sau khi xóa</span></div>
+          <div class="warn-item"><span class="warn-bullet">•</span><span class="warn-text">Mọi đăng ký và thanh toán sẽ bị hủy ngay lập tức</span></div>
+        </div>
+        <div class="card">
+          <div class="confirm-label">Nhập "XÁC NHẬN" để tiếp tục</div>
+          <div class="confirm-input placeholder">XÁC NHẬN</div>
+        </div>
+        <div class="delete-btn disabled">Xóa tài khoản vĩnh viễn</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete: Filled + confirm dialog -->
+  <div class="phone-wrap">
+    <div class="phone-label">Confirm Dialog</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Xóa tài khoản</span>
+        </div>
+      </div>
+      <div class="scroll-body" style="opacity:0.4;">
+        <div class="warning-card">
+          <div class="warn-header"><span class="warn-icon">⚠️</span><span class="warn-title">Cảnh báo quan trọng</span></div>
+        </div>
+        <div class="card">
+          <div class="confirm-input">XÁC NHẬN</div>
+        </div>
+        <div class="delete-btn">Xóa tài khoản vĩnh viễn</div>
+      </div>
+      <div class="overlay">
+        <div class="alert-box">
+          <div class="alert-title">Xóa tài khoản?</div>
+          <div class="alert-msg">Hành động này không thể hoàn tác. Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn.</div>
+          <div class="alert-btns">
+            <div class="alert-btn cancel">Hủy</div>
+            <div class="alert-btn destruct">Xóa ngay</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2>Terms &amp; Conditions Screen</h2>
+<div class="phone-row">
+
+  <!-- TnC: Content loaded -->
+  <div class="phone-wrap">
+    <div class="phone-label">Content</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Điều khoản sử dụng</span>
+        </div>
+      </div>
+      <div class="scroll-body">
+        <div class="tnc-meta">Phiên bản 1.2 · Cập nhật: 01/01/2026</div>
+        <div class="card">
+          <div class="tnc-section">
+            <div class="tnc-h">1. Điều khoản chung</div>
+            <div class="tnc-p">Bằng việc sử dụng TappyPOS, bạn đồng ý tuân thủ các điều khoản và điều kiện này. Nếu không đồng ý, vui lòng không sử dụng dịch vụ.</div>
+          </div>
+          <div class="tnc-section">
+            <div class="tnc-h">2. Quyền riêng tư và dữ liệu</div>
+            <div class="tnc-p">Dữ liệu cửa hàng của bạn được mã hóa và lưu trữ bảo mật. Chúng tôi không chia sẻ thông tin với bên thứ ba mà không có sự đồng ý của bạn.</div>
+          </div>
+          <div class="tnc-section">
+            <div class="tnc-h">3. Trách nhiệm người dùng</div>
+            <div class="tnc-p">Bạn chịu trách nhiệm bảo mật tài khoản và tất cả hoạt động xảy ra dưới tài khoản của mình.</div>
+          </div>
+          <div class="tnc-section">
+            <div class="tnc-h">4. Giới hạn trách nhiệm</div>
+            <div class="tnc-p">TappyPOS không chịu trách nhiệm về tổn thất gián tiếp hoặc hậu quả phát sinh từ việc sử dụng dịch vụ.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TnC: Loading -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Điều khoản sử dụng</span>
+        </div>
+      </div>
+      <div class="loader"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- TnC: Error -->
+  <div class="phone-wrap">
+    <div class="phone-label">Error</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="page-header">
+        <div class="header-row">
+          <span class="back-btn">‹</span>
+          <span class="header-title">Điều khoản sử dụng</span>
+        </div>
+      </div>
+      <div class="tnc-error">
+        <span style="font-size:44px;opacity:0.2;">📄</span>
+        <div class="tnc-error-text">Không thể tải điều khoản. Vui lòng thử lại.</div>
+        <div class="retry-btn"><div class="retry-text">Thử lại</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

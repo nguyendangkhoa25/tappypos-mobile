@@ -9,7 +9,14 @@ name: "01 Auth — shop ID validation, login errors, PIN skip"
 - tapOn:
     text: "http://localhost:8081"
     optional: true
-# iOS Keychain (SecureStore) survives clearState; if PIN screen appears, reset to ShopId
+# iOS Keychain (SecureStore) survives clearState — if already logged in, log out first
+- tapOn:
+    id: "tab-settings"
+    optional: true
+- tapOn:
+    id: "settings-logout-btn"
+    optional: true
+# PIN screen "change store" link (when only PIN token in Keychain, no full session)
 - tapOn:
     text: "Đổi cửa hàng"
     optional: true

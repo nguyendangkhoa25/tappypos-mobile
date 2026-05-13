@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Tools / Utilities Screens</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: #4f46e5; }
+  .s-time { font-size: 15px; font-weight: 700; color: white; }
+  .s-icons { font-size: 12px; color: white; display: flex; gap: 4px; align-items: center; }
+
+  /* Hero header */
+  .hero { padding: 16px 20px 22px; flex-shrink: 0; }
+  .hero-title { font-size: 22px; font-weight: 700; color: white; margin-bottom: 4px; }
+  .hero-sub { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+  /* Scroll body */
+  .scroll-body { flex: 1; overflow: hidden; background: #f9fafb; display: flex; flex-direction: column; gap: 16px; }
+  .group-label { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .group-label-text { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+  .tool-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tool-card { width: calc(50% - 5px); background: white; border-radius: 16px; border: 1px solid #f3f4f6; padding: 14px; }
+  .tool-icon-box { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 10px; }
+  .tool-name { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 4px; line-height: 1.3; }
+  .tool-desc { font-size: 11px; color: #6b7280; line-height: 1.4; }
+
+  /* Calculator screen */
+  .calc-header { flex-shrink: 0; padding: 14px 16px 18px; }
+  .calc-back { font-size: 22px; color: white; margin-bottom: 8px; }
+  .calc-title { font-size: 20px; font-weight: 700; color: white; }
+  .calc-body { flex: 1; overflow: hidden; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: #f9fafb; }
+
+  /* Info banner */
+  .info-banner { border-radius: 12px; padding: 10px 12px; display: flex; gap: 8px; flex-shrink: 0; }
+  .info-banner.indigo { background: #eef2ff; border: 1px solid #c7d2fe; }
+  .info-banner.amber { background: #fffbeb; border: 1px solid #fde68a; }
+  .banner-text { font-size: 11px; line-height: 1.5; }
+  .banner-text.indigo { color: #4338ca; }
+  .banner-text.amber { color: #92400e; }
+
+  /* Card input */
+  .input-card { background: white; border-radius: 14px; border: 1px solid #f3f4f6; padding: 12px 14px; }
+  .input-card-2col { display: flex; gap: 8px; }
+  .input-card-2col .input-card { flex: 1; }
+  .field-label { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .field-input { border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #9ca3af; background: #fff; }
+  .field-input.filled { color: #111827; }
+  .money-input { display: flex; align-items: center; justify-content: space-between; border: 1.5px solid #e5e7eb; border-radius: 12px; background: #fff; padding: 10px 12px; }
+  .money-val { flex: 1; font-size: 13px; color: #9ca3af; }
+  .money-val.filled { color: #111827; font-weight: 600; }
+  .money-sfx { font-size: 13px; color: #6b7280; font-weight: 600; flex-shrink: 0; }
+  .hero-hint { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 6px; line-height: 1.4; }
+
+  /* Tab toggle */
+  .tab-toggle { display: flex; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+  .tab-btn { flex: 1; padding: 8px 0; text-align: center; font-size: 12px; font-weight: 600; color: #6b7280; background: white; }
+  .tab-btn.active-indigo { background: #4f46e5; color: white; border-color: #4f46e5; }
+  .tab-btn.active-violet { background: #7c3aed; color: white; }
+
+  /* Results card */
+  .result-card { border-radius: 14px; padding: 12px 14px; }
+  .result-card.indigo { background: #eef2ff; border: 1px solid #c7d2fe; }
+  .result-card.violet { background: #ede9fe; border: 1px solid #ddd6fe; }
+  .result-card.amber { background: #fffbeb; border: 1px solid #fde68a; }
+  .result-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+  .result-title.indigo { color: #4338ca; }
+  .result-title.violet { color: #6d28d9; }
+  .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .result-label { font-size: 12px; color: #4b5563; }
+  .result-value { font-size: 12px; font-weight: 600; color: #1f2937; }
+  .result-value.highlight-indigo { font-size: 13px; font-weight: 700; color: #4338ca; }
+  .result-value.highlight-violet { font-size: 13px; font-weight: 700; color: #6d28d9; }
+  .result-value.red { color: #dc2626; }
+  .result-divider { height: 1px; background: #c7d2fe; margin: 8px 0; }
+  .result-divider.violet { background: #ddd6fe; }
+
+  /* Amortization table */
+  .table-card { background: white; border-radius: 14px; border: 1px solid #f3f4f6; overflow: hidden; }
+  .table-header { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; font-size: 12px; font-weight: 700; color: #374151; }
+  .table-row-header { display: flex; padding: 6px 10px; background: #f9fafb; border-bottom: 1px solid #f3f4f6; }
+  .table-row { display: flex; padding: 6px 10px; border-bottom: 1px solid #f9fafb; }
+  .table-row:last-child { border-bottom: none; }
+  .tc { font-size: 10px; color: #9ca3af; font-weight: 700; }
+  .td { font-size: 10px; }
+  .td.bold { font-weight: 600; color: #1f2937; }
+  .td.violet { color: #7c3aed; }
+  .td.red { color: #ef4444; }
+  .td.gray { color: #6b7280; }
+  .td.month { color: #6b7280; width: 28px; }
+  .td-grow { flex: 1; text-align: right; }
+
+  /* Budget Rule 50/30/20 bars */
+  .budget-row { display: flex; flex-direction: column; gap: 8px; }
+  .budget-item { display: flex; align-items: center; gap: 8px; }
+  .budget-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .budget-bar-wrap { flex: 1; }
+  .budget-bar-bg { background: #f3f4f6; border-radius: 4px; height: 8px; overflow: hidden; }
+  .budget-bar-fill { height: 8px; border-radius: 4px; }
+  .budget-label { font-size: 11px; color: #374151; font-weight: 500; min-width: 70px; }
+  .budget-amount { font-size: 11px; font-weight: 600; color: #1f2937; min-width: 72px; text-align: right; }
+
+  /* Breakeven chart */
+  .breakeven-area { display: flex; flex-direction: column; align-items: center; padding: 10px; gap: 6px; }
+  .breakeven-badge { background: #4f46e5; border-radius: 12px; padding: 8px 20px; }
+  .breakeven-badge-text { font-size: 15px; font-weight: 700; color: white; }
+  .breakeven-label { font-size: 11px; color: #6b7280; }
+
+  /* Compound period table */
+  .compound-row { display: flex; padding: 5px 0; border-top: 1px solid #e0e7ff; }
+  .cp-period { font-size: 11px; font-weight: 600; color: #4f46e5; width: 36px; }
+  .cp-earned { flex: 1; font-size: 11px; color: #059669; text-align: right; }
+  .cp-balance { flex: 1; font-size: 11px; font-weight: 600; color: #374151; text-align: right; }
+</style>
+</head>
+<body>
+
+<h1>Tools / Utilities Screens</h1>
+<p class="subtitle">UtilitiesScreen — hub + 7 công cụ tài chính</p>
+
+<h2>UtilitiesScreen — Hub</h2>
+<div class="phone-row">
+  <div class="phone-wrap">
+    <div class="phone-label">Tools Hub</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="hero" style="background:#4f46e5;">
+        <div class="hero-title">Tiện ích</div>
+        <div class="hero-sub">Công cụ tài chính</div>
+        <div class="hero-hint">💡 Tính lãi, khoản vay, thuế TNCN và quy tắc chi tiêu — không cần mạng.</div>
+      </div>
+      <div class="scroll-body">
+        <!-- Group 1: Tính toán -->
+        <div>
+          <div class="group-label">
+            <span style="font-size:13px; color:#9ca3af;">🧮</span>
+            <span class="group-label-text">Tính toán</span>
+          </div>
+          <div class="tool-grid">
+            <div class="tool-card">
+              <div class="tool-icon-box" style="background:#eef2ff;"><span style="color:#4f46e5;">📈</span></div>
+              <div class="tool-name">Tính lãi</div>
+              <div class="tool-desc">Lãi đơn & lãi kép</div>
+            </div>
+            <div class="tool-card">
+              <div class="tool-icon-box" style="background:#ede9fe;"><span style="color:#7c3aed;">🏦</span></div>
+              <div class="tool-name">Tính khoản vay</div>
+              <div class="tool-desc">Lịch trả nợ & lãi suất</div>
+            </div>
+            <div class="tool-card">
+              <div class="tool-icon-box" style="background:#fef3c7;"><span style="color:#b45309;">📄</span></div>
+              <div class="tool-name">Tính thuế TNCN</div>
+              <div class="tool-desc">Thuế TNCN 2026</div>
+            </div>
+            <div class="tool-card">
+              <div class="tool-icon-box" style="background:#eef2ff;"><span style="color:#4f46e5;">🥧</span></div>
+              <div class="tool-name">Quy tắc chi tiêu</div>
+              <div class="tool-desc">50/30/20 hoặc 6 hũ</div>
+            </div>
+          </div>
+        </div>
+        <!-- Group 2: Tiện ích -->
+        <div>
+          <div class="group-label">
+            <span style="font-size:13px; color:#9ca3af;">📱</span>
+            <span class="group-label-text">Tiện ích</span>
+          </div>
+          <div class="tool-grid">
+            <div class="tool-card">
+              <div class="tool-icon-box" style="background:#ede9fe;"><span style="color:#7c3aed;">💱</span></div>
+              <div class="tool-name">Tỷ giá ngoại tệ</div>
+              <div class="tool-desc">Quy đổi VCB theo thời gian thực</div>
+            </div>
+            <div class="tool-card">
+              <div class="tool-icon-box" style="background:#ecfeff;"><span style="color:#0891b2;">👥</span></div>
+              <div class="tool-name">Chia tiền nhóm</div>
+              <div class="tool-desc">Chia hoá đơn theo số người</div>
+            </div>
+            <div class="tool-card">
+              <div class="tool-icon-box" style="background:#fff1f2;"><span style="color:#e11d48;">⚖️</span></div>
+              <div class="tool-name">Điểm hoà vốn</div>
+              <div class="tool-desc">So sánh 2 lựa chọn theo thời gian</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>InterestCalculatorScreen</h2>
+<div class="phone-row">
+  <!-- Empty inputs -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#4f46e5;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tính lãi suất</div>
+      </div>
+      <div class="calc-body">
+        <div class="info-banner indigo"><span>💡</span><span class="banner-text indigo">Nhập vốn gốc, lãi suất năm và kỳ hạn. Lãi đơn: lãi tính trên vốn gốc cố định. Lãi kép: lãi được cộng vào vốn và sinh lãi tiếp.</span></div>
+        <div class="input-card">
+          <div class="field-label">Vốn gốc</div>
+          <div class="money-input"><span class="money-val">0</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card-2col">
+          <div class="input-card">
+            <div class="field-label">Lãi suất năm (%)</div>
+            <div class="field-input">VD: 7.5</div>
+          </div>
+          <div class="input-card">
+            <div class="field-label">Kỳ hạn (tháng)</div>
+            <div class="field-input">VD: 12</div>
+          </div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Loại lãi</div>
+          <div class="tab-toggle" style="margin-top:4px;">
+            <div class="tab-btn active-indigo">Lãi đơn</div>
+            <div class="tab-btn">Lãi kép</div>
+          </div>
+        </div>
+        <div class="info-banner amber" style="margin-top:auto;"><span>ℹ️</span><span class="banner-text amber">Kết quả chỉ mang tính tham khảo. Lãi suất thực tế của ngân hàng có thể thay đổi theo kỳ.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- With results (simple) -->
+  <div class="phone-wrap">
+    <div class="phone-label">Results — Simple</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#4f46e5;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tính lãi suất</div>
+      </div>
+      <div class="calc-body">
+        <div class="input-card">
+          <div class="field-label">Vốn gốc</div>
+          <div class="money-input"><span class="money-val filled">100.000.000</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card-2col">
+          <div class="input-card">
+            <div class="field-label">Lãi suất năm (%)</div>
+            <div class="field-input filled">7.5</div>
+          </div>
+          <div class="input-card">
+            <div class="field-label">Kỳ hạn (tháng)</div>
+            <div class="field-input filled">12</div>
+          </div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Loại lãi</div>
+          <div class="tab-toggle" style="margin-top:4px;">
+            <div class="tab-btn active-indigo">Lãi đơn</div>
+            <div class="tab-btn">Lãi kép</div>
+          </div>
+        </div>
+        <div class="result-card indigo">
+          <div class="result-title indigo">Kết quả</div>
+          <div class="result-row">
+            <span class="result-label">Lãi mỗi tháng</span>
+            <span class="result-value">625.000 ₫</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Tổng lãi</span>
+            <span class="result-value">7.500.000 ₫</span>
+          </div>
+          <div class="result-divider"></div>
+          <div class="result-row">
+            <span class="result-label" style="font-weight:700; color:#3730a3;">Tổng nhận được</span>
+            <span class="result-value highlight-indigo">107.500.000 ₫</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compound with breakdown -->
+  <div class="phone-wrap">
+    <div class="phone-label">Results — Compound</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#4f46e5;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tính lãi suất</div>
+      </div>
+      <div class="calc-body">
+        <div class="input-card">
+          <div class="field-label">Vốn gốc</div>
+          <div class="money-input"><span class="money-val filled">100.000.000</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card-2col">
+          <div class="input-card">
+            <div class="field-label">Lãi suất năm (%)</div>
+            <div class="field-input filled">7.5</div>
+          </div>
+          <div class="input-card">
+            <div class="field-label">Kỳ hạn (tháng)</div>
+            <div class="field-input filled">36</div>
+          </div>
+        </div>
+        <div class="input-card">
+          <div class="tab-toggle">
+            <div class="tab-btn">Lãi đơn</div>
+            <div class="tab-btn active-indigo">Lãi kép</div>
+          </div>
+        </div>
+        <div class="result-card indigo">
+          <div class="result-title indigo">Kết quả</div>
+          <div class="result-row">
+            <span class="result-label">Lãi TB mỗi tháng</span>
+            <span class="result-value">714.286 ₫</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Tổng lãi</span>
+            <span class="result-value">25.714.285 ₫</span>
+          </div>
+          <div class="result-divider"></div>
+          <div class="result-row">
+            <span class="result-label" style="font-weight:700;">Tổng nhận được</span>
+            <span class="result-value highlight-indigo">125.714.285 ₫</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header">Chi tiết theo kỳ</div>
+          <div class="table-row-header">
+            <span class="tc" style="width:36px;">Kỳ</span>
+            <span class="tc" style="flex:1; text-align:right;">Lãi phát sinh</span>
+            <span class="tc" style="flex:1; text-align:right;">Số dư</span>
+          </div>
+          <div class="compound-row"><span class="cp-period">Y1</span><span class="cp-earned">+7.763.188 ₫</span><span class="cp-balance">107.763.188 ₫</span></div>
+          <div class="compound-row"><span class="cp-period">Y2</span><span class="cp-earned">+8.364.297 ₫</span><span class="cp-balance">116.127.485 ₫</span></div>
+          <div class="compound-row"><span class="cp-period">Y3</span><span class="cp-earned">+9.010.456 ₫</span><span class="cp-balance">125.137.941 ₫</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>LoanCalculatorScreen</h2>
+<div class="phone-row">
+  <!-- Empty -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#7c3aed;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#7c3aed;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tính khoản vay</div>
+      </div>
+      <div class="calc-body">
+        <div class="info-banner indigo"><span>💡</span><span class="banner-text indigo">Nhập số tiền vay, lãi suất năm và kỳ hạn. Dư nợ giảm dần: gốc cố định, lãi giảm.</span></div>
+        <div class="input-card">
+          <div class="field-label">Số tiền vay</div>
+          <div class="money-input"><span class="money-val">0</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card-2col">
+          <div class="input-card">
+            <div class="field-label">Lãi suất năm (%)</div>
+            <div class="field-input">VD: 9.5</div>
+          </div>
+          <div class="input-card">
+            <div class="field-label">Kỳ hạn (tháng)</div>
+            <div class="field-input">VD: 60</div>
+          </div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Phương thức trả nợ</div>
+          <div class="tab-toggle" style="margin-top:4px;">
+            <div class="tab-btn" style="font-size:10px;">Dư nợ giảm dần</div>
+            <div class="tab-btn" style="font-size:10px;">Trả góp cố định (EMI)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- With results + amortization -->
+  <div class="phone-wrap">
+    <div class="phone-label">With Results</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#7c3aed;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#7c3aed;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tính khoản vay</div>
+      </div>
+      <div class="calc-body">
+        <div class="input-card">
+          <div class="field-label">Số tiền vay</div>
+          <div class="money-input"><span class="money-val filled">200.000.000</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="input-card-2col">
+          <div class="input-card">
+            <div class="field-label">Lãi suất năm (%)</div>
+            <div class="field-input filled">9.5</div>
+          </div>
+          <div class="input-card">
+            <div class="field-label">Kỳ hạn (tháng)</div>
+            <div class="field-input filled">60</div>
+          </div>
+        </div>
+        <!-- Affordability OK -->
+        <div style="display:flex; align-items:center; gap:6px; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:8px 10px;">
+          <span style="font-size:14px; color:#059669;">✓</span>
+          <span style="font-size:11px; font-weight:600; color:#059669; flex:1;">Khoản trả hợp lý (22% thu nhập)</span>
+        </div>
+        <div class="result-card violet">
+          <div class="result-title violet">Tóm tắt</div>
+          <div class="result-row">
+            <span class="result-label">Trả tháng đầu</span>
+            <span class="result-value highlight-violet">4.916.667 ₫</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Tổng lãi phải trả</span>
+            <span class="result-value red">47.708.333 ₫</span>
+          </div>
+          <div class="result-divider violet"></div>
+          <div class="result-row">
+            <span class="result-label" style="font-weight:700;">Tổng tiền phải trả</span>
+            <span class="result-value" style="font-weight:700;">247.708.333 ₫</span>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header">Lịch trả nợ</div>
+          <div class="table-row-header">
+            <span class="tc" style="width:28px;">T</span>
+            <span class="tc td-grow">Trả</span>
+            <span class="tc td-grow">Gốc</span>
+            <span class="tc td-grow">Lãi</span>
+            <span class="tc td-grow">Dư nợ</span>
+          </div>
+          <div class="table-row">
+            <span class="td month">1</span>
+            <span class="td bold td-grow">4.917k</span>
+            <span class="td violet td-grow">3.333k</span>
+            <span class="td red td-grow">1.583k</span>
+            <span class="td gray td-grow">196.7tr</span>
+          </div>
+          <div class="table-row" style="background:#f9fafb;">
+            <span class="td month">2</span>
+            <span class="td bold td-grow">4.890k</span>
+            <span class="td violet td-grow">3.333k</span>
+            <span class="td red td-grow">1.557k</span>
+            <span class="td gray td-grow">193.3tr</span>
+          </div>
+          <div class="table-row">
+            <span class="td month">3</span>
+            <span class="td bold td-grow">4.864k</span>
+            <span class="td violet td-grow">3.333k</span>
+            <span class="td red td-grow">1.530k</span>
+            <span class="td gray td-grow">190.0tr</span>
+          </div>
+          <div class="table-row" style="background:#f9fafb;">
+            <span class="td month">4</span>
+            <span class="td bold td-grow">4.837k</span>
+            <span class="td violet td-grow">3.333k</span>
+            <span class="td red td-grow">1.504k</span>
+            <span class="td gray td-grow">186.7tr</span>
+          </div>
+          <div style="padding:9px; text-align:center; border-top:1px solid #f3f4f6;">
+            <span style="font-size:11px; font-weight:600; color:#7c3aed;">Xem tất cả 60 tháng</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Budget Rule Screen</h2>
+<div class="phone-row">
+  <!-- 50/30/20 with results -->
+  <div class="phone-wrap">
+    <div class="phone-label">50/30/20</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#4f46e5;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#4f46e5;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Quy tắc chi tiêu</div>
+      </div>
+      <div class="calc-body">
+        <div class="info-banner indigo"><span>💡</span><span class="banner-text indigo">Quy tắc 50/30/20 chia thu nhập thành nhu cầu thiết yếu, giải trí và tiết kiệm.</span></div>
+        <div class="input-card">
+          <div class="field-label">Chọn quy tắc</div>
+          <div class="tab-toggle" style="margin-top:4px;">
+            <div class="tab-btn active-indigo">50/30/20</div>
+            <div class="tab-btn">6 Hũ</div>
+          </div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Thu nhập thực nhận hàng tháng</div>
+          <div class="money-input"><span class="money-val filled">20.000.000</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="result-card indigo" style="padding:14px;">
+          <div class="result-title indigo">Phân bổ thu nhập</div>
+          <div class="budget-row">
+            <div class="budget-item">
+              <div class="budget-color" style="background:#4f46e5;"></div>
+              <span class="budget-label">Thiết yếu (50%)</span>
+              <div class="budget-bar-wrap">
+                <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:50%; background:#4f46e5;"></div></div>
+              </div>
+              <span class="budget-amount">10.000.000 ₫</span>
+            </div>
+            <div class="budget-item">
+              <div class="budget-color" style="background:#f59e0b;"></div>
+              <span class="budget-label">Giải trí (30%)</span>
+              <div class="budget-bar-wrap">
+                <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:30%; background:#f59e0b;"></div></div>
+              </div>
+              <span class="budget-amount">6.000.000 ₫</span>
+            </div>
+            <div class="budget-item">
+              <div class="budget-color" style="background:#059669;"></div>
+              <span class="budget-label">Tiết kiệm (20%)</span>
+              <div class="budget-bar-wrap">
+                <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:20%; background:#059669;"></div></div>
+              </div>
+              <span class="budget-amount">4.000.000 ₫</span>
+            </div>
+          </div>
+        </div>
+        <div class="info-banner amber"><span>ℹ️</span><span class="banner-text amber">Các tỷ lệ này chỉ mang tính tham khảo. Điều chỉnh phù hợp với hoàn cảnh thực tế.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 jars -->
+  <div class="phone-wrap">
+    <div class="phone-label">6 Hũ</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#4f46e5;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#4f46e5;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Quy tắc chi tiêu</div>
+      </div>
+      <div class="calc-body" style="gap:8px;">
+        <div class="input-card">
+          <div class="tab-toggle">
+            <div class="tab-btn">50/30/20</div>
+            <div class="tab-btn active-indigo">6 Hũ</div>
+          </div>
+        </div>
+        <div class="input-card">
+          <div class="field-label">Thu nhập thực nhận hàng tháng</div>
+          <div class="money-input"><span class="money-val filled">20.000.000</span><span class="money-sfx">₫</span></div>
+        </div>
+        <div class="result-card indigo" style="padding:12px;">
+          <div class="result-title indigo" style="margin-bottom:8px;">Phân bổ 6 hũ</div>
+          <div class="budget-row" style="gap:6px;">
+            <div class="budget-item">
+              <div class="budget-color" style="background:#4f46e5;"></div>
+              <span class="budget-label" style="font-size:10px;">Thiết yếu (55%)</span>
+              <div class="budget-bar-wrap"><div class="budget-bar-bg"><div class="budget-bar-fill" style="width:55%;background:#4f46e5;"></div></div></div>
+              <span class="budget-amount" style="font-size:10px;">11.000.000 ₫</span>
+            </div>
+            <div class="budget-item">
+              <div class="budget-color" style="background:#f59e0b;"></div>
+              <span class="budget-label" style="font-size:10px;">Vui chơi (10%)</span>
+              <div class="budget-bar-wrap"><div class="budget-bar-bg"><div class="budget-bar-fill" style="width:10%;background:#f59e0b;"></div></div></div>
+              <span class="budget-amount" style="font-size:10px;">2.000.000 ₫</span>
+            </div>
+            <div class="budget-item">
+              <div class="budget-color" style="background:#0891b2;"></div>
+              <span class="budget-label" style="font-size:10px;">Giáo dục (10%)</span>
+              <div class="budget-bar-wrap"><div class="budget-bar-bg"><div class="budget-bar-fill" style="width:10%;background:#0891b2;"></div></div></div>
+              <span class="budget-amount" style="font-size:10px;">2.000.000 ₫</span>
+            </div>
+            <div class="budget-item">
+              <div class="budget-color" style="background:#059669;"></div>
+              <span class="budget-label" style="font-size:10px;">TK dài hạn (10%)</span>
+              <div class="budget-bar-wrap"><div class="budget-bar-bg"><div class="budget-bar-fill" style="width:10%;background:#059669;"></div></div></div>
+              <span class="budget-amount" style="font-size:10px;">2.000.000 ₫</span>
+            </div>
+            <div class="budget-item">
+              <div class="budget-color" style="background:#ec4899;"></div>
+              <span class="budget-label" style="font-size:10px;">Cho đi (5%)</span>
+              <div class="budget-bar-wrap"><div class="budget-bar-bg"><div class="budget-bar-fill" style="width:5%;background:#ec4899;"></div></div></div>
+              <span class="budget-amount" style="font-size:10px;">1.000.000 ₫</span>
+            </div>
+            <div class="budget-item">
+              <div class="budget-color" style="background:#7c3aed;"></div>
+              <span class="budget-label" style="font-size:10px;">Tự do TC (10%)</span>
+              <div class="budget-bar-wrap"><div class="budget-bar-bg"><div class="budget-bar-fill" style="width:10%;background:#7c3aed;"></div></div></div>
+              <span class="budget-amount" style="font-size:10px;">2.000.000 ₫</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Breakeven Screen</h2>
+<div class="phone-row">
+  <div class="phone-wrap">
+    <div class="phone-label">With Results</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#e11d48;"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="calc-header" style="background:#e11d48;">
+        <div class="calc-back">‹</div>
+        <div class="calc-title">Tính điểm hoà vốn</div>
+      </div>
+      <div class="calc-body">
+        <div class="info-banner indigo"><span>💡</span><span class="banner-text indigo">So sánh hai lựa chọn có chi phí ban đầu và chi phí hàng tháng khác nhau.</span></div>
+        <div class="input-card-2col">
+          <div class="input-card">
+            <div class="field-label">Lựa chọn A</div>
+            <div class="field-input filled" style="font-size:11px; margin-bottom:6px;">Mua xe máy điện</div>
+            <div class="field-label">Chi phí ban đầu</div>
+            <div class="money-input"><span class="money-val filled">35.000.000</span><span class="money-sfx">₫</span></div>
+            <div class="field-label" style="margin-top:6px;">Chi phí tháng</div>
+            <div class="money-input" style="margin-top:0;"><span class="money-val filled">300.000</span><span class="money-sfx">₫</span></div>
+          </div>
+          <div class="input-card">
+            <div class="field-label">Lựa chọn B</div>
+            <div class="field-input filled" style="font-size:11px; margin-bottom:6px;">Đi xe ôm công nghệ</div>
+            <div class="field-label">Chi phí ban đầu</div>
+            <div class="money-input"><span class="money-val filled">0</span><span class="money-sfx">₫</span></div>
+            <div class="field-label" style="margin-top:6px;">Chi phí tháng</div>
+            <div class="money-input"><span class="money-val filled">1.500.000</span><span class="money-sfx">₫</span></div>
+          </div>
+        </div>
+        <div class="result-card" style="background:#fff1f2; border:1px solid #fecdd3; padding:14px;">
+          <div class="result-title" style="color:#be123c;">Kết quả</div>
+          <div class="breakeven-area">
+            <div class="breakeven-label">Điểm hoà vốn</div>
+            <div class="breakeven-badge" style="background:#e11d48;"><span class="breakeven-badge-text">29 tháng</span></div>
+            <div style="font-size:11px; color:#6b7280; text-align:center; margin-top:4px;">Sau thời điểm này A và B có tổng chi phí bằng nhau</div>
+          </div>
+          <div class="result-row" style="margin-top:8px;">
+            <span class="result-label">Tổng CP tại điểm hoà vốn</span>
+            <span class="result-value" style="font-weight:700; color:#be123c;">43.700.000 ₫</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Mua xe máy điện tiết kiệm</span>
+            <span class="result-value" style="font-weight:700; color:#059669;">129.600.000 ₫</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">sau 10 năm</span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

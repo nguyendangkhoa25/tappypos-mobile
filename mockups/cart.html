@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Cart Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #f1f5f9;
+    padding: 32px;
+    color: #1e293b;
+  }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 {
+    font-size: 14px; font-weight: 700; color: #334155;
+    margin: 48px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label {
+    font-size: 11px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+  }
+  .phone {
+    width: 375px; height: 812px;
+    background: #ffffff;
+    border-radius: 48px;
+    border: 10px solid #1e293b;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+
+  /* Notch */
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 34px;
+    background: #1e293b;
+    border-radius: 0 0 22px 22px;
+    z-index: 100;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 44px; flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 20px 6px;
+    position: relative; z-index: 10;
+    background: white;
+  }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    background: white;
+    flex-shrink: 0;
+  }
+  .back-btn { font-size: 22px; color: #374151; flex-shrink: 0; }
+  .header-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+  .header-meta { font-size: 13px; color: #9ca3af; }
+
+  /* Customer card */
+  .customer-card {
+    margin: 14px 16px 4px;
+    border: 2px solid #4f46e5;
+    border-radius: 18px;
+    background: #eef2ff;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+  }
+  .customer-avatar {
+    width: 40px; height: 40px; border-radius: 20px;
+    background: #4f46e5;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: white; flex-shrink: 0;
+  }
+  .customer-label { font-size: 10px; font-weight: 700; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+  .customer-name { font-size: 15px; font-weight: 800; color: #111827; }
+  .customer-phone { font-size: 12px; color: #6b7280; margin-top: 1px; }
+  .customer-chevron { font-size: 18px; color: #4f46e5; margin-left: auto; flex-shrink: 0; }
+
+  /* Item list */
+  .items-list { flex: 1; overflow: hidden; }
+  .item-row {
+    display: flex; align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f9fafb;
+  }
+  .item-info { flex: 1; }
+  .item-name { font-size: 14px; font-weight: 600; color: #1f2937; line-height: 1.3; }
+  .item-price-row { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+  .item-price { font-size: 13px; font-weight: 700; color: #4f46e5; }
+  .pencil { font-size: 11px; color: #4f46e5; }
+  .qty-controls { display: flex; align-items: center; gap: 4px; margin: 0 10px; }
+  .qty-btn {
+    width: 30px; height: 30px; border-radius: 15px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .qty-btn.minus { background: #f3f4f6; color: #374151; }
+  .qty-btn.minus.trash { background: #fee2e2; color: #ef4444; }
+  .qty-btn.plus { background: #eef2ff; color: #4f46e5; }
+  .qty-num { font-size: 15px; font-weight: 800; color: #111827; width: 24px; text-align: center; }
+  .item-total { font-size: 14px; font-weight: 600; color: #1f2937; width: 90px; text-align: right; }
+
+  /* Footer */
+  .cart-footer {
+    background: white;
+    border-top: 1px solid #f3f4f6;
+    padding: 14px 16px 28px;
+    flex-shrink: 0;
+  }
+  .subtotal-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .subtotal-label { font-size: 14px; color: #6b7280; }
+  .subtotal-val { font-size: 14px; color: #374151; }
+  .discount-label { font-size: 14px; color: #6b7280; }
+  .discount-val { font-size: 14px; font-weight: 600; color: #f59e0b; }
+  .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .total-label { font-size: 17px; font-weight: 800; color: #111827; }
+  .total-val { font-size: 26px; font-weight: 800; color: #4f46e5; }
+  .btn-save {
+    border: 1.5px solid #4f46e5; border-radius: 18px;
+    padding: 12px; text-align: center;
+    font-size: 15px; font-weight: 700; color: #4f46e5;
+    margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-checkout {
+    background: #4f46e5; border-radius: 18px;
+    padding: 14px; text-align: center;
+    font-size: 16px; font-weight: 800; color: white;
+  }
+
+  /* Empty state */
+  .empty-state {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 32px;
+  }
+  .empty-icon { font-size: 56px; margin-bottom: 14px; }
+  .empty-title { font-size: 17px; font-weight: 700; color: #374151; margin-bottom: 6px; text-align: center; }
+  .empty-desc { font-size: 14px; color: #9ca3af; text-align: center; margin-bottom: 20px; }
+  .empty-btn {
+    background: #4f46e5; border-radius: 16px;
+    padding: 12px 28px;
+    font-size: 15px; font-weight: 700; color: white;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 50;
+    display: flex; flex-direction: column;
+  }
+  .modal-dismiss { flex: 1; }
+  .bottom-sheet {
+    background: white;
+    border-radius: 28px 28px 0 0;
+    padding: 20px 20px 32px;
+  }
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: #e5e7eb; border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .sheet-title { font-size: 17px; font-weight: 800; color: #111827; margin-bottom: 16px; }
+  .sheet-label { font-size: 13px; font-weight: 600; color: #6b7280; margin-bottom: 6px; }
+
+  /* Walk-in option */
+  .walkin-option {
+    border: 2px solid #4f46e5; border-radius: 16px;
+    background: #eef2ff;
+    padding: 14px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .walkin-option.inactive { border-color: #e5e7eb; background: #f9fafb; }
+  .walkin-avatar {
+    width: 38px; height: 38px; border-radius: 19px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .walkin-avatar.active { background: #4f46e5; color: white; }
+  .walkin-avatar.inactive { background: #d1d5db; color: white; }
+  .walkin-name { font-size: 14px; font-weight: 700; }
+  .walkin-name.active { color: #4f46e5; }
+  .walkin-name.inactive { color: #374151; }
+  .walkin-hint { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+  .check-icon { margin-left: auto; font-size: 20px; color: #4f46e5; }
+
+  /* Customer search */
+  .cust-search {
+    display: flex; align-items: center; gap: 8px;
+    background: #f3f4f6; border-radius: 12px;
+    padding: 9px 12px; margin-bottom: 12px;
+  }
+  .cust-search-icon { font-size: 15px; color: #9ca3af; }
+  .cust-search-input { font-size: 14px; color: #374151; flex: 1; }
+  .cust-search-placeholder { font-size: 14px; color: #9ca3af; flex: 1; }
+
+  /* Customer list item */
+  .cust-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px; border-radius: 14px;
+    border: 1px solid #f3f4f6;
+    margin-bottom: 8px; background: white;
+  }
+  .cust-item.active { border-color: #4f46e5; background: #eef2ff; }
+  .cust-initial {
+    width: 36px; height: 36px; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+  }
+  .cust-initial.active { background: #4f46e5; color: white; }
+  .cust-initial.inactive { background: #e5e7eb; color: #374151; }
+  .cust-name { font-size: 14px; font-weight: 600; color: #111827; }
+  .cust-name.active { color: #4f46e5; }
+  .cust-phone { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+
+  /* Price edit */
+  .price-input-mock {
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 26px; font-weight: 800; color: #111827;
+    margin-bottom: 16px;
+  }
+  .save-btn {
+    background: #4f46e5; border-radius: 18px;
+    padding: 14px; text-align: center;
+    font-size: 15px; font-weight: 800; color: white;
+  }
+</style>
+</head>
+<body>
+
+<h1>Cart Screen</h1>
+<p class="subtitle">Giỏ hàng • Items list, customer picker, price edit</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- ─── State 1: Empty Cart ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Empty Cart</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Giỏ hàng</span>
+        <span class="header-meta">0 sản phẩm</span>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">🛒</div>
+        <div class="empty-title">Giỏ hàng trống</div>
+        <div class="empty-desc">Thêm sản phẩm vào giỏ để bắt đầu bán hàng</div>
+        <div class="empty-btn">Bán hàng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 2: With Items, Walk-in ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Items + Walk-in</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Giỏ hàng</span>
+        <span class="header-meta">3 sản phẩm</span>
+      </div>
+      <!-- Customer card (walk-in) -->
+      <div class="customer-card">
+        <div class="customer-avatar">👤</div>
+        <div style="flex:1;">
+          <div class="customer-label">Khách hàng</div>
+          <div class="customer-name">Khách lẻ</div>
+        </div>
+        <span class="customer-chevron">›</span>
+      </div>
+      <!-- Items -->
+      <div class="items-list">
+        <div class="item-row">
+          <div class="item-info">
+            <div class="item-name">Cà phê sữa đá</div>
+            <div class="item-price-row">
+              <span class="item-price">35.000 ₫</span>
+              <span class="pencil">✏</span>
+            </div>
+          </div>
+          <div class="qty-controls">
+            <div class="qty-btn minus trash">🗑</div>
+            <span class="qty-num">1</span>
+            <div class="qty-btn plus">+</div>
+          </div>
+          <span class="item-total">35.000 ₫</span>
+        </div>
+        <div class="item-row">
+          <div class="item-info">
+            <div class="item-name">Trà sữa trân châu</div>
+            <div class="item-price-row">
+              <span class="item-price">55.000 ₫</span>
+              <span class="pencil">✏</span>
+            </div>
+          </div>
+          <div class="qty-controls">
+            <div class="qty-btn minus">−</div>
+            <span class="qty-num">2</span>
+            <div class="qty-btn plus">+</div>
+          </div>
+          <span class="item-total">110.000 ₫</span>
+        </div>
+        <div class="item-row">
+          <div class="item-info">
+            <div class="item-name">Bánh mì pate</div>
+            <div class="item-price-row">
+              <span class="item-price">25.000 ₫</span>
+              <span class="pencil">✏</span>
+            </div>
+          </div>
+          <div class="qty-controls">
+            <div class="qty-btn minus">−</div>
+            <span class="qty-num">3</span>
+            <div class="qty-btn plus">+</div>
+          </div>
+          <span class="item-total">75.000 ₫</span>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div class="cart-footer">
+        <div class="total-row">
+          <span class="total-label">Tổng cộng</span>
+          <span class="total-val">220.000 ₫</span>
+        </div>
+        <div class="btn-save">
+          <span>💾</span>
+          <span>Lưu đơn</span>
+        </div>
+        <div class="btn-checkout">Thanh toán</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 3: With Items + Selected Customer ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Selected Customer</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="header">
+        <span class="back-btn">←</span>
+        <span class="header-title">Giỏ hàng</span>
+        <span class="header-meta">3 sản phẩm</span>
+      </div>
+      <!-- Customer card (selected) -->
+      <div class="customer-card">
+        <div class="customer-avatar">👤</div>
+        <div style="flex:1;">
+          <div class="customer-label">Khách hàng</div>
+          <div class="customer-name">Nguyễn Thị Lan</div>
+          <div class="customer-phone">0901 234 567</div>
+        </div>
+        <span class="customer-chevron">✏</span>
+      </div>
+      <!-- Items -->
+      <div class="items-list">
+        <div class="item-row">
+          <div class="item-info">
+            <div class="item-name">Cà phê sữa đá</div>
+            <div class="item-price-row">
+              <span class="item-price">35.000 ₫</span>
+              <span class="pencil">✏</span>
+            </div>
+          </div>
+          <div class="qty-controls">
+            <div class="qty-btn minus trash">🗑</div>
+            <span class="qty-num">1</span>
+            <div class="qty-btn plus">+</div>
+          </div>
+          <span class="item-total">35.000 ₫</span>
+        </div>
+        <div class="item-row">
+          <div class="item-info">
+            <div class="item-name">Trà sữa trân châu</div>
+            <div class="item-price-row">
+              <span class="item-price">55.000 ₫</span>
+              <span class="pencil">✏</span>
+            </div>
+          </div>
+          <div class="qty-controls">
+            <div class="qty-btn minus">−</div>
+            <span class="qty-num">2</span>
+            <div class="qty-btn plus">+</div>
+          </div>
+          <span class="item-total">110.000 ₫</span>
+        </div>
+        <div class="item-row">
+          <div class="item-info">
+            <div class="item-name">Bánh mì pate</div>
+            <div class="item-price-row">
+              <span class="item-price">25.000 ₫</span>
+              <span class="pencil">✏</span>
+            </div>
+          </div>
+          <div class="qty-controls">
+            <div class="qty-btn minus">−</div>
+            <span class="qty-num">3</span>
+            <div class="qty-btn plus">+</div>
+          </div>
+          <span class="item-total">75.000 ₫</span>
+        </div>
+      </div>
+      <!-- Footer with discount -->
+      <div class="cart-footer">
+        <div class="subtotal-row">
+          <span class="subtotal-label">Tạm tính</span>
+          <span class="subtotal-val">220.000 ₫</span>
+        </div>
+        <div class="subtotal-row" style="margin-bottom:8px;">
+          <span class="discount-label">Giảm giá</span>
+          <span class="discount-val">−20.000 ₫</span>
+        </div>
+        <div class="total-row">
+          <span class="total-label">Tổng cộng</span>
+          <span class="total-val">200.000 ₫</span>
+        </div>
+        <div class="btn-save"><span>💾</span><span>Lưu đơn</span></div>
+        <div class="btn-checkout">Thanh toán</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 4: Customer Picker Sheet ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Customer Picker Sheet</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <!-- Background dimmed -->
+      <div style="filter:brightness(0.5); flex:1; display:flex; flex-direction:column;">
+        <div class="header">
+          <span class="back-btn">←</span>
+          <span class="header-title">Giỏ hàng</span>
+          <span class="header-meta">3 sản phẩm</span>
+        </div>
+        <div class="customer-card">
+          <div class="customer-avatar">👤</div>
+          <div style="flex:1;"><div class="customer-label">Khách hàng</div><div class="customer-name">Khách lẻ</div></div>
+          <span class="customer-chevron">›</span>
+        </div>
+        <div class="items-list">
+          <div class="item-row"><div class="item-info"><div class="item-name">Cà phê sữa đá</div><div class="item-price-row"><span class="item-price">35.000 ₫</span></div></div><span class="item-total">35.000 ₫</span></div>
+          <div class="item-row"><div class="item-info"><div class="item-name">Trà sữa trân châu</div><div class="item-price-row"><span class="item-price">55.000 ₫</span></div></div><span class="item-total">110.000 ₫</span></div>
+        </div>
+      </div>
+      <!-- Customer picker modal -->
+      <div class="modal-overlay">
+        <div class="modal-dismiss"></div>
+        <div class="bottom-sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-title">Chọn khách hàng</div>
+          <!-- Walk-in option (currently selected) -->
+          <div class="walkin-option">
+            <div class="walkin-avatar active">👤</div>
+            <div>
+              <div class="walkin-name active">Khách lẻ</div>
+              <div class="walkin-hint">Không cần chọn khách hàng</div>
+            </div>
+            <span class="check-icon">✓</span>
+          </div>
+          <!-- Search -->
+          <div class="cust-search">
+            <span class="cust-search-icon">🔍</span>
+            <span class="cust-search-placeholder">Tìm khách hàng...</span>
+          </div>
+          <!-- Recent customers -->
+          <div class="cust-item">
+            <div class="cust-initial inactive">N</div>
+            <div>
+              <div class="cust-name">Nguyễn Thị Lan</div>
+              <div class="cust-phone">0901 234 567</div>
+            </div>
+          </div>
+          <div class="cust-item">
+            <div class="cust-initial inactive">T</div>
+            <div>
+              <div class="cust-name">Trần Văn Hùng</div>
+              <div class="cust-phone">0912 345 678</div>
+            </div>
+          </div>
+          <div class="cust-item">
+            <div class="cust-initial inactive">L</div>
+            <div>
+              <div class="cust-name">Lê Thị Mai</div>
+              <div class="cust-phone">0923 456 789</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 5: Customer Search Results ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Customer Search</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div style="filter:brightness(0.5); flex:1; display:flex; flex-direction:column;">
+        <div class="header">
+          <span class="back-btn">←</span>
+          <span class="header-title">Giỏ hàng</span>
+          <span class="header-meta">3 sản phẩm</span>
+        </div>
+        <div class="customer-card">
+          <div class="customer-avatar">👤</div>
+          <div style="flex:1;"><div class="customer-label">Khách hàng</div><div class="customer-name">Khách lẻ</div></div>
+          <span class="customer-chevron">›</span>
+        </div>
+        <div class="items-list">
+          <div class="item-row"><div class="item-info"><div class="item-name">Cà phê sữa đá</div></div><span class="item-total">35.000 ₫</span></div>
+        </div>
+      </div>
+      <div class="modal-overlay">
+        <div class="modal-dismiss"></div>
+        <div class="bottom-sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-title">Chọn khách hàng</div>
+          <div class="walkin-option inactive">
+            <div class="walkin-avatar inactive">👤</div>
+            <div>
+              <div class="walkin-name inactive">Khách lẻ</div>
+              <div class="walkin-hint">Không cần chọn khách hàng</div>
+            </div>
+          </div>
+          <!-- Search active with text -->
+          <div class="cust-search" style="background:#eef2ff;border:1.5px solid #c7d2fe;">
+            <span class="cust-search-icon">🔍</span>
+            <span class="cust-search-input" style="color:#4f46e5;font-weight:600;">nguyễn</span>
+            <span style="font-size:13px;color:#9ca3af;">✕</span>
+          </div>
+          <!-- Search results -->
+          <div class="cust-item active">
+            <div class="cust-initial active">N</div>
+            <div style="flex:1;">
+              <div class="cust-name active">Nguyễn Thị Lan</div>
+              <div class="cust-phone">0901 234 567</div>
+            </div>
+            <span style="font-size:18px;color:#4f46e5;">✓</span>
+          </div>
+          <div class="cust-item">
+            <div class="cust-initial inactive">N</div>
+            <div style="flex:1;">
+              <div class="cust-name">Nguyễn Văn An</div>
+              <div class="cust-phone">0934 567 890</div>
+            </div>
+          </div>
+          <div class="cust-item">
+            <div class="cust-initial inactive">N</div>
+            <div style="flex:1;">
+              <div class="cust-name">Nguyễn Minh Tuấn</div>
+              <div class="cust-phone">0945 678 901</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 6: Price Edit Modal ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Price Edit Sheet</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div style="filter:brightness(0.5); flex:1; display:flex; flex-direction:column;">
+        <div class="header">
+          <span class="back-btn">←</span>
+          <span class="header-title">Giỏ hàng</span>
+          <span class="header-meta">3 sản phẩm</span>
+        </div>
+        <div class="customer-card">
+          <div class="customer-avatar">👤</div>
+          <div style="flex:1;"><div class="customer-label">Khách hàng</div><div class="customer-name">Nguyễn Thị Lan</div><div class="customer-phone">0901 234 567</div></div>
+          <span class="customer-chevron">✏</span>
+        </div>
+        <div class="items-list">
+          <div class="item-row">
+            <div class="item-info">
+              <div class="item-name">Cà phê sữa đá</div>
+              <div class="item-price-row"><span class="item-price">35.000 ₫</span><span class="pencil">✏</span></div>
+            </div>
+            <div class="qty-controls"><div class="qty-btn minus trash">🗑</div><span class="qty-num">1</span><div class="qty-btn plus">+</div></div>
+            <span class="item-total">35.000 ₫</span>
+          </div>
+          <div class="item-row" style="background:#fffbeb;">
+            <div class="item-info">
+              <div class="item-name">Trà sữa trân châu</div>
+              <div class="item-price-row"><span class="item-price" style="color:#f59e0b;">55.000 ₫</span><span class="pencil" style="color:#f59e0b;">✏</span></div>
+            </div>
+            <div class="qty-controls"><div class="qty-btn minus">−</div><span class="qty-num">2</span><div class="qty-btn plus">+</div></div>
+            <span class="item-total">110.000 ₫</span>
+          </div>
+        </div>
+      </div>
+      <!-- Price edit modal -->
+      <div class="modal-overlay">
+        <div class="modal-dismiss"></div>
+        <div class="bottom-sheet" style="padding-bottom:36px;">
+          <div class="sheet-handle"></div>
+          <div class="sheet-title">Chỉnh giá bán</div>
+          <div class="price-input-mock">55.000</div>
+          <div class="save-btn">Lưu</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

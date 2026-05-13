@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Profile Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #f1f5f9; padding: 32px; color: #1e293b; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; background: #e2e8f0; padding: 4px 14px; border-radius: 20px; }
+  .phone { width: 375px; height: 812px; background: #f9fafb; border-radius: 48px; border: 10px solid #1e293b; overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 34px; background: #1e293b; border-radius: 0 0 22px 22px; z-index: 100; }
+  .status-bar { height: 44px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 20px 6px; position: relative; z-index: 10; background: #4f46e5; }
+  .s-time { font-size: 15px; font-weight: 700; color: white; }
+  .s-icons { font-size: 12px; color: white; display: flex; gap: 4px; align-items: center; }
+
+  /* Profile Header (indigo bg) */
+  .profile-hero { background: #4f46e5; padding: 10px 20px 28px; flex-shrink: 0; }
+  .hero-nav { display: flex; align-items: center; margin-bottom: 6px; }
+  .profile-hero-hint { font-size: 11px; color: rgba(255,255,255,0.65); margin-bottom: 14px; }
+  .hero-back { font-size: 22px; color: white; margin-right: 8px; line-height: 1; }
+  .hero-title { font-size: 17px; font-weight: 700; color: white; flex: 1; }
+  .avatar-circle { width: 64px; height: 64px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .avatar-icon { font-size: 32px; }
+  .hero-name { font-size: 20px; font-weight: 700; color: white; }
+  .hero-shop { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 3px; }
+
+  /* Scroll body */
+  .scroll-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+
+  /* Card sections */
+  .card { background: white; border-radius: 16px; overflow: hidden; border: 1px solid #f3f4f6; }
+  .section-header { padding: 10px 14px; background: #fafafa; border-bottom: 1px solid #f3f4f6; }
+  .section-header-text { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid #f9fafb; }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { font-size: 14px; color: #6b7280; }
+  .info-value { font-size: 14px; font-weight: 500; color: #1f2937; text-align: right; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Language row */
+  .lang-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; }
+  .lang-text { font-size: 14px; color: #374151; }
+  .toggle { width: 44px; height: 26px; border-radius: 13px; background: #4f46e5; position: relative; }
+  .toggle.off { background: #e0e7ff; }
+  .toggle-thumb { width: 20px; height: 20px; border-radius: 50%; background: white; position: absolute; top: 3px; right: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle.off .toggle-thumb { right: auto; left: 3px; }
+
+  /* Change password row */
+  .pw-toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px; }
+  .pw-row-left { display: flex; align-items: center; gap: 10px; }
+  .lock-icon { font-size: 18px; color: #4f46e5; }
+  .pw-label { font-size: 14px; font-weight: 500; color: #1f2937; }
+  .chevron { font-size: 18px; color: #9ca3af; }
+  .pw-form { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #f3f4f6; }
+  .pw-input { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #111827; background: #f9fafb; display: flex; justify-content: space-between; align-items: center; }
+  .pw-input-text { color: #9ca3af; }
+  .pw-input-filled { color: #111827; }
+  .eye-icon { color: #9ca3af; font-size: 14px; }
+  .save-btn { background: #4f46e5; border-radius: 16px; padding: 14px; text-align: center; color: white; font-size: 15px; font-weight: 700; }
+
+  /* Logout button */
+  .logout-btn { background: white; border-radius: 16px; padding: 14px; text-align: center; border: 1px solid #fee2e2; }
+  .logout-text { font-size: 15px; font-weight: 700; color: #ef4444; }
+
+  /* Skeleton */
+  .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.15) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.15) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; height: 18px; }
+  .skeleton-dark { background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* Logout confirm overlay */
+  .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+  .alert-box { background: white; border-radius: 18px; padding: 22px 20px 16px; width: 100%; max-width: 280px; }
+  .alert-title { font-size: 17px; font-weight: 700; color: #111827; text-align: center; margin-bottom: 8px; }
+  .alert-msg { font-size: 13px; color: #4b5563; text-align: center; margin-bottom: 18px; line-height: 1.5; }
+  .alert-btns { display: flex; flex-direction: column; gap: 8px; }
+  .alert-btn { padding: 12px; border-radius: 14px; text-align: center; font-size: 14px; font-weight: 600; }
+  .alert-cancel { background: #f3f4f6; color: #374151; }
+  .alert-destructive { background: #ef4444; color: white; }
+</style>
+</head>
+<body>
+
+<h1>Profile Screen</h1>
+<p class="subtitle">Trang cá nhân — thông tin tài khoản, ngôn ngữ, đổi mật khẩu, đăng xuất</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- Loaded state -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loaded</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="profile-hero">
+        <div class="hero-nav"><span class="hero-back">‹</span><span class="hero-title">Hồ sơ</span></div>
+        <div class="profile-hero-hint">Thông tin tài khoản, ngôn ngữ và bảo mật đăng nhập.</div>
+        <div class="avatar-circle"><span class="avatar-icon">👤</span></div>
+        <div class="hero-name">Nguyễn Văn Khoa</div>
+        <div class="hero-shop">Kim Ngân Phát</div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="section-header"><span class="section-header-text">Tài khoản</span></div>
+          <div class="info-row">
+            <span class="info-label">Tài khoản</span>
+            <span class="info-value">khoa.nguyen</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Cửa hàng</span>
+            <span class="info-value">Kim Ngân Phát</span>
+          </div>
+          <div class="info-row" style="border-bottom: none;">
+            <span class="info-label">Vai trò</span>
+            <span class="info-value">SHOP_OWNER</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-header"><span class="section-header-text">Ngôn ngữ</span></div>
+          <div class="lang-row">
+            <span class="lang-text">Tiếng Việt</span>
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="pw-toggle-row">
+            <div class="pw-row-left">
+              <span class="lock-icon">🔒</span>
+              <span class="pw-label">Đổi mật khẩu</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="info-row" style="border-bottom:none;">
+            <span class="info-label">Phiên bản ứng dụng</span>
+            <span class="info-value">1.0.0</span>
+          </div>
+        </div>
+
+        <div class="logout-btn"><span class="logout-text">Đăng xuất</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change password expanded -->
+  <div class="phone-wrap">
+    <div class="phone-label">Change Password Open</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="profile-hero">
+        <div class="hero-nav"><span class="hero-back">‹</span><span class="hero-title">Hồ sơ</span></div>
+        <div class="profile-hero-hint">Thông tin tài khoản, ngôn ngữ và bảo mật đăng nhập.</div>
+        <div class="avatar-circle"><span class="avatar-icon">👤</span></div>
+        <div class="hero-name">Nguyễn Văn Khoa</div>
+        <div class="hero-shop">Kim Ngân Phát</div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="section-header"><span class="section-header-text">Tài khoản</span></div>
+          <div class="info-row">
+            <span class="info-label">Tài khoản</span>
+            <span class="info-value">khoa.nguyen</span>
+          </div>
+          <div class="info-row" style="border-bottom:none;">
+            <span class="info-label">Cửa hàng</span>
+            <span class="info-value">Kim Ngân Phát</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-header"><span class="section-header-text">Ngôn ngữ</span></div>
+          <div class="lang-row">
+            <span class="lang-text">Tiếng Việt</span>
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="pw-toggle-row">
+            <div class="pw-row-left">
+              <span class="lock-icon">🔒</span>
+              <span class="pw-label">Đổi mật khẩu</span>
+            </div>
+            <span class="chevron" style="transform:rotate(90deg); display:inline-block;">›</span>
+          </div>
+          <div class="pw-form">
+            <div class="pw-input">
+              <span class="pw-input-filled">••••••••</span>
+              <span class="eye-icon">👁</span>
+            </div>
+            <div class="pw-input">
+              <span class="pw-input-text">Mật khẩu mới</span>
+              <span class="eye-icon">👁</span>
+            </div>
+            <div class="pw-input">
+              <span class="pw-input-text">Xác nhận mật khẩu mới</span>
+              <span class="eye-icon">👁</span>
+            </div>
+            <div class="save-btn">Lưu</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="profile-hero">
+        <div class="hero-nav"><span class="hero-back">‹</span><span class="hero-title">Hồ sơ</span></div>
+        <div class="profile-hero-hint">Thông tin tài khoản, ngôn ngữ và bảo mật đăng nhập.</div>
+        <div class="avatar-circle"><span class="avatar-icon">👤</span></div>
+        <div class="skeleton" style="width: 140px; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="width: 100px;"></div>
+      </div>
+      <div class="scroll-body">
+        <div class="card">
+          <div class="section-header"><span class="section-header-text">Tài khoản</span></div>
+          <div style="padding: 14px; display:flex; flex-direction:column; gap:10px;">
+            <div class="skeleton-dark" style="height:14px; border-radius:6px;"></div>
+            <div class="skeleton-dark" style="height:14px; border-radius:6px;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-header"><span class="section-header-text">Ngôn ngữ</span></div>
+          <div class="lang-row">
+            <span class="lang-text">Tiếng Việt</span>
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="pw-toggle-row">
+            <div class="pw-row-left">
+              <span class="lock-icon">🔒</span>
+              <span class="pw-label">Đổi mật khẩu</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+        <div class="logout-btn"><span class="logout-text">Đăng xuất</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout confirm dialog -->
+  <div class="phone-wrap">
+    <div class="phone-label">Logout Confirm</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="profile-hero">
+        <div class="hero-nav"><span class="hero-back">‹</span><span class="hero-title">Hồ sơ</span></div>
+        <div class="profile-hero-hint">Thông tin tài khoản, ngôn ngữ và bảo mật đăng nhập.</div>
+        <div class="avatar-circle"><span class="avatar-icon">👤</span></div>
+        <div class="hero-name">Nguyễn Văn Khoa</div>
+        <div class="hero-shop">Kim Ngân Phát</div>
+      </div>
+      <div class="scroll-body" style="opacity:0.4;">
+        <div class="card">
+          <div class="info-row">
+            <span class="info-label">Tài khoản</span>
+            <span class="info-value">khoa.nguyen</span>
+          </div>
+        </div>
+        <div class="logout-btn"><span class="logout-text">Đăng xuất</span></div>
+      </div>
+      <div class="overlay">
+        <div class="alert-box">
+          <div class="alert-title">Đăng xuất</div>
+          <div class="alert-msg">Bạn có muốn đăng xuất không?</div>
+          <div class="alert-btns">
+            <div class="alert-btn alert-cancel">Huỷ</div>
+            <div class="alert-btn alert-destructive">Đăng xuất</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

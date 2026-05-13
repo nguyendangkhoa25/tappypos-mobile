@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – POS Screen</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #f1f5f9;
+    padding: 32px;
+    color: #1e293b;
+  }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  h2 {
+    font-size: 14px; font-weight: 700; color: #334155;
+    margin: 48px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .phone-row { display: flex; flex-wrap: wrap; gap: 36px; margin-bottom: 8px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label {
+    font-size: 11px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+  }
+  .phone {
+    width: 375px; height: 812px;
+    background: #f9fafb;
+    border-radius: 48px;
+    border: 10px solid #1e293b;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .phone.dark { background: #111827; border-color: #475569; }
+
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 34px;
+    background: #1e293b;
+    border-radius: 0 0 22px 22px;
+    z-index: 100;
+  }
+  .phone.dark .notch { background: #0f172a; }
+
+  .status-bar {
+    height: 44px; flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 20px 6px;
+    position: relative; z-index: 10;
+    background: white;
+  }
+  .phone.dark .status-bar { background: #1f2937; }
+  .s-time { font-size: 15px; font-weight: 700; color: #111827; }
+  .phone.dark .s-time { color: #f1f5f9; }
+  .s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+  .phone.dark .s-icons { color: #cbd5e1; }
+
+  /* Header */
+  .pos-header {
+    background: white;
+    border-bottom: 1px solid #f3f4f6;
+    padding: 10px 16px 0;
+    flex-shrink: 0;
+  }
+  .phone.dark .pos-header { background: #1f2937; border-bottom-color: #374151; }
+
+  .title-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 2px;
+  }
+  .screen-title { font-size: 20px; font-weight: 800; color: #111827; }
+  .phone.dark .screen-title { color: #f1f5f9; }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+
+  .icon-btn {
+    width: 40px; height: 40px;
+    background: #f3f4f6; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .phone.dark .icon-btn { background: #374151; }
+  .icon-btn.primary { background: #4f46e5; }
+
+  .cart-btn-wrap { position: relative; }
+  .cart-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: #ef4444; color: white;
+    font-size: 9px; font-weight: 700;
+    width: 16px; height: 16px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 5;
+  }
+
+  .hint-text { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+  .phone.dark .hint-text { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+
+  /* Search */
+  .search-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .search-input-wrap {
+    flex: 1; display: flex; align-items: center;
+    background: #f3f4f6; border-radius: 12px;
+    padding: 8px 12px; gap: 8px;
+  }
+  .phone.dark .search-input-wrap { background: #374151; }
+  .search-icon { font-size: 16px; color: #9ca3af; }
+  .search-placeholder { font-size: 14px; color: #9ca3af; flex: 1; }
+  .search-text { font-size: 14px; color: #111827; flex: 1; }
+  .phone.dark .search-text { color: #f1f5f9; }
+  .search-clear { font-size: 14px; color: #9ca3af; }
+  .search-btn {
+    background: #4f46e5; border-radius: 12px;
+    padding: 9px 16px;
+    font-size: 13px; font-weight: 700; color: white;
+    white-space: nowrap;
+  }
+
+  /* Category chips */
+  .chips-row {
+    display: flex; gap: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .chip {
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    background: white; color: #6b7280;
+    border: 1px solid #e5e7eb;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .phone.dark .chip { background: #374151; color: #9ca3af; border-color: #4b5563; }
+  .chip.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+
+  /* Product grid */
+  .product-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0; padding: 6px;
+    overflow: hidden;
+    flex: 1;
+  }
+  .product-card {
+    background: white;
+    border-radius: 16px;
+    padding: 12px;
+    margin: 6px;
+    border: 1px solid #f3f4f6;
+    display: flex; flex-direction: column;
+  }
+  .phone.dark .product-card { background: #1f2937; border-color: #374151; }
+  .product-name { font-size: 13px; font-weight: 600; color: #1f2937; line-height: 1.3; margin-bottom: 4px; }
+  .phone.dark .product-name { color: #f1f5f9; }
+  .product-unit { font-size: 11px; color: #9ca3af; margin-bottom: 8px; }
+  .product-footer { display: flex; align-items: center; justify-content: space-between; }
+  .product-price { font-size: 13px; font-weight: 700; color: #4f46e5; }
+  .product-price.gold { color: #f59e0b; }
+  .plus-icon { font-size: 20px; color: #4f46e5; }
+
+  /* Bottom tab */
+  .tab-bar {
+    height: 82px; flex-shrink: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    display: flex; align-items: flex-start; padding-top: 10px;
+  }
+  .phone.dark .tab-bar { background: #1e293b; border-top-color: #334155; }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    position: relative;
+  }
+  .tab-icon { font-size: 20px; line-height: 1; }
+  .tab-lbl { font-size: 10px; font-weight: 600; color: #9ca3af; }
+  .tab-item.active .tab-lbl { color: #4f46e5; font-weight: 700; }
+  .phone.dark .tab-lbl { color: #6b7280; }
+  .phone.dark .tab-item.active .tab-lbl { color: #818cf8; }
+  .tab-badge {
+    position: absolute; top: -2px; right: 16px;
+    background: #ef4444; color: white;
+    font-size: 9px; font-weight: 700;
+    min-width: 15px; height: 15px;
+    border-radius: 8px; padding: 0 3px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Skeleton */
+  .sk {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+    display: block;
+  }
+  .phone.dark .sk {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background-size: 200% 100%;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Bottom sheet modal overlay */
+  .modal-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 50;
+    display: flex; flex-direction: column;
+  }
+  .modal-dismiss { flex: 1; }
+  .bottom-sheet {
+    background: white;
+    border-radius: 28px 28px 0 0;
+    padding: 20px 24px 32px;
+  }
+  .phone.dark .bottom-sheet { background: #1f2937; }
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: #e5e7eb; border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .phone.dark .sheet-handle { background: #4b5563; }
+  .sheet-product-name { font-size: 17px; font-weight: 800; color: #111827; margin-bottom: 20px; line-height: 1.3; }
+  .phone.dark .sheet-product-name { color: #f1f5f9; }
+  .sheet-label { font-size: 13px; font-weight: 600; color: #6b7280; margin-bottom: 6px; }
+  .phone.dark .sheet-label { color: #9ca3af; }
+  .sheet-price-input {
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 22px; font-weight: 800; color: #111827;
+    margin-bottom: 20px;
+  }
+  .phone.dark .sheet-price-input { background: #374151; border-color: #4b5563; color: #f1f5f9; }
+  .qty-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .qty-controls { display: flex; align-items: center; gap: 16px; }
+  .qty-btn {
+    width: 40px; height: 40px; border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+  }
+  .qty-btn.minus { background: #f3f4f6; color: #374151; }
+  .qty-btn.plus { background: #4f46e5; color: white; }
+  .phone.dark .qty-btn.minus { background: #374151; color: #e2e8f0; }
+  .qty-val { font-size: 22px; font-weight: 800; color: #111827; width: 32px; text-align: center; }
+  .phone.dark .qty-val { color: #f1f5f9; }
+  .add-btn {
+    background: #4f46e5; border-radius: 20px;
+    padding: 16px; text-align: center;
+    font-size: 16px; font-weight: 800; color: white;
+  }
+</style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</head>
+<body>
+
+<h1>POS Screen</h1>
+<p class="subtitle">Bán hàng tab • Product grid, search, category filter, add-to-cart sheet</p>
+
+<h2>States</h2>
+<div class="phone-row">
+
+  <!-- ─── State 1: Loading ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Loading</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="pos-header">
+        <div class="title-row">
+          <span class="screen-title">Bán hàng</span>
+          <div class="header-actions">
+            <div class="icon-btn">📋</div>
+            <div class="cart-btn-wrap">
+              <div class="icon-btn primary" style="color:white;">🛒</div>
+            </div>
+          </div>
+        </div>
+        <div class="hint-text">🛒 Chạm sản phẩm để thêm vào giỏ. Lọc theo danh mục hoặc dùng thanh tìm kiếm để tìm nhanh hơn.</div>
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm kiếm sản phẩm...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+        <div class="chips-row">
+          <div class="chip active">Tất cả</div>
+          <span class="sk" style="width:64px;height:28px;border-radius:20px;flex-shrink:0;"></span>
+          <span class="sk" style="width:72px;height:28px;border-radius:20px;flex-shrink:0;"></span>
+          <span class="sk" style="width:56px;height:28px;border-radius:20px;flex-shrink:0;"></span>
+        </div>
+      </div>
+      <!-- Grid skeleton -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;padding:6px;flex:1;overflow:hidden;">
+        <div style="margin:6px;"><span class="sk" style="height:110px;display:block;border-radius:16px;"></span></div>
+        <div style="margin:6px;"><span class="sk" style="height:110px;display:block;border-radius:16px;"></span></div>
+        <div style="margin:6px;"><span class="sk" style="height:110px;display:block;border-radius:16px;"></span></div>
+        <div style="margin:6px;"><span class="sk" style="height:110px;display:block;border-radius:16px;"></span></div>
+        <div style="margin:6px;"><span class="sk" style="height:110px;display:block;border-radius:16px;"></span></div>
+        <div style="margin:6px;"><span class="sk" style="height:110px;display:block;border-radius:16px;"></span></div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 2: Product Grid (empty cart) ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Product Grid</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="pos-header">
+        <div class="title-row">
+          <span class="screen-title">Bán hàng</span>
+          <div class="header-actions">
+            <div class="icon-btn">📋</div>
+            <div class="cart-btn-wrap">
+              <div class="icon-btn primary" style="color:white;">🛒</div>
+            </div>
+          </div>
+        </div>
+        <div class="hint-text">🛒 Chạm sản phẩm để thêm vào giỏ. Lọc theo danh mục hoặc dùng thanh tìm kiếm để tìm nhanh hơn.</div>
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm kiếm sản phẩm...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+        <div class="chips-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Đồ ăn</div>
+          <div class="chip">Đồ uống</div>
+          <div class="chip">Khác</div>
+        </div>
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="product-name">Cà phê sữa đá</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">35.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Bánh mì pate</div>
+          <div class="product-unit">Ổ</div>
+          <div class="product-footer"><span class="product-price">25.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Nước cam ép tươi</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">45.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Trà sữa trân châu</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">55.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Cơm tấm sườn</div>
+          <div class="product-unit">Phần</div>
+          <div class="product-footer"><span class="product-price">65.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Sinh tố bơ</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">40.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Bánh cuốn thịt nướng</div>
+          <div class="product-unit">Đĩa</div>
+          <div class="product-footer"><span class="product-price">55.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Chè thái</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">30.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 3: Cart Badge + Category filtered ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Cart Badge + Filtered</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <div class="pos-header">
+        <div class="title-row">
+          <span class="screen-title">Bán hàng</span>
+          <div class="header-actions">
+            <div class="icon-btn">📋</div>
+            <div class="cart-btn-wrap">
+              <div class="icon-btn primary" style="color:white;">🛒</div>
+              <div class="cart-badge">3</div>
+            </div>
+          </div>
+        </div>
+        <div class="hint-text">🛒 Chạm sản phẩm để thêm vào giỏ. Lọc theo danh mục hoặc dùng thanh tìm kiếm để tìm nhanh hơn.</div>
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm kiếm sản phẩm...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+        <div class="chips-row">
+          <div class="chip">Tất cả</div>
+          <div class="chip active">Đồ uống</div>
+          <div class="chip">Đồ ăn</div>
+          <div class="chip">Khác</div>
+        </div>
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="product-name">Cà phê sữa đá</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">35.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Nước cam ép tươi</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">45.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Trà sữa trân châu</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">55.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Sinh tố bơ</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">40.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Chè thái</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">30.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Soda chanh muối</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">25.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Nước dừa tươi</div>
+          <div class="product-unit">Trái</div>
+          <div class="product-footer"><span class="product-price">30.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card">
+          <div class="product-name">Matcha đá xay</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">65.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 4: Add-to-cart Sheet Open ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Add-to-cart Sheet</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span class="s-time">9:41</span><div class="s-icons"><span>●●●</span><span>🔋</span></div></div>
+      <!-- Background (dimmed) -->
+      <div class="pos-header" style="filter:brightness(0.55);">
+        <div class="title-row">
+          <span class="screen-title">Bán hàng</span>
+          <div class="header-actions">
+            <div class="icon-btn">📋</div>
+            <div class="cart-btn-wrap">
+              <div class="icon-btn primary" style="color:white;">🛒</div>
+              <div class="cart-badge">2</div>
+            </div>
+          </div>
+        </div>
+        <div class="hint-text">🛒 Chạm sản phẩm để thêm vào giỏ. Lọc theo danh mục hoặc dùng thanh tìm kiếm để tìm nhanh hơn.</div>
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm kiếm sản phẩm...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+        <div class="chips-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Đồ ăn</div>
+          <div class="chip">Đồ uống</div>
+        </div>
+      </div>
+      <div class="product-grid" style="filter:brightness(0.55);">
+        <div class="product-card"><div class="product-name">Cà phê sữa đá</div><div class="product-unit">Ly</div><div class="product-footer"><span class="product-price">35.000 ₫</span><span class="plus-icon">⊕</span></div></div>
+        <div class="product-card"><div class="product-name">Bánh mì pate</div><div class="product-unit">Ổ</div><div class="product-footer"><span class="product-price">25.000 ₫</span><span class="plus-icon">⊕</span></div></div>
+        <div class="product-card"><div class="product-name">Nước cam ép tươi</div><div class="product-unit">Ly</div><div class="product-footer"><span class="product-price">45.000 ₫</span><span class="plus-icon">⊕</span></div></div>
+        <div class="product-card"><div class="product-name">Trà sữa trân châu</div><div class="product-unit">Ly</div><div class="product-footer"><span class="product-price">55.000 ₫</span><span class="plus-icon">⊕</span></div></div>
+      </div>
+      <!-- Modal overlay -->
+      <div class="modal-overlay">
+        <div class="modal-dismiss"></div>
+        <div class="bottom-sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-product-name">Trà sữa trân châu</div>
+          <div class="sheet-label">Giá bán</div>
+          <div class="sheet-price-input">55.000</div>
+          <div class="qty-row">
+            <span class="sheet-label" style="margin-bottom:0;">Số lượng</span>
+            <div class="qty-controls">
+              <div class="qty-btn minus">−</div>
+              <span class="qty-val">1</span>
+              <div class="qty-btn plus">+</div>
+            </div>
+          </div>
+          <div class="add-btn">Thêm vào giỏ hàng</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#4f46e5;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#4f46e5;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── State 5: Dark Mode ─── -->
+  <div class="phone-wrap">
+    <div class="phone-label">Dark Mode</div>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar" style="background:#1f2937;"><span class="s-time" style="color:#f1f5f9;">9:41</span><div class="s-icons" style="color:#cbd5e1;"><span>●●●</span><span>🔋</span></div></div>
+      <div class="pos-header" style="background:#1f2937;border-bottom-color:#374151;">
+        <div class="title-row">
+          <span class="screen-title" style="color:#f1f5f9;">Bán hàng</span>
+          <div class="header-actions">
+            <div class="icon-btn" style="background:#374151;color:#e2e8f0;">📋</div>
+            <div class="cart-btn-wrap">
+              <div class="icon-btn primary" style="color:white;">🛒</div>
+              <div class="cart-badge">3</div>
+            </div>
+          </div>
+        </div>
+        <div class="hint-text" style="color:#6b7280;">🛒 Chạm sản phẩm để thêm vào giỏ. Lọc theo danh mục hoặc dùng thanh tìm kiếm để tìm nhanh hơn.</div>
+        <div class="search-row">
+          <div class="search-input-wrap" style="background:#374151;">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">Tìm kiếm sản phẩm...</span>
+          </div>
+          <div class="search-btn">Tìm</div>
+        </div>
+        <div class="chips-row">
+          <div class="chip active">Tất cả</div>
+          <div class="chip" style="background:#374151;color:#9ca3af;border-color:#4b5563;">Đồ ăn</div>
+          <div class="chip" style="background:#374151;color:#9ca3af;border-color:#4b5563;">Đồ uống</div>
+          <div class="chip" style="background:#374151;color:#9ca3af;border-color:#4b5563;">Khác</div>
+        </div>
+      </div>
+      <div class="product-grid" style="background:#111827;">
+        <div class="product-card" style="background:#1f2937;border-color:#374151;">
+          <div class="product-name" style="color:#f1f5f9;">Cà phê sữa đá</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">35.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card" style="background:#1f2937;border-color:#374151;">
+          <div class="product-name" style="color:#f1f5f9;">Bánh mì pate</div>
+          <div class="product-unit">Ổ</div>
+          <div class="product-footer"><span class="product-price">25.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card" style="background:#1f2937;border-color:#374151;">
+          <div class="product-name" style="color:#f1f5f9;">Vàng nhẫn 1 chỉ</div>
+          <div class="product-unit">Chỉ</div>
+          <div class="product-footer"><span class="product-price gold">Theo giá vàng</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card" style="background:#1f2937;border-color:#374151;">
+          <div class="product-name" style="color:#f1f5f9;">Trà sữa trân châu</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">55.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card" style="background:#1f2937;border-color:#374151;">
+          <div class="product-name" style="color:#f1f5f9;">Nước cam ép tươi</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">45.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card" style="background:#1f2937;border-color:#374151;">
+          <div class="product-name" style="color:#f1f5f9;">Sinh tố bơ</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">40.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card" style="background:#1f2937;border-color:#374151;">
+          <div class="product-name" style="color:#f1f5f9;">Cơm tấm sườn</div>
+          <div class="product-unit">Phần</div>
+          <div class="product-footer"><span class="product-price">65.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+        <div class="product-card" style="background:#1f2937;border-color:#374151;">
+          <div class="product-name" style="color:#f1f5f9;">Chè thái</div>
+          <div class="product-unit">Ly</div>
+          <div class="product-footer"><span class="product-price">30.000 ₫</span><span class="plus-icon">⊕</span></div>
+        </div>
+      </div>
+      <div class="tab-bar" style="background:#1e293b;border-top-color:#334155;">
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-home-outline"></i></span><span class="tab-lbl" style="color:#6b7280;">Home</span></div>
+        <div class="tab-item active"><span class="tab-icon" style="color:#818cf8;"><i class="mdi mdi-cash-register"></i></span><span class="tab-lbl" style="color:#818cf8;">Bán hàng</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-wallet-outline"></i></span><span class="tab-lbl" style="color:#6b7280;">Chi phí</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-chart-areaspline"></i></span><span class="tab-lbl" style="color:#6b7280;">Báo cáo</span></div>
+        <div class="tab-item"><span class="tab-icon"><i class="mdi mdi-dots-horizontal"></i></span><span class="tab-lbl" style="color:#6b7280;">Thêm</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

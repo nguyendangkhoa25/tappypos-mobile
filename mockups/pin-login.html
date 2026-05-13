@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mockup — Nhập mã PIN</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #e5e7eb;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 48px;
+      padding: 48px 32px;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      flex-wrap: wrap;
+    }
+
+    .phone-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .phone-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Phone frame */
+    .phone {
+      width: 375px;
+      min-height: 812px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1f2937,
+        0 0 0 12px #374151,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notch {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 30px;
+      background: #1f2937;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+
+    .status-bar {
+      height: 44px;
+      padding: 14px 28px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .status-bar .time { font-size: 15px; font-weight: 600; color: #111; }
+    .status-bar .icons { display: flex; gap: 6px; align-items: center; }
+    .status-bar .icons svg { width: 16px; height: 16px; fill: #111; }
+
+    .screen {
+      flex: 1;
+      padding: 16px 24px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Top bar */
+    .top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 32px;
+    }
+    .change-shop-btn {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4f46e5;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    /* Greeting */
+    .greeting {
+      margin-bottom: 48px;
+    }
+    .greeting h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .greeting .phone-masked {
+      font-size: 15px;
+      color: #6b7280;
+    }
+
+    /* PIN dots */
+    .pin-dots {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .dot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #d1d5db;
+    }
+    .dot.filled { background: #4f46e5; }
+    .dot.filled-loading { background: #4f46e5; opacity: 0.5; }
+
+    /* Numpad */
+    .numpad {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 288px;
+    }
+    .numpad-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .key {
+      width: 80px; height: 64px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: none;
+      background: #f3f4f6;
+      transition: opacity 0.1s;
+      flex-shrink: 0;
+    }
+    .key:active { opacity: 0.6; }
+    .key.num {
+      font-size: 28px;
+      font-weight: 500;
+      color: #1f2937;
+    }
+    .key.action {
+      background: transparent;
+      color: #6b7280;
+    }
+    .key.action svg { width: 28px; height: 28px; }
+    .key.empty {
+      background: transparent;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* Spinner */
+    .spinner-large {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(79,70,229,0.2);
+      border-top-color: #4f46e5;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 12px auto 40px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Links */
+    .links {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .link-primary {
+      font-size: 15px;
+      color: #4f46e5;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+    .link-secondary {
+      font-size: 13px;
+      color: #9ca3af;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    /* Locked state */
+    .locked-view {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-top: 32px;
+    }
+    .locked-emoji { font-size: 48px; margin-bottom: 16px; }
+    .locked-timer {
+      font-size: 18px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .locked-desc { font-size: 14px; color: #6b7280; margin-bottom: 24px; }
+    .locked-login-link {
+      font-size: 15px;
+      color: #4f46e5;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    /* Alert modal */
+    .alert-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+    .alert-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 24px 20px 16px;
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+    }
+    .alert-box h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    .alert-box p {
+      font-size: 14px;
+      color: #4b5563;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .alert-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-top: 1px solid #f3f4f6;
+      padding-top: 12px;
+    }
+    .alert-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .alert-btn.primary { background: #4f46e5; color: #fff; }
+    .alert-btn.secondary { background: transparent; color: #6b7280; }
+
+    /* ── Dark mode ── */
+    .phone.dark { background: #111827; }
+    .phone.dark .notch { background: #000; }
+    .phone.dark .status-bar .time { color: #f9fafb; }
+    .phone.dark .status-bar .icons svg { fill: #f9fafb; }
+    .phone.dark .change-shop-btn { color: #818cf8; }
+    .phone.dark .greeting h1 { color: #f9fafb; }
+    .phone.dark .greeting .phone-masked { color: #9ca3af; }
+    .phone.dark .dot { background: #4b5563; }
+    .phone.dark .dot.filled { background: #4f46e5; }
+    .phone.dark .key.num { background: #374151; color: #f3f4f6; }
+    .phone.dark .key.action { color: #9ca3af; }
+    .phone.dark .locked-timer { color: #f3f4f6; }
+    .phone.dark .locked-desc { color: #9ca3af; }
+    .phone.dark .links .link-primary { color: #818cf8; }
+    .phone.dark .links .link-secondary { color: #6b7280; }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════
+       State 1: Normal — empty, with biometric
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Normal — empty + biometric</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="top-bar">
+          <button class="change-shop-btn">Đổi cửa hàng</button>
+        </div>
+
+        <div class="greeting">
+          <h1>Xin chào, Minh Châu 👋</h1>
+          <span class="phone-masked">091 **** 678</span>
+        </div>
+
+        <!-- 6 empty dots -->
+        <div class="pin-dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+
+        <!-- Numpad with biometric -->
+        <div class="numpad">
+          <div class="numpad-row">
+            <button class="key num">1</button>
+            <button class="key num">2</button>
+            <button class="key num">3</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">4</button>
+            <button class="key num">5</button>
+            <button class="key num">6</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">7</button>
+            <button class="key num">8</button>
+            <button class="key num">9</button>
+          </div>
+          <div class="numpad-row">
+            <!-- Biometric key -->
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" opacity="0.15" fill="currentColor"/>
+                <path d="M9 7c0-1.66 1.34-3 3-3s3 1.34 3 3"/>
+                <path d="M6.5 10.5c.5-2 2.5-3.5 5.5-3.5s5 1.5 5.5 3.5"/>
+                <path d="M4.5 12.5C5 9 8 7 12 7s7 2 7.5 5.5"/>
+                <path d="M7 15c.5-2 2-3 5-3s4.5 1 5 3"/>
+                <path d="M10 18c.5-1 1-1.5 2-1.5s1.5.5 2 1.5"/>
+              </svg>
+            </button>
+            <button class="key num">0</button>
+            <!-- Backspace -->
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/>
+                <line x1="18" y1="9" x2="12" y2="15"/>
+                <line x1="12" y1="9" x2="18" y2="15"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="links">
+          <button class="link-primary">Quên mã PIN?</button>
+          <button class="link-secondary">Đăng nhập bằng mật khẩu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 2: Entering — 3 digits filled
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Entering — 3 of 6</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="top-bar">
+          <button class="change-shop-btn">Đổi cửa hàng</button>
+        </div>
+
+        <div class="greeting">
+          <h1>Xin chào, Minh Châu 👋</h1>
+          <span class="phone-masked">091 **** 678</span>
+        </div>
+
+        <!-- 3 filled, 3 empty -->
+        <div class="pin-dots">
+          <div class="dot filled"></div>
+          <div class="dot filled"></div>
+          <div class="dot filled"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+
+        <div class="numpad">
+          <div class="numpad-row">
+            <button class="key num">1</button>
+            <button class="key num">2</button>
+            <button class="key num">3</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">4</button>
+            <button class="key num">5</button>
+            <button class="key num">6</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">7</button>
+            <button class="key num">8</button>
+            <button class="key num">9</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 7c0-1.66 1.34-3 3-3s3 1.34 3 3"/>
+                <path d="M6.5 10.5c.5-2 2.5-3.5 5.5-3.5s5 1.5 5.5 3.5"/>
+                <path d="M4.5 12.5C5 9 8 7 12 7s7 2 7.5 5.5"/>
+                <path d="M7 15c.5-2 2-3 5-3s4.5 1 5 3"/>
+                <path d="M10 18c.5-1 1-1.5 2-1.5s1.5.5 2 1.5"/>
+              </svg>
+            </button>
+            <button class="key num">0</button>
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/>
+                <line x1="18" y1="9" x2="12" y2="15"/>
+                <line x1="12" y1="9" x2="18" y2="15"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="links">
+          <button class="link-primary">Quên mã PIN?</button>
+          <button class="link-secondary">Đăng nhập bằng mật khẩu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 3: Loading — 6 digits submitted
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Loading</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="top-bar">
+          <button class="change-shop-btn">Đổi cửa hàng</button>
+        </div>
+
+        <div class="greeting">
+          <h1>Xin chào, Minh Châu 👋</h1>
+          <span class="phone-masked">091 **** 678</span>
+        </div>
+
+        <!-- 6 filled dots -->
+        <div class="pin-dots">
+          <div class="dot filled"></div>
+          <div class="dot filled"></div>
+          <div class="dot filled"></div>
+          <div class="dot filled"></div>
+          <div class="dot filled"></div>
+          <div class="dot filled"></div>
+        </div>
+
+        <!-- Spinner replaces numpad -->
+        <div class="spinner-large"></div>
+
+        <div class="links">
+          <button class="link-primary" style="opacity:0.4;pointer-events:none">Quên mã PIN?</button>
+          <button class="link-secondary" style="opacity:0.4;pointer-events:none">Đăng nhập bằng mật khẩu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 4: Wrong PIN alert
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Wrong PIN alert</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <!-- Background screen (dimmed) -->
+      <div class="screen" style="filter:brightness(0.5);pointer-events:none;">
+        <div class="top-bar">
+          <button class="change-shop-btn">Đổi cửa hàng</button>
+        </div>
+        <div class="greeting">
+          <h1>Xin chào, Minh Châu 👋</h1>
+          <span class="phone-masked">091 **** 678</span>
+        </div>
+        <div class="pin-dots">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="numpad">
+          <div class="numpad-row">
+            <button class="key num">1</button><button class="key num">2</button><button class="key num">3</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">4</button><button class="key num">5</button><button class="key num">6</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">7</button><button class="key num">8</button><button class="key num">9</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key empty"></button>
+            <button class="key num">0</button>
+            <button class="key action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert overlay -->
+      <div class="alert-overlay">
+        <div class="alert-box">
+          <h3>Sai mã PIN</h3>
+          <p>Còn 3 lần thử trước khi tạm khóa.</p>
+          <div class="alert-actions">
+            <button class="alert-btn primary">Thử lại</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 5: Locked — countdown timer
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Locked — countdown</span>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#111" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#111"/><path d="M20 10v4" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="top-bar">
+          <button class="change-shop-btn">Đổi cửa hàng</button>
+        </div>
+
+        <div class="greeting">
+          <h1>Xin chào, Minh Châu 👋</h1>
+          <span class="phone-masked">091 **** 678</span>
+        </div>
+
+        <!-- Locked view replaces PIN pad -->
+        <div class="locked-view">
+          <span class="locked-emoji">🔒</span>
+          <p class="locked-timer">Tạm khóa 27:43</p>
+          <p class="locked-desc">Quá nhiều lần nhập sai</p>
+          <button class="locked-login-link">Đăng nhập bằng mật khẩu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       State 6: Dark mode — normal
+  ══════════════════════════════════ -->
+  <div class="phone-wrap">
+    <span class="phone-label">Dark mode</span>
+    <div class="phone dark">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <svg viewBox="0 0 24 24"><rect x="1" y="15" width="3" height="8"/><rect x="6" y="11" width="3" height="12"/><rect x="11" y="7" width="3" height="16"/><rect x="16" y="3" width="3" height="20" opacity="0.3"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M1 7.5C5.1 3.5 10.3 1 12 1s6.9 2.5 11 6.5l-2 2C17.5 5.8 14 4 12 4S6.5 5.8 3 9.5L1 7.5z"/><path d="M5 11.5C7.5 9 9.7 8 12 8s4.5 1 7 3.5l-2 2C15 11.5 13.5 11 12 11s-3 .5-5 2.5l-2-2z"/><path d="M9 15.5c.8-.8 1.9-1.5 3-1.5s2.2.7 3 1.5L12 19l-3-3.5z"/></svg>
+          <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" stroke="#f9fafb" stroke-width="1.5" fill="none"/><rect x="3" y="8" width="13" height="8" rx="1" fill="#f9fafb"/><path d="M20 10v4" stroke="#f9fafb" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="top-bar">
+          <button class="change-shop-btn">Đổi cửa hàng</button>
+        </div>
+
+        <div class="greeting">
+          <h1>Xin chào, Minh Châu 👋</h1>
+          <span class="phone-masked">091 **** 678</span>
+        </div>
+
+        <!-- 2 filled dots -->
+        <div class="pin-dots">
+          <div class="dot filled"></div>
+          <div class="dot filled"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+
+        <div class="numpad">
+          <div class="numpad-row">
+            <button class="key num">1</button>
+            <button class="key num">2</button>
+            <button class="key num">3</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">4</button>
+            <button class="key num">5</button>
+            <button class="key num">6</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key num">7</button>
+            <button class="key num">8</button>
+            <button class="key num">9</button>
+          </div>
+          <div class="numpad-row">
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+                <path d="M9 7c0-1.66 1.34-3 3-3s3 1.34 3 3"/>
+                <path d="M6.5 10.5c.5-2 2.5-3.5 5.5-3.5s5 1.5 5.5 3.5"/>
+                <path d="M4.5 12.5C5 9 8 7 12 7s7 2 7.5 5.5"/>
+                <path d="M7 15c.5-2 2-3 5-3s4.5 1 5 3"/>
+                <path d="M10 18c.5-1 1-1.5 2-1.5s1.5.5 2 1.5"/>
+              </svg>
+            </button>
+            <button class="key num">0</button>
+            <button class="key action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/>
+                <line x1="18" y1="9" x2="12" y2="15"/>
+                <line x1="12" y1="9" x2="18" y2="15"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="links">
+          <button class="link-primary">Quên mã PIN?</button>
+          <button class="link-secondary">Đăng nhập bằng mật khẩu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

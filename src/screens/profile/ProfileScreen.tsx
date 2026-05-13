@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   Switch,
 } from 'react-native';
@@ -17,6 +16,9 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { profileApi, authApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { useAlertStore } from '../../store/alertStore';
+import { useToastStore } from '../../store/toastStore';
+import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { Skeleton } from '../../components/Skeleton';
 import i18n from '../../i18n';
 
@@ -24,6 +26,9 @@ export function ProfileScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { logout } = useAuthStore();
+  const { show: showAlert } = useAlertStore();
+  const { show: showToast } = useToastStore();
+  const showErrorAlert = useErrorAlert();
   const [changingPassword, setChangingPassword] = useState(false);
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
@@ -38,20 +43,20 @@ export function ProfileScreen() {
   const passwordMutation = useMutation({
     mutationFn: () => authApi.changePassword(currentPw, newPw),
     onSuccess: () => {
-      Alert.alert('✓', t('profile.passwordChanged'));
+      showToast(t('profile.passwordChanged'));
       setChangingPassword(false);
       setCurrentPw('');
       setNewPw('');
       setConfirmPw('');
     },
-    onError: () => Alert.alert(t('common.error'), t('common.errorStateMsg')),
+    onError: showErrorAlert,
   });
 
   const handleLogout = () => {
-    Alert.alert(t('profile.logoutTitle'), t('profile.logoutConfirm'), [
-      { text: t('common.cancel'), style: 'cancel' },
+    showAlert(t('profile.logoutTitle'), t('profile.logoutConfirm'), [
+      { label: t('common.cancel'), style: 'cancel' },
       {
-        text: t('auth.logout'),
+        label: t('auth.logout'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -74,11 +79,11 @@ export function ProfileScreen() {
   const handleChangePassword = () => {
     if (!currentPw || !newPw || !confirmPw) return;
     if (newPw !== confirmPw) {
-      Alert.alert(t('common.error'), t('profile.passwordMismatch'));
+      showAlert(t('common.error'), t('profile.passwordMismatch'), [{ label: t('common.close'), style: 'cancel' }]);
       return;
     }
     if (newPw.length < 6) {
-      Alert.alert(t('common.error'), t('profile.passwordTooShort'));
+      showAlert(t('common.error'), t('profile.passwordTooShort'), [{ label: t('common.close'), style: 'cancel' }]);
       return;
     }
     passwordMutation.mutate();
