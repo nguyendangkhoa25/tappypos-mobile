@@ -68,6 +68,14 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
       label: t('more.printTemplates'),
       onPress: () => navigation.navigate('PrintTemplates'),
     },
+    ...(has('USER') ? [{
+      key: 'staff',
+      icon: 'account-multiple-outline',
+      iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+      iconColor: '#059669',
+      label: t('more.staff'),
+      onPress: () => navigation.navigate('StaffList'),
+    } as GridItem] : []),
   ];
 
   const opsItems: GridItem[] = [
@@ -87,6 +95,30 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
       label: t('more.myWork'),
       onPress: () => navigation.navigate('MyWork'),
     },
+    ...(has('ORDER_VIEW_ALL') ? [{
+      key: 'queueView',
+      icon: 'account-clock-outline',
+      iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
+      iconColor: '#4f46e5',
+      label: t('more.queueView'),
+      onPress: () => navigation.navigate('QueueView'),
+    } as GridItem] : []),
+    ...(has('ORDER_VIEW_ALL') ? [{
+      key: 'staffPerformance',
+      icon: 'chart-bar',
+      iconBg: 'bg-violet-100 dark:bg-violet-900/30',
+      iconColor: '#7c3aed',
+      label: t('more.staffPerformance'),
+      onPress: () => navigation.navigate('StaffPerformance'),
+    } as GridItem] : []),
+    ...(has('APPOINTMENT') ? [{
+      key: 'appointments',
+      icon: 'calendar-clock-outline',
+      iconBg: 'bg-teal-100 dark:bg-teal-900/30',
+      iconColor: '#0d9488',
+      label: t('more.appointments'),
+      onPress: () => navigation.navigate('AppointmentList'),
+    } as GridItem] : []),
     ...(has('NOTIFICATION') ? [{
       key: 'notifications',
       icon: 'bell-outline',

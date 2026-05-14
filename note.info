@@ -31,7 +31,6 @@ At the Order screen, what if my barber shop has multiple service? do we support 
 
 
 
-padding: 14px 16px 0; I still can see the padding value for the body form for some screen. let's find and remove if it available
 
 
 

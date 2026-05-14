@@ -43,21 +43,19 @@ export function ShopInfoScreen({ navigation }: SettingsScreenProps<'ShopInfo'>) 
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
-  const [description, setDescription] = useState('');
 
   useEffect(() => {
     if (data) {
       setName(data.shopName ?? '');
       setAddress(data.address ?? '');
       setPhone(data.phone ?? '');
-      setDescription(data.description ?? '');
     }
   }, [data]);
 
   const showErrorAlert = useErrorAlert();
 
   const mutation = useMutation({
-    mutationFn: () => shopConfigApi.updateInfo({ shopName: name, address, phone, description }),
+    mutationFn: () => shopConfigApi.updateInfo({ shopName: name, address, phone }),
     onSuccess: async () => {
       qc.invalidateQueries({ queryKey: ['shopInfo'] });
       if (name) await setShopName(name);
@@ -140,21 +138,6 @@ export function ShopInfoScreen({ navigation }: SettingsScreenProps<'ShopInfo'>) 
               </View>
             ))}
 
-            <View>
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                {t('settings.shopInfo.descriptionLabel')}
-              </Text>
-              <TextInput
-                value={description}
-                onChangeText={setDescription}
-                placeholder={t('settings.shopInfo.descriptionPlaceholder')}
-                placeholderTextColor="#9ca3af"
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-                className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 min-h-[80px]"
-              />
-            </View>
           </View>
         </ScrollView>
       )}

@@ -20,8 +20,8 @@ import { useToastStore } from '../../store/toastStore';
 import { shopConfigApi, type BankAccount } from '../../services/api';
 import type { SettingsScreenProps } from '../../types/navigation';
 
-type FormState = Omit<BankAccount, 'id' | 'isDefault'>;
-const EMPTY_FORM: FormState = { bankCode: '', bankName: '', accountNo: '', accountName: '', branch: null };
+type FormState = { bankCode: string; bankName: string; accountNumber: string; accountName: string };
+const EMPTY_FORM: FormState = { bankCode: '', bankName: '', accountNumber: '', accountName: '' };
 
 export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAccounts'>) {
   const insets = useSafeAreaInsets();
@@ -42,7 +42,7 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
   });
 
   const addMutation = useMutation({
-    mutationFn: () => shopConfigApi.addBank(form),
+    mutationFn: () => shopConfigApi.addBank({ ...form }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['banks'] });
       showToast(t('settings.bankAccounts.saveSuccess'));
@@ -52,7 +52,7 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
   });
 
   const updateMutation = useMutation({
-    mutationFn: () => shopConfigApi.updateBank(editing!.id, form),
+    mutationFn: () => shopConfigApi.updateBank(editing!.id, { ...form }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['banks'] });
       showToast(t('settings.bankAccounts.saveSuccess'));
@@ -62,7 +62,7 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => shopConfigApi.deleteBank(id),
+    mutationFn: (id: number) => shopConfigApi.deleteBank(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['banks'] });
       showToast(t('settings.bankAccounts.deleteSuccess'));
@@ -71,7 +71,7 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
   });
 
   const setDefaultMutation = useMutation({
-    mutationFn: (id: string) => shopConfigApi.updateBank(id, { isDefault: true }),
+    mutationFn: (id: number) => shopConfigApi.setDefaultBank(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['banks'] }),
     onError: showErrorAlert,
   });
@@ -84,7 +84,7 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
 
   const openEdit = (bank: BankAccount) => {
     setEditing(bank);
-    setForm({ bankCode: bank.bankCode, bankName: bank.bankName, accountNo: bank.accountNo, accountName: bank.accountName, branch: bank.branch });
+    setForm({ bankCode: bank.bankCode, bankName: bank.bankName, accountNumber: bank.accountNumber, accountName: bank.accountName });
     setModalVisible(true);
   };
 
@@ -96,7 +96,7 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
   };
 
   const handleSave = () => {
-    if (!form.bankCode || !form.accountNo || !form.accountName) return;
+    if (!form.bankCode || !form.accountNumber || !form.accountName) return;
     if (editing) updateMutation.mutate();
     else addMutation.mutate();
   };
@@ -150,7 +150,7 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
                       </View>
                     )}
                   </View>
-                  <Text className="text-sm text-gray-600 dark:text-gray-300">{bank.accountNo}</Text>
+                  <Text className="text-sm text-gray-600 dark:text-gray-300">{bank.accountNumber}</Text>
                   <Text className="text-sm text-gray-500 dark:text-gray-400">{bank.accountName}</Text>
                   {bank.bankName ? <Text className="text-xs text-gray-400 mt-0.5">{bank.bankName}</Text> : null}
                 </View>
@@ -190,9 +190,8 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
               {[
                 { key: 'bankCode', label: t('settings.bankAccounts.bankCodeLabel'), placeholder: t('settings.bankAccounts.bankCodePlaceholder'), autoCapitalize: 'characters' as const },
                 { key: 'bankName', label: t('settings.bankAccounts.bankNameLabel'), placeholder: t('settings.bankAccounts.bankNamePlaceholder') },
-                { key: 'accountNo', label: t('settings.bankAccounts.accountNoLabel'), placeholder: t('settings.bankAccounts.accountNoPlaceholder'), keyboard: 'numeric' as const },
+                { key: 'accountNumber', label: t('settings.bankAccounts.accountNoLabel'), placeholder: t('settings.bankAccounts.accountNoPlaceholder'), keyboard: 'numeric' as const },
                 { key: 'accountName', label: t('settings.bankAccounts.accountNameLabel'), placeholder: t('settings.bankAccounts.accountNamePlaceholder'), autoCapitalize: 'words' as const },
-                { key: 'branch', label: t('settings.bankAccounts.branchLabel'), placeholder: t('settings.bankAccounts.branchPlaceholder') },
               ].map((f) => (
                 <View key={f.key} className="mb-4">
                   <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{f.label}</Text>
@@ -209,15 +208,15 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
               ))}
               <TouchableOpacity
                 onPress={handleSave}
-                disabled={isPending || !form.bankCode || !form.accountNo || !form.accountName}
+                disabled={isPending || !form.bankCode || !form.accountNumber || !form.accountName}
                 className={`rounded-2xl py-4 items-center mt-2 ${
-                  isPending || !form.bankCode || !form.accountNo || !form.accountName
+                  isPending || !form.bankCode || !form.accountNumber || !form.accountName
                     ? 'bg-gray-200 dark:bg-gray-700'
                     : 'bg-indigo-600 active:opacity-80'
                 }`}
               >
                 {isPending ? <ActivityIndicator color="#fff" /> : (
-                  <Text className={`font-bold text-base ${!form.bankCode || !form.accountNo || !form.accountName ? 'text-gray-400' : 'text-white'}`}>
+                  <Text className={`font-bold text-base ${!form.bankCode || !form.accountNumber || !form.accountName ? 'text-gray-400' : 'text-white'}`}>
                     {t('common.save')}
                   </Text>
                 )}

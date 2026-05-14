@@ -3,7 +3,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { customerApi, orderApi, type CustomerData, type OrderSummary } from '../../services/api';
+import { customerApi, orderApi, loyaltyApi, type CustomerData, type OrderSummary, type OrderDetail } from '../../services/api';
 import { useAlertStore } from '../../store/alertStore';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
@@ -83,14 +83,29 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
   const { data: customer, isLoading, isError, refetch } = useQuery({
     queryKey: ['customer', customerId],
     queryFn: () => customerApi.getById(customerId).then((r) => r.data.data),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 300_000,
   });
 
   const { data: ordersData, isLoading: ordersLoading } = useQuery({
     queryKey: ['customer-orders', customerId],
     queryFn: () => orderApi.list({ customerId, size: 5, page: 0 }).then((r) => r.data.data),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 120_000,
     enabled: !!customer,
+  });
+
+  const { data: loyaltySummary } = useQuery({
+    queryKey: ['customer-loyalty', customerId],
+    queryFn: () => loyaltyApi.getCustomerSummary(customerId).then((r) => r.data.data),
+    staleTime: 60_000,
+    enabled: !!customer,
+  });
+
+  const lastOrder = ordersData?.content?.[0];
+  const { data: lastOrderDetail } = useQuery<OrderDetail>({
+    queryKey: ['order', lastOrder?.id],
+    queryFn: () => orderApi.getById(lastOrder!.id).then((r) => r.data.data),
+    staleTime: 300_000,
+    enabled: !!lastOrder && lastOrder.status === 'COMPLETED',
   });
 
   const deleteMutation = useMutation({
@@ -196,10 +211,24 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
             <Text className="text-xs text-indigo-200">{t('customers.totalSpend')}</Text>
           </View>
           <View className="w-px bg-white/20" />
-          <View className="flex-1 items-center">
+          <TouchableOpacity
+            className="flex-1 items-center"
+            onPress={() => navigation.navigate('CustomerLoyalty', { customerId })}
+          >
             <Text className="text-lg font-bold text-white">{customer.points}</Text>
-            <Text className="text-xs text-indigo-200">{t('customers.points')}</Text>
-          </View>
+            {loyaltySummary?.currentTier ? (
+              <View
+                className="mt-0.5 px-1.5 py-0.5 rounded-full"
+                style={{ backgroundColor: loyaltySummary.currentTier.color + '40' }}
+              >
+                <Text className="text-[10px] font-bold text-white">
+                  {loyaltySummary.currentTier.name}
+                </Text>
+              </View>
+            ) : (
+              <Text className="text-xs text-indigo-200">{t('customers.points')}</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -249,6 +278,88 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
             <InfoRow label={t('customers.idCardIssuedDate')} value={customer.idCardIssuedDate} />
             <InfoRow label={t('customers.idCardIssuedPlace')} value={customer.idCardIssuedPlace} />
             <InfoRow label={t('customers.permanentAddress')} value={customer.permanentAddress} />
+          </View>
+        )}
+
+        {/* Loyalty tier progress */}
+        {loyaltySummary && (loyaltySummary.currentTier || loyaltySummary.nextTier) && (
+          <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
+            <View className="flex-row items-center justify-between mb-2">
+              <SectionHeader icon="star-circle-outline" title={t('loyalty.title')} />
+              <TouchableOpacity onPress={() => navigation.navigate('CustomerLoyalty', { customerId })}>
+                <Text className="text-xs text-primary font-semibold">{t('loyalty.viewHistory')}</Text>
+              </TouchableOpacity>
+            </View>
+            {loyaltySummary.currentTier && (
+              <View
+                className="flex-row items-center px-2 py-1 rounded-lg mb-2 self-start"
+                style={{ backgroundColor: loyaltySummary.currentTier.color + '20' }}
+              >
+                <MaterialCommunityIcons name="crown-outline" size={13} color={loyaltySummary.currentTier.color} style={{ marginRight: 4 }} />
+                <Text className="text-xs font-bold" style={{ color: loyaltySummary.currentTier.color }}>
+                  {loyaltySummary.currentTier.name}
+                </Text>
+              </View>
+            )}
+            {loyaltySummary.nextTier && loyaltySummary.amountToNextTier != null && (
+              <View>
+                <View className="flex-row justify-between mb-1">
+                  <Text className="text-xs text-gray-400">{t('loyalty.nextTier')}: {loyaltySummary.nextTier.name}</Text>
+                  <Text className="text-xs text-gray-500 font-medium">
+                    {t('loyalty.remaining')}: {formatVnd(loyaltySummary.amountToNextTier)}
+                  </Text>
+                </View>
+                <View className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <View
+                    className="h-full rounded-full"
+                    style={{
+                      backgroundColor: loyaltySummary.nextTier.color,
+                      width: `${Math.min(100, Math.max(5, ((loyaltySummary.totalSpent - (loyaltySummary.nextTier.minSpend - loyaltySummary.amountToNextTier)) / loyaltySummary.nextTier.minSpend) * 100))}%`,
+                    }}
+                  />
+                </View>
+              </View>
+            )}
+            {!loyaltySummary.nextTier && loyaltySummary.currentTier && (
+              <Text className="text-xs text-gray-400">{t('loyalty.topTier')}</Text>
+            )}
+          </View>
+        )}
+
+        {/* Last visit service summary */}
+        {lastOrderDetail && lastOrderDetail.items.length > 0 && (
+          <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
+            <View className="flex-row items-center justify-between mb-2">
+              <SectionHeader icon="history" title={t('customers.lastVisit')} />
+              <Text className="text-xs text-gray-400">{formatDate(lastOrderDetail.createdAt)}</Text>
+            </View>
+            {lastOrderDetail.createdByName ? (
+              <View className="flex-row items-center mb-2">
+                <MaterialCommunityIcons name="account-outline" size={13} color="#9ca3af" style={{ marginRight: 4 }} />
+                <Text className="text-xs text-gray-500">{lastOrderDetail.createdByName}</Text>
+              </View>
+            ) : null}
+            {lastOrderDetail.items.map((item, idx) => (
+              <View
+                key={idx}
+                className="flex-row items-center justify-between py-1.5 border-b border-gray-50 last:border-0"
+              >
+                <Text className="text-sm text-gray-700 flex-1 mr-2" numberOfLines={1}>
+                  {item.productName}
+                </Text>
+                {item.unitPrice > 0 && (
+                  <Text className="text-sm font-semibold text-emerald-600">
+                    {formatVnd(item.unitPrice)}
+                  </Text>
+                )}
+              </View>
+            ))}
+            {lastOrderDetail.total > 0 && (
+              <View className="flex-row justify-between pt-2 mt-1 border-t border-gray-100">
+                <Text className="text-xs text-gray-400">{t('customers.lastVisitTotal')}</Text>
+                <Text className="text-sm font-bold text-gray-800">{formatVnd(lastOrderDetail.total)}</Text>
+              </View>
+            )}
           </View>
         )}
 

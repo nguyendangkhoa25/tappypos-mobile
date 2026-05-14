@@ -131,7 +131,7 @@ export function DashboardScreen({ navigation }: Props) {
   const mask = (n: number) => (isHidden ? '••••' : formatVnd(n));
 
   const handleBellPress = () => {
-    (navigation as any).getParent()?.navigate('More', { screen: 'Notifications' });
+    navigation.getParent()?.navigate('More', { screen: 'Notifications' } as any);
   };
 
   const dateRange = useMemo(() => getDateRange(preset), [preset]);

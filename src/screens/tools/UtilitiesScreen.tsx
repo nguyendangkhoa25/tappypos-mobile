@@ -6,7 +6,7 @@ import type { ToolsScreenProps } from '../../types/navigation';
 
 type Props = ToolsScreenProps<'UtilitiesHub'>;
 
-type ToolScreen = 'CurrencyConverter' | 'InterestCalculator' | 'LoanCalculator' | 'TaxCalculator' | 'BillSplitter' | 'BudgetRule' | 'Breakeven';
+type ToolScreen = 'CurrencyConverter' | 'InterestCalculator' | 'LoanCalculator' | 'TaxCalculator' | 'BillSplitter' | 'BudgetRule' | 'Breakeven' | 'MarketGoldPrices';
 
 type Tool = {
   titleKey: string;
@@ -73,6 +73,14 @@ const TOOL_GROUPS: ToolGroup[] = [
         screen: 'CurrencyConverter',
         color: '#7c3aed',
         bg: '#ede9fe',
+      },
+      {
+        titleKey: 'utilities.marketGoldTitle',
+        descKey: 'utilities.marketGoldDesc',
+        icon: 'gold',
+        screen: 'MarketGoldPrices',
+        color: '#b45309',
+        bg: '#fef3c7',
       },
       {
         titleKey: 'utilities.billSplitTitle',

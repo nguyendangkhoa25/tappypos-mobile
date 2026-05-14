@@ -5,11 +5,17 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { SPECIFIC_SHOP_TYPES, SHOP_TYPE_GROUPS, getBackendCode } from '../../utils/shopTypes';
+import {
+  SPECIFIC_SHOP_TYPES,
+  SHOP_TYPE_GROUPS,
+  getBackendCode,
+  type SpecificShopType,
+} from '../../utils/shopTypes';
 import { useOnboardingStore } from '../../store/onboardingStore';
 import { OnboardingHeader } from './OnboardingHeader';
 import type { OnboardingScreenProps } from '../../types/navigation';
@@ -22,10 +28,13 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
 
+  // Two cards per row with 24px side padding and 8px gap between cards
+  const cardWidth = (Dimensions.get('window').width - 48 - 8) / 2;
+
   const filteredTypes = useMemo(() => {
     const q = filter.toLowerCase().trim();
     const byGroup = activeGroup
-      ? SPECIFIC_SHOP_TYPES.filter((t) => t.group === activeGroup)
+      ? SPECIFIC_SHOP_TYPES.filter((s) => s.group === activeGroup)
       : SPECIFIC_SHOP_TYPES;
     if (!q) return byGroup;
     return byGroup.filter((type) => {
@@ -50,6 +59,41 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
     completeStep(0);
     navigation.navigate('Step1');
   };
+
+  const renderGridCard = (type: SpecificShopType) => {
+    const isSelected = selected === type.id;
+    const localName = t(`onboarding.shopType.specific.${type.id}.name`);
+    return (
+      <TouchableOpacity
+        key={type.id}
+        onPress={() => setSelected(type.id)}
+        activeOpacity={0.7}
+        style={{ width: cardWidth, minHeight: 88 }}
+        className={`rounded-2xl p-3 items-center justify-center border-2 ${
+          isSelected
+            ? 'bg-indigo-50 dark:bg-indigo-900/30 border-primary'
+            : 'bg-gray-50 dark:bg-gray-800 border-transparent'
+        }`}
+      >
+        <Text style={{ fontSize: 28 }}>{type.emoji}</Text>
+        <Text
+          className={`text-xs font-semibold text-center mt-1.5 leading-4 ${
+            isSelected ? 'text-primary dark:text-indigo-300' : 'text-gray-700 dark:text-gray-200'
+          }`}
+          numberOfLines={2}
+        >
+          {localName}
+        </Text>
+        {isSelected && (
+          <View className="absolute top-1.5 right-1.5">
+            <MaterialCommunityIcons name="check-circle" size={14} color="#4f46e5" />
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  const showGrouped = !activeGroup && !filter;
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-900" style={{ paddingTop: insets.top }}>
@@ -95,28 +139,25 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
             </View>
           </View>
 
-          {/* Group chips — horizontal scroll, full bleed */}
+          {/* Group filter chips — horizontal scroll */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 24, gap: 8 }}
-            className="mb-4"
+            className="mb-5"
           >
-            {/* All */}
             <TouchableOpacity
               onPress={() => handleGroupPress(null)}
               activeOpacity={0.7}
               className={`flex-row items-center rounded-full border px-4 py-2 ${
-                activeGroup === null && !filter
+                showGrouped
                   ? 'bg-primary border-primary'
                   : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
               }`}
             >
               <Text
                 className={`text-sm font-semibold ${
-                  activeGroup === null && !filter
-                    ? 'text-white'
-                    : 'text-gray-600 dark:text-gray-300'
+                  showGrouped ? 'text-white' : 'text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {t('onboarding.shopType.groupAll')}
@@ -149,57 +190,41 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
             })}
           </ScrollView>
 
-          {/* Type list */}
-          <View className="px-6 gap-2">
-            {filteredTypes.map((type) => {
-              const isSelected = selected === type.id;
-              const localName = t(`onboarding.shopType.specific.${type.id}.name`);
-              const examples = t(`onboarding.shopType.specific.${type.id}.examples`, {
-                defaultValue: '',
-              });
-              return (
-                <TouchableOpacity
-                  key={type.id}
-                  onPress={() => setSelected(type.id)}
-                  activeOpacity={0.7}
-                  className={`rounded-2xl p-4 flex-row items-center gap-3 border-2 ${
-                    isSelected
-                      ? 'bg-indigo-50 dark:bg-indigo-900/30 border-primary'
-                      : 'bg-gray-50 dark:bg-gray-800 border-transparent'
-                  }`}
-                >
-                  <Text style={{ fontSize: 28 }}>{type.emoji}</Text>
-                  <View className="flex-1">
-                    <Text
-                      className={`text-sm font-bold ${
-                        isSelected
-                          ? 'text-primary dark:text-indigo-300'
-                          : 'text-gray-800 dark:text-gray-100'
-                      }`}
-                    >
-                      {localName}
-                    </Text>
-                    {examples ? (
-                      <Text
-                        className="text-xs text-gray-400 dark:text-gray-500 mt-0.5"
-                        numberOfLines={1}
-                      >
-                        {examples}
+          {/* Shop type grid */}
+          {showGrouped ? (
+            // All selected: grouped sections with section headers
+            <View className="px-6 gap-6">
+              {SHOP_TYPE_GROUPS.map((group) => {
+                const groupTypes = SPECIFIC_SHOP_TYPES.filter((s) => s.group === group.id);
+                return (
+                  <View key={group.id}>
+                    <View className="flex-row items-center gap-2 mb-3">
+                      <Text style={{ fontSize: 15 }}>{group.emoji}</Text>
+                      <Text className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                        {t(`onboarding.shopType.groups.${group.id}`)}
                       </Text>
-                    ) : null}
+                    </View>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                      {groupTypes.map((type) => renderGridCard(type))}
+                    </View>
                   </View>
-                  {isSelected && (
-                    <MaterialCommunityIcons name="check-circle" size={20} color="#4f46e5" />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-            {filteredTypes.length === 0 && (
-              <Text className="text-sm text-gray-400 dark:text-gray-500 text-center py-10">
-                {t('onboarding.shopType.noResults')}
-              </Text>
-            )}
-          </View>
+                );
+              })}
+            </View>
+          ) : (
+            // Filtered / group-specific: flat 2-column grid
+            <View className="px-6">
+              {filteredTypes.length > 0 ? (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {filteredTypes.map((type) => renderGridCard(type))}
+                </View>
+              ) : (
+                <Text className="text-sm text-gray-400 dark:text-gray-500 text-center py-10">
+                  {t('onboarding.shopType.noResults')}
+                </Text>
+              )}
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -215,7 +240,9 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
           disabled={!selected}
         >
           <Text
-            className={`font-bold text-base ${selected ? 'text-white' : 'text-gray-400 dark:text-gray-500'}`}
+            className={`font-bold text-base ${
+              selected ? 'text-white' : 'text-gray-400 dark:text-gray-500'
+            }`}
           >
             {t('onboarding.shopType.continue')}
           </Text>

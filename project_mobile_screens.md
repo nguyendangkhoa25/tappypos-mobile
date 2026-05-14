@@ -10,6 +10,14 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 ### SplashScreen
 Full-screen primary green `#059669` background. Logo centred + "TappyPOS" wordmark + animated 3-dot loader. Minimum display 600ms (prevents flash even on fast devices). Runs `authStore.hydrate()` + `userStore.hydrate()` in parallel + `GET /api/app/version`. On complete → RootNavigator resolves destination. No user interaction.
 
+**RootNavigator routing logic (`resolveState`):**
+1. `!isAuthenticated` → Auth stack (ShopIdScreen or PinLoginScreen)
+2. `isAuthenticated && !setupComplete` → Onboarding wizard (new shop not set up yet; e.g. mid-wizard restart after register)
+3. `isAuthenticated && setupComplete && !tenantId` → Auth stack (lost shop context; user needs to re-enter shop ID)
+4. `isAuthenticated && setupComplete && tenantId` → App stack
+
+`setupComplete` is server-authoritative: set on `tenants.setup_complete` column (DEFAULT TRUE); returned in every `AuthResponse`; stored in SecureStore as `setup_complete`. Existing installs without this key default to `true` (backward compat). Login for any user of a shop that has completed setup always returns `true`.
+
 ### ForceUpdateScreen
 Full-screen, same green bg as Splash. Logo + "Cần cập nhật ứng dụng" title + current/latest version lines + "Cập nhật ngay" button → `Linking.openURL(Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL)`. Cannot dismiss — back gesture disabled. Shown when `currentVersion < minVersion` from `GET /api/app/version`.
 Soft update: amber dismissible banner at top of HomeScreen when `currentVersion < latestVersion` but ≥ `minVersion`.
@@ -54,21 +62,48 @@ Phone number `ClearableInput` (pre-filled from LoginScreen via `prefillPhone` pa
 Progress bar at top of every step: dot indicators + "Bước N / 4" label.
 
 ### ShopTypeScreen (Step 0)
-3×3 grid of shop type cards (emoji + name). Selected: emerald border + checkmark overlay + light emerald bg. `OTHER` → free-text field appears below grid. Required — no skip.
+**Grouped sections layout** (redesigned 2026-05-14). Context-aware display driven by the active group chip and search state:
+
+| State | Layout |
+|---|---|
+| "Tất cả" selected (default) | Section headers (group emoji + uppercase group name) with 2-column card grid under each header |
+| Group chip tapped | Flat 2-column grid for that group only; no section header (active chip already shows context) |
+| Search active | Flat 2-column grid of matching results across all groups |
+
+**Grid card design:** 28px emoji centred, name below (max 2 lines, `text-xs font-semibold`), `minHeight: 88`. Selected: `bg-indigo-50 dark:bg-indigo-900/30 border-primary` + small `check-circle` icon badge at top-right. Unselected: `bg-gray-50 dark:bg-gray-800 border-transparent`.
+
+**Card width:** `(Dimensions.get('window').width − 48 − 8) / 2` (24px padding each side + 8px gap between cards).
+
+**Group filter chips (horizontal scroll):** "Tất cả" chip + one chip per group (emoji + label). Tapping a group chip sets `activeGroup` and clears search. Tapping "Tất cả" restores grouped all-view.
+
+**Search:** filters by `name` + `examples` from i18n keys across all groups. Resets `activeGroup` when text is typed. `close-circle` clear button appears when text is present.
+
+Required — no skip.
 
 ### Step1Screen
 Fields: Biệt danh* (`ClearableInput`, used in "Chào X 👋"), Họ và tên, Tên cửa hàng*, Địa chỉ. `ReturnKeyType="next"` chains focus. Saves to `onboardingStore.setStep1()` on each keystroke. Inline validation on "Tiếp tục" (no alert modals).
 
 ### Step2Screen
-Template list from `GET /api/product-templates?shopTypeCode=`. Top 5 pre-checked with default prices. Checkbox → `MoneyInput` focuses. Unchecked rows have disabled price input. "Thêm sản phẩm khác" adds blank row. JEWELRY dynamic-price items show "Theo giá vàng" label. Skippable.
+Suggestion chips from `GET /api/product-templates?shopTypeCode=` (horizontal scroll). Tap chip → fills name/price/unit form; already-selected chips show ✓ prefix. Committed products shown as editable chips at top (tap → pulls back into form; × removes). `MoneyInput` for price; unit horizontal picker (ordered by shop type priority). JEWELRY dynamic-price items show amber "Theo giá vàng" panel instead of price input. "+" button or Enter commits the current form row. Skippable.
+
+**Locale-aware chip labels (2026-05-14):** API returns both `name` (Vietnamese) and `nameEn`. Chip display uses `nameEn` when `i18n.language === 'en'`; chip filter also matches `nameEn` in English mode. Form fill always uses `name` (Vietnamese — this becomes business data stored on the tenant).
+
+**Types:** `ProductTemplate { id, name, nameEn?, emoji, price, unit, dynamicPrice }`.
 
 ### Step3Screen
-`SuggestionChips` (emoji + color, ordered by shop type commonness, reorder on input). Tap chip → adds as row with `MoneyInput` focused + chip disappears. `ClearableInput` for custom names. "Thêm chi phí khác" for free-form rows. Skippable.
+Suggestion chips from `GET /api/expense-suggestions?shopTypeCode=` (horizontal scroll). Tap chip → fills name form + stores `selectedSuggestionCategory` from API's `category` field. Committed expenses shown as editable chips at top. `MoneyInput` for monthly amount. Payment day picker (calendar icon → `DayPickerModal`). Type toggle FIXED / VARIABLE. "+" button commits current row. Skippable.
+
+**Category from API (2026-05-14):** `selectedSuggestionCategory` state tracks the API-returned `category` when a suggestion chip is tapped. Cleared when user types manually in the name field. `doAdd()` uses `selectedSuggestionCategory ?? 'OTHER'`. The old hardcoded `EXPENSE_CATEGORY_MAP` (44 entries mapping Vietnamese names → category codes) has been removed — category now always comes from the API response.
+
+**Locale-aware chip labels (2026-05-14):** Chips show `nameEn` in English mode; filter also searches `nameEn`. Form fill uses Vietnamese `name`.
+
+**Types:** `ExpenseSuggestion { name, nameEn?, emoji, color?, category? }`.
 
 ### Step4Screen (Summary)
 Three sections: shop info (edit link → Step1), products (edit link → Step2), expenses (edit link → Step3). Each list collapses at >3 items with "+ N khác ∨" toggle. Empty sections show "Chưa có… Thêm ngay →" tappable link.
-- "Bắt đầu sử dụng" → button loading state → `POST /api/tenants/self-provision` → new JWT → `authStore.setAuthenticated` → `onboardingStore.reset()` → AppStack Home
+- "Bắt đầu sử dụng" → button loading state → `POST /api/tenants/self-provision` → response includes `{ accessToken, tenantId, setupComplete: true }` → `authStore.setAuthenticated({ accessToken, setupComplete: true })` → `onboardingStore.reset()` → AppStack Home
 - Error → `alertStore` with retry button
+- **setupComplete flow:** `selfProvision` sets `setup_complete = TRUE` on the `tenants` table. Every subsequent login by any user of that shop returns `setupComplete: true` in `AuthResponse` → stored in SecureStore as `setup_complete = 'true'` → `RootNavigator.resolveState()` routes to `app` not `onboarding`.
 
 ---
 
@@ -92,12 +127,29 @@ Top toggle: **[Bán hàng]** ↔ Đơn hàng (`sellingStore.activeView`). Toggle
 - Manual toggle ▦ icon in header next to search; overrides auto; choice saved to `AsyncStorage('pos_grid_columns')` and survives restarts
 - Re-reads saved preference on mount; falls back to auto if key absent
 
-Search bar top. Category filter chips. Cart FAB bottom-right (item count badge + running total). Out-of-stock: reduced opacity + "Hết" overlay, still tappable. Tap → add to cart + haptic. Long-press → qty stepper popup.
+Search bar top. Category filter chips. Cart FAB / header cart icon (item count badge). Tap product → **AddToCartSheet** (bottom modal):
+- Product name at top; `MoneyInput` for price (pre-filled from `product.price`; editable; dynamic-price products show "Theo giá vàng" label, price locked to 0)
+- Qty stepper (`−` / count / `+`); minimum 1; tapping `−` at 1 does nothing (no accidental delete from sheet)
+- If product already in cart: "Thêm vào đơn" adds `sheetQty` to existing qty; updates price if changed
+- "Thêm vào đơn" primary button → `addItem` or `updateQty + updatePrice` in `cartStore`; haptic + sheet dismisses
+- Backdrop tap dismisses without adding
 
-**Note field quick phrases (KeyboardAccessoryView):** When note input is focused (at any checkout point), `SuggestionChips` slide in above keyboard from `KeyboardAccessoryView`. Chips are phrases configured in POSConfigScreen (default: "Khách quen", "Giao hàng tận nơi", "Đặt trước", "Không túi"). Tap chip → appends text (replaces if field empty). Managed via `react-native-keyboard-controller`'s `KeyboardStickyView` or `@flyerhq/react-native-keyboard-accessory-view`.
+**Note field quick phrases (KeyboardAccessoryView):** When note input is focused (at any checkout point), `SuggestionChips` slide in above keyboard. Phrases from POSConfigScreen. Tap chip → appends text.
 
-### CartScreen
-Order items list with inline qty steppers and swipe-left remove. "Xóa tất cả" → `alertStore` confirm. Promo code input row. Tạm tính / Giảm giá / Tổng cộng summary. "Thanh toán" button with total.
+### CartScreen ✅ (redesigned 2026-05-12)
+**Customer selector (top of screen, full-width, gated by `CUSTOMER`):**
+- `border-2 border-primary bg-primary-light` card showing avatar circle + "KHÁCH HÀNG" label + customer name or "Khách vãng lai" + phone if linked
+- Tap → `CustomerPickerSheet` (bottom modal):
+  - Walk-in option first: highlighted `border-primary` when active + `check-circle` icon
+  - Search input; recent 5 customers from `GET /api/customers/recent?limit=5` shown when search < 2 chars
+  - Search results from `GET /api/customers?search=` when ≥ 2 chars
+  - Selecting customer → `cartStore.setCustomer()` + sheet closes; walk-in → `setCustomer(null)`
+- State lives in `cartStore.selectedCustomer` (cleared on `clearCart`)
+
+**Item list:** `FlatList`; each row: product name + tap-to-edit price (pencil icon) + qty stepper (−/count/+; − at qty=1 shows trash icon → `Alert.alert` confirm before remove) + line total.
+- **Price edit:** tap price → `PriceEditSheet` (bottom modal) with `MoneyInput`; confirm saves via `cartStore.updatePrice`
+
+**Footer:** subtotal + discount (when > 0) + total. "Lưu đơn" outline button (saves cart as pending order via `POST /api/carts/init` + `addItem` × N + `sendToKitchen`). "Thanh toán" primary button → CheckoutScreen.
 
 ### CheckoutScreen
 **Payment method:** radio (Tiền mặt / Chuyển khoản / Thẻ). Pre-selected from `AsyncStorage('last_payment_method')` on mount; "Thẻ" is never pre-selected as default even if saved (Tiền mặt fallback). On payment confirmed: save chosen method to `AsyncStorage('last_payment_method')`.
@@ -331,27 +383,7 @@ Search + filter chips (Tất cả / Đang bán / Tạm ẩn / Hết hàng) + cat
 
 **AddProductSheet / Edit:** name*, price `MoneyInput` (hidden for dynamic-price), unit chips (filtered by PRODUCT_TYPE_UNIT_CONFIG), category picker, `ImagePicker` (single photo). "Thêm thuộc tính nâng cao" toggle → EAV fields (collapsed by default).
 
-**ProductDetailScreen:** Primary-colour hero with page title "Chi tiết sản phẩm" centred in the nav row (back ← · title · ✏️ edit). Hero shows: category chip, product name (2-line max), and price/badge.
-
-**Product types:**
-- Physical product — formatted VND price; stock status card (green ✓ / red ✗) with quantity + unit; never shown for SERVICE.
-- Dynamic-price (JEWELRY) — amber "Theo giá vàng" badge; no stock card shown.
-- SERVICE — violet "Dịch vụ" badge + duration chip in hero; price shown as a separate row below the hero only when price > 0; no stock card; "Đặt dịch vụ" button instead of "Thêm vào giỏ".
-
-**Category:** services support category assignment (categories are generic, not service-specific — use CategoryListScreen to add barber categories like "Cắt tóc", "Nhuộm", "Uốn"). Category shown as a chip in the hero and in the details row.
-
-**Body cards:**
-1. Price card (service only, price > 0)
-2. Stock status card (non-service, stockQuantity ≠ null)
-3. Details card — unit · category · product type · duration (service)
-4. Description card (when present)
-5. Hint card — indigo info box, 💡 what / how / why text
-
-**Footer:** sticky "Thêm vào giỏ" / "Đặt dịch vụ" button.
-
-**Edit flow:** ✏️ → ProductEditScreen (same stack). On save, React Query invalidates `['product', id]` and `['products']` so both detail and list refresh.
-
-API: `GET /api/products/{id}`. Gated by `PRODUCT`.
+**ProductDetailScreen:** hero image + name + price. Stock info + "Điều chỉnh tồn kho" (if INVENTORY). EAV attributes as label–value rows. "Đã bán N lần trong 30 ngày" stat. Edit / Delete buttons.
 
 ---
 
@@ -451,7 +483,7 @@ Quick cross-reference: where each UX improvement lives in the code.
 
 ---
 
-## api.ts Status (as of 2026-05-11)
+## api.ts Status (as of 2026-05-14)
 
 All previously missing endpoints have been added:
 - `authApi.deletePin()` → `DELETE /api/auth/pin`
@@ -464,6 +496,11 @@ Type bugs fixed:
 - `CheckoutRequest.redeemPoints?: boolean` added ✅
 - `selfProvision` response corrected to `{ accessToken, tenantId }` (was `{ accessToken, refreshToken }`) ✅
 - `ExpenseSuggestion.category?: string` added ✅
+
+i18n type additions (2026-05-14):
+- `ProductTemplate.nameEn?: string` added — English name from `product_suggestions.name_en` (DB column added in V008 migration)
+- `ExpenseSuggestion.nameEn?: string` added — English name from `expense_suggestions.name_en`
+- Backend `OnboardingController` updated to SELECT and return `nameEn` in both `/product-templates` and `/expense-suggestions` responses; falls back to `name` when `name_en` is NULL
 
 ## Settings Sub-Screens — Status
 

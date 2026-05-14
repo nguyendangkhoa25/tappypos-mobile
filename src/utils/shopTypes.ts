@@ -47,10 +47,14 @@ export const SPECIFIC_SHOP_TYPES: SpecificShopType[] = [
   { id: 'SHOE_SHOP',     emoji: '👟', backendCode: 'FASHION',           group: 'FASHION' },
   { id: 'ACCESSORIES',   emoji: '👜', backendCode: 'FASHION',           group: 'FASHION' },
   // Làm đẹp
-  { id: 'MENS_BARBER',   emoji: '💇‍♂️', backendCode: 'BARBER_SHOP',       group: 'BEAUTY' },
-  { id: 'HAIR_SALON',    emoji: '💇', backendCode: 'BARBER_SHOP',       group: 'BEAUTY' },
-  { id: 'NAIL_STUDIO',   emoji: '💅', backendCode: 'BARBER_SHOP',       group: 'BEAUTY' },
-  { id: 'SPA',           emoji: '🧖', backendCode: 'BARBER_SHOP',       group: 'BEAUTY' },
+  { id: 'MENS_BARBER',   emoji: '💇‍♂️', backendCode: 'BARBER_SHOP_MEN',  group: 'BEAUTY' },
+  { id: 'HAIR_SALON',    emoji: '💇',   backendCode: 'HAIR_SALON',       group: 'BEAUTY' },
+  { id: 'NAIL_STUDIO',   emoji: '💅',   backendCode: 'NAIL_SHOP',        group: 'BEAUTY' },
+  { id: 'SPA',           emoji: '🧖',   backendCode: 'SPA_SHOP',         group: 'BEAUTY' },
+  { id: 'LASH_PMU',      emoji: '👁️',   backendCode: 'LASH_PMU_STUDIO',  group: 'BEAUTY' },
+  { id: 'MASSAGE',       emoji: '🤲',   backendCode: 'MASSAGE_SHOP',     group: 'BEAUTY' },
+  { id: 'BEAUTY_CLINIC', emoji: '🏥',   backendCode: 'BEAUTY_CLINIC',    group: 'BEAUTY' },
+  { id: 'MAKEUP_STUDIO', emoji: '💄',   backendCode: 'MAKEUP_STUDIO',    group: 'BEAUTY' },
   // Y tế
   { id: 'PHARMACY',      emoji: '💊', backendCode: 'PHARMACY',          group: 'HEALTH' },
   { id: 'TRAD_MEDICINE', emoji: '🌿', backendCode: 'PHARMACY',          group: 'HEALTH' },
@@ -81,6 +85,14 @@ const BACKEND_CODE_MAP: Record<string, string> = {
   FASHION: 'FASHION',
   ELECTRONICS: 'ELECTRONICS',
   BARBER_SHOP: 'BARBER_SHOP',
+  BARBER_SHOP_MEN: 'BARBER_SHOP_MEN',
+  HAIR_SALON: 'HAIR_SALON',
+  NAIL_SHOP: 'NAIL_SHOP',
+  LASH_PMU_STUDIO: 'LASH_PMU_STUDIO',
+  SPA_SHOP: 'SPA_SHOP',
+  MASSAGE_SHOP: 'MASSAGE_SHOP',
+  BEAUTY_CLINIC: 'BEAUTY_CLINIC',
+  MAKEUP_STUDIO: 'MAKEUP_STUDIO',
   PAWN_SHOP: 'PAWN_SHOP',
 };
 

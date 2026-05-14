@@ -81,7 +81,15 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 - US-19: suggestion chips have emoji + color; ordered by shop-type commonness; reorder on typing
 - US-20: Step 4 collapses lists >3 items; each section has a "Sửa" link back to that step; swipe-back keeps data
 - US-21: `onboardingStore` persisted via AsyncStorage; resume navigates to `lastCompletedStep + 1`
-- US-22: single `POST /api/tenants/self-provision`; returns fresh JWT with real tenantId
+- US-22: single `POST /api/tenants/self-provision`; returns `{ accessToken, tenantId, setupComplete: true }`; backend sets `tenants.setup_complete = TRUE`; all subsequent logins by any user of that shop return `setupComplete: true` — routing goes to App, never to wizard again
+
+**US-152** As a staff member (or shop owner on a new device) of a shop that has already completed setup, I want the app to route me directly to the main app when I log in, so that I never see the onboarding wizard that was already completed by the shop owner.
+
+**Acceptance notes (US-152):**
+- `setupComplete` is a per-tenant (per-shop) server flag, not per-user or per-device
+- Backend: `tenants.setup_complete BOOLEAN DEFAULT TRUE`; returned in every `AuthResponse` as `setupComplete`; `POST /auth/register` returns `false` (no shop yet); all other logins return tenant's DB value
+- Mobile: `setup_complete` stored in SecureStore on every login; `RootNavigator` routes to onboarding only when `!setupComplete`; defaults to `true` for existing installs without the key (backward compat)
+- Mid-wizard restart: user who registered but hasn't run selfProvision has `setup_complete = 'false'` in SecureStore → still routed to wizard on restart ✓
 
 ---
 
@@ -879,6 +887,33 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 
 ---
 
+## Epic 50 — Barber Queue Status Badge (BARBER_SHOP only)
+
+**US-153** As a barber shop owner, I want to see how many services are currently waiting and in-progress at the top of the selling screen, so that I can gauge shop busyness at a glance before creating a new order.
+
+**Acceptance notes:**
+- `QueueStatusBadge` in `BarberServiceScreen` header; two pills: amber "N chờ" (PENDING) + indigo "N đang làm" (IN_PROGRESS)
+- Both pills hidden when counts are zero
+- Data from `orderApi.pendingWorkItems({ size: 100 })`; `staleTime: 30_000`; invalidated after every checkout
+- Only shown on `BARBER_SHOP` (inside `BarberServiceScreen`); no feature gate beyond `POS`/`ORDER`
+
+---
+
+## Epic 51 — Barber Employee Commission Assignment (BARBER_SHOP + EMPLOYEE feature)
+
+**US-154** As a barber shop owner, I want to assign a staff member to each service when I add it to an order, so that the system can track which employee performed each service for commission and performance reports.
+
+**US-155** As a barber shop owner, I want employee assignment to be optional at add time, so that I can create an order quickly without blocking on staff selection when the shop is busy.
+
+**Acceptance notes:**
+- Employee picker appears in `AddItemSheet` only for service items (`durationMinutes > 0`); hidden for retail products (qty stepper shown instead)
+- `ScrollView` of avatar chips (initials circle + last word of name); selected chip turns indigo; tap again to deselect
+- Label shows "Thợ thực hiện (tuỳ chọn)"; no validation error if none selected
+- On checkout: for each `CartItem` with a non-null employee, `cartApi.updateCommission(cartId, newItemId, employeeId)` called after `cartApi.addItem()` using the `knownItemIds` diff pattern to identify the newly added item
+- Employee list from `employeeApi.listActive()`; `staleTime: 5 * 60_000`; entire picker hidden when `!has('EMPLOYEE')`
+
+---
+
 ## Final Story Map (complete)
 
 | Epic | Stories | Feature Gate | Priority |
@@ -933,9 +968,12 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 | Customer Order History Summary | US-148 | CUSTOMER | MVP |
 | Top Selling Products on Product Page | US-149 | PRODUCT | MVP |
 
-**Total: 151 user stories across 49 epics.**
+| Barber Queue Status Badge | US-153 | POS / ORDER | MVP (BARBER_SHOP only) |
+| Barber Employee Commission | US-154–155 | EMPLOYEE | MVP (BARBER_SHOP only) |
 
-**Why:** Written in planning sessions 2026-05-10. US-132–147 added after UX review. US-148–149 added for customer order history and product top-sellers. US-150–151 added 2026-05-11 for edit/delete customer (CustomerFormScreen + CustomerDetailScreen trash).
+**Total: 155 user stories across 51 epics.**
+
+**Why:** Written in planning sessions 2026-05-10. US-132–147 added after UX review. US-148–149 added for customer order history and product top-sellers. US-150–151 added 2026-05-11 for edit/delete customer. US-153–155 added 2026-05-13 to document barber-specific features already implemented in BarberServiceScreen but previously untracked.
 **How to apply:** Reference during implementation to verify feature completeness. Each story maps to one or more screens in `project_mobile_screens.md`.
 
 **Feature coverage check:**
@@ -952,6 +990,7 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 | SHOP_SETTING | US-79–83, US-86–88, US-112–114, US-127–129 | ✅ |
 | ACTIVITY_LOG | US-97–99 | ✅ |
 | PAWN | US-117–119 | ✅ |
+| EMPLOYEE | US-154–155 | ✅ |
 
 **Why:** Written in planning sessions 2026-05-10. US-121–131 added after full feature gap analysis.
 **How to apply:** Reference during implementation to verify feature completeness. Each story maps to one or more screens in `project_mobile_screens.md`.

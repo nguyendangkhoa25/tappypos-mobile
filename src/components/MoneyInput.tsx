@@ -22,7 +22,7 @@ function MoneyInputInner({ rawValue, onChangeRaw, ...rest }: Props, ref: Ref<Tex
 
   return (
     <View>
-      <View className="flex-row items-center border border-gray-300 rounded-xl overflow-hidden bg-white">
+      <View className="flex-row items-center border border-gray-300 rounded-xl overflow-hidden bg-white dark:bg-gray-800">
         <TextInput
           ref={ref}
           {...rest}
@@ -30,7 +30,7 @@ function MoneyInputInner({ rawValue, onChangeRaw, ...rest }: Props, ref: Ref<Tex
           onChangeText={handleChange}
           keyboardType="number-pad"
           inputAccessoryViewID={Platform.OS === 'ios' ? ACCESSORY_ID : undefined}
-          className="flex-1 px-3 py-3 text-base text-gray-900"
+          className="flex-1 px-3 py-3 text-base text-gray-900 dark:text-gray-100"
           placeholderTextColor="#9ca3af"
         />
         <View className="px-2.5 py-3 bg-gray-50 border-l border-gray-200">

@@ -65,8 +65,7 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
       } else {
         setError('not_found');
       }
-    } catch (e) {
-      console.error('[ShopId] request failed:', e);
+    } catch {
       setError('network');
     } finally {
       setLoading(false);

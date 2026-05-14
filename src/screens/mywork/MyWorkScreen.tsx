@@ -49,7 +49,7 @@ function WorkItemCard({
             {item.productName}
           </Text>
           <Text className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            {item.orderNumber} · {item.customerName ?? 'Khách lẻ'}
+            {item.orderNumber} · {item.customerName ?? t('pos.walkIn')}
           </Text>
         </View>
         <View style={{ backgroundColor: statusColor + '22', borderRadius: 99, paddingHorizontal: 10, paddingVertical: 3 }}>
@@ -135,14 +135,14 @@ function AvailableItemCard({
             {item.productName}
           </Text>
           <Text className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            {item.orderNumber} · {item.customerName ?? 'Khách lẻ'}
+            {item.orderNumber} · {item.customerName ?? t('pos.walkIn')}
           </Text>
         </View>
         {item.durationMinutes > 0 && (
           <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg">
             <MaterialCommunityIcons name="clock-outline" size={13} color="#6b7280" />
             <Text className="text-xs text-gray-600 dark:text-gray-300 ml-1">
-              {item.durationMinutes} phút
+              {t('myWork.duration', { minutes: item.durationMinutes })}
             </Text>
           </View>
         )}

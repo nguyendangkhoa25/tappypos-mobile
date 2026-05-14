@@ -297,13 +297,9 @@
       "modeList": "Product list",
       "modeBarcode": "Barcode scan",
       "modeTable": "Table layout",
-      "sectionPrint": "Receipt printing",
-      "autoPrint": "Auto-print after each order",
-      "sectionVat": "VAT",
-      "vatNone": "No VAT",
-      "vatIncluded": "Price includes VAT",
-      "vatAdded": "Add VAT on top of price",
-      "vatRateLabel": "VAT rate (%)",
+      "sectionTax": "Tax",
+      "taxAutoApply": "Auto-apply tax to orders",
+      "taxRate": "Tax rate",
       "sectionDenominations": "Cash denominations",
       "denominationsHint": "Select denominations shown at cash checkout",
       "saveSuccess": "POS config saved"
@@ -492,7 +488,9 @@
     "currency": "₫",
     "saved": "Saved",
     "datePlaceholder": "YYYY-MM-DD",
-    "selectDate": "Select date"
+    "selectDate": "Select date",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "maintenance": "System under maintenance. Please try again later."
   },
   "datePickerModal": {
     "weekdays": "Mo,Tu,We,Th,Fr,Sa,Su",
@@ -745,7 +743,9 @@
     "printReceipt": "Print receipt",
     "printing": "Printing...",
     "autoNewOrder": "New order in {{count}}s",
-    "checkoutError": "Could not complete order. Please try again."
+    "autoReturn": "Auto in {{count}}s",
+    "checkoutError": "Could not complete order. Please try again.",
+    "exactAmount": "Exact amount"
   },
   "orders": {
     "title": "Orders",
@@ -872,7 +872,71 @@
     "goldPrice": "Gold Price",
     "myWork": "My Work",
     "notifications": "Notifications",
+    "staff": "Staff",
+    "queueView": "Queue",
+    "staffPerformance": "Performance",
+    "appointments": "Appointments",
     "settingsHint": "Account, shop, security..."
+  },
+  "appt": {
+    "title": "Appointments",
+    "new": "New Appointment",
+    "edit": "Edit Appointment",
+    "detail": "Appointment Detail",
+    "customerSection": "CUSTOMER",
+    "datetimeSection": "DATE & TIME",
+    "servicesSection": "SERVICES",
+    "noteSection": "NOTE",
+    "customerName": "Customer name",
+    "customerPhone": "Phone number",
+    "date": "Date",
+    "time": "Time",
+    "duration": "Duration (minutes)",
+    "note": "Note",
+    "addService": "Add service",
+    "service": "Service",
+    "assignedTo": "Assigned to",
+    "noServices": "No services selected",
+    "confirm": "Confirm",
+    "checkIn": "Check In",
+    "cancel": "Cancel",
+    "noShow": "No Show",
+    "delete": "Delete",
+    "confirmCancel": "Cancel this appointment?",
+    "confirmNoShow": "Mark as no-show?",
+    "confirmDelete": "Delete this appointment?",
+    "confirmAction": "Confirm",
+    "cancelAction": "Go back",
+    "empty": "No appointments",
+    "emptyHint": "Tap + to schedule a new appointment",
+    "statusPending": "Pending",
+    "statusConfirmed": "Confirmed",
+    "statusCheckedIn": "Checked In",
+    "statusCancelled": "Cancelled",
+    "statusNoShow": "No Show",
+    "checkInSuccess": "Customer checked in. Proceeding to service order.",
+    "saveSuccess": "Appointment saved",
+    "cancelSuccess": "Appointment cancelled",
+    "noShowSuccess": "Marked as no-show",
+    "deleteSuccess": "Appointment deleted",
+    "saveFailed": "Could not save appointment",
+    "searchCustomer": "Search customer...",
+    "walkIn": "Walk-in",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "errorConfirm": "Cannot confirm appointment",
+    "errorCheckIn": "Cannot check in",
+    "errorCancel": "Cannot cancel appointment",
+    "errorNoShow": "Cannot mark as no-show",
+    "errorDelete": "Cannot delete appointment",
+    "totalEstimate": "Estimated total",
+    "unassigned": "Unassigned",
+    "searchService": "Search service",
+    "noServicesFound": "No services found",
+    "customerNameRequired": "Please enter customer name",
+    "customerNamePlaceholder": "Enter customer name",
+    "customerPhonePlaceholder": "Phone number (optional)",
+    "notePlaceholder": "Note (optional)"
   },
   "tools": {
     "title": "Tools",
@@ -894,7 +958,19 @@
     "breakevenTitle": "Break-even",
     "breakevenDesc": "Compare two options over time",
     "currencyTitle": "Exchange Rates",
-    "currencyDesc": "Real-time VCB conversion"
+    "currencyDesc": "Real-time VCB conversion",
+    "marketGoldTitle": "Gold Market Prices",
+    "marketGoldDesc": "SJC, PNJ, BTMC, Mi Hồng"
+  },
+  "marketGold": {
+    "title": "Gold Market Prices",
+    "updatedAt": "Updated: {{time}}",
+    "noData": "No gold price data available",
+    "noDataHint": "Try a different source or tap refresh",
+    "type": "Type",
+    "buy": "Buy",
+    "sell": "Sell",
+    "dataSource": "Source: {{source}}"
   },
   "interestCalc": {
     "title": "Interest Calculator",
@@ -1126,7 +1202,38 @@
     "deleteConfirmTitle": "Delete customer?",
     "deleteConfirmMsg": "This action cannot be undone.",
     "deleteSuccess": "Customer deleted",
-    "profileInfo": "Customer information"
+    "profileInfo": "Customer information",
+    "lastVisit": "Last visit",
+    "lastVisitTotal": "Total"
+  },
+  "loyalty": {
+    "title": "Loyalty Points",
+    "historyTitle": "Points & History",
+    "viewHistory": "View details",
+    "currentPoints": "Current points",
+    "pts": "pts",
+    "balance": "Balance",
+    "nextTier": "Next tier",
+    "remaining": "Needed",
+    "totalSpend": "Total spend",
+    "topTier": "Top tier — you've reached the highest level!",
+    "transactionHistory": "Transaction history",
+    "noTransactions": "No point transactions yet",
+    "adjust": "Adjust",
+    "adjustTitle": "Adjust Points",
+    "adjustPoints": "Points change",
+    "adjustHint": "Enter a positive number to add points, negative to deduct (e.g. +100 or -50)",
+    "adjustReason": "Reason",
+    "adjustReasonPlaceholder": "e.g. Compensate error, bonus for service...",
+    "adjustConfirm": "Confirm adjustment",
+    "adjustFailed": "Could not adjust points",
+    "invalidPoints": "Invalid points amount",
+    "txType": {
+      "EARNED": "Points earned",
+      "REDEEMED": "Points redeemed",
+      "ADJUSTED": "Manual adjustment",
+      "EXPIRED": "Points expired"
+    }
   },
   "onboarding": {
     "common": {
@@ -1330,8 +1437,18 @@
         },
         "BARBER_SHOP": {
           "name": "Salon / Barbershop",
-          "examples": "Men's barber, hair salon, nail studio, spa",
-          "hint": "For hair salons, nail studios, and spas. Stores each customer's preferences and visit history for personalised service."
+          "examples": "Men's barber, hair salon, perm, hair colouring, wash",
+          "hint": "For hair salons and barbershops. Stores each customer's style preferences and visit history for personalised service."
+        },
+        "NAIL_SHOP": {
+          "name": "Nail Studio",
+          "examples": "Nail polish, gel, acrylic, nail art, manicure, pedicure",
+          "hint": "For nail studios and manicure shops. Tracks each customer's preferred nail style and service history."
+        },
+        "SPA_SHOP": {
+          "name": "Spa / Beauty Center",
+          "examples": "Massage, facial, waxing, hair removal, body treatment",
+          "hint": "For spas and beauty centers. Manages treatment courses, skin type records, and customer therapy history."
         },
         "PHARMACY": {
           "name": "Pharmacy",
@@ -1447,6 +1564,22 @@
           "name": "Spa / Beauty",
           "examples": "Massage, facial, beauty treatments, waxing"
         },
+        "LASH_PMU": {
+          "name": "Lash & PMU Studio",
+          "examples": "Eyelash extensions, eyebrow tattoo, lip tattoo, eyeliner"
+        },
+        "MASSAGE": {
+          "name": "Massage Shop",
+          "examples": "Relaxation massage, therapeutic massage, foot massage"
+        },
+        "BEAUTY_CLINIC": {
+          "name": "Beauty Clinic",
+          "examples": "Facial, acne treatment, laser, HIFU, hair removal"
+        },
+        "MAKEUP_STUDIO": {
+          "name": "Makeup & Bridal Studio",
+          "examples": "Event makeup, bridal makeup, photo shoot makeup"
+        },
         "PHARMACY": {
           "name": "Pharmacy",
           "examples": "Medicines, supplements, vitamins, pharmacy"
@@ -1535,7 +1668,12 @@
     "duration": "{{minutes}} min",
     "historyIcon": "History",
     "alreadyClaimed": "This task was already taken by someone else",
-    "cannotUnpick": "Cannot return a task that is already in progress"
+    "cannotUnpick": "Cannot return a task that is already in progress",
+    "detail": "Details",
+    "completedAt": "Completed at {{time}}",
+    "durationMin": "{{minutes}} min",
+    "durationHour": "{{hours}}h",
+    "durationHourMin": "{{hours}}h {{minutes}}m"
   },
   "currencyConverter": {
     "title": "Currency Exchange",
@@ -1552,6 +1690,89 @@
     "ratePlaceholder": "Enter rate…",
     "error": "Could not load rates",
     "retry": "Retry"
+  },
+  "perf": {
+    "title": "Staff Performance",
+    "services": "Services",
+    "revenue": "Revenue",
+    "avgDuration": "Avg Time",
+    "commission": "Est. commission",
+    "unassigned": "Unassigned",
+    "empty": "No completed services",
+    "emptyHint": "Data appears when technicians complete services in the selected period"
+  },
+  "queue": {
+    "title": "Staff Queue",
+    "hint": "Monitor every technician's work status in real time.",
+    "sectionUnassigned": "Unassigned",
+    "sectionEmployees": "Technicians",
+    "statusWorking": "Working",
+    "statusWaiting": "Waiting",
+    "statusFree": "Free",
+    "statWorking": "Working",
+    "statWaiting": "Waiting",
+    "statFree": "Free",
+    "statUnassigned": "Unassigned",
+    "labelCustomer": "Customer",
+    "labelOrder": "Order",
+    "labelNext": "Next",
+    "noWork": "No current tasks",
+    "updatedAt": "Updated {{time}}",
+    "doneIn": "Done in ~{{min}}m",
+    "waitBannerFree": "Staff available now",
+    "waitBannerEstimate": "Est. wait: ~{{min}}m",
+    "empty": "No staff or queue data",
+    "emptyHint": "The queue appears when new service orders are created",
+    "sectionConcurrent": "Concurrent sessions",
+    "concurrentHint": "Customer being served by multiple technicians at once",
+    "splitBadge": "{{count}} techs"
+  },
+  "staff": {
+    "title": "Staff",
+    "hint": "Manage staff accounts — add new members, assign roles and track account status.",
+    "add": "Add Staff",
+    "edit": "Edit Info",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "E.g. John Smith",
+    "username": "Phone / username",
+    "usernamePlaceholder": "E.g. 0912345678",
+    "role": "Role",
+    "password": "Password",
+    "tempPassword": "Temporary password (auto-generated)",
+    "tempPasswordHint": "Note this password before saving — staff will need to change it on first login.",
+    "regenerate": "Regenerate",
+    "passwordCopied": "Password copied",
+    "createSuccess": "Staff member added",
+    "credentialModal": "Account Created",
+    "credentialHint": "Note down the credentials and share with the staff member. The password will not be shown again.",
+    "gotIt": "Got it",
+    "newPassword": "New password",
+    "resetPassword": "Reset Password",
+    "resetPasswordMsg": "A new temporary password will be generated. Staff must change it on next login.",
+    "deactivate": "Deactivate",
+    "deactivateConfirmMsg": "This staff member will not be able to log in. You can reactivate later.",
+    "activate": "Activate",
+    "activateConfirmMsg": "This staff member will be able to log in again.",
+    "active": "Active",
+    "inactive": "Locked",
+    "noStaff": "No staff yet",
+    "noStaffHint": "Add staff so they can log in and use the app.",
+    "updateSuccess": "Staff info updated",
+    "activateSuccess": "Account activated",
+    "deactivateSuccess": "Account deactivated",
+    "errorFullNameRequired": "Please enter the full name",
+    "errorUsernameRequired": "Please enter a phone number or username"
+  },
+  "roles": {
+    "SHOP_OWNER": "Shop Owner",
+    "MANAGER": "Manager",
+    "CASHIER": "Cashier",
+    "RECEPTIONIST": "Receptionist",
+    "TECHNICIAN": "Technician",
+    "SERVICE_STAFF": "Service Staff",
+    "ACCOUNTANT": "Accountant",
+    "WAREHOUSE_STAFF": "Warehouse Staff",
+    "CLEANER": "Cleaner"
   },
   "barber": {
     "title": "New Order",
@@ -1574,6 +1795,14 @@
     "addToOrder": "Add to Order",
     "checkout": "Review Order",
     "checkoutTitle": "Review Order",
+    "subtotal": "Subtotal",
+    "tipLabel": "Tip (optional)",
+    "tip": "Tip",
+    "totalDue": "Total due",
+    "cashReceived": "Amount received",
+    "exactAmount": "Exact",
+    "change": "Change",
+    "shortage": "Shortage",
     "orderTotal": "Total",
     "paymentMethod": "Payment method",
     "paymentCash": "Cash",
@@ -1588,6 +1817,14 @@
     "cancel": "Cancel",
     "orderCreatedSuccess": "Order created",
     "orderCreatedHint": "Order has been added to the queue",
-    "createFailed": "Failed to create order"
+    "createFailed": "Failed to create order",
+    "scanQR": "Scan QR code to transfer",
+    "noBankAccount": "No bank account configured",
+    "noBankAccountHint": "Go to Settings → Bank Accounts to add one",
+    "usePoints": "Use loyalty points",
+    "pointsAvailable": "pts available",
+    "pointsDiscount": "Points discount",
+    "splitSession": "{{count}} techs",
+    "splitSessionHint": "Concurrent session"
   }
 }

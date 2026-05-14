@@ -28,7 +28,7 @@ import type { OnboardingProduct } from '../../store/onboardingStore';
 
 export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { shopTypeCode, step2, addProduct, removeProduct, setStep2, completeStep } =
     useOnboardingStore();
 
@@ -89,12 +89,15 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
   // suggestion chips: filter by what's typed, not-selected first
   const visibleChips = useMemo(() => {
     const q = chipFilter.toLowerCase().trim();
-    const notSel = templates.filter((t) => !selectedIds.has(t.id));
-    const sel = templates.filter((t) => selectedIds.has(t.id));
+    const isEn = i18n.language === 'en';
+    const notSel = templates.filter((tpl) => !selectedIds.has(tpl.id));
+    const sel = templates.filter((tpl) => selectedIds.has(tpl.id));
     if (!q) return [...notSel, ...sel].slice(0, 20);
-    const hit = (t: ProductTemplate) => t.name.toLowerCase().includes(q);
-    return [...notSel.filter(hit), ...sel.filter(hit), ...notSel.filter((t) => !hit(t))].slice(0, 20);
-  }, [templates, chipFilter, selectedIds]);
+    const hit = (tpl: ProductTemplate) =>
+      tpl.name.toLowerCase().includes(q) ||
+      (isEn && (tpl.nameEn ?? '').toLowerCase().includes(q));
+    return [...notSel.filter(hit), ...sel.filter(hit), ...notSel.filter((tpl) => !hit(tpl))].slice(0, 20);
+  }, [templates, chipFilter, selectedIds, i18n.language]);
 
   const resetForm = () => {
     setName('');
@@ -280,7 +283,7 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
                             : 'text-gray-700 dark:text-gray-200'
                         }`}
                       >
-                        {isOn ? '✓ ' : ''}{tpl.name}
+                        {isOn ? '✓ ' : ''}{i18n.language === 'en' ? (tpl.nameEn || tpl.name) : tpl.name}
                       </Text>
                     </TouchableOpacity>
                   );

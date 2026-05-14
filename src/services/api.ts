@@ -190,7 +190,7 @@ export const authApi = {
   logout: () => api.post<ApiResponse<null>>('/auth/logout'),
 
   changePassword: (currentPassword: string, newPassword: string) =>
-    api.put<ApiResponse<null>>('/profiles/password', { currentPassword, newPassword }),
+    api.post<ApiResponse<null>>('/users/change-password', { oldPassword: currentPassword, newPassword }),
 
   deletePin: () => api.delete<ApiResponse<null>>('/auth/pin'),
 };
@@ -343,7 +343,49 @@ export type CheckoutRequest = {
   amountPaid?: number;
   customerId?: string;
   notes?: string;
-  redeemPoints?: boolean;
+  loyaltyPointsToRedeem?: number;
+};
+
+export type LoyaltyProgramDTO = {
+  id: number | null;
+  pointsPerAmount: number;
+  amountPerPoints: number;
+  redemptionPointsPerDiscount: number;
+  redemptionDiscountAmount: number;
+  minRedemptionPoints: number;
+  isActive: boolean;
+};
+
+export type LoyaltyTierDTO = {
+  id: number;
+  name: string;
+  minSpend: number;
+  pointsMultiplier: number;
+  color: string;
+  description: string | null;
+  sortOrder: number;
+};
+
+export type CustomerLoyaltySummaryDTO = {
+  customerId: number;
+  customerName: string;
+  loyaltyPoints: number;
+  totalSpent: number;
+  currentTier: LoyaltyTierDTO | null;
+  nextTier: LoyaltyTierDTO | null;
+  amountToNextTier: number | null;
+};
+
+export type LoyaltyTransactionDTO = {
+  id: number;
+  customerId: number;
+  orderId: number | null;
+  type: 'EARNED' | 'REDEEMED' | 'ADJUSTED' | 'EXPIRED';
+  points: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  description: string;
+  createdAt: string;
 };
 
 export type CheckoutResponse = {
@@ -439,6 +481,8 @@ export type WorkItemDTO = {
   assignedEmployeeId: number | null;
   assignedEmployeeName: string | null;
   orderCreatedAt: string;
+  commissionRate: number | null;
+  commissionAmount: number | null;
 };
 
 export type WorkItemSummaryDTO = {
@@ -564,6 +608,7 @@ export type ShopType = {
 export type ProductTemplate = {
   id: string;
   name: string;
+  nameEn?: string;
   emoji: string;
   price: number;
   unit: string;
@@ -572,6 +617,7 @@ export type ProductTemplate = {
 
 export type ExpenseSuggestion = {
   name: string;
+  nameEn?: string;
   emoji: string;
   color?: string;
   category?: string;
@@ -798,12 +844,13 @@ export const customerApi = {
 // ── Shop config API ───────────────────────────────────────────────────────────
 
 export type BankAccount = {
-  id: string;
+  id: number;
+  bankBin: string | null;
   bankCode: string;
   bankName: string;
-  accountNo: string;
+  bankShortName: string | null;
+  accountNumber: string;
   accountName: string;
-  branch: string | null;
   isDefault: boolean;
 };
 
@@ -811,39 +858,33 @@ export type ShopInfo = {
   shopName: string;
   address: string | null;
   phone: string | null;
-  description: string | null;
   logoUrl: string | null;
   shopTypeCode: string | null;
   posMode: string | null;
-};
-
-export type PosConfig = {
-  posMode: 'LIST' | 'BARCODE' | 'TABLE';
-  autoPrint: boolean;
-  vatMode: 'NONE' | 'INCLUDED' | 'ADDED';
-  vatRate: number;
-  denominations: number[];
-  quickNotes: string[];
+  defaultTaxRate: number | null;
+  taxAutoApply: boolean | null;
+  cashDenominations: string | null;
 };
 
 export const shopConfigApi = {
   getInfo: () => api.get<ApiResponse<ShopInfo>>('/shop-config'),
-  updateInfo: (data: Partial<Omit<ShopInfo, 'logoUrl'>>) =>
-    api.put<ApiResponse<ShopInfo>>('/shop-config', data),
 
-  getPosConfig: () => api.get<ApiResponse<PosConfig>>('/shop-config/pos-config'),
-  updatePosConfig: (data: Partial<PosConfig>) =>
-    api.put<ApiResponse<PosConfig>>('/shop-config/pos-config', data),
+  updateInfo: (data: Partial<Pick<ShopInfo, 'shopName' | 'address' | 'phone' | 'posMode' | 'defaultTaxRate' | 'taxAutoApply' | 'cashDenominations'>>) =>
+    api.put<ApiResponse<ShopInfo>>('/shop-info', data),
 
-  getBanks: () => api.get<ApiResponse<BankAccount[]>>('/shop-config/banks'),
+  getPosSettings: () => api.get<ApiResponse<ShopInfo>>('/shop-info'),
 
-  addBank: (data: Omit<BankAccount, 'id' | 'isDefault'>) =>
-    api.post<ApiResponse<BankAccount>>('/shop-config/banks', data),
+  getBanks: () => api.get<ApiResponse<BankAccount[]>>('/bank-accounts'),
 
-  updateBank: (id: string, data: Partial<Omit<BankAccount, 'id'>>) =>
-    api.put<ApiResponse<BankAccount>>(`/shop-config/banks/${id}`, data),
+  addBank: (data: { bankCode: string; bankName: string; accountNumber: string; accountName: string; bankBin?: string | null; bankShortName?: string | null }) =>
+    api.post<ApiResponse<BankAccount>>('/bank-accounts', data),
 
-  deleteBank: (id: string) => api.delete<ApiResponse<null>>(`/shop-config/banks/${id}`),
+  updateBank: (id: number, data: { bankCode?: string; bankName?: string; accountNumber?: string; accountName?: string }) =>
+    api.put<ApiResponse<BankAccount>>(`/bank-accounts/${id}`, data),
+
+  deleteBank: (id: number) => api.delete<ApiResponse<null>>(`/bank-accounts/${id}`),
+
+  setDefaultBank: (id: number) => api.put<ApiResponse<null>>(`/bank-accounts/${id}/default`),
 
   getLoyalty: () =>
     api.get<ApiResponse<{ pointsPerUnit: number; unitValue: number }>>('/shop-config/loyalty'),
@@ -1009,6 +1050,7 @@ export type ExchangeRateItem = {
   buyRate: number | null;
   transferRate: number | null;
   sellRate: number | null;
+  fetchedAt: string | null;
 };
 
 export type ExchangeRatesData = {
@@ -1017,8 +1059,76 @@ export type ExchangeRatesData = {
   rates: ExchangeRateItem[];
 };
 
+export type MarketGoldPriceItem = {
+  ktype: string;
+  name: string;
+  source: string;
+  buyPrice: number | null;
+  sellPrice: number | null;
+  fetchedAt: string | null;
+};
+
+export type MarketGoldPricesData = {
+  source: string;
+  fetchedAt: string | null;
+  prices: MarketGoldPriceItem[];
+};
+
 export const utilitiesApi = {
   getExchangeRates: () => api.get<ApiResponse<ExchangeRatesData>>('/utilities/exchange-rates'),
+  getExchangeRateHistory: (currency: string, days = 7) =>
+    api.get<ApiResponse<ExchangeRateItem[]>>('/utilities/exchange-rates/history', {
+      params: { currency, days },
+    }),
+  getMarketGoldPrices: (source?: string) =>
+    api.get<ApiResponse<MarketGoldPricesData>>('/utilities/market-gold-prices', {
+      params: { source },
+    }),
+  getMarketGoldPricesHistory: (source?: string, ktype?: string, days = 7) =>
+    api.get<ApiResponse<MarketGoldPriceItem[]>>('/utilities/market-gold-prices/history', {
+      params: { source, ktype, days },
+    }),
+};
+
+// ── Shop user (staff) API ─────────────────────────────────────────────────────
+
+export type ShopUser = {
+  id: string;
+  username: string;
+  fullName: string | null;
+  roles: string[];
+  active: boolean;
+  accountNonLocked: boolean;
+  createdAt: string;
+};
+
+export type CreateStaffPayload = {
+  username: string;
+  password: string;
+  fullName: string;
+  roleNames: string[];
+};
+
+export type UpdateStaffPayload = {
+  fullName?: string;
+  roleNames?: string[];
+};
+
+export const shopUserApi = {
+  list: () =>
+    api.get<ApiResponse<{ content: ShopUser[]; totalElements: number }>>('/users'),
+
+  create: (data: CreateStaffPayload) =>
+    api.post<ApiResponse<ShopUser>>('/users', data),
+
+  update: (id: string, data: UpdateStaffPayload) =>
+    api.put<ApiResponse<ShopUser>>(`/users/${id}`, data),
+
+  toggleEnable: (id: string, enable: boolean) =>
+    api.put<ApiResponse<null>>(`/users/${id}/enable`, null, { params: { enabled: enable } }),
+
+  resetPassword: (id: string) =>
+    api.post<ApiResponse<{ tempPassword: string }>>(`/users/${id}/reset-password`),
 };
 
 // ── Legal API ─────────────────────────────────────────────────────────────────
@@ -1073,7 +1183,99 @@ export const printTemplateApi = {
     api.put<ApiResponse<null>>(`/shop-config/print-templates/${id}/default`),
 };
 
+// ── Loyalty API ───────────────────────────────────────────────────────────────
+
+export const loyaltyApi = {
+  getProgram: () => api.get<ApiResponse<LoyaltyProgramDTO>>('/loyalty/program'),
+  getTiers: () => api.get<ApiResponse<LoyaltyTierDTO[]>>('/loyalty/tiers'),
+  getCustomerSummary: (customerId: string) =>
+    api.get<ApiResponse<CustomerLoyaltySummaryDTO>>(`/loyalty/customers/${customerId}/summary`),
+  getTransactions: (customerId: string, page = 0) =>
+    api.get<ApiResponse<{ content: LoyaltyTransactionDTO[]; totalPages: number; totalElements: number }>>(
+      `/loyalty/customers/${customerId}/transactions`,
+      { params: { page, size: 20 } },
+    ),
+  adjustPoints: (customerId: string, points: number, description?: string) =>
+    api.post<ApiResponse<LoyaltyTransactionDTO>>(`/loyalty/customers/${customerId}/adjust`, {
+      points,
+      description,
+    }),
+};
+
 // ── User / profile extended ───────────────────────────────────────────────────
+
+// ── Appointments ─────────────────────────────────────────────────────────────
+
+export type AppointmentServiceItemData = {
+  id: number;
+  productId: number;
+  productName: string;
+  unitPrice: number;
+  durationMinutes: number;
+  assignedEmployeeId: number | null;
+  assignedEmployeeName: string | null;
+};
+
+export type AppointmentData = {
+  id: number;
+  appointmentNumber: string;
+  customerId: number | null;
+  customerName: string;
+  customerPhone: string | null;
+  scheduledDate: string;       // 'YYYY-MM-DD'
+  scheduledStartTime: string;  // 'HH:mm:ss'
+  durationMinutes: number;
+  status: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CANCELLED' | 'NO_SHOW';
+  note: string | null;
+  linkedOrderId: number | null;
+  createdBy: string;
+  createdAt: string;
+  services: AppointmentServiceItemData[];
+};
+
+export type CheckInPayload = {
+  appointmentId: number;
+  appointmentNumber: string;
+  customerId: number | null;
+  customerName: string;
+  customerPhone: string | null;
+  services: AppointmentServiceItemData[];
+};
+
+export type AppointmentServiceRequest = {
+  productId: number;
+  productName: string;
+  unitPrice?: number;
+  durationMinutes?: number;
+  assignedEmployeeId?: number;
+  assignedEmployeeName?: string;
+};
+
+export type CreateAppointmentPayload = {
+  customerId?: number;
+  customerName: string;
+  customerPhone?: string;
+  scheduledDate: string;
+  scheduledStartTime: string;
+  durationMinutes?: number;
+  note?: string;
+  services?: AppointmentServiceRequest[];
+};
+
+export type UpdateAppointmentPayload = Partial<CreateAppointmentPayload>;
+
+export const appointmentApi = {
+  list: (date: string, page = 0, size = 50) =>
+    api.get<ApiResponse<{ content: AppointmentData[]; totalPages: number; totalElements: number }>>('/appointments', { params: { date, page, size } }),
+  getById: (id: number) => api.get<ApiResponse<AppointmentData>>(`/appointments/${id}`),
+  create: (data: CreateAppointmentPayload) => api.post<ApiResponse<AppointmentData>>('/appointments', data),
+  update: (id: number, data: UpdateAppointmentPayload) => api.put<ApiResponse<AppointmentData>>(`/appointments/${id}`, data),
+  confirm: (id: number) => api.put<ApiResponse<AppointmentData>>(`/appointments/${id}/confirm`),
+  checkIn: (id: number) => api.post<ApiResponse<CheckInPayload>>(`/appointments/${id}/check-in`),
+  cancel: (id: number) => api.put<ApiResponse<AppointmentData>>(`/appointments/${id}/cancel`),
+  noShow: (id: number) => api.put<ApiResponse<AppointmentData>>(`/appointments/${id}/no-show`),
+  delete: (id: number) => api.delete<ApiResponse<void>>(`/appointments/${id}`),
+};
 
 export const userApi = {
   getMe: () => api.get<ApiResponse<{

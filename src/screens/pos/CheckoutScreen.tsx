@@ -226,7 +226,7 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
                 onPress={() => setCashReceived(String(total))}
                 className="px-3 py-1 bg-indigo-100 rounded-full"
               >
-                <Text className="text-xs font-semibold text-indigo-700">Đúng tiền</Text>
+                <Text className="text-xs font-semibold text-indigo-700">{t('pos.exactAmount')}</Text>
               </TouchableOpacity>
             </View>
             <TextInput

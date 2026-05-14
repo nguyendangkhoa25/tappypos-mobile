@@ -8,6 +8,7 @@ import { useFeatureCheck } from '../hooks/useFeature';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { useNotificationBadge } from '../hooks/useNotificationBadge';
 import { useBootstrap } from '../hooks/useBootstrap';
+import { useTokenRefresh } from '../hooks/useTokenRefresh';
 
 // Tab screens
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
@@ -50,6 +51,7 @@ import { TaxCalculatorScreen } from '../screens/tools/TaxCalculatorScreen';
 import { BillSplitterScreen } from '../screens/tools/BillSplitterScreen';
 import { BudgetRuleScreen } from '../screens/tools/BudgetRuleScreen';
 import { BreakevenScreen } from '../screens/tools/BreakevenScreen';
+import { MarketGoldPricesScreen } from '../screens/tools/MarketGoldPricesScreen';
 
 // Modal stack screens (overflow menu)
 import { CustomerListScreen } from '../screens/customers/CustomerListScreen';
@@ -70,6 +72,14 @@ import { NotificationScreen } from '../screens/main/NotificationScreen';
 import { MyWorkScreen } from '../screens/mywork/MyWorkScreen';
 import { MyWorkHistoryScreen } from '../screens/mywork/MyWorkHistoryScreen';
 import { MoreScreen } from '../screens/more/MoreScreen';
+import { StaffListScreen } from '../screens/staff/StaffListScreen';
+import { StaffFormScreen } from '../screens/staff/StaffFormScreen';
+import { StaffQueueScreen } from '../screens/staff/StaffQueueScreen';
+import { StaffPerformanceScreen } from '../screens/staff/StaffPerformanceScreen';
+import { AppointmentListScreen } from '../screens/appointment/AppointmentListScreen';
+import { AppointmentDetailScreen } from '../screens/appointment/AppointmentDetailScreen';
+import { AppointmentFormScreen } from '../screens/appointment/AppointmentFormScreen';
+import { CustomerLoyaltyScreen } from '../screens/customers/CustomerLoyaltyScreen';
 
 import type {
   AppTabParamList,
@@ -108,6 +118,7 @@ function HomeNavigator() {
       <HomeStack.Screen name="CustomerList" component={CustomerListScreen} />
       <HomeStack.Screen name="CustomerDetail" component={CustomerDetailScreen} />
       <HomeStack.Screen name="CustomerForm" component={CustomerFormScreen} />
+      <HomeStack.Screen name="CustomerLoyalty" component={CustomerLoyaltyScreen} />
     </HomeStack.Navigator>
   );
 }
@@ -154,6 +165,7 @@ function SettingsNavigator() {
       <SettingsStack.Screen name="BillSplitter" component={BillSplitterScreen} />
       <SettingsStack.Screen name="BudgetRule" component={BudgetRuleScreen} />
       <SettingsStack.Screen name="Breakeven" component={BreakevenScreen} />
+      <SettingsStack.Screen name="MarketGoldPrices" component={MarketGoldPricesScreen} />
     </SettingsStack.Navigator>
   );
 }
@@ -172,6 +184,13 @@ function MoreNavigator() {
       <MoreStack.Screen name="MyWork" component={MyWorkNavigator} />
       <MoreStack.Screen name="Notifications" component={NotificationNavigator} />
       <MoreStack.Screen name="Settings" component={SettingsNavigator} />
+      <MoreStack.Screen name="StaffList" component={StaffListScreen} />
+      <MoreStack.Screen name="StaffForm" component={StaffFormScreen} />
+      <MoreStack.Screen name="QueueView" component={StaffQueueScreen} />
+      <MoreStack.Screen name="StaffPerformance" component={StaffPerformanceScreen} />
+      <MoreStack.Screen name="AppointmentList" component={AppointmentListScreen} />
+      <MoreStack.Screen name="AppointmentDetail" component={AppointmentDetailScreen} />
+      <MoreStack.Screen name="AppointmentForm" component={AppointmentFormScreen} />
     </MoreStack.Navigator>
   );
 }
@@ -184,6 +203,7 @@ export function AppNavigator() {
   const insets = useSafeAreaInsets();
   const unreadCount = useNotificationBadge();
   useBootstrap();
+  useTokenRefresh();
 
   return (
     <View style={{ flex: 1 }}>
@@ -283,6 +303,7 @@ export function CustomerNavigator() {
       <CustomerStack.Screen name="CustomerList" component={CustomerListScreen} />
       <CustomerStack.Screen name="CustomerDetail" component={CustomerDetailScreen} />
       <CustomerStack.Screen name="CustomerForm" component={CustomerFormScreen} />
+      <CustomerStack.Screen name="CustomerLoyalty" component={CustomerLoyaltyScreen} />
     </CustomerStack.Navigator>
   );
 }

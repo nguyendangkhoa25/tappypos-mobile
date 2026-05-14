@@ -15,7 +15,7 @@ export function StickyAction({ label, onPress, icon, disabled = false, loading =
 
   return (
     <View
-      className="px-4 pt-3 bg-white border-t border-gray-100"
+      className="px-4 pt-3 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700"
       style={{ paddingBottom: bottom + 12 }}
     >
       <TouchableOpacity

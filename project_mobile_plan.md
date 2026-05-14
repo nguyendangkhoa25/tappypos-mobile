@@ -71,7 +71,7 @@ AuthStack
 └── ForgotPasswordScreen   (phone input → POST /auth/password-reset/request; support contacts as fallback)
 
 OnboardingStack            (shown when tenantId = null)
-├── ShopTypeScreen         ← 3×3 grid, required
+├── ShopTypeScreen         ← grouped sections + 2-col grid, required (redesigned 2026-05-14)
 ├── Step1Screen            nickname* + fullName + shopName* + address
 ├── Step2Screen            product templates checklist + prices (skippable)
 ├── Step3Screen            fixed expenses with suggestion chips (skippable)
@@ -359,19 +359,32 @@ Settings → Tài khoản → "Xóa tài khoản" (red text). Two-step confirmat
 
 ## Shop Types & Tenant ID Prefixes
 
-| Code | Display Name | Prefix | Extra Features |
-|---|---|---|---|
-| `PHO_SHOP` | Quán phở | `pho` | — |
-| `BARBER_SHOP` | Tiệm cắt tóc | `toc` | — |
-| `CAFE` | Quán cà phê | `cf` | — |
-| `GROCERY` | Cửa hàng tạp hóa | `tg` | `INVENTORY` |
-| `BAKERY` | Tiệm bánh mì / bánh ngọt | `bm` | — |
-| `RESTAURANT` | Quán ăn | `qa` | — |
-| `FASHION` | Cửa hàng thời trang | `tt` | `INVENTORY` |
-| `JEWELRY` | Tiệm vàng / Cầm đồ | `vang` | `PAWN`, `INVENTORY` |
-| `OTHER` | Khác | `shop` | — |
+Specific shop type IDs live in `mobile/src/utils/shopTypes.ts` (`SPECIFIC_SHOP_TYPES`). They map to backend `ShopType` enum codes. Groups shown on ShopTypeScreen:
 
-Tenant ID format: `{prefix}-{4-char-random}` e.g. `pho-a7k2`
+| Group | Specific IDs (mobile) | Backend Code | Notes |
+|---|---|---|---|
+| FOOD | PHO_SHOP, RICE_SHOP, NOODLE_SHOP, BUN_BO, HOT_POT, BANH_MI, EATERY, RESTAURANT | `RESTAURANT` | — |
+| DRINKS | CAFE, BUBBLE_TEA, JUICE_BAR | `COFFEE_SHOP` | — |
+| GROCERY | GROCERY, MINI_MART | `CONVENIENCE_STORE` | INVENTORY feature |
+| GROCERY | VEGETABLE_SHOP, MEAT_SHOP, BAKERY | `FOOD_BEVERAGE` | — |
+| FASHION | CLOTHING, SHOE_SHOP, ACCESSORIES | `FASHION` | INVENTORY feature |
+| BEAUTY | MENS_BARBER | `BARBER_SHOP_MEN` | ⚠️ was `BARBER_SHOP` (fixed 2026-05-14) |
+| BEAUTY | HAIR_SALON | `HAIR_SALON` | ⚠️ was `BARBER_SHOP` (fixed 2026-05-14) |
+| BEAUTY | NAIL_STUDIO | `NAIL_SHOP` | — |
+| BEAUTY | SPA | `SPA_SHOP` | — |
+| BEAUTY | LASH_PMU | `LASH_PMU_STUDIO` | New 2026-05-14 |
+| BEAUTY | MASSAGE | `MASSAGE_SHOP` | New 2026-05-14 |
+| BEAUTY | BEAUTY_CLINIC | `BEAUTY_CLINIC` | New 2026-05-14 |
+| BEAUTY | MAKEUP_STUDIO | `MAKEUP_STUDIO` | New 2026-05-14 |
+| HEALTH | PHARMACY, TRAD_MEDICINE | `PHARMACY` | — |
+| GOLD | JEWELRY | `JEWELRY` | PAWN feature |
+| GOLD | PAWN | `PAWN_SHOP` | PAWN feature |
+| ELECTRONICS | PHONE_SHOP, COMPUTER_SHOP, APPLIANCES | `ELECTRONICS` | INVENTORY feature |
+| SERVICES | CAR_WASH, LAUNDRY, PET_SHOP, FLOWER_SHOP, STATIONERY, GYM, OTHER | `OTHER` | — |
+
+Backend `OnboardingController.PREFIX_MAP` assigns tenant ID prefixes (e.g. `barm` for BARBER_SHOP_MEN, `hair` for HAIR_SALON, `lash` for LASH_PMU_STUDIO, `mass` for MASSAGE_SHOP, `bcln` for BEAUTY_CLINIC, `mkup` for MAKEUP_STUDIO).
+
+`getBackendCode(shopTypeId)` resolves any specific ID or broad backend code to the canonical backend code. All new beauty codes added to `BACKEND_CODE_MAP` for explicit pass-through.
 
 ---
 
@@ -397,14 +410,15 @@ Expired → Phase 2 enforcement.
 
 | Step | Screen | Content | Skip? | Required fields |
 |---|---|---|---|---|
-| 0 | ShopTypeScreen | 3×3 grid of shop type cards | No | shopTypeCode |
+| 0 | ShopTypeScreen | Grouped sections + 2-col grid (redesigned 2026-05-14) | No | shopTypeCode |
 | 1 | Step1Screen | Nickname + Full name + Shop name + Address | No | nickname, shopName |
-| 2 | Step2Screen | Product templates checklist + prices | Yes | price > 0 per checked item |
-| 3 | Step3Screen | Fixed monthly expenses (chips + custom rows) + payment date | Yes | amount > 0 per added row |
+| 2 | Step2Screen | Product suggestion chips + add form (name/price/unit) | Yes | — |
+| 3 | Step3Screen | Expense suggestion chips + add form (name/amount/type/date) | Yes | — |
 | 4 | Step4Screen | Summary (collapse >3) + confirm → self-provision | No skip | — |
 
-Step 2 product row: checkbox · name · MoneyInput (pre-filled default). Dynamic-price → "Theo giá vàng" label.
-Step 3 chips: Thuê mặt bằng, Tiền điện, Tiền nước, Internet, Tiền gas, Lương nhân viên, Phí quản lý, Bảo hiểm. Each chip has emoji + color. Ordered by shop type commonness. Input reorders matching chips to top (diacritic-insensitive).
+**Step 2:** suggestion chips from `GET /api/product-templates?shopTypeCode=` — tap to fill form; dynamic-price products show amber "Theo giá vàng" panel instead of price input. Chip labels locale-aware (`nameEn` in English). Form fill always uses Vietnamese `name` (becomes business data).
+
+**Step 3:** suggestion chips from `GET /api/expense-suggestions?shopTypeCode=` — tap to fill form + captures API's `category` field into `selectedSuggestionCategory` state (replaces old hardcoded `EXPENSE_CATEGORY_MAP`). Payment day picker. Chip labels locale-aware (`nameEn` in English).
 Step 4 collapse: first 3 + "+ N khác ∨" toggle. Empty sections show placeholder with link back to that step.
 
 **Confirm:** `POST /api/tenants/self-provision` → new JWT → `authStore.setAuthenticated` → `onboardingStore.reset()` → AppStack Home tab.

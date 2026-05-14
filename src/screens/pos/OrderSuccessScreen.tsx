@@ -12,6 +12,17 @@ import type { POSScreenProps } from '../../types/navigation';
 
 const AUTO_SECONDS = 5;
 
+const PM_EMOJI: Record<string, string> = {
+  CASH: '💵',
+  BANK_TRANSFER: '🏦',
+  CARD: '💳',
+};
+const PM_I18N: Record<string, string> = {
+  CASH: 'pos.cash',
+  BANK_TRANSFER: 'pos.transfer',
+  CARD: 'pos.card',
+};
+
 function buildReceiptHtml(order: OrderDetail, t: (k: string) => string): string {
   const rows = order.items
     .map(
@@ -146,6 +157,22 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
           <Text className="font-bold text-gray-800">#{orderNumber}</Text>
         </Text>
         <Text className="text-3xl font-bold text-indigo-600 mt-2">{formatVnd(total)}</Text>
+
+        {orderData?.paymentMethod && (
+          <View className="items-center mt-3 gap-y-1">
+            <View className="flex-row items-center gap-x-1.5 bg-gray-100 rounded-full px-4 py-1.5">
+              <Text>{PM_EMOJI[orderData.paymentMethod] ?? '💰'}</Text>
+              <Text className="text-sm font-medium text-gray-700">
+                {t(PM_I18N[orderData.paymentMethod] ?? 'pos.cash')}
+              </Text>
+            </View>
+            {orderData.paymentMethod === 'CASH' && (orderData.changeAmount ?? 0) > 0 && (
+              <Text className="text-sm text-emerald-600 font-medium">
+                {t('pos.change')}: {formatVnd(orderData.changeAmount!)}
+              </Text>
+            )}
+          </View>
+        )}
       </View>
 
       {/* Print receipt */}
@@ -182,9 +209,8 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
         className="w-full rounded-2xl py-4 items-center bg-indigo-600 active:opacity-80"
         onPress={handleNewOrder}
       >
-        <Text className="text-white font-bold text-base">
-          {t('pos.autoNewOrder', { count: countdown })}
-        </Text>
+        <Text className="text-white font-bold text-base">{t('pos.newOrder')}</Text>
+        <Text className="text-indigo-300 text-xs mt-0.5">{t('pos.autoReturn', { count: countdown })}</Text>
       </TouchableOpacity>
     </View>
   );

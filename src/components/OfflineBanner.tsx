@@ -7,11 +7,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNetworkStore } from '../store/networkStore';
 
 const CONTENT_H = 42; // paddingBottom(8) + text(~20) + gap(14)
 
 export function OfflineBanner() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { isMaintenance } = useNetworkStore();
 
@@ -49,7 +51,7 @@ export function OfflineBanner() {
       pointerEvents="none"
     >
       <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>
-        ⚙️ Hệ thống đang bảo trì. Thử lại sau.
+        ⚙️ {t('common.maintenance')}
       </Text>
     </Animated.View>
   );

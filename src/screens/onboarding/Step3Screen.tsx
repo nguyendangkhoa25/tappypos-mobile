@@ -18,56 +18,11 @@ import { CATEGORY_EMOJI } from '../../constants/expenseCategories';
 
 export { CATEGORY_EMOJI };
 
-type Suggestion = { name: string; emoji: string; category?: string };
-
-const EXPENSE_CATEGORY_MAP: Record<string, string> = {
-  'Tiền thuê mặt bằng':           'RENT',
-  'Tiền điện':                     'ELECTRICITY',
-  'Tiền nước':                     'WATER',
-  'Internet / WiFi':               'INTERNET',
-  'Tiền điện thoại':               'PHONE',
-  'Lương nhân viên':               'SALARY_EXTRA',
-  'Vệ sinh cửa hàng':              'CLEANING',
-  'Sửa chữa / bảo trì':            'MAINTENANCE',
-  'Phí phần mềm quản lý':          'SOFTWARE',
-  'Chi phí quảng cáo / fanpage':   'MARKETING',
-  'Phí ngân hàng / chuyển khoản':  'BANK_FEE',
-  'Bảo hiểm cửa hàng':             'INSURANCE',
-  'Thuế môn bài / phí kinh doanh': 'TAX',
-  'Camera / thiết bị an ninh':     'EQUIPMENT',
-  'In ấn / văn phòng phẩm':        'SUPPLIES',
-  'Trang trí / nội thất cửa hàng': 'EQUIPMENT',
-  'Đồng phục nhân viên':           'SALARY_EXTRA',
-  'Ăn uống nhân viên':             'FOOD_STAFF',
-  'Chi phí giao hàng':             'TRANSPORT',
-  'Bao bì / túi đựng':             'PACKAGING',
-  'Nguyên liệu / thực phẩm':       'SUPPLIES',
-  'Gas / nhiên liệu nấu ăn':        'EQUIPMENT',
-  'Dụng cụ bếp / nhà hàng':        'EQUIPMENT',
-  'Nguyên liệu cà phê / trà':      'SUPPLIES',
-  'Ly / cốc / đồ pha chế':         'PACKAGING',
-  'Phí hoa hồng ứng dụng giao đồ ăn': 'TRANSPORT',
-  'Tủ lạnh bảo quản thuốc':        'EQUIPMENT',
-  'Phí kiểm định / giấy phép dược phẩm': 'TAX',
-  'Bao bì đóng gói thuốc':         'PACKAGING',
-  'Phí sàn thương mại điện tử':    'MARKETING',
-  'Móc treo / giá trưng bày':       'EQUIPMENT',
-  'Bao bì / túi thời trang':        'PACKAGING',
-  'Linh kiện / phụ kiện thay thế': 'SUPPLIES',
-  'Chi phí bảo hành / dịch vụ sau bán': 'MAINTENANCE',
-  'Chi phí giám định hàng hóa':    'EQUIPMENT',
-  'Két sắt / thiết bị bảo mật':    'EQUIPMENT',
-  'Phí bảo hiểm hàng quý giá':     'INSURANCE',
-  'Vật tư dịch vụ (dao, kéo, hóa chất)': 'SUPPLIES',
-  'Khăn / đồ vệ sinh cá nhân':     'CLEANING',
-  'Bảo trì / thuê ghế cắt tóc':   'MAINTENANCE',
-  'Phí kiểm kho / kiểm đếm hàng': 'SUPPLIES',
-  'Túi nilon / bao bì siêu thị':   'PACKAGING',
-};
+type Suggestion = { name: string; nameEn?: string; emoji: string; category?: string };
 
 export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { shopTypeCode, step3, setStep3, addExpense, removeExpense, completeStep } =
     useOnboardingStore();
 
@@ -77,6 +32,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
   const [paymentDate, setPaymentDate] = useState<number | undefined>(undefined);
   const [dayPickerVisible, setDayPickerVisible] = useState(false);
   const [chipFilter, setChipFilter] = useState('');
+  const [selectedSuggestionCategory, setSelectedSuggestionCategory] = useState<string | null>(null);
   const [kbVisible, setKbVisible] = useState(false);
 
   const nameRef = useRef<TextInput>(null);
@@ -107,23 +63,28 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
   const visibleChips = useMemo(() => {
     const all = data ?? [];
     const q = chipFilter.toLowerCase().trim();
+    const isEn = i18n.language === 'en';
     const notSel = all.filter((s) => !selectedNames.has(s.name));
     const sel = all.filter((s) => selectedNames.has(s.name));
     if (!q) return [...notSel, ...sel].slice(0, 20);
-    const hit = (s: Suggestion) => s.name.toLowerCase().includes(q);
+    const hit = (s: Suggestion) =>
+      s.name.toLowerCase().includes(q) ||
+      (isEn && (s.nameEn ?? '').toLowerCase().includes(q));
     return [...notSel.filter(hit), ...sel.filter(hit), ...notSel.filter((s) => !hit(s))].slice(0, 20);
-  }, [data, chipFilter, step3.expenses]);
+  }, [data, chipFilter, step3.expenses, i18n.language]);
 
   const resetForm = () => {
     setExpenseName('');
     setRawAmount('');
     setPaymentDate(undefined);
     setChipFilter('');
+    setSelectedSuggestionCategory(null);
   };
 
   const handleNameChange = (v: string) => {
     setExpenseName(v);
     setChipFilter(v);
+    setSelectedSuggestionCategory(null);
   };
 
   const doAdd = (name: string, amount: string, type: 'FIXED' | 'VARIABLE', date: number | undefined) => {
@@ -134,7 +95,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
       monthlyAmount: amount ? parseInt(amount, 10) : 0,
       expenseType: type,
       paymentDate: date,
-      category: EXPENSE_CATEGORY_MAP[trimmed] ?? 'OTHER',
+      category: selectedSuggestionCategory ?? 'OTHER',
     });
   };
 
@@ -152,6 +113,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
     }
     setExpenseName(s.name);
     setChipFilter(s.name);
+    setSelectedSuggestionCategory(s.category ?? null);
     setTimeout(() => amountRef.current?.focus(), 50);
   };
 
@@ -162,6 +124,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
     setExpenseType(expense.expenseType ?? 'FIXED');
     setPaymentDate(expense.paymentDate);
     setChipFilter(expense.name);
+    setSelectedSuggestionCategory(expense.category ?? null);
     setTimeout(() => nameRef.current?.focus(), 50);
   };
 
@@ -279,7 +242,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
                             : 'text-gray-700 dark:text-gray-200'
                         }`}
                       >
-                        {isOn ? '✓ ' : ''}{s.name}
+                        {isOn ? '✓ ' : ''}{i18n.language === 'en' ? (s.nameEn || s.name) : s.name}
                       </Text>
                     </TouchableOpacity>
                   );

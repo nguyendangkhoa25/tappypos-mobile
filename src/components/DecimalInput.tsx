@@ -27,7 +27,7 @@ function DecimalInputInner(
   };
 
   return (
-    <View className="flex-row items-center border border-gray-300 rounded-xl overflow-hidden bg-white">
+    <View className="flex-row items-center border border-gray-300 rounded-xl overflow-hidden bg-white dark:bg-gray-800">
       <TextInput
         ref={ref}
         {...rest}
@@ -35,7 +35,7 @@ function DecimalInputInner(
         onChangeText={handleChange}
         onBlur={handleBlur}
         keyboardType="decimal-pad"
-        className="flex-1 px-3 py-3 text-base text-gray-900"
+        className="flex-1 px-3 py-3 text-base text-gray-900 dark:text-gray-100"
         placeholderTextColor="#9ca3af"
       />
       {suffix ? (

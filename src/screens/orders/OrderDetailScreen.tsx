@@ -68,7 +68,7 @@ export function OrderDetailScreen({ navigation, route }: Props) {
   const { data: order, isLoading, isError, refetch } = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => orderApi.getById(orderId).then((r) => r.data.data),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 120_000,
   });
 
   const completeMutation = useMutation({

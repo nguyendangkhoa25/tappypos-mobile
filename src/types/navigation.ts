@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { CheckInPayload } from '../services/api';
 
 // ── Root ──────────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,7 @@ export type HomeStackParamList = {
   CustomerList: undefined;
   CustomerDetail: { customerId: string };
   CustomerForm: { customerId?: string };
+  CustomerLoyalty: { customerId: string };
 };
 
 export type HomeScreenProps<T extends keyof HomeStackParamList> =
@@ -68,7 +70,7 @@ export type HomeScreenProps<T extends keyof HomeStackParamList> =
 // ── Nested stacks inside app ──────────────────────────────────────────────────
 
 export type SellingStackParamList = {
-  POSMain: undefined;
+  POSMain: { checkInPayload?: CheckInPayload } | undefined;
   Cart: undefined;
   Checkout: undefined;
   OrderSuccess: { orderId: string; orderNumber: string; total: number };
@@ -103,6 +105,7 @@ export type SettingsStackParamList = {
   BillSplitter: undefined;
   BudgetRule: undefined;
   Breakeven: undefined;
+  MarketGoldPrices: undefined;
 };
 
 // ── Modal stacks (over tab bar, from overflow menu) ───────────────────────────
@@ -111,6 +114,7 @@ export type CustomerStackParamList = {
   CustomerList: undefined;
   CustomerDetail: { customerId: string };
   CustomerForm: { customerId?: string };
+  CustomerLoyalty: { customerId: string };
 };
 
 export type InventoryStackParamList = {
@@ -159,6 +163,7 @@ export type ToolsStackParamList = {
   BillSplitter: undefined;
   BudgetRule: undefined;
   Breakeven: undefined;
+  MarketGoldPrices: undefined;
 };
 
 // ── More tab (replaces Settings tab) ─────────────────────────────────────────
@@ -175,6 +180,13 @@ export type MoreStackParamList = {
   MyWork: undefined;
   Notifications: undefined;
   Settings: undefined;
+  StaffList: undefined;
+  StaffForm: { userId?: string };
+  QueueView: undefined;
+  StaffPerformance: undefined;
+  AppointmentList: undefined;
+  AppointmentDetail: { appointmentId: number };
+  AppointmentForm: { appointmentId?: number };
 };
 
 export type MoreScreenProps<T extends keyof MoreStackParamList> =

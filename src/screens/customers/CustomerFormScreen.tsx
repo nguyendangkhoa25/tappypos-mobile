@@ -136,7 +136,7 @@ export function CustomerFormScreen({ navigation, route }: Props) {
     queryKey: ['customer', customerId],
     queryFn: () => customerApi.getById(customerId!).then((r) => r.data.data),
     enabled: isEdit,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 300_000,
   });
 
   useEffect(() => {

@@ -19,6 +19,7 @@ import { Skeleton } from '../../components/Skeleton';
 import { ErrorState } from '../../components/ErrorState';
 import { EmptyState } from '../../components/EmptyState';
 import { QuickOrderStrip } from '../../components/QuickOrderStrip';
+import { useSellingStore } from '../../store/sellingStore';
 import type { OrdersScreenProps } from '../../types/navigation';
 
 const STATUS_FILTERS = [
@@ -38,6 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) {
   const { t } = useTranslation();
+  const { activeView, setActiveView } = useSellingStore();
   const insets = useSafeAreaInsets();
   const [status, setStatus] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -109,8 +111,24 @@ export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) 
     <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="bg-white px-4 pt-3 pb-3 shadow-sm">
-        <Text className="text-2xl font-bold text-gray-900">{t('orders.title')}</Text>
-        <Text className="text-xs text-gray-500 mb-3 mt-0.5">{t('orders.hint')}</Text>
+        {activeView === 'ORDERS' ? (
+          <View className="flex-row bg-gray-100 rounded-2xl p-1 mb-3">
+            <TouchableOpacity
+              className="flex-1 rounded-xl py-2 items-center active:opacity-70"
+              onPress={() => setActiveView('POS')}
+            >
+              <Text className="text-sm font-semibold text-gray-500">{t('selling.title')}</Text>
+            </TouchableOpacity>
+            <View className="flex-1 rounded-xl py-2 items-center bg-white">
+              <Text className="text-sm font-semibold text-indigo-600">{t('orders.title')}</Text>
+            </View>
+          </View>
+        ) : (
+          <>
+            <Text className="text-2xl font-bold text-gray-900">{t('orders.title')}</Text>
+            <Text className="text-xs text-gray-500 mb-3 mt-0.5">{t('orders.hint')}</Text>
+          </>
+        )}
 
         {/* Search */}
         <View className="flex-row items-center gap-2 mb-3">

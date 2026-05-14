@@ -139,10 +139,10 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
   const YEARS = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1];
 
   function formatDuration(minutes: number): string {
-    if (minutes < 60) return `${minutes} phút`;
+    if (minutes < 60) return t('myWork.durationMin', { minutes });
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return m > 0 ? `${h}g ${m}p` : `${h} giờ`;
+    return m > 0 ? t('myWork.durationHourMin', { hours: h, minutes: m }) : t('myWork.durationHour', { hours: h });
   }
 
   const chartData = (trend ?? []).map((d) => ({ label: d.label, count: d.count }));
@@ -340,7 +340,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
             )}
 
             <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-4 mt-4 mb-2">
-              Chi tiết
+              {t('myWork.detail')}
             </Text>
           </View>
         }
@@ -363,14 +363,26 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
                   {item.productName}
                 </Text>
                 <Text className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                  {item.orderNumber} · {item.customerName ?? 'Khách lẻ'}
+                  {item.orderNumber} · {item.customerName ?? t('pos.walkIn')}
                 </Text>
               </View>
-              <Text className="text-sm font-bold text-emerald-600">{formatVnd(item.amount)}</Text>
+              <View className="items-end gap-0.5">
+                <Text className="text-sm font-bold text-emerald-600">{formatVnd(item.amount)}</Text>
+                {has('COMMISSION') && item.commissionAmount != null && item.commissionAmount > 0 && (
+                  <View className="flex-row items-center gap-1">
+                    <Text className="text-xs text-amber-500 font-semibold">
+                      +{formatVnd(item.commissionAmount)}
+                    </Text>
+                    {item.commissionRate != null && item.commissionRate > 0 && (
+                      <Text className="text-[10px] text-gray-400">({item.commissionRate}%)</Text>
+                    )}
+                  </View>
+                )}
+              </View>
             </View>
             {item.completedAt && (
               <Text className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                Hoàn thành lúc {formatDateTime(item.completedAt)}
+                {t('myWork.completedAt', { time: formatDateTime(item.completedAt) })}
               </Text>
             )}
           </View>

@@ -102,7 +102,7 @@ export function CustomerListScreen({ navigation }: Props) {
       }
       return res.data.data;
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 120_000,
   });
 
   const hasMore = data ? page < data.totalPages - 1 : false;
