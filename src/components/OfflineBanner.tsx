@@ -10,27 +10,30 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNetworkStore } from '../store/networkStore';
 
-const CONTENT_H = 42; // paddingBottom(8) + text(~20) + gap(14)
+const CONTENT_H = 42;
 
 export function OfflineBanner() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { isMaintenance } = useNetworkStore();
+  const { isMaintenance, isOffline } = useNetworkStore();
+  const visible = isMaintenance || isOffline;
 
-  // Full banner height = notch padding + content. Must hide by this much.
   const bannerH = insets.top + CONTENT_H;
   const translateY = useSharedValue(-bannerH);
 
   useEffect(() => {
-    translateY.value = withTiming(isMaintenance ? 0 : -bannerH, {
+    translateY.value = withTiming(visible ? 0 : -bannerH, {
       duration: 280,
       easing: Easing.out(Easing.cubic),
     });
-  }, [isMaintenance, bannerH]);
+  }, [visible, bannerH]);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
   }));
+
+  const bg = isOffline ? '#6b7280' : '#f59e0b';
+  const label = isOffline ? `📴 ${t('common.offline')}` : `⚙️ ${t('common.maintenance')}`;
 
   return (
     <Animated.View
@@ -41,7 +44,7 @@ export function OfflineBanner() {
           left: 0,
           right: 0,
           zIndex: 999,
-          backgroundColor: '#f59e0b',
+          backgroundColor: bg,
           paddingTop: insets.top + 6,
           paddingBottom: 8,
           alignItems: 'center',
@@ -50,9 +53,7 @@ export function OfflineBanner() {
       ]}
       pointerEvents="none"
     >
-      <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>
-        ⚙️ {t('common.maintenance')}
-      </Text>
+      <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{label}</Text>
     </Animated.View>
   );
 }

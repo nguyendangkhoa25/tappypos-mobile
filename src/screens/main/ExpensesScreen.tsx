@@ -19,13 +19,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAlertStore } from '../../store/alertStore';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
+import { useNetworkStore } from '../../store/networkStore';
+import { useOfflineQueueStore } from '../../store/offlineQueueStore';
 import { expenseApi, type ExpenseData } from '../../services/api';
 import { formatVnd, formatDate } from '../../utils/format';
 import { ClearableInput } from '../../components/ClearableInput';
 import { MoneyInput } from '../../components/MoneyInput';
 import { BarChart } from '../../components/BarChart';
 import { DatePickerInput } from '../../components/DatePickerInput';
-import { EXPENSE_CATEGORIES, CATEGORY_EMOJI, type ExpenseCategory } from '../../constants/expenseCategories';
+import { EXPENSE_CATEGORIES, CATEGORY_EMOJI, FB_CATEGORY_ORDER, FB_SHOP_TYPES, type ExpenseCategory } from '../../constants/expenseCategories';
+import { useAuthStore } from '../../store/authStore';
 import { PAGE_SIZE } from '../../utils/constants';
 
 function getMonthRange(offset = 0): { from: string; to: string; label: string } {
@@ -58,6 +61,12 @@ export function ExpensesScreen() {
   const { show: showAlert } = useAlertStore();
   const { show: showToast } = useToastStore();
   const showErrorAlert = useErrorAlert();
+  const { isOffline } = useNetworkStore();
+  const { addExpense, pendingExpenses } = useOfflineQueueStore();
+  const { shopTypeCode } = useAuthStore();
+  const orderedCategories: ExpenseCategory[] = shopTypeCode && FB_SHOP_TYPES.includes(shopTypeCode)
+    ? FB_CATEGORY_ORDER
+    : [...EXPENSE_CATEGORIES];
 
   const [monthOffset, setMonthOffset] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<'' | 'FIXED' | 'VARIABLE'>('');
@@ -168,6 +177,18 @@ export function ExpensesScreen() {
   });
 
   const handleSave = () => {
+    // Offline: queue locally and skip the API call (edit not supported offline)
+    if (isOffline && !editingExpense) {
+      addExpense({
+        description: form.description,
+        amount: Number(form.amount),
+        category: form.category,
+        expenseDate: form.expenseDate,
+      });
+      setSheetVisible(false);
+      showToast(t('expenses.savedOffline'));
+      return;
+    }
     saveMutation.mutate({
       expenseId: editingExpense?.id ?? null,
       ...form,
@@ -341,11 +362,28 @@ export function ExpensesScreen() {
               </View>
             ) : null
           }
-          ListHeaderComponent={chartData.length > 0 ? (
-            <View className="bg-white dark:bg-gray-800 rounded-2xl px-4 pt-4 pb-2 mb-2">
-              <BarChart data={chartData} color="#ef4444" granularity="day" />
-            </View>
-          ) : null}
+          ListHeaderComponent={(
+            <>
+              {pendingExpenses.filter((e) => e.status === 'pending' || e.status === 'syncing').map((e) => (
+                <View
+                  key={e.id}
+                  className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-2 flex-row items-center gap-3"
+                >
+                  <MaterialCommunityIcons name="clock-outline" size={18} color="#d97706" />
+                  <View className="flex-1">
+                    <Text className="text-sm font-semibold text-amber-800" numberOfLines={1}>{e.description}</Text>
+                    <Text className="text-xs text-amber-600">{t('expenses.pendingSync')}</Text>
+                  </View>
+                  <Text className="text-sm font-bold text-amber-800">{formatVnd(e.amount)}</Text>
+                </View>
+              ))}
+              {chartData.length > 0 && (
+                <View className="bg-white dark:bg-gray-800 rounded-2xl px-4 pt-4 pb-2 mb-2">
+                  <BarChart data={chartData} color="#ef4444" granularity="day" />
+                </View>
+              )}
+            </>
+          )}
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => openEdit(item)}
@@ -457,7 +495,7 @@ export function ExpensesScreen() {
               {catExpanded && (
                 <View className="border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 mb-3 overflow-hidden">
                   <View className="flex-row flex-wrap gap-2 p-3">
-                    {EXPENSE_CATEGORIES.map((cat) => {
+                    {orderedCategories.map((cat) => {
                       const active = form.category === cat;
                       return (
                         <TouchableOpacity

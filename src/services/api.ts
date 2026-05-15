@@ -344,6 +344,8 @@ export type CheckoutRequest = {
   customerId?: string;
   notes?: string;
   loyaltyPointsToRedeem?: number;
+  tableId?: number | null;
+  tableLabel?: string | null;
 };
 
 export type LoyaltyProgramDTO = {
@@ -423,8 +425,11 @@ export const cartApi = {
   checkout: (cartId: string, req: CheckoutRequest) =>
     api.post<ApiResponse<CheckoutResponse>>(`/carts/${cartId}/checkout`, req),
 
-  sendToKitchen: (cartId: string) =>
-    api.post<ApiResponse<{ orderId: string; orderNumber: string; status: string }>>(`/carts/${cartId}/send-to-kitchen`, {}),
+  sendToKitchen: (cartId: string, tableId?: number, tableLabel?: string) =>
+    api.post<ApiResponse<{ orderId: string; orderNumber: string; tableLabel: string; status: string }>>(
+      `/carts/${cartId}/send-to-kitchen`,
+      { tableId: tableId ?? null, tableLabel: tableLabel ?? null },
+    ),
 };
 
 // ── Order API ─────────────────────────────────────────────────────────────────
@@ -649,6 +654,7 @@ export const tenantApi = {
     fullName: string;
     products: { templateId: string; name: string; price: number; unit: string; dynamicPrice: boolean }[];
     expenses: { name: string; monthlyAmount: number; category?: string; expenseType?: string; paymentDate?: number; note?: string }[];
+    tables?: { tableNumber: string; capacity: number; location?: string }[];
     refreshInBody?: boolean;
   }) =>
     api.post<ApiResponse<{ accessToken: string; refreshToken?: string; tenantId: string; setupComplete: boolean }>>('/tenants/self-provision', payload),
@@ -1294,4 +1300,29 @@ export const userApi = {
     api.put<ApiResponse<null>>('/profiles/lang', { username, lang }),
 
   deleteAccount: () => api.delete<ApiResponse<null>>('/users/me'),
+};
+
+// ── Table API ─────────────────────────────────────────────────────────────────
+
+export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING';
+
+export type ShopTable = {
+  id: number;
+  tableNumber: string;
+  capacity: number;
+  status: TableStatus;
+  currentOrderId?: number;
+  currentOrderNumber?: string;
+  location?: string;
+  displayOrder: number;
+  elapsedMinutes?: number;
+};
+
+export const tableApi = {
+  list: () => api.get<ApiResponse<ShopTable[]>>('/tables'),
+  create: (data: { tableNumber: string; capacity: number; location?: string; displayOrder?: number }) =>
+    api.post<ApiResponse<ShopTable>>('/tables', data),
+  update: (id: number, data: { tableNumber?: string; capacity?: number; location?: string; displayOrder?: number }) =>
+    api.put<ApiResponse<ShopTable>>(`/tables/${id}`, data),
+  delete: (id: number) => api.delete<ApiResponse<null>>(`/tables/${id}`),
 };

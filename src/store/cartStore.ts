@@ -20,6 +20,8 @@ type CartState = {
   promoCode: string | null;
   discount: number;
   selectedCustomer: SelectedCustomer | null;
+  tableId: number | null;
+  tableLabel: string | null;
 
   addItem: (item: Omit<CartItem, 'cartItemId'>) => void;
   updateQty: (productId: string, qty: number) => void;
@@ -28,6 +30,7 @@ type CartState = {
   setCartItemId: (productId: string, cartItemId: string) => void;
   setPromo: (code: string | null, discount: number) => void;
   setCustomer: (c: SelectedCustomer | null) => void;
+  setTable: (tableId: number | null, tableLabel: string | null) => void;
   clearCart: () => void;
   getTotal: () => number;
 };
@@ -37,6 +40,8 @@ export const useCartStore = create<CartState>((set, get) => ({
   promoCode: null,
   discount: 0,
   selectedCustomer: null,
+  tableId: null,
+  tableLabel: null,
 
   addItem: (item) =>
     set((state) => {
@@ -76,7 +81,9 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   setCustomer: (c) => set({ selectedCustomer: c }),
 
-  clearCart: () => set({ items: [], promoCode: null, discount: 0, selectedCustomer: null }),
+  setTable: (tableId, tableLabel) => set({ tableId, tableLabel }),
+
+  clearCart: () => set({ items: [], promoCode: null, discount: 0, selectedCustomer: null, tableId: null, tableLabel: null }),
 
   getTotal: () => {
     const state = get();

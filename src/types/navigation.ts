@@ -34,6 +34,7 @@ export type OnboardingStackParamList = {
   ShopType: undefined;
   Step1: undefined;
   Step2: undefined;
+  TableSetup: undefined;
   Step3: undefined;
   Step4: undefined;
 };
@@ -73,7 +74,7 @@ export type SellingStackParamList = {
   POSMain: { checkInPayload?: CheckInPayload } | undefined;
   Cart: undefined;
   Checkout: undefined;
-  OrderSuccess: { orderId: string; orderNumber: string; total: number };
+  OrderSuccess: { orderId: string; orderNumber: string; total: number; savedOffline?: boolean };
   OrderList: undefined;
   OrderDetail: { orderId: string };
 };

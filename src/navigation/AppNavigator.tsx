@@ -9,6 +9,7 @@ import { OfflineBanner } from '../components/OfflineBanner';
 import { useNotificationBadge } from '../hooks/useNotificationBadge';
 import { useBootstrap } from '../hooks/useBootstrap';
 import { useTokenRefresh } from '../hooks/useTokenRefresh';
+import { useOfflineSync } from '../hooks/useOfflineSync';
 
 // Tab screens
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
@@ -204,6 +205,7 @@ export function AppNavigator() {
   const unreadCount = useNotificationBadge();
   useBootstrap();
   useTokenRefresh();
+  useOfflineSync();
 
   return (
     <View style={{ flex: 1 }}>

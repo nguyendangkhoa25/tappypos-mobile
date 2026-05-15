@@ -20,6 +20,7 @@ import { ErrorState } from '../../components/ErrorState';
 import { EmptyState } from '../../components/EmptyState';
 import { QuickOrderStrip } from '../../components/QuickOrderStrip';
 import { useSellingStore } from '../../store/sellingStore';
+import { useOfflineQueueStore } from '../../store/offlineQueueStore';
 import type { OrdersScreenProps } from '../../types/navigation';
 
 const STATUS_FILTERS = [
@@ -40,6 +41,8 @@ const STATUS_COLORS: Record<string, string> = {
 export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) {
   const { t } = useTranslation();
   const { activeView, setActiveView } = useSellingStore();
+  const { pendingOrders } = useOfflineQueueStore();
+  const visiblePendingOrders = pendingOrders.filter((o) => o.status !== 'error');
   const insets = useSafeAreaInsets();
   const [status, setStatus] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -191,8 +194,6 @@ export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) 
         <View className="px-4 pt-4 gap-3">
           {[0, 1, 2, 3].map((i) => <Skeleton key={i} height={88} borderRadius={16} />)}
         </View>
-      ) : allOrders.length === 0 ? (
-        <EmptyState icon="🧾" title={t('orders.noOrders')} description={t('orders.noOrdersHint')} />
       ) : (
         <FlatList
           data={allOrders}
@@ -203,6 +204,39 @@ export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) 
           }
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.3}
+          ListHeaderComponent={
+            visiblePendingOrders.length > 0 && status === '' ? (
+              <View className="mb-3">
+                {visiblePendingOrders.map((order) => (
+                  <View
+                    key={order.id}
+                    className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-2"
+                  >
+                    <View className="flex-row justify-between items-start">
+                      <View className="flex-1 mr-3">
+                        <View className="flex-row items-center gap-2 mb-1">
+                          <MaterialCommunityIcons name="clock-outline" size={14} color="#d97706" />
+                          <Text className="text-xs font-semibold text-amber-700">
+                            {t('orders.pendingSync')}
+                          </Text>
+                        </View>
+                        <Text className="text-xs text-amber-600" numberOfLines={1}>
+                          {order.items.map((i) => `${i.name} ×${i.quantity}`).join(', ')}
+                        </Text>
+                        <Text className="text-xs text-amber-500 mt-0.5">{formatDateTime(order.createdAt)}</Text>
+                      </View>
+                      <Text className="font-bold text-amber-800">{formatVnd(order.total)}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            visiblePendingOrders.length === 0 || status !== '' ? (
+              <EmptyState icon="🧾" title={t('orders.noOrders')} description={t('orders.noOrdersHint')} />
+            ) : null
+          }
           renderItem={({ item, index }) => (
             <TouchableOpacity
               testID={`order-row-${index}`}

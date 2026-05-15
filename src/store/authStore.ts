@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import { extractFeatures, extractTenantId } from '../utils/jwt';
+import { extractFeatures, extractTenantId, extractShopType } from '../utils/jwt';
 import { registerForceLogout } from '../services/authSession';
 
 type AuthState = {
@@ -10,6 +10,7 @@ type AuthState = {
   biometricEnabled: boolean;
   tenantId: string | null;
   features: string[];
+  shopTypeCode: string | null;
   deviceSwitchedMessage: string | null;
   setupComplete: boolean;
 
@@ -29,6 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   biometricEnabled: false,
   tenantId: null,
   features: [],
+  shopTypeCode: null,
   deviceSwitchedMessage: null,
   setupComplete: false,
 
@@ -41,6 +43,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     const jwtTenantId = extractTenantId(accessToken);
     const features = extractFeatures(accessToken);
+    const shopTypeCode = extractShopType(accessToken);
+
+    if (shopTypeCode) tasks.push(SecureStore.setItemAsync('shop_type', shopTypeCode));
 
     let tenantId: string | null = jwtTenantId;
     if (jwtTenantId) {
@@ -61,6 +66,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: true,
       tenantId,
       features,
+      shopTypeCode,
       ...(setupComplete !== undefined ? { setupComplete } : {}),
     });
   },
@@ -92,19 +98,20 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Keep storedPhone, pin_enabled, refresh_token, biometric_enabled, setup_complete so the
     // user lands on PinLoginScreen and biometric/PIN re-login still works after logout.
     await SecureStore.deleteItemAsync('access_token');
-    set({ isAuthenticated: false, features: [], tenantId: null });
+    set({ isAuthenticated: false, features: [], tenantId: null, shopTypeCode: null });
   },
 
   clearDeviceSwitchedMessage: () => set({ deviceSwitchedMessage: null }),
 
   hydrateFromStorage: async () => {
-    const [accessToken, storedPhone, pinEnabled, biometricEnabled, tenantId, setupCompleteStr] = await Promise.all([
+    const [accessToken, storedPhone, pinEnabled, biometricEnabled, tenantId, setupCompleteStr, shopTypeCode] = await Promise.all([
       SecureStore.getItemAsync('access_token'),
       SecureStore.getItemAsync('phone'),
       SecureStore.getItemAsync('pin_enabled'),
       SecureStore.getItemAsync('biometric_enabled'),
       SecureStore.getItemAsync('tenant_id'),
       SecureStore.getItemAsync('setup_complete'),
+      SecureStore.getItemAsync('shop_type'),
     ]);
 
     const hasPinOnDevice = storedPhone !== null && pinEnabled === 'true';
@@ -120,6 +127,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       biometricEnabled: biometricEnabled === 'true',
       tenantId: tenantId ?? null,
       features,
+      shopTypeCode: shopTypeCode ?? null,
       setupComplete,
     });
   },

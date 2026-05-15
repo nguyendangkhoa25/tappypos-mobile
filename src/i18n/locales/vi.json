@@ -49,7 +49,9 @@
       "deleteMsg": "Bạn có chắc muốn xóa chi phí này không?",
       "deleteConfirm": "Xóa",
       "deleteSuccess": "Đã xóa chi phí"
-    }
+    },
+    "savedOffline": "⏳ Đã lưu tạm — sẽ đồng bộ khi có mạng",
+    "pendingSync": "Chờ đồng bộ"
   },
   "report": {
     "title": "Báo cáo",
@@ -237,21 +239,178 @@
     "sectionTools": "Tiện ích",
     "sectionSystem": "Hệ thống",
     "profileUpdate": "Hồ sơ cá nhân",
-    "changePassword": "Đổi mật khẩu",
-    "shopInfo": "Thông tin cửa hàng",
-    "bankAccounts": "Tài khoản ngân hàng",
-    "posConfig": "Cấu hình POS",
-    "defaultExpenses": "Chi phí mặc định",
+    "changePassword": {
+      "title": "Đổi mật khẩu",
+      "hint": "🔒 Nhập mật khẩu hiện tại, sau đó chọn mật khẩu mới có ít nhất 8 ký tự.\nSau khi đổi bạn sẽ bị đăng xuất — hãy ghi nhớ mật khẩu mới trước khi xác nhận.",
+      "currentLabel": "Mật khẩu hiện tại",
+      "currentPlaceholder": "Nhập mật khẩu hiện tại",
+      "newLabel": "Mật khẩu mới",
+      "newPlaceholder": "Tối thiểu 8 ký tự",
+      "confirmLabel": "Xác nhận mật khẩu mới",
+      "confirmPlaceholder": "Nhập lại mật khẩu mới",
+      "mismatch": "Mật khẩu xác nhận không khớp",
+      "wrongCurrent": "Mật khẩu hiện tại không đúng",
+      "success": "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.",
+      "submitBtn": "Đổi mật khẩu"
+    },
+    "shopInfo": {
+      "title": "Thông tin cửa hàng",
+      "hint": "🏪 Tên, địa chỉ và số điện thoại cửa hàng được in trên mọi hóa đơn khách nhận.\nĐiền hoặc cập nhật thông tin bên dưới, sau đó nhấn Lưu ở góc trên phải để áp dụng.",
+      "shopIdLabel": "Mã cửa hàng",
+      "shopIdCopied": "Đã sao chép mã cửa hàng",
+      "nameLabel": "Tên cửa hàng",
+      "namePlaceholder": "Tên cửa hàng của bạn",
+      "addressLabel": "Địa chỉ",
+      "addressPlaceholder": "Địa chỉ cửa hàng",
+      "phoneLabel": "Số điện thoại",
+      "phonePlaceholder": "Số điện thoại cửa hàng",
+      "descriptionLabel": "Mô tả",
+      "descriptionPlaceholder": "Giới thiệu ngắn về cửa hàng",
+      "saveSuccess": "Đã lưu thông tin cửa hàng"
+    },
+    "bankAccounts": {
+      "title": "Tài khoản ngân hàng",
+      "hint": "🏦 Tài khoản ngân hàng lưu ở đây dùng để tạo mã QR thanh toán chuyển khoản tại quầy.\nNhấn + để thêm tài khoản. Nhấn biểu tượng ngôi sao để đặt làm mặc định cho thanh toán QR.",
+      "addBtn": "Thêm tài khoản",
+      "defaultBadge": "Mặc định",
+      "setDefault": "Đặt làm mặc định",
+      "deleteTitle": "Xóa tài khoản?",
+      "deleteMsg": "Bạn có chắc muốn xóa tài khoản ngân hàng này không?",
+      "deleteConfirm": "Xóa",
+      "empty": "Chưa có tài khoản ngân hàng nào",
+      "emptyHint": "Thêm tài khoản ngân hàng để in lên hoá đơn và nhận chuyển khoản",
+      "formTitle": "Tài khoản ngân hàng",
+      "bankCodeLabel": "Ngân hàng",
+      "bankCodePlaceholder": "VD: VCB, TCB, MB...",
+      "bankNameLabel": "Tên ngân hàng",
+      "bankNamePlaceholder": "Vietcombank",
+      "accountNoLabel": "Số tài khoản",
+      "accountNoPlaceholder": "Số tài khoản",
+      "accountNameLabel": "Tên chủ tài khoản",
+      "accountNamePlaceholder": "Họ và tên",
+      "branchLabel": "Chi nhánh",
+      "branchPlaceholder": "Chi nhánh (tuỳ chọn)",
+      "saveSuccess": "Đã lưu tài khoản ngân hàng",
+      "deleteSuccess": "Đã xóa tài khoản ngân hàng"
+    },
+    "posConfig": {
+      "title": "Cấu hình POS",
+      "sectionMode": "Chế độ bán hàng",
+      "modeList": "Danh sách sản phẩm",
+      "modeBarcode": "Quét mã vạch",
+      "modeTable": "Sơ đồ bàn",
+      "sectionTax": "Thuế",
+      "taxAutoApply": "Tự động áp dụng thuế vào đơn hàng",
+      "taxRate": "Thuế suất",
+      "sectionDenominations": "Mệnh giá tiền mặt",
+      "denominationsHint": "Chọn các mệnh giá hiển thị khi thanh toán tiền mặt",
+      "saveSuccess": "Đã lưu cấu hình POS"
+    },
+    "defaultExpenses": {
+      "title": "Chi phí mặc định",
+      "screenHint": "💡 Chi phí mặc định là các mục chi phí cài sẵn, tự động điền khi ghi chép chi phí tháng.\nThêm các khoản cố định như tiền thuê, điện nước, lương một lần — rồi áp dụng mỗi tháng chỉ một chạm.",
+      "addBtn": "Thêm chi phí",
+      "hint": "Chi phí mặc định sẽ được gợi ý khi bạn thêm chi phí mỗi tháng",
+      "empty": "Chưa có chi phí mặc định nào",
+      "emptyHint": "Thêm các chi phí cố định hàng tháng như thuê mặt bằng, điện nước...",
+      "deleteTitle": "Xóa chi phí?",
+      "deleteMsg": "Bạn có chắc muốn xóa chi phí mặc định này không?",
+      "deleteConfirm": "Xóa",
+      "formTitle": "Chi phí mặc định",
+      "nameLabel": "Tên chi phí",
+      "namePlaceholder": "VD: Thuê mặt bằng, Điện, Nước...",
+      "amountLabel": "Số tiền hàng tháng (₫)",
+      "amountPlaceholder": "0",
+      "paymentDateLabel": "Ngày thanh toán hàng tháng",
+      "paymentDatePlaceholder": "1-28 (tuỳ chọn)",
+      "saveSuccess": "Đã lưu chi phí mặc định",
+      "deleteSuccess": "Đã xóa chi phí mặc định",
+      "paymentDateHint": "Ngày {{day}} hàng tháng"
+    },
     "security": "Bảo mật & PIN",
     "display": "Giao diện & Ngôn ngữ",
-    "notificationPreferences": "Cài đặt thông báo",
-    "feedback": "Gửi phản hồi",
-    "feedbackHistory": "Lịch sử phản hồi",
+    "notificationPreferences": {
+      "title": "Cài đặt thông báo",
+      "hint": "🔔 Kiểm soát chính xác sự kiện nào gửi thông báo trong ứng dụng cho bạn.\nBật/tắt từng loại — đơn mới, cảnh báo tồn kho, cập nhật hệ thống. Thay đổi được lưu tự động.",
+      "sectionOrder": "Đơn hàng",
+      "newOrder": "Đơn hàng mới",
+      "orderCancelled": "Đơn hàng bị huỷ",
+      "sectionInventory": "Tồn kho",
+      "lowStock": "Tồn kho thấp",
+      "outOfStock": "Hết hàng",
+      "sectionSystem": "Hệ thống",
+      "systemUpdate": "Cập nhật hệ thống",
+      "promotionAlert": "Khuyến mãi & Ưu đãi",
+      "saveSuccess": "Đã cập nhật cài đặt thông báo"
+    },
+    "feedback": {
+      "title": "Gửi phản hồi",
+      "hint": "💌 Gửi báo lỗi, ý tưởng tính năng hoặc nhận xét chung trực tiếp đến đội ngũ của chúng tôi.\nChọn loại phản hồi, mô tả chi tiết trải nghiệm, rồi nhấn Gửi — chúng tôi đọc từng tin nhắn.",
+      "categoryBug": "Báo lỗi",
+      "categoryIdea": "Ý tưởng",
+      "categoryFeature": "Tính năng mới",
+      "categoryOther": "Khác",
+      "contentLabel": "Nội dung phản hồi",
+      "contentPlaceholder": "Mô tả chi tiết về phản hồi của bạn...",
+      "charCount": "{{count}}/500",
+      "submitBtn": "Gửi phản hồi",
+      "successTitle": "Cảm ơn bạn!",
+      "successMsg": "Phản hồi của bạn đã được gửi. Chúng tôi sẽ xem xét sớm nhất có thể.",
+      "submitAnother": "Gửi phản hồi khác",
+      "categoryRequired": "Vui lòng chọn danh mục",
+      "contentRequired": "Vui lòng nhập nội dung phản hồi"
+    },
+    "feedbackHistory": {
+      "title": "Lịch sử phản hồi",
+      "hint": "💬 Theo dõi trạng thái các phản hồi bạn đã gửi đến đội ngũ chúng tôi.\nĐã nhận → đang xem xét · Đang xử lý → đang thực hiện · Đã giải quyết → hoàn thành.",
+      "empty": "Chưa có phản hồi nào",
+      "emptyHint": "Các phản hồi bạn đã gửi sẽ xuất hiện ở đây",
+      "statusReceived": "Đã nhận",
+      "statusProcessing": "Đang xử lý",
+      "statusResolved": "Đã giải quyết",
+      "categoryBug": "Báo lỗi",
+      "categoryIdea": "Ý tưởng",
+      "categoryFeature": "Tính năng mới",
+      "categoryOther": "Khác"
+    },
     "hotline": "Hotline",
     "email": "Email",
-    "activityLog": "Nhật ký hoạt động",
-    "tnc": "Điều khoản sử dụng",
-    "deleteAccount": "Xóa tài khoản",
+    "activityLog": {
+      "title": "Nhật ký hoạt động",
+      "hint": "📋 Ghi nhận có dấu thời gian mọi hành động trong cửa hàng — đơn hàng, thay đổi sản phẩm, chỉnh sửa cài đặt.\nDùng chip lọc để thu hẹp theo danh mục. Giúp bạn theo dõi điều gì đã thay đổi và khi nào.",
+      "filterAll": "Tất cả",
+      "filterOrder": "Đơn hàng",
+      "filterProduct": "Sản phẩm",
+      "filterCustomer": "Khách hàng",
+      "filterEmployee": "Nhân viên",
+      "filterSetting": "Cài đặt",
+      "empty": "Không có nhật ký",
+      "emptyHint": "Các hoạt động trong hệ thống sẽ xuất hiện ở đây",
+      "sourceMobile": "Mobile",
+      "sourceWeb": "Web"
+    },
+    "tnc": {
+      "title": "Điều khoản sử dụng",
+      "loadError": "Không thể tải điều khoản. Vui lòng thử lại.",
+      "version": "Phiên bản {{version}}",
+      "updatedAt": "Cập nhật: {{date}}"
+    },
+    "deleteAccount": {
+      "title": "Xóa tài khoản",
+      "hint": "⚠️ Xóa tài khoản sẽ xóa vĩnh viễn toàn bộ dữ liệu — sản phẩm, đơn hàng và khách hàng.\nGõ từ xác nhận chính xác như hiển thị bên dưới, sau đó nhấn nút xóa để tiến hành.",
+      "warningTitle": "Cảnh báo quan trọng",
+      "warning1": "Toàn bộ dữ liệu cửa hàng và lịch sử giao dịch sẽ bị xóa vĩnh viễn",
+      "warning2": "Tài khoản không thể khôi phục sau khi xóa",
+      "warning3": "Mọi đăng ký và thanh toán sẽ bị hủy ngay lập tức",
+      "confirmLabel": "Nhập \"XÁC NHẬN\" để tiếp tục",
+      "confirmPlaceholder": "XÁC NHẬN",
+      "confirmKeyword": "XÁC NHẬN",
+      "deleteBtn": "Xóa tài khoản vĩnh viễn",
+      "deleting": "Đang xóa tài khoản...",
+      "confirmDialogTitle": "Xóa tài khoản?",
+      "confirmDialogMsg": "Hành động này không thể hoàn tác. Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn.",
+      "confirmDialogBtn": "Xóa ngay"
+    },
     "profile": {
       "unknown": "Người dùng"
     },
@@ -284,94 +443,6 @@
       "phoneLabel": "Số điện thoại",
       "saveSuccess": "Đã cập nhật hồ sơ"
     },
-    "changePassword": {
-      "title": "Đổi mật khẩu",
-      "hint": "🔒 Nhập mật khẩu hiện tại, sau đó chọn mật khẩu mới có ít nhất 8 ký tự.\nSau khi đổi bạn sẽ bị đăng xuất — hãy ghi nhớ mật khẩu mới trước khi xác nhận.",
-      "currentLabel": "Mật khẩu hiện tại",
-      "currentPlaceholder": "Nhập mật khẩu hiện tại",
-      "newLabel": "Mật khẩu mới",
-      "newPlaceholder": "Tối thiểu 8 ký tự",
-      "confirmLabel": "Xác nhận mật khẩu mới",
-      "confirmPlaceholder": "Nhập lại mật khẩu mới",
-      "mismatch": "Mật khẩu xác nhận không khớp",
-      "wrongCurrent": "Mật khẩu hiện tại không đúng",
-      "success": "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.",
-      "submitBtn": "Đổi mật khẩu"
-    },
-    "shopInfo": {
-      "title": "Thông tin cửa hàng",
-      "hint": "🏪 Tên, địa chỉ và số điện thoại cửa hàng được in trên mọi hóa đơn khách nhận.\nĐiền hoặc cập nhật thông tin bên dưới, sau đó nhấn Lưu ở góc trên phải để áp dụng.",
-      "shopIdLabel": "Mã cửa hàng",
-      "shopIdCopied": "Đã sao chép mã cửa hàng",
-      "nameLabel": "Tên cửa hàng",
-      "namePlaceholder": "Tên cửa hàng của bạn",
-      "addressLabel": "Địa chỉ",
-      "addressPlaceholder": "Địa chỉ cửa hàng",
-      "phoneLabel": "Số điện thoại",
-      "phonePlaceholder": "Số điện thoại cửa hàng",
-      "descriptionLabel": "Mô tả",
-      "descriptionPlaceholder": "Giới thiệu ngắn về cửa hàng",
-      "saveSuccess": "Đã lưu thông tin cửa hàng"
-    },
-    "posConfig": {
-      "title": "Cấu hình POS",
-      "sectionMode": "Chế độ bán hàng",
-      "modeList": "Danh sách sản phẩm",
-      "modeBarcode": "Quét mã vạch",
-      "modeTable": "Sơ đồ bàn",
-      "sectionTax": "Thuế",
-      "taxAutoApply": "Tự động áp dụng thuế vào đơn hàng",
-      "taxRate": "Thuế suất",
-      "sectionDenominations": "Mệnh giá tiền mặt",
-      "denominationsHint": "Chọn các mệnh giá hiển thị khi thanh toán tiền mặt",
-      "saveSuccess": "Đã lưu cấu hình POS"
-    },
-    "bankAccounts": {
-      "title": "Tài khoản ngân hàng",
-      "hint": "🏦 Tài khoản ngân hàng lưu ở đây dùng để tạo mã QR thanh toán chuyển khoản tại quầy.\nNhấn + để thêm tài khoản. Nhấn biểu tượng ngôi sao để đặt làm mặc định cho thanh toán QR.",
-      "addBtn": "Thêm tài khoản",
-      "defaultBadge": "Mặc định",
-      "setDefault": "Đặt làm mặc định",
-      "deleteTitle": "Xóa tài khoản?",
-      "deleteMsg": "Bạn có chắc muốn xóa tài khoản ngân hàng này không?",
-      "deleteConfirm": "Xóa",
-      "empty": "Chưa có tài khoản ngân hàng nào",
-      "emptyHint": "Thêm tài khoản ngân hàng để in lên hoá đơn và nhận chuyển khoản",
-      "formTitle": "Tài khoản ngân hàng",
-      "bankCodeLabel": "Ngân hàng",
-      "bankCodePlaceholder": "VD: VCB, TCB, MB...",
-      "bankNameLabel": "Tên ngân hàng",
-      "bankNamePlaceholder": "Vietcombank",
-      "accountNoLabel": "Số tài khoản",
-      "accountNoPlaceholder": "Số tài khoản",
-      "accountNameLabel": "Tên chủ tài khoản",
-      "accountNamePlaceholder": "Họ và tên",
-      "branchLabel": "Chi nhánh",
-      "branchPlaceholder": "Chi nhánh (tuỳ chọn)",
-      "saveSuccess": "Đã lưu tài khoản ngân hàng",
-      "deleteSuccess": "Đã xóa tài khoản ngân hàng"
-    },
-    "defaultExpenses": {
-      "title": "Chi phí mặc định",
-      "screenHint": "💡 Chi phí mặc định là các mục chi phí cài sẵn, tự động điền khi ghi chép chi phí tháng.\nThêm các khoản cố định như tiền thuê, điện nước, lương một lần — rồi áp dụng mỗi tháng chỉ một chạm.",
-      "addBtn": "Thêm chi phí",
-      "hint": "Chi phí mặc định sẽ được gợi ý khi bạn thêm chi phí mỗi tháng",
-      "empty": "Chưa có chi phí mặc định nào",
-      "emptyHint": "Thêm các chi phí cố định hàng tháng như thuê mặt bằng, điện nước...",
-      "deleteTitle": "Xóa chi phí?",
-      "deleteMsg": "Bạn có chắc muốn xóa chi phí mặc định này không?",
-      "deleteConfirm": "Xóa",
-      "formTitle": "Chi phí mặc định",
-      "nameLabel": "Tên chi phí",
-      "namePlaceholder": "VD: Thuê mặt bằng, Điện, Nước...",
-      "amountLabel": "Số tiền hàng tháng (₫)",
-      "amountPlaceholder": "0",
-      "paymentDateLabel": "Ngày thanh toán hàng tháng",
-      "paymentDatePlaceholder": "1-28 (tuỳ chọn)",
-      "saveSuccess": "Đã lưu chi phí mặc định",
-      "deleteSuccess": "Đã xóa chi phí mặc định",
-      "paymentDateHint": "Ngày {{day}} hàng tháng"
-    },
     "displaySettings": {
       "title": "Giao diện & Ngôn ngữ",
       "hint": "🎨 Chuyển đổi giữa chủ đề Sáng, Tối hoặc Tự động theo sở thích hoặc thời điểm trong ngày.\nThay đổi ngôn ngữ ứng dụng giữa Tiếng Việt và Tiếng Anh. Bật Ẩn số tiền để bảo mật thông tin.",
@@ -385,86 +456,6 @@
       "sectionPrivacy": "Quyền riêng tư",
       "privacyMode": "Ẩn số tiền",
       "privacyModeHint": "Che giá trị doanh thu và tiền trên màn hình"
-    },
-    "notificationPreferences": {
-      "title": "Cài đặt thông báo",
-      "hint": "🔔 Kiểm soát chính xác sự kiện nào gửi thông báo trong ứng dụng cho bạn.\nBật/tắt từng loại — đơn mới, cảnh báo tồn kho, cập nhật hệ thống. Thay đổi được lưu tự động.",
-      "sectionOrder": "Đơn hàng",
-      "newOrder": "Đơn hàng mới",
-      "orderCancelled": "Đơn hàng bị huỷ",
-      "sectionInventory": "Tồn kho",
-      "lowStock": "Tồn kho thấp",
-      "outOfStock": "Hết hàng",
-      "sectionSystem": "Hệ thống",
-      "systemUpdate": "Cập nhật hệ thống",
-      "promotionAlert": "Khuyến mãi & Ưu đãi",
-      "saveSuccess": "Đã cập nhật cài đặt thông báo"
-    },
-    "activityLog": {
-      "title": "Nhật ký hoạt động",
-      "hint": "📋 Ghi nhận có dấu thời gian mọi hành động trong cửa hàng — đơn hàng, thay đổi sản phẩm, chỉnh sửa cài đặt.\nDùng chip lọc để thu hẹp theo danh mục. Giúp bạn theo dõi điều gì đã thay đổi và khi nào.",
-      "filterAll": "Tất cả",
-      "filterOrder": "Đơn hàng",
-      "filterProduct": "Sản phẩm",
-      "filterCustomer": "Khách hàng",
-      "filterEmployee": "Nhân viên",
-      "filterSetting": "Cài đặt",
-      "empty": "Không có nhật ký",
-      "emptyHint": "Các hoạt động trong hệ thống sẽ xuất hiện ở đây",
-      "sourceMobile": "Mobile",
-      "sourceWeb": "Web"
-    },
-    "feedback": {
-      "title": "Gửi phản hồi",
-      "hint": "💌 Gửi báo lỗi, ý tưởng tính năng hoặc nhận xét chung trực tiếp đến đội ngũ của chúng tôi.\nChọn loại phản hồi, mô tả chi tiết trải nghiệm, rồi nhấn Gửi — chúng tôi đọc từng tin nhắn.",
-      "categoryBug": "Báo lỗi",
-      "categoryIdea": "Ý tưởng",
-      "categoryFeature": "Tính năng mới",
-      "categoryOther": "Khác",
-      "contentLabel": "Nội dung phản hồi",
-      "contentPlaceholder": "Mô tả chi tiết về phản hồi của bạn...",
-      "charCount": "{{count}}/500",
-      "submitBtn": "Gửi phản hồi",
-      "successTitle": "Cảm ơn bạn!",
-      "successMsg": "Phản hồi của bạn đã được gửi. Chúng tôi sẽ xem xét sớm nhất có thể.",
-      "submitAnother": "Gửi phản hồi khác",
-      "categoryRequired": "Vui lòng chọn danh mục",
-      "contentRequired": "Vui lòng nhập nội dung phản hồi"
-    },
-    "feedbackHistory": {
-      "title": "Lịch sử phản hồi",
-      "hint": "💬 Theo dõi trạng thái các phản hồi bạn đã gửi đến đội ngũ chúng tôi.\nĐã nhận → đang xem xét · Đang xử lý → đang thực hiện · Đã giải quyết → hoàn thành.",
-      "empty": "Chưa có phản hồi nào",
-      "emptyHint": "Các phản hồi bạn đã gửi sẽ xuất hiện ở đây",
-      "statusReceived": "Đã nhận",
-      "statusProcessing": "Đang xử lý",
-      "statusResolved": "Đã giải quyết",
-      "categoryBug": "Báo lỗi",
-      "categoryIdea": "Ý tưởng",
-      "categoryFeature": "Tính năng mới",
-      "categoryOther": "Khác"
-    },
-    "tnc": {
-      "title": "Điều khoản sử dụng",
-      "loadError": "Không thể tải điều khoản. Vui lòng thử lại.",
-      "version": "Phiên bản {{version}}",
-      "updatedAt": "Cập nhật: {{date}}"
-    },
-    "deleteAccount": {
-      "title": "Xóa tài khoản",
-      "hint": "⚠️ Xóa tài khoản sẽ xóa vĩnh viễn toàn bộ dữ liệu — sản phẩm, đơn hàng và khách hàng.\nGõ từ xác nhận chính xác như hiển thị bên dưới, sau đó nhấn nút xóa để tiến hành.",
-      "warningTitle": "Cảnh báo quan trọng",
-      "warning1": "Toàn bộ dữ liệu cửa hàng và lịch sử giao dịch sẽ bị xóa vĩnh viễn",
-      "warning2": "Tài khoản không thể khôi phục sau khi xóa",
-      "warning3": "Mọi đăng ký và thanh toán sẽ bị hủy ngay lập tức",
-      "confirmLabel": "Nhập \"XÁC NHẬN\" để tiếp tục",
-      "confirmPlaceholder": "XÁC NHẬN",
-      "confirmKeyword": "XÁC NHẬN",
-      "deleteBtn": "Xóa tài khoản vĩnh viễn",
-      "deleting": "Đang xóa tài khoản...",
-      "confirmDialogTitle": "Xóa tài khoản?",
-      "confirmDialogMsg": "Hành động này không thể hoàn tác. Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn.",
-      "confirmDialogBtn": "Xóa ngay"
     },
     "subscription": {
       "title": "Gói dịch vụ",
@@ -501,7 +492,8 @@
     "datePlaceholder": "YYYY-MM-DD",
     "selectDate": "Chọn ngày",
     "errorGeneric": "Đã xảy ra lỗi. Vui lòng thử lại.",
-    "maintenance": "Hệ thống đang bảo trì. Thử lại sau."
+    "maintenance": "Hệ thống đang bảo trì. Thử lại sau.",
+    "offline": "Không có kết nối mạng"
   },
   "datePickerModal": {
     "weekdays": "T2,T3,T4,T5,T6,T7,CN",
@@ -756,7 +748,19 @@
     "autoNewOrder": "Đơn mới sau {{count}}s",
     "autoReturn": "Tự động sau {{count}}s",
     "checkoutError": "Không thể hoàn tất đơn hàng. Vui lòng thử lại.",
-    "exactAmount": "Đúng tiền"
+    "exactAmount": "Đúng tiền",
+    "savedOffline": "Đã lưu tạm — sẽ đồng bộ khi có mạng",
+    "savedOfflineTitle": "Đơn đã lưu tạm!",
+    "willSyncWhenOnline": "Sẽ tự động gửi lên khi có kết nối mạng",
+    "soldOut": "Hết",
+    "soldOutMark": "Đánh dấu hết hàng",
+    "soldOutRestore": "Mở lại",
+    "soldOutPrompt": "Đánh dấu sản phẩm này hết hàng?",
+    "soldOutCurrently": "Sản phẩm đang hết hàng.",
+    "soldOutMorningTitle": "Sản phẩm hết hàng hôm qua",
+    "soldOutMorningMsg": "Có {{count}} sản phẩm được đánh dấu hết từ hôm qua. Mở lại tất cả?",
+    "soldOutRestoreAll": "Mở lại tất cả",
+    "soldOutKeep": "Giữ hết hàng"
   },
   "orders": {
     "title": "Đơn hàng",
@@ -770,6 +774,7 @@
     "searchButton": "Tìm",
     "noOrders": "Không có đơn hàng",
     "noOrdersHint": "Các đơn hàng sẽ hiển thị ở đây",
+    "pendingSync": "⏳ Chờ đồng bộ",
     "loadMore": "Xem thêm",
     "orderDetail": "Chi tiết đơn hàng",
     "orderNumber": "Mã đơn",
@@ -801,7 +806,7 @@
   },
   "products": {
     "title": "Sản phẩm",
-    "hint": "🛍️ Toàn bộ danh mục sản phẩm — nhấn vào bất kỳ sản phẩm nào để xem hoặc chỉnh sửa chi tiết.\nDùng thanh tìm kiếm hoặc nhấn chip danh mục để lọc. Sản phẩm hết hàng được đánh dấu tự động.",
+    "hint": "📋 Thông tin đầy đủ của sản phẩm — giá bán, tồn kho và mô tả.\nNhấn biểu tượng bút chì để chỉnh sửa bất kỳ trường nào. Nhấn Thêm vào giỏ để tạo đơn hàng ngay.\nVới dịch vụ, thời gian hiển thị độ dài của lượt phục vụ.",
     "searchPlaceholder": "Tìm sản phẩm...",
     "searchButton": "Tìm",
     "allCategories": "Tất cả",
@@ -820,7 +825,6 @@
     "inStock": "Còn hàng",
     "name": "Tên",
     "detailTitle": "Chi tiết sản phẩm",
-    "hint": "📋 Thông tin đầy đủ của sản phẩm — giá bán, tồn kho và mô tả.\nNhấn biểu tượng bút chì để chỉnh sửa bất kỳ trường nào. Nhấn Thêm vào giỏ để tạo đơn hàng ngay.\nVới dịch vụ, thời gian hiển thị độ dài của lượt phục vụ.",
     "service": "Dịch vụ",
     "minutes": "phút",
     "bookService": "Đặt dịch vụ",
@@ -1395,7 +1399,9 @@
       "createError": "Không thể tạo cửa hàng",
       "retry": "Thử lại",
       "networkError": "Không thể kết nối. Kiểm tra mạng và thử lại.",
-      "unexpectedError": "Đã xảy ra lỗi không mong muốn."
+      "unexpectedError": "Đã xảy ra lỗi không mong muốn.",
+      "sectionTables": "Bàn ({{count}} bàn)",
+      "noTables": "Không thiết lập bàn"
     },
     "shopType": {
       "title": "Loại hình cửa hàng",
@@ -1405,15 +1411,16 @@
       "noResults": "Không tìm thấy loại hình phù hợp",
       "groupAll": "Tất cả",
       "groups": {
-        "FOOD":        "Quán ăn",
-        "DRINKS":      "Đồ uống",
-        "GROCERY":     "Tạp hóa",
-        "FASHION":     "Thời trang",
-        "BEAUTY":      "Làm đẹp",
-        "HEALTH":      "Y tế",
-        "GOLD":        "Vàng & Cầm đồ",
+        "FOOD": "Quán ăn",
+        "DRINKS": "Đồ uống",
+        "GROCERY": "Tạp hóa",
+        "FASHION": "Thời trang",
+        "BEAUTY": "Làm đẹp",
+        "HEALTH": "Y tế",
+        "GOLD": "Vàng & Cầm đồ",
         "ELECTRONICS": "Điện tử",
-        "SERVICES":    "Dịch vụ"
+        "SERVICES": "Dịch vụ",
+        "PUB": "Quán nhậu"
       },
       "types": {
         "CONVENIENCE_STORE": {
@@ -1483,48 +1490,217 @@
         }
       },
       "specific": {
-        "PHO_SHOP":      { "name": "Quán phở",             "examples": "Phở bò, phở gà, phở đặc biệt" },
-        "RICE_SHOP":     { "name": "Cơm bình dân",         "examples": "Cơm phần, cơm đĩa, cơm tấm" },
-        "NOODLE_SHOP":   { "name": "Quán bún / mì",        "examples": "Bún riêu, mì xào, hủ tiếu, bún mọc" },
-        "BUN_BO":        { "name": "Quán bún bò",          "examples": "Bún bò Huế, bún bò giò heo" },
-        "HOT_POT":       { "name": "Quán lẩu",             "examples": "Lẩu thái, lẩu hải sản, lẩu nấm" },
-        "BANH_MI":       { "name": "Quán bánh mì",         "examples": "Bánh mì thịt, pate, chả, trứng" },
-        "EATERY":        { "name": "Quán ăn vặt",          "examples": "Xôi, bánh cuốn, nem, chả giò, ăn vặt" },
-        "RESTAURANT":    { "name": "Nhà hàng",             "examples": "Nhà hàng, buffet, đặt bàn" },
-        "CAFE":          { "name": "Quán cà phê",          "examples": "Cà phê đen, bạc xỉu, cà phê sữa đá" },
-        "BUBBLE_TEA":    { "name": "Quán trà sữa",         "examples": "Trà sữa, trà trái cây, topping" },
-        "JUICE_BAR":     { "name": "Quán nước ép",         "examples": "Nước ép, sinh tố, trà chanh, soda" },
-        "GROCERY":       { "name": "Tạp hóa",              "examples": "Hàng tạp hóa, thực phẩm khô, đồ dùng hàng ngày" },
-        "MINI_MART":     { "name": "Siêu thị mini",        "examples": "Siêu thị nhỏ, cửa hàng tiện lợi" },
-        "VEGETABLE_SHOP":{ "name": "Rau củ quả",           "examples": "Rau sạch, trái cây tươi, nông sản" },
-        "MEAT_SHOP":     { "name": "Thịt cá tươi",         "examples": "Thịt heo, thịt bò, hải sản, thủy sản" },
-        "BAKERY":        { "name": "Tiệm bánh",            "examples": "Bánh kem, bánh mì, bánh ngọt" },
-        "CLOTHING":      { "name": "Shop quần áo",         "examples": "Quần áo nam, nữ, thời trang" },
-        "SHOE_SHOP":     { "name": "Shop giày dép",        "examples": "Giày thể thao, dép, sandal, giày da" },
-        "ACCESSORIES":   { "name": "Phụ kiện thời trang",  "examples": "Túi xách, kính mắt, mũ, dây đeo" },
-        "MENS_BARBER":   { "name": "Tiệm cắt tóc nam",            "examples": "Cắt tóc, fade, undercut, cạo râu" },
-        "HAIR_SALON":    { "name": "Salon tóc",                    "examples": "Uốn, nhuộm, duỗi, gội đầu, tạo kiểu" },
-        "NAIL_STUDIO":   { "name": "Tiệm nail",                    "examples": "Sơn móng, đắp bột, vẽ nail, gel" },
-        "SPA":           { "name": "Spa / Thẩm mỹ",                "examples": "Massage, chăm sóc da, thẩm mỹ, wax" },
-        "LASH_PMU":      { "name": "Tiệm mi / Xăm thẩm mỹ",       "examples": "Nối mi, xăm mày, xăm môi, xăm mí mắt" },
-        "MASSAGE":       { "name": "Tiệm massage",                  "examples": "Massage thư giãn, massage trị liệu, massage chân" },
-        "BEAUTY_CLINIC": { "name": "Thẩm mỹ viện",                  "examples": "Chăm sóc da, trị mụn, laser, HIFU, triệt lông" },
-        "MAKEUP_STUDIO": { "name": "Tiệm trang điểm / Studio cô dâu", "examples": "Trang điểm đi tiệc, cô dâu, chụp ảnh" },
-        "PHARMACY":      { "name": "Nhà thuốc",            "examples": "Thuốc tây, dược phẩm, vitamin, thực phẩm chức năng" },
-        "TRAD_MEDICINE": { "name": "Thuốc đông y",         "examples": "Thuốc bắc, đông y, dược liệu, thảo dược" },
-        "JEWELRY":       { "name": "Tiệm vàng",            "examples": "Vàng, bạc, trang sức, kim cương" },
-        "PAWN":          { "name": "Tiệm cầm đồ",          "examples": "Cầm đồ, thế chấp, mua bán đồ cũ" },
-        "PHONE_SHOP":    { "name": "Shop điện thoại",      "examples": "Điện thoại, phụ kiện, sửa chữa" },
-        "COMPUTER_SHOP": { "name": "Shop máy tính",        "examples": "Laptop, máy tính, linh kiện, sửa chữa" },
-        "APPLIANCES":    { "name": "Điện máy",             "examples": "Tủ lạnh, máy giặt, điều hòa, đồ gia dụng" },
-        "CAR_WASH":      { "name": "Rửa xe",               "examples": "Rửa xe máy, ô tô, chăm sóc xe" },
-        "LAUNDRY":       { "name": "Giặt sấy",             "examples": "Giặt ủi, giặt khô, dịch vụ giặt" },
-        "PET_SHOP":      { "name": "Thú cưng",             "examples": "Thú cưng, thức ăn, phụ kiện, grooming" },
-        "FLOWER_SHOP":   { "name": "Cửa hàng hoa",         "examples": "Hoa tươi, hoa giả, hoa sự kiện" },
-        "STATIONERY":    { "name": "Văn phòng phẩm",       "examples": "Sách vở, bút mực, dụng cụ học tập" },
-        "GYM":           { "name": "Phòng gym / Yoga",     "examples": "Gym, yoga, fitness, thể hình" },
-        "OTHER":         { "name": "Khác",                 "examples": "Dịch vụ khác, loại hình chưa có trong danh sách" }
+        "PHO_SHOP": {
+          "name": "Quán phở",
+          "examples": "Phở bò, phở gà, phở đặc biệt"
+        },
+        "RICE_SHOP": {
+          "name": "Cơm bình dân",
+          "examples": "Cơm phần, cơm đĩa, cơm tấm"
+        },
+        "NOODLE_SHOP": {
+          "name": "Quán bún / mì",
+          "examples": "Bún riêu, mì xào, hủ tiếu, bún mọc"
+        },
+        "BUN_BO": {
+          "name": "Quán bún bò",
+          "examples": "Bún bò Huế, bún bò giò heo"
+        },
+        "HOT_POT": {
+          "name": "Quán lẩu",
+          "examples": "Lẩu thái, lẩu hải sản, lẩu nấm"
+        },
+        "LAU_BO": {
+          "name": "Lẩu bò",
+          "examples": "Lẩu bò nhúng dấm, bò tái chanh, bò nướng"
+        },
+        "QUAN_DE": {
+          "name": "Quán Dê",
+          "examples": "Dê xào lăn, dê nướng, dê hầm thuốc bắc"
+        },
+        "BANH_MI": {
+          "name": "Quán bánh mì",
+          "examples": "Bánh mì thịt, pate, chả, trứng"
+        },
+        "EATERY": {
+          "name": "Quán ăn vặt",
+          "examples": "Xôi, bánh cuốn, nem, chả giò, ăn vặt"
+        },
+        "RESTAURANT": {
+          "name": "Nhà hàng",
+          "examples": "Nhà hàng, buffet, đặt bàn"
+        },
+        "CAFE": {
+          "name": "Quán cà phê",
+          "examples": "Cà phê đen, bạc xỉu, cà phê sữa đá"
+        },
+        "BUBBLE_TEA": {
+          "name": "Quán trà sữa",
+          "examples": "Trà sữa, trà trái cây, topping"
+        },
+        "JUICE_BAR": {
+          "name": "Quán nước ép",
+          "examples": "Nước ép, sinh tố, trà chanh, soda"
+        },
+        "GROCERY": {
+          "name": "Tạp hóa",
+          "examples": "Hàng tạp hóa, thực phẩm khô, đồ dùng hàng ngày"
+        },
+        "MINI_MART": {
+          "name": "Siêu thị mini",
+          "examples": "Siêu thị nhỏ, cửa hàng tiện lợi"
+        },
+        "VEGETABLE_SHOP": {
+          "name": "Rau củ quả",
+          "examples": "Rau sạch, trái cây tươi, nông sản"
+        },
+        "MEAT_SHOP": {
+          "name": "Thịt cá tươi",
+          "examples": "Thịt heo, thịt bò, hải sản, thủy sản"
+        },
+        "BAKERY": {
+          "name": "Tiệm bánh",
+          "examples": "Bánh kem, bánh mì, bánh ngọt"
+        },
+        "CLOTHING": {
+          "name": "Shop quần áo",
+          "examples": "Quần áo nam, nữ, thời trang"
+        },
+        "SHOE_SHOP": {
+          "name": "Shop giày dép",
+          "examples": "Giày thể thao, dép, sandal, giày da"
+        },
+        "ACCESSORIES": {
+          "name": "Phụ kiện thời trang",
+          "examples": "Túi xách, kính mắt, mũ, dây đeo"
+        },
+        "MENS_BARBER": {
+          "name": "Tiệm cắt tóc nam",
+          "examples": "Cắt tóc, fade, undercut, cạo râu"
+        },
+        "HAIR_SALON": {
+          "name": "Salon tóc",
+          "examples": "Uốn, nhuộm, duỗi, gội đầu, tạo kiểu"
+        },
+        "NAIL_STUDIO": {
+          "name": "Tiệm nail",
+          "examples": "Sơn móng, đắp bột, vẽ nail, gel"
+        },
+        "SPA": {
+          "name": "Spa / Thẩm mỹ",
+          "examples": "Massage, chăm sóc da, thẩm mỹ, wax"
+        },
+        "LASH_PMU": {
+          "name": "Tiệm mi / Xăm thẩm mỹ",
+          "examples": "Nối mi, xăm mày, xăm môi, xăm mí mắt"
+        },
+        "MASSAGE": {
+          "name": "Tiệm massage",
+          "examples": "Massage thư giãn, massage trị liệu, massage chân"
+        },
+        "BEAUTY_CLINIC": {
+          "name": "Thẩm mỹ viện",
+          "examples": "Chăm sóc da, trị mụn, laser, HIFU, triệt lông"
+        },
+        "MAKEUP_STUDIO": {
+          "name": "Tiệm trang điểm / Studio cô dâu",
+          "examples": "Trang điểm đi tiệc, cô dâu, chụp ảnh"
+        },
+        "PHARMACY": {
+          "name": "Nhà thuốc",
+          "examples": "Thuốc tây, dược phẩm, vitamin, thực phẩm chức năng"
+        },
+        "TRAD_MEDICINE": {
+          "name": "Thuốc đông y",
+          "examples": "Thuốc bắc, đông y, dược liệu, thảo dược"
+        },
+        "JEWELRY": {
+          "name": "Tiệm vàng",
+          "examples": "Vàng, bạc, trang sức, kim cương"
+        },
+        "PAWN": {
+          "name": "Tiệm cầm đồ",
+          "examples": "Cầm đồ, thế chấp, mua bán đồ cũ"
+        },
+        "PHONE_SHOP": {
+          "name": "Shop điện thoại",
+          "examples": "Điện thoại, phụ kiện, sửa chữa"
+        },
+        "COMPUTER_SHOP": {
+          "name": "Shop máy tính",
+          "examples": "Laptop, máy tính, linh kiện, sửa chữa"
+        },
+        "APPLIANCES": {
+          "name": "Điện máy",
+          "examples": "Tủ lạnh, máy giặt, điều hòa, đồ gia dụng"
+        },
+        "CAR_WASH": {
+          "name": "Rửa xe",
+          "examples": "Rửa xe máy, ô tô, chăm sóc xe"
+        },
+        "LAUNDRY": {
+          "name": "Giặt sấy",
+          "examples": "Giặt ủi, giặt khô, dịch vụ giặt"
+        },
+        "PET_SHOP": {
+          "name": "Thú cưng",
+          "examples": "Thú cưng, thức ăn, phụ kiện, grooming"
+        },
+        "FLOWER_SHOP": {
+          "name": "Cửa hàng hoa",
+          "examples": "Hoa tươi, hoa giả, hoa sự kiện"
+        },
+        "STATIONERY": {
+          "name": "Văn phòng phẩm",
+          "examples": "Sách vở, bút mực, dụng cụ học tập"
+        },
+        "GYM": {
+          "name": "Phòng gym / Yoga",
+          "examples": "Gym, yoga, fitness, thể hình"
+        },
+        "OTHER": {
+          "name": "Khác",
+          "examples": "Dịch vụ khác, loại hình chưa có trong danh sách"
+        },
+        "PUB": {
+          "name": "Quán nhậu",
+          "examples": "Quán nhậu, quán bia, nhậu lai rai",
+          "hint": "Dành cho quán nhậu phục vụ bia rượu và đồ nhắm. Hỗ trợ quản lý bàn, gọi món và theo dõi doanh thu theo ca."
+        },
+        "PUB_SEAFOOD": {
+          "name": "Quán nhậu hải sản",
+          "examples": "Hải sản tươi sống, lẩu hải sản, tôm hùm, ghẹ, ốc",
+          "hint": "Phù hợp cho quán nhậu chuyên hải sản. Hỗ trợ quản lý bàn, menu hải sản phong phú và đặt bàn trước."
+        },
+        "PUB_GOAT": {
+          "name": "Quán nhậu chuyên dê",
+          "examples": "Dê xào lăn, dê nướng, lẩu dê, tiết canh dê",
+          "hint": "Dành cho quán nhậu chuyên thịt dê. Hỗ trợ quản lý bàn và menu theo từng phần, bán theo kg hoặc phần."
+        },
+        "PUB_BEEF": {
+          "name": "Quán nhậu chuyên bò",
+          "examples": "Bò nhúng dấm, bò nướng, lẩu bò, bắp bò kho",
+          "hint": "Phù hợp cho quán nhậu chuyên thịt bò. Hỗ trợ quản lý bàn và menu đặc sắc theo phần hoặc theo kg."
+        }
       }
+    },
+    "tableSetup": {
+      "title": "Thiết lập bàn",
+      "hint1": "Thiết lập bàn giúp quản lý trạng thái bàn trống và bàn có khách",
+      "hint2": "Bạn có thể thêm, sửa, xóa bàn sau khi đã đăng ký",
+      "hint3": "Bỏ qua nếu cửa hàng không phục vụ theo bàn",
+      "autoGenLabel": "Tạo tự động",
+      "autoGenCount": "Số bàn (ví dụ: 10)",
+      "autoGenHint": "Tự tạo Bàn 1 đến Bàn N",
+      "generateBtn": "Tạo",
+      "manualLabel": "Thêm bàn thủ công",
+      "tableNumberPlaceholder": "Tên bàn (vd: Bàn VIP, Bàn 1)",
+      "capacityLabel": "Số chỗ ngồi",
+      "locationLabel": "Khu vực",
+      "locationPlaceholder": "Tầng 1, Sân thượng...",
+      "addTableBtn": "Thêm bàn",
+      "tableCount": "{{count}} bàn đã thêm",
+      "capacityHint": "{{count}} chỗ"
     }
   },
   "myWork": {
@@ -1714,5 +1890,25 @@
     "pointsDiscount": "Giảm từ điểm",
     "splitSession": "{{count}} KTV",
     "splitSessionHint": "Phục vụ đồng thời"
+  },
+  "tableGrid": {
+    "title": "Sơ đồ bàn",
+    "allAreas": "Tất cả khu",
+    "capacity": "{{count}} chỗ",
+    "elapsed": "{{count}} phút",
+    "noTables": "Chưa có bàn nào.",
+    "addFirstTable": "Thêm bàn đầu tiên",
+    "addTable": "Thêm bàn",
+    "tableNumber": "Tên bàn",
+    "tableNumberPlaceholder": "VD: Bàn 1, Bàn VIP...",
+    "capacityLabel": "Số chỗ ngồi",
+    "area": "Khu vực",
+    "areaPlaceholder": "Tầng 1, Sân thượng...",
+    "status": {
+      "available": "Trống",
+      "occupied": "Có khách",
+      "reserved": "Đặt trước",
+      "cleaning": "Đang dọn"
+    }
   }
 }

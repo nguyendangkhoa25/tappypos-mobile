@@ -20,13 +20,17 @@ import { useUserStore } from '../../store/userStore';
 import { useAlertStore } from '../../store/alertStore';
 import { formatVnd } from '../../utils/format';
 import { CATEGORY_EMOJI } from './Step3Screen';
-import { getBackendCode, SPECIFIC_SHOP_TYPES } from '../../utils/shopTypes';
+import { getBackendCode, isFnbShop, SPECIFIC_SHOP_TYPES } from '../../utils/shopTypes';
 import type { OnboardingScreenProps } from '../../types/navigation';
 
 export function Step4Screen({ navigation }: OnboardingScreenProps<'Step4'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { shopTypeCode, step1, step2, step3, removeExpense, removeProduct, reset } = useOnboardingStore();
+  const { shopTypeCode, step1, step2, tables, step3, removeExpense, removeProduct, reset } = useOnboardingStore();
+  const backendCode = getBackendCode(shopTypeCode);
+  const isFnb = isFnbShop(backendCode);
+  const totalSteps = isFnb ? 5 : 4;
+  const stepIndex = isFnb ? 4 : 3;
   const { setAuthenticated } = useAuthStore();
   const { show: showAlert } = useAlertStore();
   const [loading, setLoading] = useState(false);
@@ -57,6 +61,11 @@ export function Step4Screen({ navigation }: OnboardingScreenProps<'Step4'>) {
           paymentDate: e.paymentDate,
           note: e.note,
         })),
+        tables: tables.length > 0 ? tables.map((tb) => ({
+          tableNumber: tb.tableNumber,
+          capacity: tb.capacity,
+          location: tb.location,
+        })) : undefined,
       });
 
       const { accessToken, refreshToken, setupComplete } = res.data.data;
@@ -91,7 +100,7 @@ export function Step4Screen({ navigation }: OnboardingScreenProps<'Step4'>) {
         keyboardShouldPersistTaps="handled"
       >
         <View className="px-6 pt-8">
-          <OnboardingHeader step={3} total={4} onBack={() => navigation.goBack()} />
+          <OnboardingHeader step={stepIndex} total={totalSteps} onBack={() => navigation.goBack()} />
 
           <Text className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-1">
             {t('onboarding.step4.title')}
@@ -196,6 +205,53 @@ export function Step4Screen({ navigation }: OnboardingScreenProps<'Step4'>) {
               </View>
             )}
           </View>
+
+          {/* Tables — read-only summary (F&B only) */}
+          {isFnb && (
+            <View className="mb-3">
+              <View className="flex-row items-center justify-between mb-2">
+                <Text className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+                  {t('onboarding.step4.sectionTables', { count: tables.length })}
+                </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('TableSetup')}>
+                  <Text className="text-xs text-primary font-semibold">{t('onboarding.step4.editList')}</Text>
+                </TouchableOpacity>
+              </View>
+              {tables.length === 0 ? (
+                <View className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4">
+                  <Text className="text-sm text-gray-400 dark:text-gray-500">
+                    {t('onboarding.step4.noTables')}
+                  </Text>
+                </View>
+              ) : (
+                <View className="bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden">
+                  {tables.slice(0, 5).map((tb, i) => (
+                    <View
+                      key={i}
+                      className={`flex-row items-center px-4 py-3 ${
+                        i < Math.min(tables.length, 5) - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''
+                      }`}
+                    >
+                      <MaterialCommunityIcons name="table-chair" size={14} color="#6b7280" />
+                      <Text className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-200 ml-2">
+                        {tb.tableNumber}
+                      </Text>
+                      <Text className="text-xs text-gray-400 dark:text-gray-500">
+                        {t('onboarding.tableSetup.capacityHint', { count: tb.capacity })}
+                      </Text>
+                    </View>
+                  ))}
+                  {tables.length > 5 && (
+                    <View className="px-4 py-2">
+                      <Text className="text-xs text-gray-400 dark:text-gray-500">
+                        +{tables.length - 5} bàn nữa
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Expenses — read-only summary */}
           <View className="mb-3">

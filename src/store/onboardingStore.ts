@@ -10,6 +10,12 @@ export type OnboardingProduct = {
   dynamicPrice: boolean;
 };
 
+export type TableSetup = {
+  tableNumber: string;
+  capacity: number;
+  location?: string;
+};
+
 export type OnboardingExpense = {
   name: string;
   monthlyAmount: number;
@@ -24,6 +30,7 @@ type OnboardingState = {
   shopTypeCode: string | null;
   step1: { nickname: string; fullName: string; shopName: string; address: string };
   step2: { products: OnboardingProduct[] };
+  tables: TableSetup[];
   step3: { expenses: OnboardingExpense[] };
 
   setShopType: (code: string) => void;
@@ -32,6 +39,9 @@ type OnboardingState = {
   addProduct: (product: OnboardingProduct) => void;
   removeProduct: (templateId: string) => void;
   updateProduct: (templateId: string, patch: Partial<Omit<OnboardingProduct, 'templateId'>>) => void;
+  setTables: (tables: TableSetup[]) => void;
+  addTable: (table: TableSetup) => void;
+  removeTable: (index: number) => void;
   setStep3: (data: OnboardingState['step3']) => void;
   addExpense: (expense: OnboardingExpense) => void;
   removeExpense: (name: string) => void;
@@ -45,6 +55,7 @@ const initialState = {
   shopTypeCode: null,
   step1: { nickname: '', fullName: '', shopName: '', address: '' },
   step2: { products: [] },
+  tables: [] as TableSetup[],
   step3: { expenses: [] },
 };
 
@@ -67,6 +78,9 @@ export const useOnboardingStore = create<OnboardingState>()(
             ),
           },
         })),
+      setTables: (tables) => set({ tables }),
+      addTable: (table) => set((s) => ({ tables: [...s.tables, table] })),
+      removeTable: (index) => set((s) => ({ tables: s.tables.filter((_, i) => i !== index) })),
       setStep3: (data) => set({ step3: data }),
       addExpense: (expense) =>
         set((s) => ({ step3: { expenses: [...s.step3.expenses, expense] } })),

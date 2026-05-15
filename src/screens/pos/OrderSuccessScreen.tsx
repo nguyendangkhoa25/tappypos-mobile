@@ -89,7 +89,7 @@ function buildReceiptHtml(order: OrderDetail, t: (k: string) => string): string 
 export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderSuccess'>) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { orderId, orderNumber, total } = route.params;
+  const { orderId, orderNumber, total, savedOffline } = route.params;
 
   const [countdown, setCountdown] = useState(AUTO_SECONDS);
   const [printing, setPrinting] = useState(false);
@@ -99,6 +99,7 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
     queryKey: ['order', orderId],
     queryFn: () => orderApi.getById(orderId).then((r) => r.data.data),
     staleTime: 60_000,
+    enabled: !savedOffline && !!orderId,
   });
 
   const startCountdown = useCallback(() => {
@@ -148,13 +149,24 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
       </View>
 
       <Text className="text-2xl font-bold text-gray-900 mb-2 text-center">
-        {t('pos.orderSuccess')}
+        {savedOffline ? t('pos.savedOfflineTitle') : t('pos.orderSuccess')}
       </Text>
+
+      {savedOffline && (
+        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-1.5 mb-3 gap-x-1.5">
+          <MaterialCommunityIcons name="wifi-off" size={14} color="#6b7280" />
+          <Text className="text-sm text-gray-600 font-medium">{t('pos.savedOffline')}</Text>
+        </View>
+      )}
 
       <View className="items-center mb-10">
         <Text testID="order-success-number" className="text-gray-500 text-base">
-          {t('pos.orderNumber')}{' '}
-          <Text className="font-bold text-gray-800">#{orderNumber}</Text>
+          {savedOffline ? t('pos.willSyncWhenOnline') : (
+            <>
+              {t('pos.orderNumber')}{' '}
+              <Text className="font-bold text-gray-800">#{orderNumber}</Text>
+            </>
+          )}
         </Text>
         <Text className="text-3xl font-bold text-indigo-600 mt-2">{formatVnd(total)}</Text>
 
@@ -175,33 +187,35 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
         )}
       </View>
 
-      {/* Print receipt */}
-      <TouchableOpacity
-        className={`w-full rounded-2xl py-4 items-center justify-center flex-row gap-2 mb-3 border-2 ${
-          !orderData || printing
-            ? 'border-gray-200 bg-gray-50'
-            : 'border-indigo-200 bg-indigo-50 active:opacity-70'
-        }`}
-        onPress={handlePrint}
-        disabled={!orderData || printing}
-      >
-        {printing ? (
-          <ActivityIndicator size="small" color="#4f46e5" />
-        ) : (
-          <MaterialCommunityIcons
-            name="printer-outline"
-            size={20}
-            color={orderData ? '#4f46e5' : '#9ca3af'}
-          />
-        )}
-        <Text
-          className={`font-semibold text-base ${
-            !orderData || printing ? 'text-gray-400' : 'text-indigo-700'
+      {/* Print receipt — hidden when saved offline (no server order exists yet) */}
+      {!savedOffline && (
+        <TouchableOpacity
+          className={`w-full rounded-2xl py-4 items-center justify-center flex-row gap-2 mb-3 border-2 ${
+            !orderData || printing
+              ? 'border-gray-200 bg-gray-50'
+              : 'border-indigo-200 bg-indigo-50 active:opacity-70'
           }`}
+          onPress={handlePrint}
+          disabled={!orderData || printing}
         >
-          {printing ? t('pos.printing') : t('pos.printReceipt')}
-        </Text>
-      </TouchableOpacity>
+          {printing ? (
+            <ActivityIndicator size="small" color="#4f46e5" />
+          ) : (
+            <MaterialCommunityIcons
+              name="printer-outline"
+              size={20}
+              color={orderData ? '#4f46e5' : '#9ca3af'}
+            />
+          )}
+          <Text
+            className={`font-semibold text-base ${
+              !orderData || printing ? 'text-gray-400' : 'text-indigo-700'
+            }`}
+          >
+            {printing ? t('pos.printing') : t('pos.printReceipt')}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {/* New order with countdown */}
       <TouchableOpacity

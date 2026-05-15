@@ -20,7 +20,7 @@ import { OnboardingHeader } from './OnboardingHeader';
 import { MoneyInput } from '../../components/MoneyInput';
 import { ClearableInput } from '../../components/ClearableInput';
 import { formatVnd } from '../../utils/format';
-import { getBackendCode } from '../../utils/shopTypes';
+import { getBackendCode, isFnbShop } from '../../utils/shopTypes';
 import { ONBOARDING_UNITS, SHOP_TYPE_UNIT_PRIORITY, DEFAULT_ONBOARDING_UNIT, type UnitDef } from '../../constants/productConstants';
 import type { OnboardingScreenProps } from '../../types/navigation';
 import type { ProductTemplate } from '../../services/api';
@@ -166,11 +166,18 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
     setTimeout(() => nameRef.current?.focus(), 50);
   };
 
+  const isFnb = isFnbShop(backendCode);
+  const totalSteps = isFnb ? 5 : 4;
+
   const handleContinue = () => {
     // commit unsaved form item if there's a name
     if (name.trim()) doAdd(name, rawPrice, unit, isDynamic);
     completeStep(1);
-    navigation.navigate('Step3');
+    if (isFnb) {
+      navigation.navigate('TableSetup');
+    } else {
+      navigation.navigate('Step3');
+    }
   };
 
   const handleSkip = () => {
@@ -185,7 +192,7 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
     >
       {/* Fixed header */}
       <View className="px-6" style={{ paddingTop: insets.top + 8 }}>
-        <OnboardingHeader step={1} total={4} onBack={() => navigation.goBack()} />
+        <OnboardingHeader step={1} total={totalSteps} onBack={() => navigation.goBack()} />
         <Text className={`text-2xl font-bold text-gray-900 dark:text-white ${kbVisible ? 'mt-2 mb-1' : 'mt-4 mb-1'}`}>
           {t('onboarding.step2.title')}
         </Text>

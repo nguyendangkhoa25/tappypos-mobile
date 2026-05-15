@@ -15,6 +15,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { cartApi } from '../../services/api';
 import { useCartStore } from '../../store/cartStore';
+import { useNetworkStore } from '../../store/networkStore';
+import { useOfflineQueueStore } from '../../store/offlineQueueStore';
+import { useAuthStore } from '../../store/authStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { formatVnd } from '../../utils/format';
 import type { POSScreenProps } from '../../types/navigation';
@@ -32,7 +35,15 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const showErrorAlert = useErrorAlert();
-  const { items, discount, getTotal, clearCart, promoCode, setPromo, selectedCustomer } = useCartStore();
+  const { items, discount, getTotal, clearCart, promoCode, setPromo, selectedCustomer, tableId, tableLabel } = useCartStore();
+  const { isOffline } = useNetworkStore();
+  const { addOrder } = useOfflineQueueStore();
+  const { shopTypeCode } = useAuthStore();
+  // Street food and simple F&B shops rarely use card terminals — hide CARD option.
+  const isSimpleFB = shopTypeCode === 'STREET_FOOD' || shopTypeCode === 'FOOD_BEVERAGE';
+  const visiblePaymentMethods = isSimpleFB
+    ? PAYMENT_METHODS.filter((m) => m.key !== 'CARD')
+    : PAYMENT_METHODS;
   const total = getTotal();
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
 
@@ -57,6 +68,12 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
+      // Offline path: save to local queue and return a stub result
+      if (isOffline) {
+        addOrder({ items, paymentMethod, total, tableId, tableLabel });
+        return { orderId: '', orderNumber: t('pos.savedOffline'), total };
+      }
+
       const initRes = await cartApi.init();
       const cartId = initRes.data.data.cartId;
 
@@ -72,6 +89,8 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
         paymentMethod,
         amountPaid: cashReceivedNum || undefined,
         customerId: selectedCustomer?.id,
+        tableId: tableId ?? undefined,
+        tableLabel: tableLabel ?? undefined,
       });
       return res.data.data;
     },
@@ -84,6 +103,7 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
         orderId: data.orderId,
         orderNumber: data.orderNumber,
         total: data.total,
+        savedOffline: isOffline,
       });
     },
     onError: () => {
@@ -140,8 +160,8 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
           </View>
         </View>
 
-        {/* Promo code */}
-        {!promoCode && (
+        {/* Promo code — hidden when offline (server required to validate) */}
+        {!promoCode && !isOffline && (
           <View className="flex-row gap-2 mb-4">
             <TextInput
               className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-base"
@@ -189,7 +209,7 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
         {/* Payment method */}
         <Text className="text-base font-bold text-gray-800 mb-3">{t('pos.paymentMethod')}</Text>
         <View className="flex-row gap-3 mb-4">
-          {PAYMENT_METHODS.map(({ key, icon, labelKey }) => (
+          {visiblePaymentMethods.map(({ key, icon, labelKey }) => (
             <TouchableOpacity
               key={key}
               testID={`payment-method-${key}`}

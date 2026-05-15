@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,13 +9,18 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { productApi, categoryApi, type ProductData } from '../../services/api';
+
+const SOLD_OUT_KEY = 'sold_out_log';
+type SoldOutEntry = { productId: string; name: string; markedAt: string };
 import { PAGE_SIZE } from '../../utils/constants';
 import { useCartStore } from '../../store/cartStore';
 import { formatVnd } from '../../utils/format';
@@ -35,12 +40,41 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
   const [allProducts, setAllProducts] = useState<ProductData[]>([]);
   const isLoadingMore = useRef(false);
   const canLoadMore = useRef(false);
-  const { items, addItem, updatePrice } = useCartStore();
+  const { items, addItem, updatePrice, tableId, tableLabel, setTable } = useCartStore();
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
 
   const [sheetProduct, setSheetProduct] = useState<ProductData | null>(null);
   const [sheetPrice, setSheetPrice] = useState('');
   const [sheetQty, setSheetQty] = useState(1);
+  const [soldOutIds, setSoldOutIds] = useState<Set<string>>(new Set());
+
+  // Load sold-out list on mount; show morning prompt for previous-day entries
+  useEffect(() => {
+    AsyncStorage.getItem(SOLD_OUT_KEY).then((raw) => {
+      if (!raw) return;
+      const entries: SoldOutEntry[] = JSON.parse(raw);
+      const today = new Date().toDateString();
+      const stale = entries.filter((e) => new Date(e.markedAt).toDateString() !== today);
+      setSoldOutIds(new Set(entries.map((e) => e.productId)));
+      if (stale.length > 0) {
+        Alert.alert(
+          t('pos.soldOutMorningTitle'),
+          t('pos.soldOutMorningMsg', { count: stale.length }),
+          [
+            {
+              text: t('pos.soldOutRestoreAll'),
+              onPress: () => {
+                const fresh = entries.filter((e) => new Date(e.markedAt).toDateString() === today);
+                AsyncStorage.setItem(SOLD_OUT_KEY, JSON.stringify(fresh));
+                setSoldOutIds(new Set(fresh.map((e) => e.productId)));
+              },
+            },
+            { text: t('pos.soldOutKeep'), style: 'cancel' },
+          ],
+        );
+      }
+    });
+  }, []);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -104,6 +138,36 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
     setSheetQty(1);
   }, []);
 
+  const handleLongPress = useCallback((product: ProductData) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const isSoldOut = soldOutIds.has(product.id);
+    Alert.alert(
+      product.name,
+      isSoldOut ? t('pos.soldOutCurrently') : t('pos.soldOutPrompt'),
+      [
+        {
+          text: isSoldOut ? t('pos.soldOutRestore') : t('pos.soldOutMark'),
+          style: isSoldOut ? 'default' : 'destructive',
+          onPress: async () => {
+            const raw = await AsyncStorage.getItem(SOLD_OUT_KEY);
+            const entries: SoldOutEntry[] = raw ? JSON.parse(raw) : [];
+            if (isSoldOut) {
+              const updated = entries.filter((e) => e.productId !== product.id);
+              await AsyncStorage.setItem(SOLD_OUT_KEY, JSON.stringify(updated));
+              setSoldOutIds((prev) => { const n = new Set(prev); n.delete(product.id); return n; });
+            } else {
+              const updated = entries.filter((e) => e.productId !== product.id);
+              updated.push({ productId: product.id, name: product.name, markedAt: new Date().toISOString() });
+              await AsyncStorage.setItem(SOLD_OUT_KEY, JSON.stringify(updated));
+              setSoldOutIds((prev) => new Set([...prev, product.id]));
+            }
+          },
+        },
+        { text: t('common.cancel'), style: 'cancel' },
+      ],
+    );
+  }, [soldOutIds, t]);
+
   const handleConfirmAdd = useCallback(() => {
     if (!sheetProduct) return;
     const price = parseInt(sheetPrice, 10) || 0;
@@ -125,26 +189,54 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
     setSheetProduct(null);
   }, [sheetProduct, sheetPrice, sheetQty, items, addItem, updatePrice]);
 
-  const renderProduct = ({ item }: { item: ProductData }) => (
-    <TouchableOpacity
-      testID={`pos-product-${item.name}`}
-      className="flex-1 bg-white dark:bg-gray-800 m-1.5 rounded-2xl p-3 border border-gray-100 dark:border-gray-700 active:opacity-80"
-      onPress={() => openSheet(item)}
-    >
-      <Text className="font-semibold text-gray-800 dark:text-white text-sm" numberOfLines={2}>
-        {item.name}
-      </Text>
-      <Text className="text-xs text-gray-400 dark:text-gray-500 mt-1">{item.unit}</Text>
-      <View className="flex-row justify-between items-center mt-2">
-        {item.dynamicPrice ? (
-          <Text className="text-xs font-semibold text-warning">{t('pos.goldPrice')}</Text>
-        ) : (
-          <Text className="text-sm font-bold text-indigo-600">{formatVnd(item.price)}</Text>
+  const renderProduct = ({ item }: { item: ProductData }) => {
+    const isSoldOut = soldOutIds.has(item.id);
+    return (
+      <TouchableOpacity
+        testID={`pos-product-${item.name}`}
+        className="flex-1 bg-white dark:bg-gray-800 m-1.5 rounded-2xl p-3 border border-gray-100 dark:border-gray-700 active:opacity-80"
+        onPress={() => !isSoldOut && openSheet(item)}
+        onLongPress={() => handleLongPress(item)}
+        delayLongPress={400}
+      >
+        {isSoldOut && (
+          <View
+            style={{
+              position: 'absolute', top: 0, bottom: 0, left: 0, right: 0,
+              backgroundColor: 'rgba(17,24,39,0.45)', borderRadius: 16,
+              zIndex: 10, alignItems: 'center', justifyContent: 'center',
+            }}
+            pointerEvents="none"
+          >
+            <View style={{ backgroundColor: '#ef4444', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}>
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{t('pos.soldOut')}</Text>
+            </View>
+          </View>
         )}
-        <MaterialCommunityIcons name="plus-circle" size={22} color="#4f46e5" />
-      </View>
-    </TouchableOpacity>
-  );
+        <Text
+          className={`font-semibold text-sm ${isSoldOut ? 'text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-white'}`}
+          numberOfLines={2}
+        >
+          {item.name}
+        </Text>
+        <Text className="text-xs text-gray-400 dark:text-gray-500 mt-1">{item.unit}</Text>
+        <View className="flex-row justify-between items-center mt-2">
+          {item.dynamicPrice ? (
+            <Text className="text-xs font-semibold text-warning">{t('pos.goldPrice')}</Text>
+          ) : (
+            <Text className={`text-sm font-bold ${isSoldOut ? 'text-gray-300' : 'text-indigo-600'}`}>
+              {formatVnd(item.price)}
+            </Text>
+          )}
+          <MaterialCommunityIcons
+            name={isSoldOut ? 'close-circle-outline' : 'plus-circle'}
+            size={22}
+            color={isSoldOut ? '#9ca3af' : '#4f46e5'}
+          />
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   if (isError) return <ErrorState onRetry={refetch} />;
 
@@ -157,7 +249,21 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
       >
         {/* Title row */}
         <View className="flex-row items-center justify-between mb-0.5">
-          <Text className="text-xl font-bold text-gray-900 dark:text-white">{t('selling.title')}</Text>
+          <View className="flex-row items-center gap-2 flex-1 min-w-0">
+            <Text className="text-xl font-bold text-gray-900 dark:text-white">{t('selling.title')}</Text>
+            {tableId && tableLabel ? (
+              <TouchableOpacity
+                onPress={() => setTable(null, null)}
+                className="flex-row items-center gap-1 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-full px-2.5 py-1"
+              >
+                <MaterialCommunityIcons name="table-chair" size={13} color="#16a34a" />
+                <Text className="text-xs font-semibold text-green-700 dark:text-green-400">
+                  {tableLabel}
+                </Text>
+                <MaterialCommunityIcons name="close" size={12} color="#16a34a" />
+              </TouchableOpacity>
+            ) : null}
+          </View>
           <View className="flex-row items-center gap-3">
 <TouchableOpacity
               testID="pos-order-list-btn"
@@ -273,6 +379,7 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
           data={allProducts}
           keyExtractor={(item) => item.id}
           renderItem={renderProduct}
+          extraData={soldOutIds}
           numColumns={2}
           contentContainerStyle={{ padding: 6 }}
           onEndReached={handleEndReached}

@@ -11,7 +11,7 @@ import { MoneyInput } from '../../components/MoneyInput';
 import { ClearableInput } from '../../components/ClearableInput';
 import { DayPickerModal } from '../../components/DayPickerModal';
 import { formatVnd } from '../../utils/format';
-import { getBackendCode } from '../../utils/shopTypes';
+import { getBackendCode, isFnbShop } from '../../utils/shopTypes';
 import type { OnboardingScreenProps } from '../../types/navigation';
 import type { OnboardingExpense } from '../../store/onboardingStore';
 import { CATEGORY_EMOJI } from '../../constants/expenseCategories';
@@ -50,6 +50,9 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
   );
 
   const backendCode = getBackendCode(shopTypeCode);
+  const isFnb = isFnbShop(backendCode);
+  const totalSteps = isFnb ? 5 : 4;
+  const stepIndex = isFnb ? 3 : 2;
 
   const { data, isLoading } = useQuery({
     queryKey: ['expense-suggestions', backendCode],
@@ -147,7 +150,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
     >
       {/* Fixed header */}
       <View className="px-6" style={{ paddingTop: insets.top + 8 }}>
-        <OnboardingHeader step={2} total={4} onBack={() => navigation.goBack()} />
+        <OnboardingHeader step={stepIndex} total={totalSteps} onBack={() => navigation.goBack()} />
         <Text className={`text-2xl font-bold text-gray-900 dark:text-white ${kbVisible ? 'mt-2 mb-1' : 'mt-4 mb-1'}`}>
           {t('onboarding.step3.title')}
         </Text>

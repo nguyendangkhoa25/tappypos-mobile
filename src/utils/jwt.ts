@@ -5,6 +5,7 @@ type JwtPayload = {
   roles?: string[];
   isMasterUser?: boolean;
   sessionId?: string;
+  shopType?: string;
   exp?: number;
 };
 
@@ -23,6 +24,10 @@ export function decodeJwt(token: string): JwtPayload | null {
 
 export function extractFeatures(token: string): string[] {
   return decodeJwt(token)?.features ?? [];
+}
+
+export function extractShopType(token: string): string | null {
+  return decodeJwt(token)?.shopType ?? null;
 }
 
 export function extractTenantId(token: string): string | null {

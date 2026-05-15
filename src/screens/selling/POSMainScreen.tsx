@@ -2,16 +2,22 @@ import { ActivityIndicator, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { shopConfigApi } from '../../services/api';
 import { useSellingStore } from '../../store/sellingStore';
+import { useFeatureCheck } from '../../hooks/useFeature';
+import { useCartStore } from '../../store/cartStore';
 import { POSScreen } from '../pos/POSScreen';
 import { BarberServiceScreen } from './BarberServiceScreen';
+import { TableGridScreen } from './TableGridScreen';
 import { ScanScreen } from '../scan/ScanScreen';
 import { OrderListScreen } from '../orders/OrderListScreen';
 import type { SellingScreenProps } from '../../types/navigation';
 
 const SCAN_SHOP_CODES = ['CONVENIENCE_STORE', 'FOOD_BEVERAGE', 'PHARMACY', 'ELECTRONICS'];
+const FB_TABLE_CODES = ['RESTAURANT', 'COFFEE_SHOP', 'PUB', 'PUB_SEAFOOD', 'PUB_GOAT', 'PUB_BEEF'];
 
 export function POSMainScreen(props: SellingScreenProps<'POSMain'>) {
   const { activeView } = useSellingStore();
+  const has = useFeatureCheck();
+  const tableId = useCartStore((s) => s.tableId);
 
   const { data, isLoading } = useQuery({
     queryKey: ['shopConfig'],
@@ -33,6 +39,13 @@ export function POSMainScreen(props: SellingScreenProps<'POSMain'>) {
   }
 
   const code = data?.shopTypeCode ?? '';
+
+  // F&B shops with table management: show grid unless a table is already selected
+  if (FB_TABLE_CODES.includes(code) && has('TABLE_SERVICE')) {
+    if (tableId) return <POSScreen {...props} />;
+    return <TableGridScreen />;
+  }
+
   if (SCAN_SHOP_CODES.includes(code)) return <ScanScreen />;
   if (['BARBER_SHOP', 'BARBER_SHOP_MEN', 'HAIR_SALON', 'NAIL_SHOP',
        'LASH_PMU_STUDIO', 'SPA_SHOP', 'MASSAGE_SHOP', 'BEAUTY_CLINIC',

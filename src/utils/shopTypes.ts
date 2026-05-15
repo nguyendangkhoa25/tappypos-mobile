@@ -6,6 +6,7 @@ export type ShopTypeGroup = {
 export const SHOP_TYPE_GROUPS: ShopTypeGroup[] = [
   { id: 'FOOD',        emoji: '🍽️' },
   { id: 'DRINKS',      emoji: '☕' },
+  { id: 'PUB',         emoji: '🍺' },
   { id: 'GROCERY',     emoji: '🏪' },
   { id: 'FASHION',     emoji: '👗' },
   { id: 'BEAUTY',      emoji: '✂️' },
@@ -29,6 +30,8 @@ export const SPECIFIC_SHOP_TYPES: SpecificShopType[] = [
   { id: 'NOODLE_SHOP',   emoji: '🥢', backendCode: 'RESTAURANT',        group: 'FOOD' },
   { id: 'BUN_BO',        emoji: '🥣', backendCode: 'RESTAURANT',        group: 'FOOD' },
   { id: 'HOT_POT',       emoji: '🫕', backendCode: 'RESTAURANT',        group: 'FOOD' },
+  { id: 'LAU_BO',        emoji: '🥩', backendCode: 'RESTAURANT',        group: 'FOOD' },
+  { id: 'QUAN_DE',       emoji: '🐐', backendCode: 'RESTAURANT',        group: 'FOOD' },
   { id: 'BANH_MI',       emoji: '🥖', backendCode: 'RESTAURANT',        group: 'FOOD' },
   { id: 'EATERY',        emoji: '🍱', backendCode: 'RESTAURANT',        group: 'FOOD' },
   { id: 'RESTAURANT',    emoji: '🍽️', backendCode: 'RESTAURANT',        group: 'FOOD' },
@@ -36,6 +39,11 @@ export const SPECIFIC_SHOP_TYPES: SpecificShopType[] = [
   { id: 'CAFE',          emoji: '☕', backendCode: 'COFFEE_SHOP',       group: 'DRINKS' },
   { id: 'BUBBLE_TEA',    emoji: '🧋', backendCode: 'COFFEE_SHOP',       group: 'DRINKS' },
   { id: 'JUICE_BAR',     emoji: '🥤', backendCode: 'COFFEE_SHOP',       group: 'DRINKS' },
+  // Quán nhậu
+  { id: 'PUB',           emoji: '🍺', backendCode: 'PUB',               group: 'PUB' },
+  { id: 'PUB_SEAFOOD',   emoji: '🦞', backendCode: 'PUB_SEAFOOD',       group: 'PUB' },
+  { id: 'PUB_GOAT',      emoji: '🐐', backendCode: 'PUB_GOAT',          group: 'PUB' },
+  { id: 'PUB_BEEF',      emoji: '🐄', backendCode: 'PUB_BEEF',          group: 'PUB' },
   // Tạp hóa & Thực phẩm
   { id: 'GROCERY',       emoji: '🏪', backendCode: 'CONVENIENCE_STORE', group: 'GROCERY' },
   { id: 'MINI_MART',     emoji: '🛒', backendCode: 'CONVENIENCE_STORE', group: 'GROCERY' },
@@ -94,9 +102,24 @@ const BACKEND_CODE_MAP: Record<string, string> = {
   BEAUTY_CLINIC: 'BEAUTY_CLINIC',
   MAKEUP_STUDIO: 'MAKEUP_STUDIO',
   PAWN_SHOP: 'PAWN_SHOP',
+  RESTAURANT: 'RESTAURANT',
+  PUB: 'PUB',
+  PUB_SEAFOOD: 'PUB_SEAFOOD',
+  PUB_GOAT: 'PUB_GOAT',
+  PUB_BEEF: 'PUB_BEEF',
 };
 
 export function getBackendCode(shopTypeCode: string | null | undefined): string {
   if (!shopTypeCode) return 'OTHER';
   return BACKEND_CODE_MAP[shopTypeCode] ?? shopTypeCode;
+}
+
+export const FB_BACKEND_CODES = new Set([
+  'RESTAURANT', 'COFFEE_SHOP', 'FOOD_BEVERAGE',
+  'PUB', 'PUB_SEAFOOD', 'PUB_GOAT', 'PUB_BEEF',
+]);
+
+export function isFnbShop(backendCode: string | null | undefined): boolean {
+  if (!backendCode) return false;
+  return FB_BACKEND_CODES.has(backendCode);
 }

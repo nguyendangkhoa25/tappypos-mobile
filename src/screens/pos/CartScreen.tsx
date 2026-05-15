@@ -29,7 +29,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const has = useFeatureCheck();
-  const { items, updateQty, updatePrice, removeItem, discount, getTotal, clearCart, selectedCustomer, setCustomer } = useCartStore();
+  const { items, updateQty, updatePrice, removeItem, discount, getTotal, clearCart, selectedCustomer, setCustomer, tableId, tableLabel } = useCartStore();
   const { show: showAlert } = useAlertStore();
   const showErrorAlert = useErrorAlert();
   const [saving, setSaving] = useState(false);
@@ -69,7 +69,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
       for (const item of items) {
         await cartApi.addItem(cartId, item.productId, item.quantity);
       }
-      await cartApi.sendToKitchen(cartId);
+      await cartApi.sendToKitchen(cartId, tableId ?? undefined, tableLabel ?? undefined);
       clearCart();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
