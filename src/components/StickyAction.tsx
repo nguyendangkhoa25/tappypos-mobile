@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTypography } from '../hooks/useTypography';
 
 type Props = {
   label: string;
@@ -12,6 +13,7 @@ type Props = {
 
 export function StickyAction({ label, onPress, icon, disabled = false, loading = false }: Props) {
   const { bottom } = useSafeAreaInsets();
+  const typo = useTypography();
 
   return (
     <View
@@ -29,7 +31,7 @@ export function StickyAction({ label, onPress, icon, disabled = false, loading =
         {icon && !loading && (
           <MaterialCommunityIcons name={icon} size={20} color="#fff" />
         )}
-        <Text className="text-white font-bold text-base">
+        <Text className={`text-white ${typo.body}`}>
           {loading ? '...' : label}
         </Text>
       </TouchableOpacity>

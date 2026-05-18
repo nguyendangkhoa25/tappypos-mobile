@@ -10,8 +10,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const GRID_COLS_KEY = 'pos_grid_columns';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +27,7 @@ type SoldOutEntry = { productId: string; name: string; markedAt: string };
 import { PAGE_SIZE } from '../../utils/constants';
 import { useCartStore } from '../../store/cartStore';
 import { formatVnd } from '../../utils/format';
+import { useTypography } from '../../hooks/useTypography';
 import { MoneyInput } from '../../components/MoneyInput';
 import { ErrorState } from '../../components/ErrorState';
 import { EmptyState } from '../../components/EmptyState';
@@ -32,9 +36,12 @@ import type { POSScreenProps } from '../../types/navigation';
 
 export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+  const [numCols, setNumCols] = useState<2 | 3>(width >= 390 ? 3 : 2);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [allProducts, setAllProducts] = useState<ProductData[]>([]);
@@ -47,6 +54,19 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
   const [sheetPrice, setSheetPrice] = useState('');
   const [sheetQty, setSheetQty] = useState(1);
   const [soldOutIds, setSoldOutIds] = useState<Set<string>>(new Set());
+
+  // Load persisted grid column preference on mount
+  useEffect(() => {
+    AsyncStorage.getItem(GRID_COLS_KEY).then((v) => {
+      if (v === '2' || v === '3') setNumCols(Number(v) as 2 | 3);
+    }).catch(() => {});
+  }, []);
+
+  const toggleGrid = useCallback(() => {
+    const next = numCols === 2 ? 3 : 2;
+    setNumCols(next);
+    AsyncStorage.setItem(GRID_COLS_KEY, String(next)).catch(() => {});
+  }, [numCols]);
 
   // Load sold-out list on mount; show morning prompt for previous-day entries
   useEffect(() => {
@@ -214,17 +234,17 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
           </View>
         )}
         <Text
-          className={`font-semibold text-sm ${isSoldOut ? 'text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-white'}`}
+          className={`${typo.label} ${isSoldOut ? 'text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-white'}`}
           numberOfLines={2}
         >
           {item.name}
         </Text>
-        <Text className="text-xs text-gray-400 dark:text-gray-500 mt-1">{item.unit}</Text>
+        <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-1`}>{item.unit}</Text>
         <View className="flex-row justify-between items-center mt-2">
           {item.dynamicPrice ? (
-            <Text className="text-xs font-semibold text-warning">{t('pos.goldPrice')}</Text>
+            <Text className={`${typo.captionBold} text-warning`}>{t('pos.goldPrice')}</Text>
           ) : (
-            <Text className={`text-sm font-bold ${isSoldOut ? 'text-gray-300' : 'text-indigo-600'}`}>
+            <Text className={`${typo.label} font-bold ${isSoldOut ? 'text-gray-300' : 'text-indigo-600'}`}>
               {formatVnd(item.price)}
             </Text>
           )}
@@ -250,14 +270,14 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
         {/* Title row */}
         <View className="flex-row items-center justify-between mb-0.5">
           <View className="flex-row items-center gap-2 flex-1 min-w-0">
-            <Text className="text-xl font-bold text-gray-900 dark:text-white">{t('selling.title')}</Text>
+            <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('selling.title')}</Text>
             {tableId && tableLabel ? (
               <TouchableOpacity
                 onPress={() => setTable(null, null)}
                 className="flex-row items-center gap-1 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-full px-2.5 py-1"
               >
                 <MaterialCommunityIcons name="table-chair" size={13} color="#16a34a" />
-                <Text className="text-xs font-semibold text-green-700 dark:text-green-400">
+                <Text className={`${typo.captionBold} text-green-700 dark:text-green-400`}>
                   {tableLabel}
                 </Text>
                 <MaterialCommunityIcons name="close" size={12} color="#16a34a" />
@@ -265,6 +285,17 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
             ) : null}
           </View>
           <View className="flex-row items-center gap-3">
+            <TouchableOpacity
+              testID="pos-grid-toggle"
+              className="bg-gray-100 dark:bg-gray-700 rounded-xl p-2.5 active:opacity-80"
+              onPress={toggleGrid}
+            >
+              <MaterialCommunityIcons
+                name={numCols === 2 ? 'view-grid' : 'view-module'}
+                size={22}
+                color="#374151"
+              />
+            </TouchableOpacity>
 <TouchableOpacity
               testID="pos-order-list-btn"
               className="bg-gray-100 dark:bg-gray-700 rounded-xl p-2.5 active:opacity-80"
@@ -285,7 +316,7 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
                   className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 items-center justify-center"
                   pointerEvents="none"
                 >
-                  <Text testID="pos-cart-count" className="text-white text-xs font-bold">
+                  <Text testID="pos-cart-count" className={`${typo.captionBold} text-white`}>
                     {cartCount > 99 ? '99+' : cartCount}
                   </Text>
                 </View>
@@ -295,14 +326,14 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
         </View>
 
         {/* Hint */}
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-3">{t('selling.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5 mb-3`}>{t('selling.hint')}</Text>
 
         {/* Search bar */}
         <View className="flex-row items-center gap-2 mb-3">
           <View className="flex-1 flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-3 py-2.5">
             <MaterialCommunityIcons name="magnify" size={20} color="#9ca3af" />
             <TextInput
-              className="flex-1 ml-2 text-base text-gray-800 dark:text-white"
+              className={`flex-1 ml-2 ${typo.inputSize} text-gray-800 dark:text-white`}
               placeholder={t('pos.searchPlaceholder')}
               placeholderTextColor="#9ca3af"
               value={searchInput}
@@ -328,7 +359,7 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
             className="bg-indigo-600 rounded-xl px-4 py-2.5 items-center justify-center"
             activeOpacity={0.8}
           >
-            <Text className="text-white font-semibold text-sm">{t('pos.searchButton')}</Text>
+            <Text className={`${typo.label} text-white font-semibold`}>{t('pos.searchButton')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -351,7 +382,7 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
                 onPress={() => handleCategoryChange(item.id ?? null)}
               >
                 <Text
-                  className={`text-sm font-medium ${
+                  className={`${typo.caption} font-medium ${
                     selectedCategory === item.id ? 'text-white' : 'text-gray-600 dark:text-gray-400'
                   }`}
                 >
@@ -366,8 +397,8 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
       {/* Product grid */}
       {isLoading && page === 0 ? (
         <View className="flex-row flex-wrap p-3">
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <View key={i} className="w-1/2 p-1.5">
+          {Array.from({ length: numCols * 2 }).map((_, i) => (
+            <View key={i} style={{ width: `${100 / numCols}%` as any }} className="p-1.5">
               <Skeleton height={110} borderRadius={16} />
             </View>
           ))}
@@ -376,11 +407,13 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
         <EmptyState icon="📦" title={t('pos.noProducts')} />
       ) : (
         <FlatList
+          showsVerticalScrollIndicator={false}
+          key={String(numCols)}
           data={allProducts}
           keyExtractor={(item) => item.id}
           renderItem={renderProduct}
           extraData={soldOutIds}
-          numColumns={2}
+          numColumns={numCols}
           contentContainerStyle={{ padding: 6 }}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.3}
@@ -413,19 +446,17 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
           >
             <View className="w-10 h-1 bg-gray-200 dark:bg-gray-600 rounded-full self-center mb-4" />
 
-            <Text className="text-lg font-bold text-gray-900 dark:text-white mb-5" numberOfLines={2}>
+            <Text className={`${typo.section} text-gray-900 dark:text-white mb-5`} numberOfLines={2}>
               {sheetProduct?.name}
             </Text>
 
-            <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1.5">{t('pos.price')}</Text>
-            <MoneyInput
-              rawValue={sheetPrice}
-              onChangeRaw={setSheetPrice}
-              className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-xl font-bold text-gray-900 dark:text-white mb-5"
-            />
+            <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>{t('pos.price')}</Text>
+            <View className="mb-5">
+              <MoneyInput rawValue={sheetPrice} onChangeRaw={setSheetPrice} />
+            </View>
 
             <View className="flex-row items-center justify-between mb-6">
-              <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400">{t('pos.quantity')}</Text>
+              <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400`}>{t('pos.quantity')}</Text>
               <View className="flex-row items-center gap-4">
                 <TouchableOpacity
                   className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 items-center justify-center active:opacity-70"
@@ -433,7 +464,7 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
                 >
                   <MaterialCommunityIcons name="minus" size={18} color="#374151" />
                 </TouchableOpacity>
-                <Text className="text-xl font-bold text-gray-900 dark:text-white w-8 text-center">{sheetQty}</Text>
+                <Text className={`${typo.section} font-bold text-gray-900 dark:text-white w-8 text-center`}>{sheetQty}</Text>
                 <TouchableOpacity
                   className="w-10 h-10 rounded-full bg-indigo-600 items-center justify-center active:opacity-70"
                   onPress={() => setSheetQty((q) => q + 1)}
@@ -447,7 +478,7 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
               className="bg-indigo-600 rounded-2xl py-4 items-center active:opacity-80"
               onPress={handleConfirmAdd}
             >
-              <Text className="text-white font-bold text-lg">{t('pos.addToCart')}</Text>
+              <Text className={`${typo.labelBold} text-white`}>{t('pos.addToCart')}</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

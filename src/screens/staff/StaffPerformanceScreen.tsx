@@ -8,10 +8,11 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { orderApi, employeeApi, type WorkItemDTO, type EmployeeData } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import { formatVnd } from '../../utils/format';
 import { Skeleton } from '../../components/Skeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -117,22 +118,24 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 function StatCell({ label, value, color }: { label: string; value: string; color: string }) {
+  const typo = useTypography();
   return (
     <View className="flex-1 items-center px-1">
-      <Text style={{ color }} className="text-sm font-bold" numberOfLines={1}>{value}</Text>
-      <Text className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 text-center">{label}</Text>
+      <Text style={{ color }} className={`${typo.labelBold}`} numberOfLines={1}>{value}</Text>
+      <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5 text-center`}>{label}</Text>
     </View>
   );
 }
 
 function EmpCard({ stats, rank, maxRevenue }: { stats: EmpStats; rank: number; maxRevenue: number }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const color = avatarColor(stats.name);
   const initial = stats.name.split(' ').slice(-1)[0]?.charAt(0).toUpperCase() ?? '?';
   const barFlex = maxRevenue > 0 ? stats.revenue / maxRevenue : 0;
 
   return (
-    <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700">
+    <View testID={`staff-perf-card-${stats.name}`} className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700">
       {/* Name row */}
       <View className="flex-row items-center mb-3">
         <RankBadge rank={rank} />
@@ -143,11 +146,11 @@ function EmpCard({ stats, rank, maxRevenue }: { stats: EmpStats; rank: number; m
           <Text style={{ color, fontSize: 16, fontWeight: '700' }}>{initial}</Text>
         </View>
         <View className="flex-1">
-          <Text className="text-sm font-bold text-gray-900 dark:text-white" numberOfLines={1}>
+          <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
             {stats.name}
           </Text>
           {stats.position ? (
-            <Text className="text-xs text-gray-400 dark:text-gray-500">{stats.position}</Text>
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{stats.position}</Text>
           ) : null}
         </View>
       </View>
@@ -170,10 +173,10 @@ function EmpCard({ stats, rank, maxRevenue }: { stats: EmpStats; rank: number; m
       {/* Commission */}
       {stats.commissionRate !== null && (
         <View className="flex-row items-center justify-between mt-1.5">
-          <Text className="text-xs text-gray-400 dark:text-gray-500">
+          <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
             {t('perf.commission')} ({stats.commissionRate}%)
           </Text>
-          <Text className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+          <Text className={`${typo.captionBold} text-amber-600 dark:text-amber-400`}>
             {formatVnd(stats.estimatedCommission)}
           </Text>
         </View>
@@ -211,6 +214,7 @@ function LoadingSkeleton() {
 
 export function StaffPerformanceScreen({ navigation }: Props) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const { top, bottom } = useSafeAreaInsets();
 
   const today = getTodayParts();
@@ -248,7 +252,9 @@ export function StaffPerformanceScreen({ navigation }: Props) {
     setYear(d.getFullYear());
   }
 
-  const { data, isLoading, isError, isRefetching, refetch } = useQuery({
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['staffPerf', filterType, day, month, year],
     queryFn: async () => {
       const [itemsRes, empRes] = await Promise.all([
@@ -261,6 +267,7 @@ export function StaffPerformanceScreen({ navigation }: Props) {
       };
     },
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   const { rows, maxRevenue } = useMemo(() => {
@@ -270,7 +277,11 @@ export function StaffPerformanceScreen({ navigation }: Props) {
     return { rows: stats, maxRevenue: max };
   }, [data]);
 
-  const onRefresh = useCallback(async () => { await refetch(); }, [refetch]);
+  const onRefresh = useCallback(async () => {
+    setIsManualRefreshing(true);
+    await refetch();
+    setIsManualRefreshing(false);
+  }, [refetch]);
 
   const DateNav = (
     <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3">
@@ -279,7 +290,7 @@ export function StaffPerformanceScreen({ navigation }: Props) {
           <TouchableOpacity onPress={() => shiftDay(-1)} className="p-1" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <MaterialCommunityIcons name="chevron-left" size={22} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-sm font-semibold text-gray-800 dark:text-white">{day}/{month}/{year}</Text>
+          <Text className={`${typo.label} text-gray-800 dark:text-white`}>{day}/{month}/{year}</Text>
           <TouchableOpacity onPress={() => shiftDay(1)} className="p-1" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <MaterialCommunityIcons name="chevron-right" size={22} color="#4f46e5" />
           </TouchableOpacity>
@@ -291,7 +302,7 @@ export function StaffPerformanceScreen({ navigation }: Props) {
           <TouchableOpacity onPress={() => shiftWeek(-1)} className="p-1" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <MaterialCommunityIcons name="chevron-left" size={22} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-sm font-semibold text-gray-800 dark:text-white">
+          <Text className={`${typo.label} text-gray-800 dark:text-white`}>
             {formatWeekLabel(day, month, year)}
           </Text>
           <TouchableOpacity onPress={() => shiftWeek(1)} className="p-1" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -308,7 +319,7 @@ export function StaffPerformanceScreen({ navigation }: Props) {
               onPress={() => setMonth(m)}
               className={`px-3 py-1 rounded-full border ${month === m ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
             >
-              <Text className={`text-xs font-medium ${month === m ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+              <Text className={`${typo.captionBold} ${month === m ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                 T{m}/{year}
               </Text>
             </TouchableOpacity>
@@ -319,7 +330,7 @@ export function StaffPerformanceScreen({ navigation }: Props) {
               onPress={() => setYear(y)}
               className={`px-3 py-1 rounded-full border ${year === y ? 'border-indigo-600' : 'border-gray-200 dark:border-gray-600'}`}
             >
-              <Text className="text-xs text-gray-500 dark:text-gray-400">{y}</Text>
+              <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{y}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -333,7 +344,7 @@ export function StaffPerformanceScreen({ navigation }: Props) {
               onPress={() => setYear(y)}
               className={`px-4 py-1.5 rounded-full border ${year === y ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
             >
-              <Text className={`text-sm font-medium ${year === y ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>{y}</Text>
+              <Text className={`${typo.caption} font-medium ${year === y ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>{y}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -348,18 +359,19 @@ export function StaffPerformanceScreen({ navigation }: Props) {
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: top + 12, paddingBottom: 12 }}
       >
-        <View className="flex-row items-center mb-4">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             className="mr-3"
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <MaterialCommunityIcons name="arrow-left" size={24} color="#4f46e5" />
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900 dark:text-white flex-1">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {t('perf.title')}
           </Text>
         </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-2 mt-0.5`}>{t('perf.hint')}</Text>
 
         {/* Period filter tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
@@ -371,7 +383,7 @@ export function StaffPerformanceScreen({ navigation }: Props) {
                 onPress={() => setFilterType(f.key)}
                 className={`px-4 py-1.5 rounded-full border ${active ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
               >
-                <Text className={`text-sm font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                <Text className={`${typo.caption} font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                   {f.label}
                 </Text>
               </TouchableOpacity>
@@ -394,9 +406,10 @@ export function StaffPerformanceScreen({ navigation }: Props) {
         <FlatList
           data={rows}
           keyExtractor={(item) => item.name}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 16, paddingBottom: bottom + 24, flexGrow: 1 }}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor="#4f46e5" />
+            <RefreshControl refreshing={isManualRefreshing} onRefresh={onRefresh} tintColor="#4f46e5" />
           }
           ListHeaderComponent={DateNav}
           stickyHeaderIndices={[0]}
@@ -405,7 +418,7 @@ export function StaffPerformanceScreen({ navigation }: Props) {
           )}
           ListEmptyComponent={
             <EmptyState
-              icon="📊"
+              icon="🌟"
               title={t('perf.empty')}
               description={t('perf.emptyHint')}
             />

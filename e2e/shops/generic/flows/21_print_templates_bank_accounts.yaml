@@ -1,0 +1,58 @@
+appId: com.knp.tappypos
+name: "21 Print templates & bank accounts — list, smoke test (PRINT_TEMPLATE + BANK_ACCOUNT)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → Print Templates ───────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-print"
+- assertVisible: "Mẫu in"
+- assertNotVisible: "500"
+
+# ── PT01: Template list renders (may be empty or have defaults) ───────────────
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── PT02: First template card is accessible if any exist ─────────────────────
+- tapOn:
+    id: "print-template-row-0"
+    optional: true
+- assertNotVisible: "500"
+# Navigate back if we went into detail
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── Navigate to Settings → Bank Accounts ──────────────────────────────────────
+- tapOn:
+    id: "tab-more"
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- tapOn: "Tài khoản ngân hàng"
+- assertVisible: "Tài khoản ngân hàng"
+- assertNotVisible: "500"
+
+# ── BA01: Bank accounts list renders ─────────────────────────────────────────
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── BA02: Add bank account form accessible ────────────────────────────────────
+# Tap "+" or "Thêm tài khoản" to open add form
+- tapOn: "Thêm tài khoản"
+    optional: true
+- tapOn:
+    text: "+"
+    optional: true
+- assertNotVisible: "500"
+# Dismiss without saving
+- tapOn: "Huỷ"
+    optional: true
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

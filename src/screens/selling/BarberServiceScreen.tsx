@@ -37,6 +37,7 @@ import {
   type CheckInPayload,
 } from '../../services/api';
 import { buildVietQrUrl } from '../../utils/vietqr';
+import { UpgradeModal } from '../../components/UpgradeModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAlertStore } from '../../store/alertStore';
 
@@ -51,6 +52,7 @@ import { ErrorState } from '../../components/ErrorState';
 import { Skeleton } from '../../components/Skeleton';
 import { QuickPhraseBar } from '../../components/QuickPhraseBar';
 import { useFeatureCheck } from '../../hooks/useFeature';
+import { useTypography } from '../../hooks/useTypography';
 import { useSellingStore } from '../../store/sellingStore';
 import type { SellingScreenProps } from '../../types/navigation';
 
@@ -104,13 +106,14 @@ function initials(name: string): string {
 
 function QueueStatusBadge({ pending, inProgress }: { pending: number; inProgress: number }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   if (pending === 0 && inProgress === 0) return null;
   return (
     <View className="flex-row items-center gap-x-2 mt-0.5 mb-1">
       {pending > 0 && (
         <View className="flex-row items-center gap-x-1 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full">
           <View className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-          <Text className="text-amber-700 dark:text-amber-400 text-xs font-medium">
+          <Text className={`${typo.caption} font-medium text-amber-700 dark:text-amber-400`}>
             {pending} {t('barber.statusWaiting')}
           </Text>
         </View>
@@ -118,7 +121,7 @@ function QueueStatusBadge({ pending, inProgress }: { pending: number; inProgress
       {inProgress > 0 && (
         <View className="flex-row items-center gap-x-1 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded-full">
           <View className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-          <Text className="text-indigo-700 dark:text-indigo-400 text-xs font-medium">
+          <Text className={`${typo.caption} font-medium text-indigo-700 dark:text-indigo-400`}>
             {inProgress} {t('barber.statusWorking')}
           </Text>
         </View>
@@ -131,28 +134,30 @@ function QueueStatusBadge({ pending, inProgress }: { pending: number; inProgress
 
 function ServiceCard({ item, onPress }: { item: ProductData; onPress: (item: ProductData) => void }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   return (
     <TouchableOpacity
+      testID={`barber-service-${item.name}`}
       className="flex-1 bg-white dark:bg-gray-800 m-1.5 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 active:opacity-75"
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress(item);
       }}
     >
-      <Text className="font-semibold text-gray-800 text-sm leading-tight" numberOfLines={2}>
+      <Text className={`${typo.label} text-gray-800 leading-tight`} numberOfLines={2}>
         {item.name}
       </Text>
       {item.durationMinutes > 0 && (
         <View className="flex-row items-center mt-2 gap-x-1">
           <MaterialCommunityIcons name="clock-outline" size={13} color="#6b7280" />
-          <Text className="text-xs text-gray-500">{fmtDuration(item.durationMinutes, t)}</Text>
+          <Text className={`${typo.caption} text-gray-500`}>{fmtDuration(item.durationMinutes, t)}</Text>
         </View>
       )}
       <View className="flex-row justify-between items-center mt-2">
         {item.dynamicPrice ? (
-          <Text className="text-xs font-semibold text-warning">{t('pos.goldPrice')}</Text>
+          <Text className={`${typo.captionBold} text-warning`}>{t('pos.goldPrice')}</Text>
         ) : (
-          <Text className="text-sm font-bold text-indigo-600">{formatVnd(item.price)}</Text>
+          <Text className={`${typo.label} font-bold text-indigo-600`}>{formatVnd(item.price)}</Text>
         )}
         <View className="bg-indigo-50 rounded-full p-1">
           <MaterialCommunityIcons name="plus" size={16} color="#4f46e5" />
@@ -173,6 +178,7 @@ function EmployeeChip({
   selected: boolean;
   onPress: () => void;
 }) {
+  const typo = useTypography();
   return (
     <TouchableOpacity className="items-center mr-3" onPress={onPress} activeOpacity={0.7}>
       <View
@@ -180,12 +186,12 @@ function EmployeeChip({
           selected ? 'bg-indigo-600' : 'bg-gray-100'
         }`}
       >
-        <Text className={`text-sm font-bold ${selected ? 'text-white' : 'text-gray-600'}`}>
+        <Text className={`${typo.label} font-bold ${selected ? 'text-white' : 'text-gray-600'}`}>
           {initials(employee.fullName)}
         </Text>
       </View>
       <Text
-        className={`text-xs text-center max-w-[56px] ${
+        className={`${typo.caption} text-center max-w-[56px] ${
           selected ? 'text-indigo-600 font-semibold' : 'text-gray-500'
         }`}
         numberOfLines={2}
@@ -199,20 +205,21 @@ function EmployeeChip({
 // ── Customer Row ──────────────────────────────────────────────────────────────
 
 function CustomerRow({ customer, onPress }: { customer: CustomerData; onPress: () => void }) {
+  const typo = useTypography();
   return (
     <TouchableOpacity
       className="flex-row items-center px-3 py-2.5 border-b border-gray-50 active:bg-gray-50"
       onPress={onPress}
     >
       <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center mr-3">
-        <Text className="text-xs font-bold text-indigo-600">{initials(customer.name)}</Text>
+        <Text className={`${typo.captionBold} text-indigo-600`}>{initials(customer.name)}</Text>
       </View>
       <View className="flex-1">
-        <Text className="text-sm font-medium text-gray-900">{customer.name}</Text>
-        <Text className="text-xs text-gray-500">{customer.phone}</Text>
+        <Text className={`${typo.caption} font-medium text-gray-900`}>{customer.name}</Text>
+        <Text className={`${typo.caption} text-gray-500`}>{customer.phone}</Text>
       </View>
       {customer.totalOrders > 0 && (
-        <Text className="text-xs text-gray-400">{customer.totalOrders} lần</Text>
+        <Text className={`${typo.caption} text-gray-400`}>{customer.totalOrders} lần</Text>
       )}
     </TouchableOpacity>
   );
@@ -221,6 +228,7 @@ function CustomerRow({ customer, onPress }: { customer: CustomerData; onPress: (
 // ── Preferences Banner ────────────────────────────────────────────────────────
 
 function PreferencesBanner({ customer, t }: { customer: CustomerData; t: (k: string) => string }) {
+  const typo = useTypography();
   const hasPrefs = customer.allergiesOrSensitivities || customer.hairType || customer.preferredServices;
   if (!hasPrefs) return null;
   return (
@@ -229,10 +237,10 @@ function PreferencesBanner({ customer, t }: { customer: CustomerData; t: (k: str
         <View className="flex-row items-start gap-2 bg-rose-50 px-3 py-2">
           <MaterialCommunityIcons name="alert-circle" size={14} color="#e11d48" style={{ marginTop: 1 }} />
           <View className="flex-1">
-            <Text className="text-[10px] font-bold text-rose-600 uppercase tracking-wide">
+            <Text className={`${typo.caption} font-bold text-rose-600 uppercase tracking-wide`}>
               {t('customer.allergies')}
             </Text>
-            <Text className="text-xs text-rose-800 mt-0.5" numberOfLines={2}>
+            <Text className={`${typo.caption} text-rose-800 mt-0.5`} numberOfLines={2}>
               {customer.allergiesOrSensitivities}
             </Text>
           </View>
@@ -242,10 +250,10 @@ function PreferencesBanner({ customer, t }: { customer: CustomerData; t: (k: str
         <View className="flex-row items-start gap-2 bg-white px-3 py-2 border-t border-gray-50">
           <MaterialCommunityIcons name="content-cut" size={14} color="#6b7280" style={{ marginTop: 1 }} />
           <View className="flex-1">
-            <Text className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+            <Text className={`${typo.caption} font-semibold text-gray-400 uppercase tracking-wide`}>
               {t('customer.hairType')}
             </Text>
-            <Text className="text-xs text-gray-700 mt-0.5" numberOfLines={1}>
+            <Text className={`${typo.caption} text-gray-700 mt-0.5`} numberOfLines={1}>
               {customer.hairType}
             </Text>
           </View>
@@ -255,10 +263,10 @@ function PreferencesBanner({ customer, t }: { customer: CustomerData; t: (k: str
         <View className="flex-row items-start gap-2 bg-white px-3 py-2 border-t border-gray-50">
           <MaterialCommunityIcons name="star-outline" size={14} color="#6b7280" style={{ marginTop: 1 }} />
           <View className="flex-1">
-            <Text className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+            <Text className={`${typo.caption} font-semibold text-gray-400 uppercase tracking-wide`}>
               {t('customer.preferredServices')}
             </Text>
-            <Text className="text-xs text-gray-700 mt-0.5" numberOfLines={2}>
+            <Text className={`${typo.caption} text-gray-700 mt-0.5`} numberOfLines={2}>
               {customer.preferredServices}
             </Text>
           </View>
@@ -282,6 +290,7 @@ function AddItemSheet({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const [note, setNote] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeData | null>(null);
@@ -317,23 +326,23 @@ function AddItemSheet({
               {/* Item info */}
               <View className="flex-row justify-between items-start mb-4">
                 <View className="flex-1 mr-3">
-                  <Text className="text-lg font-bold text-gray-900">{product.name}</Text>
+                  <Text className={`${typo.section} text-gray-900`}>{product.name}</Text>
                   {isService && product.durationMinutes > 0 && (
                     <View className="flex-row items-center mt-1 gap-x-1">
                       <MaterialCommunityIcons name="clock-outline" size={14} color="#6b7280" />
-                      <Text className="text-sm text-gray-500">
+                      <Text className={`${typo.caption} text-gray-500`}>
                         {fmtDuration(product.durationMinutes, t)}
                       </Text>
                     </View>
                   )}
                 </View>
-                <Text className="text-lg font-bold text-indigo-600">{formatVnd(product.price)}</Text>
+                <Text className={`${typo.section} font-bold text-indigo-600`}>{formatVnd(product.price)}</Text>
               </View>
 
               {/* Quantity stepper — retail products only */}
               {!isService && (
                 <View className="flex-row items-center justify-between bg-gray-50 rounded-2xl px-4 py-3 mb-4">
-                  <Text className="text-sm font-medium text-gray-700">{t('barber.quantityLabel')}</Text>
+                  <Text className={`${typo.label} text-gray-700`}>{t('barber.quantityLabel')}</Text>
                   <View className="flex-row items-center gap-x-3">
                     <TouchableOpacity
                       onPress={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -342,7 +351,7 @@ function AddItemSheet({
                     >
                       <MaterialCommunityIcons name="minus" size={18} color="#374151" />
                     </TouchableOpacity>
-                    <Text className="text-lg font-bold text-gray-900 w-8 text-center">{quantity}</Text>
+                    <Text className={`${typo.section} font-bold text-gray-900 w-8 text-center`}>{quantity}</Text>
                     <TouchableOpacity
                       onPress={() => setQuantity((q) => q + 1)}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -358,10 +367,10 @@ function AddItemSheet({
               {isService && employees.length > 0 && (
                 <View className="mb-4">
                   <View className="flex-row items-center mb-2">
-                    <Text className="text-sm font-medium text-gray-700">
+                    <Text className={`${typo.label} text-gray-700`}>
                       {t('barber.assignLabel')}
                     </Text>
-                    <Text className="text-xs text-gray-400 ml-1">({t('barber.optional')})</Text>
+                    <Text className={`${typo.caption} text-gray-400 ml-1`}>({t('barber.optional')})</Text>
                   </View>
                   <ScrollView
                     horizontal
@@ -381,7 +390,7 @@ function AddItemSheet({
               )}
 
               {/* Note input */}
-              <Text className="text-sm font-medium text-gray-700 mb-2">
+              <Text className={`${typo.label} text-gray-700 mb-2`}>
                 {t('barber.noteLabel')}
               </Text>
               <QuickPhraseBar
@@ -393,7 +402,7 @@ function AddItemSheet({
               />
               <TextInput
                 ref={noteRef}
-                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-sm min-h-[80px]"
+                className={`bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-800 ${typo.inputSize} min-h-[80px]`}
                 placeholder={t('barber.notePlaceholder')}
                 placeholderTextColor="#9ca3af"
                 value={note}
@@ -411,14 +420,15 @@ function AddItemSheet({
                   className="flex-1 border border-gray-200 rounded-2xl py-3.5 items-center"
                   onPress={onClose}
                 >
-                  <Text className="font-semibold text-gray-600">{t('barber.cancel')}</Text>
+                  <Text className={`${typo.label} text-gray-600`}>{t('barber.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  testID="barber-add-to-order"
                   className="bg-indigo-600 rounded-2xl py-3.5 items-center"
                   style={{ flex: 2 }}
                   onPress={() => onAdd(note, selectedEmployee, quantity)}
                 >
-                  <Text className="font-bold text-white">{t('barber.addToOrder')}</Text>
+                  <Text className={`${typo.labelBold} text-white`}>{t('barber.addToOrder')}</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -441,6 +451,7 @@ function CartBar({
   onCheckout: () => void;
 }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const total = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
   const names = cartItems.map((i) => i.product.name).join(', ');
@@ -458,18 +469,18 @@ function CartBar({
       {isSplitSession && (
         <View className="flex-row items-center gap-1.5 mb-2">
           <MaterialCommunityIcons name="account-multiple-outline" size={13} color="rgba(255,255,255,0.85)" />
-          <Text className="text-xs text-white/80 font-semibold">
+          <Text className={`${typo.captionBold} text-white/80`}>
             {t('barber.splitSession', { count: uniqueTechCount })} · {t('barber.splitSessionHint')}
           </Text>
         </View>
       )}
       <View className="flex-row items-center">
-        <View className="w-6 h-6 rounded-full bg-white items-center justify-center mr-2.5">
-          <Text className="text-indigo-600 text-xs font-bold">{cartItems.length}</Text>
+        <View testID="barber-cart-count" className="w-6 h-6 rounded-full bg-white items-center justify-center mr-2.5">
+          <Text className={`${typo.captionBold} text-indigo-600`}>{cartItems.length}</Text>
         </View>
         <View className="flex-1 mr-3">
-          <Text className="text-white text-xs opacity-80" numberOfLines={1}>{names}</Text>
-          <Text className="text-white text-sm font-bold">{formatVnd(total)}</Text>
+          <Text className={`${typo.caption} text-white opacity-80`} numberOfLines={1}>{names}</Text>
+          <Text className={`${typo.label} font-bold text-white`}>{formatVnd(total)}</Text>
         </View>
         <TouchableOpacity
           className="p-2 mr-1"
@@ -479,11 +490,12 @@ function CartBar({
           <MaterialCommunityIcons name="trash-can-outline" size={20} color="rgba(255,255,255,0.65)" />
         </TouchableOpacity>
         <TouchableOpacity
+          testID="barber-checkout-btn"
           className="bg-white rounded-2xl px-4 py-2.5"
           onPress={onCheckout}
           activeOpacity={0.85}
         >
-          <Text className="text-indigo-600 font-bold text-sm">{t('barber.checkout')}</Text>
+          <Text className={`${typo.labelBold} text-indigo-600`}>{t('barber.checkout')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -521,6 +533,7 @@ function CheckoutSheet({
   onCustomerChange?: (c: CustomerData | null) => void;
 }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
   const [tip, setTip] = useState(0);
   const [cashReceived, setCashReceived] = useState('');
@@ -634,7 +647,7 @@ function CheckoutSheet({
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View className="bg-white rounded-t-3xl px-5 pt-4 pb-8" style={{ maxHeight: '88%' }}>
           <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-4" />
-          <Text className="text-lg font-bold text-gray-900 mb-4">{t('barber.checkoutTitle')}</Text>
+          <Text className={`${typo.section} text-gray-900 mb-4`}>{t('barber.checkoutTitle')}</Text>
 
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             {/* Split-session summary — shown when 2+ technicians are in the cart */}
@@ -651,13 +664,13 @@ function CheckoutSheet({
                 <View className="bg-teal-50 rounded-2xl px-3 py-2.5 mb-3 flex-row flex-wrap gap-x-3 gap-y-1.5">
                   <View className="flex-row items-center gap-1.5 w-full mb-0.5">
                     <MaterialCommunityIcons name="account-multiple-outline" size={14} color="#0d9488" />
-                    <Text className="text-xs font-bold text-teal-700">{t('barber.splitSessionHint')}</Text>
+                    <Text className={`${typo.captionBold} text-teal-700`}>{t('barber.splitSessionHint')}</Text>
                   </View>
                   {Array.from(techMap.values()).map(({ name, items: techItems }) => (
                     <View key={name} className="flex-row items-center gap-1">
                       <View className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                      <Text className="text-xs text-teal-700 font-semibold">{name.split(' ').pop()}</Text>
-                      <Text className="text-xs text-teal-500">({techItems.map(i => i.product.name).join(', ')})</Text>
+                      <Text className={`${typo.caption} text-teal-700 font-semibold`}>{name.split(' ').pop()}</Text>
+                      <Text className={`${typo.caption} text-teal-500`}>({techItems.map(i => i.product.name).join(', ')})</Text>
                     </View>
                   ))}
                 </View>
@@ -668,20 +681,20 @@ function CheckoutSheet({
             {cartItems.map((item) => (
               <View key={item.key} className="flex-row items-start py-3 border-b border-gray-50">
                 <View className="flex-1">
-                  <Text className="text-sm font-semibold text-gray-900">{item.product.name}</Text>
+                  <Text className={`${typo.label} text-gray-900`}>{item.product.name}</Text>
                   {item.employee && (
-                    <Text className="text-xs text-indigo-600 mt-0.5">
+                    <Text className={`${typo.caption} text-indigo-600 mt-0.5`}>
                       {item.employee.fullName.split(' ').pop()}
                     </Text>
                   )}
                   {!!item.note && (
-                    <Text className="text-xs text-gray-400 mt-0.5">{item.note}</Text>
+                    <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{item.note}</Text>
                   )}
                   {item.quantity > 1 && (
-                    <Text className="text-xs text-gray-500 mt-0.5">×{item.quantity}</Text>
+                    <Text className={`${typo.caption} text-gray-500 mt-0.5`}>×{item.quantity}</Text>
                   )}
                 </View>
-                <Text className="text-sm font-bold text-indigo-600 mr-3 mt-0.5">
+                <Text className={`${typo.label} font-bold text-indigo-600 mr-3 mt-0.5`}>
                   {formatVnd(item.product.price * item.quantity)}
                 </Text>
                 <TouchableOpacity
@@ -698,30 +711,30 @@ function CheckoutSheet({
               {(tip > 0 || pointsDiscount > 0) ? (
                 <>
                   <View className="flex-row justify-between items-center mb-1">
-                    <Text className="text-sm text-gray-500">{t('barber.subtotal')}</Text>
-                    <Text className="text-sm text-gray-600">{formatVnd(itemsTotal)}</Text>
+                    <Text className={`${typo.caption} text-gray-500`}>{t('barber.subtotal')}</Text>
+                    <Text className={`${typo.caption} text-gray-600`}>{formatVnd(itemsTotal)}</Text>
                   </View>
                   {tip > 0 && (
                     <View className="flex-row justify-between items-center mb-1">
-                      <Text className="text-sm text-gray-500">{t('barber.tip')}</Text>
-                      <Text className="text-sm text-emerald-600 font-medium">+{formatVnd(tip)}</Text>
+                      <Text className={`${typo.caption} text-gray-500`}>{t('barber.tip')}</Text>
+                      <Text className={`${typo.caption} font-medium text-emerald-600`}>+{formatVnd(tip)}</Text>
                     </View>
                   )}
                   {pointsDiscount > 0 && (
                     <View className="flex-row justify-between items-center mb-1">
-                      <Text className="text-sm text-gray-500">{t('barber.pointsDiscount')}</Text>
-                      <Text className="text-sm text-amber-600 font-medium">-{formatVnd(pointsDiscount)}</Text>
+                      <Text className={`${typo.caption} text-gray-500`}>{t('barber.pointsDiscount')}</Text>
+                      <Text className={`${typo.caption} font-medium text-amber-600`}>-{formatVnd(pointsDiscount)}</Text>
                     </View>
                   )}
                   <View className="flex-row justify-between items-center pt-2 border-t border-gray-100">
-                    <Text className="text-base font-bold text-gray-900">{t('barber.totalDue')}</Text>
-                    <Text className="text-base font-bold text-indigo-600">{formatVnd(effectiveTotal)}</Text>
+                    <Text className={`${typo.labelBold} text-gray-900`}>{t('barber.totalDue')}</Text>
+                    <Text className={`${typo.labelBold} text-indigo-600`}>{formatVnd(effectiveTotal)}</Text>
                   </View>
                 </>
               ) : (
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-base font-bold text-gray-900">{t('barber.orderTotal')}</Text>
-                  <Text className="text-base font-bold text-indigo-600">{formatVnd(itemsTotal)}</Text>
+                  <Text className={`${typo.labelBold} text-gray-900`}>{t('barber.orderTotal')}</Text>
+                  <Text className={`${typo.labelBold} text-indigo-600`}>{formatVnd(itemsTotal)}</Text>
                 </View>
               )}
             </View>
@@ -730,7 +743,7 @@ function CheckoutSheet({
             {!appliedPromo ? (
               <View className="flex-row gap-x-2 mb-4">
                 <TextInput
-                  className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800"
+                  className={`flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-800`}
                   placeholder={t('pos.promoCode')}
                   placeholderTextColor="#9ca3af"
                   value={promoInput}
@@ -748,13 +761,13 @@ function CheckoutSheet({
                     setPromoInput('');
                   }}
                 >
-                  <Text className="text-indigo-600 font-semibold text-sm">{t('pos.applyPromo')}</Text>
+                  <Text className={`${typo.label} text-indigo-600 font-semibold`}>{t('pos.applyPromo')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <View className="flex-row items-center bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 mb-4">
                 <MaterialCommunityIcons name="tag-outline" size={16} color="#4f46e5" />
-                <Text className="flex-1 ml-2 text-indigo-700 font-semibold text-sm">{appliedPromo}</Text>
+                <Text className={`${typo.label} flex-1 ml-2 text-indigo-700 font-semibold`}>{appliedPromo}</Text>
                 <TouchableOpacity
                   onPress={() => setAppliedPromo('')}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -766,7 +779,7 @@ function CheckoutSheet({
 
             {/* Tip chips */}
             <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">{t('barber.tipLabel')}</Text>
+              <Text className={`${typo.label} text-gray-700 mb-2`}>{t('barber.tipLabel')}</Text>
               <View className="flex-row gap-x-2">
                 {TIP_AMOUNTS.map((amount) => {
                   const selected = tip === amount;
@@ -781,7 +794,7 @@ function CheckoutSheet({
                         setTip(selected ? 0 : amount);
                       }}
                     >
-                      <Text className={`text-xs font-semibold ${selected ? 'text-white' : 'text-gray-600'}`}>
+                      <Text className={`${typo.captionBold} ${selected ? 'text-white' : 'text-gray-600'}`}>
                         {amount >= 1_000 ? `${amount / 1_000}k` : String(amount)}
                       </Text>
                     </TouchableOpacity>
@@ -794,25 +807,25 @@ function CheckoutSheet({
             {hasCustomer && (
               <View className="mb-4">
                 <View className="flex-row items-center mb-2">
-                  <Text className="text-sm font-medium text-gray-700">
+                  <Text className={`${typo.label} text-gray-700`}>
                     {t('barber.customerLabel')}
                   </Text>
-                  <Text className="text-xs text-gray-400 ml-1">({t('barber.optional')})</Text>
+                  <Text className={`${typo.caption} text-gray-400 ml-1`}>({t('barber.optional')})</Text>
                 </View>
 
                 {selectedCustomer ? (
                   <>
                     <View className="flex-row items-center bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2.5">
                       <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center mr-2.5">
-                        <Text className="text-xs font-bold text-indigo-600">
+                        <Text className={`${typo.captionBold} text-indigo-600`}>
                           {initials(selectedCustomer.name)}
                         </Text>
                       </View>
                       <View className="flex-1">
-                        <Text className="text-sm font-semibold text-gray-900">
+                        <Text className={`${typo.label} text-gray-900`}>
                           {selectedCustomer.name}
                         </Text>
-                        <Text className="text-xs text-gray-500">{selectedCustomer.phone}</Text>
+                        <Text className={`${typo.caption} text-gray-500`}>{selectedCustomer.phone}</Text>
                       </View>
                       <TouchableOpacity
                         onPress={() => { setSelectedCustomer(null); onCustomerChange?.(null); }}
@@ -827,10 +840,10 @@ function CheckoutSheet({
                           <View className="flex-row items-start gap-2 bg-rose-50 px-3 py-2 border-b border-rose-100">
                             <MaterialCommunityIcons name="alert-circle" size={15} color="#e11d48" style={{ marginTop: 1 }} />
                             <View className="flex-1">
-                              <Text className="text-[10px] font-bold text-rose-600 uppercase tracking-wide">
+                              <Text className={`${typo.caption} font-bold text-rose-600 uppercase tracking-wide`}>
                                 {t('customer.allergies')}
                               </Text>
-                              <Text className="text-xs text-rose-800 mt-0.5">
+                              <Text className={`${typo.caption} text-rose-800 mt-0.5`}>
                                 {selectedCustomer.allergiesOrSensitivities}
                               </Text>
                             </View>
@@ -840,10 +853,10 @@ function CheckoutSheet({
                           <View className={`flex-row items-start gap-2 bg-white px-3 py-2${selectedCustomer.preferredServices ? ' border-b border-gray-100' : ''}`}>
                             <MaterialCommunityIcons name="content-cut" size={15} color="#6b7280" style={{ marginTop: 1 }} />
                             <View className="flex-1">
-                              <Text className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                              <Text className={`${typo.caption} font-semibold text-gray-400 uppercase tracking-wide`}>
                                 {t('customer.hairType')}
                               </Text>
-                              <Text className="text-xs text-gray-700 mt-0.5">{selectedCustomer.hairType}</Text>
+                              <Text className={`${typo.caption} text-gray-700 mt-0.5`}>{selectedCustomer.hairType}</Text>
                             </View>
                           </View>
                         ) : null}
@@ -851,10 +864,10 @@ function CheckoutSheet({
                           <View className="flex-row items-start gap-2 bg-white px-3 py-2">
                             <MaterialCommunityIcons name="star-outline" size={15} color="#6b7280" style={{ marginTop: 1 }} />
                             <View className="flex-1">
-                              <Text className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                              <Text className={`${typo.caption} font-semibold text-gray-400 uppercase tracking-wide`}>
                                 {t('customer.preferredServices')}
                               </Text>
-                              <Text className="text-xs text-gray-700 mt-0.5">
+                              <Text className={`${typo.caption} text-gray-700 mt-0.5`}>
                                 {selectedCustomer.preferredServices}
                               </Text>
                             </View>
@@ -868,7 +881,7 @@ function CheckoutSheet({
                     <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
                       <MaterialCommunityIcons name="magnify" size={16} color="#9ca3af" />
                       <TextInput
-                        className="flex-1 ml-2 text-sm text-gray-800"
+                        className={`flex-1 ml-2 ${typo.inputSize} text-gray-800`}
                         placeholder={t('barber.customerSearchPlaceholder')}
                         placeholderTextColor="#9ca3af"
                         value={customerSearch}
@@ -886,7 +899,7 @@ function CheckoutSheet({
                     {showSearchResults && (
                       <View className="mt-1 bg-white border border-gray-100 rounded-xl overflow-hidden max-h-36">
                         {searchResults.length === 0 && !searching ? (
-                          <Text className="text-xs text-gray-400 text-center py-3">
+                          <Text className={`${typo.caption} text-gray-400 text-center py-3`}>
                             {t('barber.customerNotFound')}
                           </Text>
                         ) : (
@@ -910,7 +923,7 @@ function CheckoutSheet({
 
                     {showRecent && (
                       <View className="mt-2">
-                        <Text className="text-xs text-gray-400 mb-1.5">
+                        <Text className={`${typo.caption} text-gray-400 mb-1.5`}>
                           {t('barber.customerRecent')}
                         </Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -924,7 +937,7 @@ function CheckoutSheet({
                                 onCustomerChange?.(c);
                               }}
                             >
-                              <Text className="text-xs text-gray-700 font-medium">
+                              <Text className={`${typo.caption} text-gray-700 font-medium`}>
                                 {c.name.split(' ').pop()}
                               </Text>
                             </TouchableOpacity>
@@ -952,10 +965,10 @@ function CheckoutSheet({
                 activeOpacity={0.8}
               >
                 <View className="flex-1 mr-3">
-                  <Text className={`text-sm font-semibold ${redeemPoints ? 'text-amber-800' : 'text-gray-700'}`}>
+                  <Text className={`${typo.label} ${redeemPoints ? 'text-amber-800' : 'text-gray-700'}`}>
                     {t('barber.usePoints')}
                   </Text>
-                  <Text className={`text-xs mt-0.5 ${redeemPoints ? 'text-amber-600' : 'text-gray-400'}`}>
+                  <Text className={`${typo.caption} mt-0.5 ${redeemPoints ? 'text-amber-600' : 'text-gray-400'}`}>
                     {customerPoints} {t('barber.pointsAvailable')}
                     {redeemPoints && pointsDiscount > 0
                       ? ` · -${formatVnd(pointsDiscount)}`
@@ -970,7 +983,7 @@ function CheckoutSheet({
 
             {/* Payment method */}
             <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">
+              <Text className={`${typo.label} text-gray-700 mb-2`}>
                 {t('barber.paymentMethod')}
               </Text>
               <View className="flex-row gap-x-2">
@@ -988,7 +1001,7 @@ function CheckoutSheet({
                     }}
                   >
                     <Text
-                      className={`text-xs font-semibold ${
+                      className={`${typo.captionBold} ${
                         paymentMethod === value ? 'text-white' : 'text-gray-600'
                       }`}
                     >
@@ -1023,7 +1036,7 @@ function CheckoutSheet({
                               }`}
                               onPress={() => handleBankSelect(bank.id)}
                             >
-                              <Text className={`text-xs font-semibold ${isActive ? 'text-white' : 'text-gray-600'}`}>
+                              <Text className={`${typo.captionBold} ${isActive ? 'text-white' : 'text-gray-600'}`}>
                                 {bank.bankShortName ?? bank.bankName}
                               </Text>
                             </TouchableOpacity>
@@ -1043,10 +1056,10 @@ function CheckoutSheet({
                         style={{ width: 200, height: 200, borderRadius: 8 }}
                         resizeMode="contain"
                       />
-                      <Text className="text-2xl font-bold text-indigo-600 mt-3">
+                      <Text className={`${typo.heading} text-indigo-600 mt-3`}>
                         {formatVnd(effectiveTotal)}
                       </Text>
-                      <Text className="text-sm font-bold text-gray-700 mt-2">
+                      <Text className={`${typo.label} font-bold text-gray-700 mt-2`}>
                         {activeBank.bankShortName ?? activeBank.bankName}
                       </Text>
                       <TouchableOpacity
@@ -1057,22 +1070,22 @@ function CheckoutSheet({
                         }}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
-                        <Text className="text-base font-mono font-bold text-gray-900 tracking-wider">
+                        <Text className={`${typo.label} font-mono font-bold text-gray-900 tracking-wider`}>
                           {activeBank.accountNumber}
                         </Text>
                         <MaterialCommunityIcons name="content-copy" size={14} color="#9ca3af" />
                       </TouchableOpacity>
-                      <Text className="text-xs text-gray-500 mt-0.5">{activeBank.accountName}</Text>
-                      <Text className="text-xs text-gray-400 mt-2">{t('barber.scanQR')}</Text>
+                      <Text className={`${typo.caption} text-gray-500 mt-0.5`}>{activeBank.accountName}</Text>
+                      <Text className={`${typo.caption} text-gray-400 mt-2`}>{t('barber.scanQR')}</Text>
                     </View>
                   </>
                 ) : (
                   <View className="items-center py-2">
                     <MaterialCommunityIcons name="bank-outline" size={32} color="#9ca3af" />
-                    <Text className="text-sm font-medium text-gray-500 mt-2 text-center">
+                    <Text className={`${typo.label} text-gray-500 mt-2 text-center`}>
                       {t('barber.noBankAccount')}
                     </Text>
-                    <Text className="text-xs text-gray-400 mt-1 text-center">
+                    <Text className={`${typo.caption} text-gray-400 mt-1 text-center`}>
                       {t('barber.noBankAccountHint')}
                     </Text>
                   </View>
@@ -1084,7 +1097,7 @@ function CheckoutSheet({
             {paymentMethod === 'CASH' && (
               <View className="bg-gray-50 rounded-2xl p-4 mb-4">
                 <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-sm font-medium text-gray-700">{t('barber.cashReceived')}</Text>
+                  <Text className={`${typo.label} text-gray-700`}>{t('barber.cashReceived')}</Text>
                   <TouchableOpacity
                     className="bg-indigo-100 rounded-full px-3 py-1"
                     onPress={() => {
@@ -1092,11 +1105,11 @@ function CheckoutSheet({
                       setCashReceived(String(effectiveTotal));
                     }}
                   >
-                    <Text className="text-xs font-semibold text-indigo-700">{t('barber.exactAmount')}</Text>
+                    <Text className={`${typo.captionBold} text-indigo-700`}>{t('barber.exactAmount')}</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput
-                  className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-xl font-bold text-gray-900 mb-3"
+                  className={`bg-white border border-gray-200 rounded-xl px-4 py-3 ${typo.inputSize} font-bold text-gray-900 mb-3`}
                   value={cashReceived}
                   onChangeText={setCashReceived}
                   keyboardType="numeric"
@@ -1106,10 +1119,10 @@ function CheckoutSheet({
                 />
                 {cashReceivedNum > 0 && (
                   <View className="flex-row justify-between items-center">
-                    <Text className="text-sm font-medium text-gray-600">
+                    <Text className={`${typo.label} text-gray-600`}>
                       {cashDelta >= 0 ? t('barber.change') : t('barber.shortage')}
                     </Text>
-                    <Text className={`text-xl font-bold ${cashDelta >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>
+                    <Text className={`${typo.section} font-bold ${cashDelta >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>
                       {formatVnd(Math.abs(cashDelta))}
                     </Text>
                   </View>
@@ -1119,7 +1132,7 @@ function CheckoutSheet({
 
             {/* Order note */}
             <View className="mb-5">
-              <Text className="text-sm font-medium text-gray-700 mb-2">
+              <Text className={`${typo.label} text-gray-700 mb-2`}>
                 {t('barber.orderNote')}
               </Text>
               <QuickPhraseBar
@@ -1130,7 +1143,7 @@ function CheckoutSheet({
                 }
               />
               <TextInput
-                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-sm"
+                className={`bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-800 ${typo.inputSize}`}
                 placeholder={t('barber.notePlaceholder')}
                 placeholderTextColor="#9ca3af"
                 value={orderNote}
@@ -1149,7 +1162,7 @@ function CheckoutSheet({
           {!!checkoutError && (
             <View className="flex-row items-center bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-3 gap-x-2">
               <MaterialCommunityIcons name="alert-outline" size={18} color="#d97706" />
-              <Text className="flex-1 text-amber-800 text-sm font-medium">{checkoutError}</Text>
+              <Text className={`${typo.label} flex-1 text-amber-800 font-medium`}>{checkoutError}</Text>
               <TouchableOpacity
                 onPress={onDismissError}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -1161,6 +1174,7 @@ function CheckoutSheet({
 
           {/* Place Order button */}
           <TouchableOpacity
+            testID="barber-place-order-btn"
             className="bg-indigo-600 rounded-2xl py-4 items-center mt-2"
             onPress={() => onConfirm({
               customer: selectedCustomer,
@@ -1177,7 +1191,7 @@ function CheckoutSheet({
             {creating ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text className="font-bold text-white text-base">
+              <Text className={`${typo.labelBold} text-white`}>
                 {t('barber.placeOrder')} · {formatVnd(effectiveTotal)}
               </Text>
             )}
@@ -1192,11 +1206,12 @@ function CheckoutSheet({
 
 export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'POSMain'>) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const has = useFeatureCheck();
   const { show: showAlert } = useAlertStore();
-  const { setActiveView } = useSellingStore();
+  const { setActiveView, barberCategoryId, setBarberCategoryId } = useSellingStore();
   const { width } = useWindowDimensions();
   const [gridPref, setGridPref] = useState<'auto' | '2' | '3'>('auto');
 
@@ -1217,9 +1232,15 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
 
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(barberCategoryId);
   const [page, setPage] = useState(0);
   const [allServices, setAllServices] = useState<ProductData[]>([]);
+
+  const selectCategory = (id: string | null) => {
+    setSelectedCategoryId(id);
+    setBarberCategoryId(id);
+    setPage(0);
+  };
   const isLoadingMore = useRef(false);
   const canLoadMore = useRef(false);
 
@@ -1301,11 +1322,11 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
   }, [checkInPayload?.appointmentId]);
   const [creating, setCreating] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
+  const [upgradeVisible, setUpgradeVisible] = useState(false);
 
   const commitSearch = () => {
     setSearch(searchInput);
-    setSelectedCategoryId(null);
-    setPage(0);
+    selectCategory(null);
   };
 
   const {
@@ -1331,6 +1352,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
       }
       return res.data.data;
     },
+    staleTime: 30_000,
   });
 
   const hasMore = servicesPage ? page < servicesPage.totalPages - 1 : false;
@@ -1460,9 +1482,14 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.navigate('OrderSuccess', { orderId, orderNumber, total });
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? t('barber.createFailed');
-      setCheckoutError(msg);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (err?.response?.data?.error === 'ORDER_LIMIT_EXCEEDED') {
+        setCheckoutVisible(false);
+        setUpgradeVisible(true);
+      } else {
+        const msg = err?.response?.data?.message ?? t('barber.createFailed');
+        setCheckoutError(msg);
+      }
     } finally {
       setCreating(false);
     }
@@ -1479,7 +1506,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
       >
         <View className="flex-row items-center justify-between mb-0.5">
           <View className="flex-1">
-            <Text className="text-xl font-bold text-gray-900 dark:text-white">{t('barber.title')}</Text>
+            <Text className={`${typo.heading} text-gray-900 dark:text-white`}>{t('barber.title')}</Text>
             <QueueStatusBadge pending={pendingCount} inProgress={inProgressCount} />
           </View>
           <TouchableOpacity
@@ -1493,11 +1520,12 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
             />
           </TouchableOpacity>
         </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5 mb-0`}>{t('barber.hint')}</Text>
 
         {/* View toggle */}
         <View className="flex-row bg-gray-100 dark:bg-gray-700 rounded-2xl p-1 mt-2 mb-3">
           <View className="flex-1 rounded-xl py-2 items-center bg-white dark:bg-gray-600">
-            <Text className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+            <Text className={`${typo.label} text-indigo-600 dark:text-indigo-400`}>
               {t('selling.title')}
             </Text>
           </View>
@@ -1505,7 +1533,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
             className="flex-1 rounded-xl py-2 items-center active:opacity-70"
             onPress={() => { Haptics.selectionAsync(); setActiveView('ORDERS'); }}
           >
-            <Text className="text-sm font-semibold text-gray-500 dark:text-gray-300">
+            <Text className={`${typo.label} text-gray-500 dark:text-gray-300`}>
               {t('orders.title')}
             </Text>
           </TouchableOpacity>
@@ -1516,7 +1544,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
           <View className="flex-1 flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-3 py-2.5">
             <MaterialCommunityIcons name="magnify" size={20} color="#9ca3af" />
             <TextInput
-              className="flex-1 ml-2 text-base text-gray-800 dark:text-white"
+              className={`flex-1 ml-2 ${typo.inputSize} text-gray-800 dark:text-white`}
               placeholder={t('barber.searchPlaceholder')}
               placeholderTextColor="#9ca3af"
               value={searchInput}
@@ -1526,7 +1554,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
             />
             {searchInput.length > 0 && (
               <TouchableOpacity
-                onPress={() => { setSearchInput(''); setSearch(''); setPage(0); setSelectedCategoryId(null); }}
+                onPress={() => { setSearchInput(''); setSearch(''); selectCategory(null); }}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <MaterialCommunityIcons name="close-circle" size={18} color="#9ca3af" />
@@ -1538,7 +1566,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
             className="bg-indigo-600 rounded-xl px-4 py-2.5 items-center justify-center"
             activeOpacity={0.8}
           >
-            <Text className="text-white font-semibold text-sm">{t('pos.searchButton')}</Text>
+            <Text className={`${typo.label} text-white font-semibold`}>{t('pos.searchButton')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -1563,11 +1591,10 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
               }`}
               onPress={() => {
                 Haptics.selectionAsync();
-                setSelectedCategoryId(null);
-                setPage(0);
+                selectCategory(null);
               }}
             >
-              <Text className={`text-xs font-semibold ${selectedCategoryId === null ? 'text-white' : 'text-gray-600'}`}>
+              <Text className={`${typo.captionBold} ${selectedCategoryId === null ? 'text-white' : 'text-gray-600'}`}>
                 {t('pos.allCategories')}
               </Text>
             </TouchableOpacity>
@@ -1581,12 +1608,11 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
                   }`}
                   onPress={() => {
                     Haptics.selectionAsync();
-                    setSelectedCategoryId(active ? null : cat.id);
-                    setPage(0);
+                    selectCategory(active ? null : cat.id);
                   }}
                 >
                   {cat.emoji ? <Text>{cat.emoji}</Text> : null}
-                  <Text className={`text-xs font-semibold ${active ? 'text-white' : 'text-gray-600'}`}>
+                  <Text className={`${typo.captionBold} ${active ? 'text-white' : 'text-gray-600'}`}>
                     {cat.name}
                   </Text>
                 </TouchableOpacity>
@@ -1597,7 +1623,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
       </View>
 
       {/* Product grid */}
-      {productsLoading && page === 0 ? (
+      {(productsLoading || (productsFetching && allServices.length === 0)) && page === 0 ? (
         <View className="flex-row flex-wrap p-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
             <View key={i} style={{ width: `${(100 / numColumns).toFixed(2)}%` }} className="p-1.5">
@@ -1664,6 +1690,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
         initialCustomer={bannerCustomer}
         onCustomerChange={setBannerCustomer}
       />
+      <UpgradeModal visible={upgradeVisible} onClose={() => setUpgradeVisible(false)} />
     </View>
   );
 }

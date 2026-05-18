@@ -1,4 +1,4 @@
-# Reusable subflow: cold-launch → Shop ID → Login → skip PIN → main app
+# Reusable subflow: launch → logout if needed → Shop ID → Login → skip PIN → main app
 #
 # Required env vars (pass with --env or --env-file):
 #   SHOP_ID   - tenant slug (e.g. "my-shop")
@@ -9,38 +9,56 @@
 appId: com.knp.tappypos
 ---
 
+# clearState: false — preserves AsyncStorage so the Expo dev menu does NOT appear.
+# The Keychain (SecureStore) always survives regardless; auth state is handled below.
 - launchApp:
-    clearState: true
+    clearState: false
 
-# ── 0. Expo dev-client server picker (dev builds only) ───────────────────────
-# clearState wipes the stored server URL; tap through the picker if it appears.
-- tapOn:
-    text: "http://localhost:8081"
-    optional: true
+# ── 0. Handle already-logged-in case ─────────────────────────────────────────
+# Only runs if the app is on the main screen (tab-more visible = logged in).
+# More tab → Settings entry → logout → confirm FriendlyAlert.
+- runFlow:
+    when:
+      visible:
+        id: "tab-more"
+    commands:
+      - tapOn:
+          id: "tab-more"
+      - scrollUntilVisible:
+          element:
+            id: "more-settings-entry"
+          direction: DOWN
+          timeout: 5000
+      - tapOn:
+          id: "more-settings-entry"
+      - scrollUntilVisible:
+          element:
+            id: "settings-logout-btn"
+          direction: DOWN
+          speed: 80
+          timeout: 10000
+      - tapOn:
+          id: "settings-logout-btn"
+      - tapOn:
+          id: "alert-btn-1"
+          optional: true
 
-# ── 0b. Handle already-logged-in case ────────────────────────────────────────
-# iOS Keychain (SecureStore) survives clearState; if the app resumes at Dashboard,
-# navigate to Settings → tap logout → the stub SettingsScreen logs out immediately
-# (no confirmation dialog) and resets to ShopId screen.
-- tapOn:
-    id: "tab-settings"
-    optional: true
-- tapOn:
-    id: "settings-logout-btn"
-    optional: true
-
-# ── 0c. PIN screen "change store" link (also survives clearState) ─────────────
+# ── 0b. PIN screen "change store" link ───────────────────────────────────────
 - tapOn:
     text: "Đổi cửa hàng"
     optional: true
 
-# ── 1. Shop ID screen ────────────────────────────────────────────────────────
-- assertVisible: "Mã cửa hàng"
-- tapOn:
-    id: "shop-id-input"
-- inputText: ${SHOP_ID}
-- tapOn:
-    id: "shop-id-submit"
+# ── 1. Shop ID screen (only shown on fresh install; skipped if already stored) ─
+- runFlow:
+    when:
+      visible:
+        id: "shop-id-input"
+    commands:
+      - tapOn:
+          id: "shop-id-input"
+      - inputText: ${SHOP_ID}
+      - tapOn:
+          id: "shop-id-submit"
 
 # ── 2. Login screen ──────────────────────────────────────────────────────────
 - assertVisible: "Đăng nhập"
@@ -55,10 +73,13 @@ appId: com.knp.tappypos
     enabled: true
 - pressKey: Enter
 
-# ── 3. PIN setup — skip if it appears (Keychain PIN survives clearState) ─────
+# ── 3. PIN setup — skip if it appears ────────────────────────────────────────
 - tapOn:
     text: "Bỏ qua, thiết lập sau"
     optional: true
 
 # ── 4. Main app is ready ─────────────────────────────────────────────────────
-- assertVisible: "Tổng quan"
+# Use testID on the tab bar button (always present) instead of the label text which
+# is rendered inside a custom Pressable and may not be in Maestro's accessibility tree.
+- assertVisible:
+    id: "tab-more"

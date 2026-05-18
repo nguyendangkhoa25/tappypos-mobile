@@ -1,0 +1,39 @@
+appId: com.knp.tappypos
+name: "12 Activity log — view log entries, filter by category (ACTIVITY_LOG feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Settings → Activity Log ──────────────────────────────────────
+- tapOn:
+    id: "tab-more"
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- tapOn: "Nhật ký hoạt động"
+- assertVisible: "Nhật ký hoạt động"
+
+# ── AL01: First log entry is visible ─────────────────────────────────────────
+- assertVisible:
+    id: "activity-entry-0"
+
+# ── AL02: Filter by Order ────────────────────────────────────────────────────
+- tapOn: "Đơn hàng"
+- assertVisible: "Nhật ký hoạt động"
+
+# ── AL03: Filter by Product ──────────────────────────────────────────────────
+- tapOn: "Sản phẩm"
+- assertVisible: "Nhật ký hoạt động"
+
+# ── AL04: Reset to all ────────────────────────────────────────────────────────
+- tapOn: "Tất cả"
+- assertVisible:
+    id: "activity-entry-0"
+
+# ── Navigate back ─────────────────────────────────────────────────────────────
+- tapOn:
+    text: "‹"
+    optional: true
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

@@ -21,6 +21,7 @@ import {
 } from '../../services/api';
 import { useFeatureCheck } from '../../hooks/useFeature';
 import { useAlertStore } from '../../store/alertStore';
+import { useTypography } from '../../hooks/useTypography';
 import { formatVnd } from '../../utils/format';
 import { Skeleton } from '../../components/Skeleton';
 import type { HomeScreenProps } from '../../types/navigation';
@@ -44,6 +45,7 @@ function formatDateTime(iso: string) {
 }
 
 function TransactionRow({ tx, t }: { tx: LoyaltyTransactionDTO; t: (k: string) => string }) {
+  const typo = useTypography();
   const cfg = TX_TYPE_CONFIG[tx.type] ?? TX_TYPE_CONFIG.ADJUSTED;
   const sign = tx.type === 'ADJUSTED' ? (tx.points >= 0 ? '+' : '') : cfg.sign;
   return (
@@ -55,16 +57,16 @@ function TransactionRow({ tx, t }: { tx: LoyaltyTransactionDTO; t: (k: string) =
         <MaterialCommunityIcons name={cfg.icon as any} size={18} color={cfg.color} />
       </View>
       <View className="flex-1">
-        <Text className="text-sm font-semibold text-gray-800" numberOfLines={1}>
+        <Text className={`${typo.label} text-gray-800`} numberOfLines={1}>
           {tx.description || t(`loyalty.txType.${tx.type}`)}
         </Text>
-        <Text className="text-xs text-gray-400 mt-0.5">{formatDateTime(tx.createdAt)}</Text>
+        <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{formatDateTime(tx.createdAt)}</Text>
       </View>
       <View className="items-end">
-        <Text className="text-sm font-bold" style={{ color: cfg.color }}>
+        <Text className={`${typo.labelBold}`} style={{ color: cfg.color }}>
           {sign}{Math.abs(tx.points)} {t('loyalty.pts')}
         </Text>
-        <Text className="text-xs text-gray-400 mt-0.5">{t('loyalty.balance')}: {tx.balanceAfter}</Text>
+        <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{t('loyalty.balance')}: {tx.balanceAfter}</Text>
       </View>
     </View>
   );
@@ -77,6 +79,7 @@ function SummaryHeader({
   summary: CustomerLoyaltySummaryDTO;
   t: (k: string) => string;
 }) {
+  const typo = useTypography();
   const tier = summary.currentTier;
   const next = summary.nextTier;
 
@@ -88,24 +91,24 @@ function SummaryHeader({
         style={{ backgroundColor: tier?.color ?? '#4f46e5' }}
       >
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-sm font-semibold text-white/80">{t('loyalty.currentPoints')}</Text>
+          <Text className={`${typo.label} text-white/80`}>{t('loyalty.currentPoints')}</Text>
           {tier && (
             <View className="flex-row items-center bg-white/20 rounded-full px-2 py-0.5">
               <MaterialCommunityIcons name="crown-outline" size={12} color="white" style={{ marginRight: 3 }} />
-              <Text className="text-xs font-bold text-white">{tier.name}</Text>
+              <Text className={`${typo.captionBold} text-white`}>{tier.name}</Text>
             </View>
           )}
         </View>
-        <Text className="text-4xl font-bold text-white mb-1">{summary.loyaltyPoints}</Text>
-        <Text className="text-xs text-white/70">{t('loyalty.pts')}</Text>
+        <Text testID="loyalty-balance" className={`${typo.heading} text-white mb-1`}>{summary.loyaltyPoints}</Text>
+        <Text className={`${typo.caption} text-white/70`}>{t('loyalty.pts')}</Text>
       </View>
 
       {/* Tier progress */}
       {next && summary.amountToNextTier != null && (
         <View className="bg-white rounded-2xl p-4 border border-gray-100">
           <View className="flex-row justify-between mb-2">
-            <Text className="text-xs font-semibold text-gray-600">{t('loyalty.nextTier')}: {next.name}</Text>
-            <Text className="text-xs text-gray-400">
+            <Text className={`${typo.captionBold} text-gray-600`}>{t('loyalty.nextTier')}: {next.name}</Text>
+            <Text className={`${typo.caption} text-gray-400`}>
               {t('loyalty.remaining')}: {formatVnd(summary.amountToNextTier)}
             </Text>
           </View>
@@ -118,7 +121,7 @@ function SummaryHeader({
               }}
             />
           </View>
-          <Text className="text-xs text-gray-400 mt-1.5">
+          <Text className={`${typo.caption} text-gray-400 mt-1.5`}>
             {t('loyalty.totalSpend')}: {formatVnd(summary.totalSpent)}
           </Text>
         </View>
@@ -126,7 +129,7 @@ function SummaryHeader({
       {!next && tier && (
         <View className="bg-white rounded-2xl px-4 py-3 border border-gray-100 flex-row items-center">
           <MaterialCommunityIcons name="trophy-outline" size={18} color={tier.color} style={{ marginRight: 8 }} />
-          <Text className="text-sm font-semibold" style={{ color: tier.color }}>{t('loyalty.topTier')}</Text>
+          <Text className={`${typo.label}`} style={{ color: tier.color }}>{t('loyalty.topTier')}</Text>
         </View>
       )}
     </View>
@@ -143,6 +146,7 @@ function AdjustModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const qc = useQueryClient();
   const showAlert = useAlertStore((s) => s.show);
   const [points, setPoints] = useState('');
@@ -181,28 +185,28 @@ function AdjustModal({
         <View className="bg-black/40 absolute inset-0" />
         <View className="bg-white rounded-t-3xl px-5 pt-5 pb-8">
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-base font-bold text-gray-900">{t('loyalty.adjustTitle')}</Text>
+            <Text className={`${typo.labelBold} text-gray-900`}>{t('loyalty.adjustTitle')}</Text>
             <TouchableOpacity onPress={handleClose} hitSlop={8}>
               <MaterialCommunityIcons name="close" size={22} color="#9ca3af" />
             </TouchableOpacity>
           </View>
 
-          <Text className="text-xs font-semibold text-gray-500 mb-1">{t('loyalty.adjustPoints')}</Text>
-          <Text className="text-xs text-gray-400 mb-2">{t('loyalty.adjustHint')}</Text>
+          <Text className={`${typo.captionBold} text-gray-500 mb-1`}>{t('loyalty.adjustPoints')}</Text>
+          <Text className={`${typo.caption} text-gray-400 mb-2`}>{t('loyalty.adjustHint')}</Text>
           <TextInput
             value={points}
             onChangeText={setPoints}
             placeholder="+100 hoặc -50"
             keyboardType="numbers-and-punctuation"
-            className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 mb-3"
+            className={`border border-gray-200 rounded-xl px-3 py-2.5 ${typo.inputSize} text-gray-800 mb-3`}
           />
 
-          <Text className="text-xs font-semibold text-gray-500 mb-1">{t('loyalty.adjustReason')}</Text>
+          <Text className={`${typo.captionBold} text-gray-500 mb-1`}>{t('loyalty.adjustReason')}</Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
             placeholder={t('loyalty.adjustReasonPlaceholder')}
-            className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 mb-4"
+            className={`border border-gray-200 rounded-xl px-3 py-2.5 ${typo.inputSize} text-gray-800 mb-4`}
           />
 
           <TouchableOpacity
@@ -213,7 +217,7 @@ function AdjustModal({
             {mutation.isPending ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-sm font-bold text-white">{t('loyalty.adjustConfirm')}</Text>
+              <Text className={`${typo.labelBold} text-white`}>{t('loyalty.adjustConfirm')}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -224,6 +228,7 @@ function AdjustModal({
 
 export function CustomerLoyaltyScreen({ route, navigation }: Props) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const { customerId } = route.params;
   const has = useFeatureCheck();
@@ -264,22 +269,25 @@ export function CustomerLoyaltyScreen({ route, navigation }: Props) {
   const keyExtractor = useCallback((item: LoyaltyTransactionDTO) => String(item.id), []);
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#4f46e5" />
-        </TouchableOpacity>
-        <Text className="ml-3 text-base font-bold text-gray-900 flex-1">{t('loyalty.historyTitle')}</Text>
-        {canAdjust && (
-          <TouchableOpacity
-            onPress={() => setAdjustVisible(true)}
-            className="flex-row items-center bg-violet-50 rounded-xl px-3 py-1.5"
-          >
-            <MaterialCommunityIcons name="pencil-outline" size={15} color="#7c3aed" style={{ marginRight: 4 }} />
-            <Text className="text-xs font-bold text-violet-700">{t('loyalty.adjust')}</Text>
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center mb-0.5">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-        )}
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('loyalty.historyTitle')}</Text>
+          {canAdjust && (
+            <TouchableOpacity
+              onPress={() => setAdjustVisible(true)}
+              className="flex-row items-center bg-violet-50 rounded-xl px-3 py-1.5"
+            >
+              <MaterialCommunityIcons name="pencil-outline" size={15} color="#7c3aed" style={{ marginRight: 4 }} />
+              <Text className={`${typo.captionBold} text-violet-700`}>{t('loyalty.adjust')}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-0 mt-0.5`}>{t('loyalty.hint')}</Text>
       </View>
 
       <FlatList
@@ -288,6 +296,7 @@ export function CustomerLoyaltyScreen({ route, navigation }: Props) {
         renderItem={renderItem}
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
         ListHeaderComponent={
           summaryLoading ? (
@@ -299,7 +308,7 @@ export function CustomerLoyaltyScreen({ route, navigation }: Props) {
             <View className="pt-4">
               <SummaryHeader summary={summary} t={t} />
               <View className="px-4 pb-2">
-                <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+                <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wide`}>
                   {t('loyalty.transactionHistory')}
                 </Text>
               </View>
@@ -310,7 +319,7 @@ export function CustomerLoyaltyScreen({ route, navigation }: Props) {
           !txFetching ? (
             <View className="items-center py-12">
               <MaterialCommunityIcons name="star-circle-outline" size={40} color="#d1d5db" />
-              <Text className="text-gray-400 text-sm mt-3">{t('loyalty.noTransactions')}</Text>
+              <Text className={`${typo.caption} text-gray-400 mt-3`}>{t('loyalty.noTransactions')}</Text>
             </View>
           ) : null
         }

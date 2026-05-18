@@ -1,0 +1,33 @@
+appId: com.knp.tappypos
+name: "MKUP 13 Security — blocked features absent, service features present"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+
+# INVENTORY tile absent
+- assertNotVisible:
+    id: "more-tile-inventory"
+
+# Gold price tile absent
+- assertNotVisible:
+    id: "more-tile-goldPrice"
+
+# APPOINTMENT tile present
+- assertVisible:
+    id: "more-tile-appointments"
+
+# Sell tab shows makeup service screen
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+- assertNotVisible: "Tìm sản phẩm..."
+
+# Vendor absent
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertNotVisible: "Nhà cung cấp"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

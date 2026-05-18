@@ -1,0 +1,51 @@
+appId: com.knp.tappypos
+name: "MKUP 02 POS golden path — makeup service card → add to order → checkout → success"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+
+# MK01: Tap first service card (makeup service)
+- tapOn:
+    id: "barber-service-.*"
+
+# MK02: AddItemSheet appears
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+
+# MK03: CartBar count = 1
+- assertVisible:
+    id: "barber-cart-count"
+- assertVisible: "1"
+
+# MK04: Add a second service
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible: "2"
+
+# MK05: Open CheckoutSheet
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Hoàn tất đơn hàng"
+- assertVisible: "Phương thức thanh toán"
+- assertVisible:
+    id: "payment-method-CASH"
+
+# MK06: Place order
+- tapOn:
+    id: "barber-place-order-btn"
+- assertVisible: "Đặt hàng thành công!"
+- assertVisible:
+    id: "order-success-number"
+
+# MK07: New order
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Dịch vụ"

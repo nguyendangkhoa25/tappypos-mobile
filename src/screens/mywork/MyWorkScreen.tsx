@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { orderApi, type WorkItemDTO } from '../../services/api';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
+import { useTypography } from '../../hooks/useTypography';
 import { formatVnd } from '../../utils/format';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
@@ -37,18 +38,19 @@ function WorkItemCard({
   isPending: boolean;
 }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const statusColor = STATUS_COLOR[item.status] ?? '#6b7280';
   const statusLabel =
     item.status === 'PENDING' ? t('myWork.statusPending') : t('myWork.statusInProgress');
 
   return (
-    <View className="bg-white dark:bg-gray-800 rounded-2xl mx-4 mb-3 p-4 shadow-sm">
+    <View testID={`mywork-task-${item.itemId}`} className="bg-white dark:bg-gray-800 rounded-2xl mx-4 mb-3 p-4 shadow-sm">
       <View className="flex-row justify-between items-start mb-2">
         <View className="flex-1 mr-3">
-          <Text className="text-base font-semibold text-gray-900 dark:text-white" numberOfLines={1}>
+          <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
             {item.productName}
           </Text>
-          <Text className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
             {item.orderNumber} · {item.customerName ?? t('pos.walkIn')}
           </Text>
         </View>
@@ -58,19 +60,19 @@ function WorkItemCard({
       </View>
 
       <View className="flex-row items-center mb-3 gap-x-3">
-        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+        <Text className={`${typo.label} text-gray-900 dark:text-white`}>
           {formatVnd(item.amount)}
         </Text>
         {item.durationMinutes > 0 && (
           <View className="flex-row items-center">
             <MaterialCommunityIcons name="clock-outline" size={14} color="#6b7280" />
-            <Text className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 ml-1`}>
               {t('myWork.duration', { minutes: item.durationMinutes })}
             </Text>
           </View>
         )}
         {item.quantity > 1 && (
-          <Text className="text-xs text-gray-400">×{item.quantity}</Text>
+          <Text className={`${typo.caption} text-gray-400`}>×{item.quantity}</Text>
         )}
       </View>
 
@@ -82,14 +84,14 @@ function WorkItemCard({
               disabled={isPending}
               className="flex-1 bg-indigo-600 py-2 rounded-xl items-center"
             >
-              <Text className="text-white text-sm font-semibold">{t('myWork.actionStart')}</Text>
+              <Text className={`${typo.label} text-white`}>{t('myWork.actionStart')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => onAction('unpick', item.itemId)}
               disabled={isPending}
               className="flex-1 bg-gray-100 dark:bg-gray-700 py-2 rounded-xl items-center"
             >
-              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">{t('myWork.actionUnpick')}</Text>
+              <Text className={`${typo.label} text-gray-700 dark:text-gray-300`}>{t('myWork.actionUnpick')}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -100,14 +102,14 @@ function WorkItemCard({
               disabled={isPending}
               className="flex-1 bg-indigo-600 py-2 rounded-xl items-center"
             >
-              <Text className="text-white text-sm font-semibold">{t('myWork.actionComplete')}</Text>
+              <Text className={`${typo.label} text-white`}>{t('myWork.actionComplete')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => onAction('release', item.itemId)}
               disabled={isPending}
               className="flex-1 bg-gray-100 dark:bg-gray-700 py-2 rounded-xl items-center"
             >
-              <Text className="text-gray-700 dark:text-gray-300 text-sm font-semibold">{t('myWork.actionRelease')}</Text>
+              <Text className={`${typo.label} text-gray-700 dark:text-gray-300`}>{t('myWork.actionRelease')}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -126,22 +128,23 @@ function AvailableItemCard({
   isPending: boolean;
 }) {
   const { t } = useTranslation();
+  const typo = useTypography();
 
   return (
     <View className="bg-white dark:bg-gray-800 rounded-2xl mx-4 mb-3 p-4 shadow-sm">
       <View className="flex-row justify-between items-start mb-2">
         <View className="flex-1 mr-3">
-          <Text className="text-base font-semibold text-gray-900 dark:text-white" numberOfLines={1}>
+          <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
             {item.productName}
           </Text>
-          <Text className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
             {item.orderNumber} · {item.customerName ?? t('pos.walkIn')}
           </Text>
         </View>
         {item.durationMinutes > 0 && (
           <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg">
             <MaterialCommunityIcons name="clock-outline" size={13} color="#6b7280" />
-            <Text className="text-xs text-gray-600 dark:text-gray-300 ml-1">
+            <Text className={`${typo.caption} text-gray-600 dark:text-gray-300 ml-1`}>
               {t('myWork.duration', { minutes: item.durationMinutes })}
             </Text>
           </View>
@@ -149,7 +152,7 @@ function AvailableItemCard({
       </View>
 
       <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+        <Text className={`${typo.label} text-gray-900 dark:text-white`}>
           {formatVnd(item.amount)}
         </Text>
         <TouchableOpacity
@@ -157,7 +160,7 @@ function AvailableItemCard({
           disabled={isPending}
           className="bg-indigo-600 px-5 py-2 rounded-xl"
         >
-          <Text className="text-white text-sm font-semibold">{t('myWork.actionPickup')}</Text>
+          <Text className={`${typo.label} text-white`}>{t('myWork.actionPickup')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -166,6 +169,7 @@ function AvailableItemCard({
 
 export function MyWorkScreen({ navigation }: MyWorkScreenProps<'MyWorkMain'>) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>('queue');
@@ -251,13 +255,13 @@ export function MyWorkScreen({ navigation }: MyWorkScreenProps<'MyWorkMain'>) {
             <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
               <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
             </TouchableOpacity>
-            <Text className="text-xl font-bold text-gray-900 dark:text-white flex-1">{t('myWork.title')}</Text>
+            <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('myWork.title')}</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('MyWorkHistory')}>
             <MaterialCommunityIcons name="history" size={24} color="#4f46e5" />
           </TouchableOpacity>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-3">{t('myWork.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5 mb-3`}>{t('myWork.hint')}</Text>
 
         {/* Tab toggle */}
         <View className="flex-row bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
@@ -270,7 +274,7 @@ export function MyWorkScreen({ navigation }: MyWorkScreenProps<'MyWorkMain'>) {
               onPress={() => setTab(tabItem.key)}
               className={`flex-1 py-2 rounded-lg items-center ${tab === tabItem.key ? 'bg-white dark:bg-gray-800 shadow-sm' : ''}`}
             >
-              <Text className={`text-sm font-semibold ${tab === tabItem.key ? 'text-indigo-600' : 'text-gray-500 dark:text-gray-400'}`}>
+              <Text className={`${typo.label} ${tab === tabItem.key ? 'text-indigo-600' : 'text-gray-500 dark:text-gray-400'}`}>
                 {tabItem.label}
               </Text>
             </TouchableOpacity>
@@ -287,6 +291,7 @@ export function MyWorkScreen({ navigation }: MyWorkScreenProps<'MyWorkMain'>) {
         <ErrorState onRetry={tab === 'queue' ? refetchQueue : refetchAvailable} />
       ) : (
         <FlatList
+          showsVerticalScrollIndicator={false}
           data={items as WorkItemDTO[]}
           keyExtractor={(item) => String(item.itemId)}
           contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 20 }}

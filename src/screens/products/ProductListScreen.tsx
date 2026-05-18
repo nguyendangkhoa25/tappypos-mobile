@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,13 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi, categoryApi, type ProductData, type ProductSummary } from '../../services/api';
 import { formatVnd } from '../../utils/format';
 import { PAGE_SIZE } from '../../utils/constants';
+import { useTypography } from '../../hooks/useTypography';
 import { Skeleton } from '../../components/Skeleton';
 import { ErrorState } from '../../components/ErrorState';
 import { EmptyState } from '../../components/EmptyState';
@@ -22,6 +23,7 @@ import type { ProductsScreenProps } from '../../types/navigation';
 
 export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductList'>) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -58,6 +60,8 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
       }
       return res.data.data;
     },
+    staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
   });
 
   const hasMore = productsPage ? page < productsPage.totalPages - 1 : false;
@@ -68,62 +72,63 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
 
   useEffect(() => {
     canLoadMore.current = false;
-    const t = setTimeout(() => { canLoadMore.current = true; }, 400);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => { canLoadMore.current = true; }, 400);
+    return () => clearTimeout(timer);
   }, [search, selectedCategory]);
 
-  const commitSearch = () => {
+  const commitSearch = useCallback(() => {
     setSearch(searchInput);
     setPage(0);
-  };
+  }, [searchInput]);
 
-  const handleCategoryChange = (id: string | null) => {
+  const handleCategoryChange = useCallback((id: string | null) => {
     setSelectedCategory(id);
     setPage(0);
-  };
+  }, []);
 
-  const handleEndReached = () => {
+  const handleEndReached = useCallback(() => {
     if (!canLoadMore.current || !hasMore || isFetching || isLoadingMore.current) return;
     isLoadingMore.current = true;
     setPage((p) => p + 1);
-  };
+  }, [hasMore, isFetching]);
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     setPage(0);
     await refetch();
     setRefreshing(false);
-  };
+  }, [refetch]);
 
-  const renderProduct = ({ item }: { item: ProductData }) => (
+  const renderProduct = useCallback(({ item }: { item: ProductData }) => (
     <TouchableOpacity
+      testID={`product-card-${item.id}`}
       className="flex-1 bg-white m-1.5 rounded-2xl p-4 border border-gray-100 shadow-sm active:opacity-80"
       onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
     >
-      <Text className="font-semibold text-gray-800 text-sm" numberOfLines={2}>
+      <Text className={`${typo.label} text-gray-800`} numberOfLines={2}>
         {item.name}
       </Text>
-      <Text className="text-xs text-gray-400 mt-1">{item.categoryNames?.[0] ?? '—'}</Text>
+      <Text className={`${typo.caption} text-gray-400 mt-1`}>{item.categoryNames?.[0] ?? '—'}</Text>
       <View className="mt-2">
         {item.dynamicPrice ? (
-          <Text className="text-xs font-bold text-amber-600">{t('products.goldPrice')}</Text>
+          <Text className={`${typo.captionBold} text-amber-600`}>{t('products.goldPrice')}</Text>
         ) : (
-          <Text className="text-sm font-bold text-indigo-600">{formatVnd(item.price)}</Text>
+          <Text className={`${typo.labelBold} text-indigo-600`}>{formatVnd(item.price)}</Text>
         )}
-        <Text className="text-xs text-gray-400 mt-0.5">{item.unit}</Text>
+        <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{item.unit}</Text>
       </View>
       {item.stockQuantity != null && (
         <View
           className={`mt-2 self-start px-2 py-0.5 rounded-full ${item.inStock ? 'bg-green-50' : 'bg-red-50'}`}
         >
-          <Text className={`text-xs font-medium ${item.inStock ? 'text-green-600' : 'text-red-500'}`}>
+          <Text className={`${typo.caption} font-medium ${item.inStock ? 'text-green-600' : 'text-red-500'}`}>
             {item.inStock ? t('products.inStock') : t('products.outOfStock')}
             {item.stockQuantity != null && ` (${item.stockQuantity})`}
           </Text>
         </View>
       )}
     </TouchableOpacity>
-  );
+  ), [navigation, t]);
 
   if (isError) return <ErrorState onRetry={refetch} />;
 
@@ -135,9 +140,9 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-2">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900 dark:text-white flex-1">{t('products.title')}</Text>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('products.title')}</Text>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-3">{t('products.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5 mb-3`}>{t('products.hint')}</Text>
 
         {/* Summary row */}
         {summary && (
@@ -148,8 +153,8 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
               { key: 'outOfStock',    value: summary.outOfStock, color: 'text-red-600' },
             ] as const).map((stat) => (
               <View key={stat.key} className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
-                <Text className={`text-xl font-bold ${stat.color}`}>{stat.value}</Text>
-                <Text className="text-xs text-gray-500 text-center mt-0.5">{t(`products.${stat.key}`)}</Text>
+                <Text className={`${typo.section} font-bold ${stat.color}`}>{stat.value}</Text>
+                <Text className={`${typo.caption} text-gray-500 text-center mt-0.5`}>{t(`products.${stat.key}`)}</Text>
               </View>
             ))}
           </View>
@@ -160,7 +165,8 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
           <View className="flex-1 flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-3 py-2.5">
             <MaterialCommunityIcons name="magnify" size={20} color="#9ca3af" />
             <TextInput
-              className="flex-1 ml-2 text-base text-gray-800 dark:text-white"
+              testID="product-search-input"
+              className={`flex-1 ml-2 ${typo.inputSize} text-gray-800 dark:text-white`}
               placeholder={t('products.searchPlaceholder')}
               placeholderTextColor="#9ca3af"
               value={searchInput}
@@ -182,7 +188,7 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
             className="bg-indigo-600 rounded-xl px-4 py-2.5 items-center justify-center"
             activeOpacity={0.8}
           >
-            <Text className="text-white font-semibold text-sm">{t('products.searchButton')}</Text>
+            <Text className={`${typo.label} text-white`}>{t('products.searchButton')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -203,7 +209,7 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
                 }`}
                 onPress={() => handleCategoryChange(selectedCategory === item.id ? null : (item.id ?? null))}
               >
-                <Text className={`text-sm font-medium ${selectedCategory === item.id ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                <Text className={`${typo.caption} font-medium ${selectedCategory === item.id ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                   {item.name}
                 </Text>
               </TouchableOpacity>
@@ -225,6 +231,7 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
         <EmptyState icon="📦" title={t('products.noProducts')} description={t('products.noProductsHint')} />
       ) : (
         <FlatList
+          showsVerticalScrollIndicator={false}
           data={allProducts}
           keyExtractor={(item) => item.id}
           renderItem={renderProduct}
@@ -247,6 +254,7 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
 
       {/* FAB */}
       <TouchableOpacity
+        testID="product-add-fab"
         onPress={() => navigation.navigate('ProductCreate')}
         className="absolute right-5 bg-indigo-600 rounded-full w-14 h-14 items-center justify-center shadow-lg"
         style={{ bottom: insets.bottom + 16 }}

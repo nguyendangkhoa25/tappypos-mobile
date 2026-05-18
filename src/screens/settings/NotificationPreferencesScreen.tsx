@@ -5,7 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToastStore } from '../../store/toastStore';
+import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { notificationApi } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import type { SettingsScreenProps } from '../../types/navigation';
 
 type PrefsMap = Record<string, boolean>;
@@ -37,8 +39,10 @@ const PREF_GROUPS: { section: string; items: { key: string; labelKey: string }[]
 export function NotificationPreferencesScreen({ navigation }: SettingsScreenProps<'NotificationPreferences'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const qc = useQueryClient();
   const { show: showToast } = useToastStore();
+  const showErrorAlert = useErrorAlert();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [prefs, setPrefs] = useState<PrefsMap | null>(null);
@@ -59,6 +63,7 @@ export function NotificationPreferencesScreen({ navigation }: SettingsScreenProp
       qc.invalidateQueries({ queryKey: ['notifPreferences'] });
       showToast(t('settings.notificationPreferences.saveSuccess'));
     },
+    onError: showErrorAlert,
   });
 
   const togglePref = (key: string, value: boolean) => {
@@ -78,11 +83,11 @@ export function NotificationPreferencesScreen({ navigation }: SettingsScreenProp
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {t('settings.notificationPreferences.title')}
           </Text>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-9">{t('settings.notificationPreferences.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('settings.notificationPreferences.hint')}</Text>
       </View>
 
       {isLoading || !prefs ? (
@@ -90,17 +95,17 @@ export function NotificationPreferencesScreen({ navigation }: SettingsScreenProp
           <ActivityIndicator color="#4f46e5" />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
           {PREF_GROUPS.map((group) => (
             <View key={group.section} className="bg-white dark:bg-gray-800 rounded-2xl p-4">
-              <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+              <Text className={`${typo.label} text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3`}>
                 {t(`settings.notificationPreferences.${group.section}`)}
               </Text>
               <View className="gap-1">
                 {group.items.map((item, idx) => (
                   <View key={item.key}>
                     <View className="flex-row items-center justify-between py-2">
-                      <Text className="text-base text-gray-900 dark:text-white flex-1 mr-4">
+                      <Text className={`${typo.caption} text-gray-900 dark:text-white flex-1 mr-4`}>
                         {t(`settings.notificationPreferences.${item.labelKey}`)}
                       </Text>
                       <Switch

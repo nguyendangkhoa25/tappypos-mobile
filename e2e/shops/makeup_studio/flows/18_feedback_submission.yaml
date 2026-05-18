@@ -1,0 +1,32 @@
+appId: com.knp.tappypos
+name: "MKUP 18 Feedback submission — category + content + submit (FEEDBACK feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- tapOn: "Gửi phản hồi"
+- assertNotVisible: "500"
+
+- tapOn: "Góp ý tính năng"
+    optional: true
+- tapOn: "Lỗi / Sự cố"
+    optional: true
+
+- tapOn:
+    id: "feedback-content-input"
+- inputText: "E2E test makeup studio feedback - please ignore"
+
+- tapOn:
+    id: "feedback-submit-btn"
+- assertVisible: "Cảm ơn"
+    optional: true
+- assertVisible: "thành công"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

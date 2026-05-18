@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PhoneInput } from '../../components/PhoneInput';
+import { useSubmitting } from '../../hooks/useSubmitting';
+import { useTypography } from '../../hooks/useTypography';
 import { authExtApi } from '../../services/api';
 import { SUPPORT } from '../../utils/constants';
 import type { AuthScreenProps } from '../../types/navigation';
@@ -21,15 +23,15 @@ import type { AuthScreenProps } from '../../types/navigation';
 export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'ForgotPassword'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const [phone, setPhone] = useState(route.params?.prefillPhone?.replace(/\D/g, '') ?? '');
-  const [loading, setLoading] = useState(false);
+  const [submitting, withSubmit] = useSubmitting();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSend = async () => {
+  const handleSend = () => withSubmit(async () => {
     if (!phone.trim()) return;
     setError('');
-    setLoading(true);
     try {
       await authExtApi.requestPasswordReset(phone.trim());
       setSent(true);
@@ -40,10 +42,8 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
         // Always show success-like message to avoid phone enumeration
         setSent(true);
       }
-    } finally {
-      setLoading(false);
     }
-  };
+  });
 
   return (
     <KeyboardAvoidingView
@@ -63,17 +63,17 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
             <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
           </TouchableOpacity>
 
-          <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white mb-1`}>
             {t('auth.forgotPassword.title')}
           </Text>
-          <Text className="text-sm text-gray-500 dark:text-gray-400 mb-8 leading-5">
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-8 leading-5`}>
             {t('auth.forgotPassword.subtitle')}
           </Text>
 
           {!sent ? (
             <>
               <View className="mb-6">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
                   {t('auth.forgotPassword.phoneLabel')}
                 </Text>
                 <PhoneInput
@@ -83,24 +83,22 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
                   returnKeyType="send"
                   onSubmitEditing={handleSend}
                 />
-                {error ? <Text className="text-red-500 text-xs mt-1">{error}</Text> : null}
+                {error ? <Text className={`${typo.caption} text-red-500 mt-1`}>{error}</Text> : null}
               </View>
 
               <TouchableOpacity
                 className={`rounded-2xl py-4 items-center justify-center ${
-                  loading || !phone.trim()
-                    ? 'bg-gray-200 dark:bg-gray-700'
+                  submitting || !phone.trim()
+                    ? 'bg-gray-300'
                     : 'bg-primary active:opacity-80'
                 }`}
                 onPress={handleSend}
-                disabled={loading || !phone.trim()}
+                disabled={submitting || !phone.trim()}
               >
-                {loading ? (
+                {submitting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text
-                    className={`font-bold text-base ${!phone.trim() ? 'text-gray-400 dark:text-gray-500' : 'text-white'}`}
-                  >
+                  <Text className={`${typo.labelBold} ${!phone.trim() ? 'text-gray-400' : 'text-white'}`}>
                     {t('auth.forgotPassword.send')}
                   </Text>
                 )}
@@ -109,10 +107,10 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
           ) : (
             <View className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-5 items-center mb-6">
               <Text className="text-3xl mb-3">✅</Text>
-              <Text className="text-base font-bold text-indigo-700 dark:text-indigo-300 text-center mb-1">
+              <Text className={`${typo.body} text-indigo-700 dark:text-indigo-300 text-center mb-1`}>
                 {t('auth.forgotPassword.sentTitle')}
               </Text>
-              <Text className="text-sm text-indigo-600 dark:text-indigo-400 text-center leading-5">
+              <Text className={`${typo.caption} text-indigo-600 dark:text-indigo-400 text-center leading-5`}>
                 {t('auth.forgotPassword.sentDesc')}
               </Text>
             </View>
@@ -120,7 +118,7 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
 
           {/* Support contacts — always visible */}
           <View className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-2xl p-4">
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-3`}>
               {t('auth.forgotPassword.supportTitle')}
             </Text>
             <TouchableOpacity
@@ -128,14 +126,14 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
               onPress={() => Linking.openURL(`tel:${SUPPORT.phone}`)}
             >
               <MaterialCommunityIcons name="phone-outline" size={18} color="#4f46e5" />
-              <Text className="text-primary font-medium text-sm">{SUPPORT.phone}</Text>
+              <Text className={`${typo.caption} text-primary font-medium`}>{SUPPORT.phone}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="flex-row items-center gap-3 py-2"
               onPress={() => Linking.openURL(`mailto:${SUPPORT.email}`)}
             >
               <MaterialCommunityIcons name="email-outline" size={18} color="#4f46e5" />
-              <Text className="text-primary font-medium text-sm">{SUPPORT.email}</Text>
+              <Text className={`${typo.caption} text-primary font-medium`}>{SUPPORT.email}</Text>
             </TouchableOpacity>
           </View>
         </View>

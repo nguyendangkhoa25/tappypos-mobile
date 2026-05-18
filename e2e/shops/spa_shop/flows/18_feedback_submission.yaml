@@ -1,0 +1,42 @@
+appId: com.knp.tappypos
+name: "SPA 18 Feedback submission — category + content + submit (FEEDBACK feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Feedback via More → Settings ──────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- tapOn: "Gửi phản hồi"
+- assertVisible: "Phản hồi"
+    optional: true
+- assertVisible: "Gửi phản hồi"
+    optional: true
+- assertNotVisible: "500"
+
+# ── FB01: Select a feedback category ─────────────────────────────────────────
+- tapOn: "Góp ý tính năng"
+    optional: true
+- tapOn: "Lỗi / Sự cố"
+    optional: true
+
+# ── FB02: Enter feedback content ─────────────────────────────────────────────
+- tapOn:
+    id: "feedback-content-input"
+- inputText: "E2E test spa feedback - please ignore"
+
+# ── FB03: Submit ──────────────────────────────────────────────────────────────
+- tapOn:
+    id: "feedback-submit-btn"
+- assertVisible: "Cảm ơn"
+    optional: true
+- assertVisible: "thành công"
+    optional: true
+- assertNotVisible: "500"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

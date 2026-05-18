@@ -1,0 +1,39 @@
+appId: com.knp.tappypos
+name: "SPA 12 Settings — shop info, POS config, bank accounts (SHOP_INFO feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Settings via More ────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- assertNotVisible: "500"
+
+# ── SC01: Shop Info ───────────────────────────────────────────────────────────
+- tapOn: "Thông tin cửa hàng"
+- assertVisible: "Thông tin cửa hàng"
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+
+# ── SC02: POS Configuration ───────────────────────────────────────────────────
+- tapOn: "Cấu hình POS"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── SC03: Bank accounts list ──────────────────────────────────────────────────
+- tapOn: "Tài khoản ngân hàng"
+- assertVisible: "Tài khoản ngân hàng"
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

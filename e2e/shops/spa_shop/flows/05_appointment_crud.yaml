@@ -1,0 +1,64 @@
+appId: com.knp.tappypos
+name: "SPA 05 Appointment CRUD — create, cancel (APPOINTMENT feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Appointments via More ────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-appointments"
+- assertVisible: "Lịch hẹn"
+- assertNotVisible: "500"
+
+# ── AP01: Open form to create appointment ────────────────────────────────────
+- tapOn:
+    id: "appointment-add-fab"
+- assertVisible: "Đặt lịch hẹn"
+
+# ── AP02: Fill in customer info ───────────────────────────────────────────────
+- tapOn:
+    id: "appt-customer-name"
+- inputText: "Khách Spa Test"
+
+- tapOn:
+    id: "appt-customer-phone"
+- inputText: "0933222111"
+
+# ── AP03: Advance date by one tap (custom chevron picker — no Done needed) ───
+- tapOn:
+    text: "›"
+    optional: true
+
+# ── AP04: Save the appointment ────────────────────────────────────────────────
+- tapOn:
+    id: "appt-save-btn"
+- assertVisible: "Lịch hẹn"
+
+# ── AP05: Open the appointment card ──────────────────────────────────────────
+- tapOn:
+    id: "appointment-card-0"
+- assertVisible: "Khách Spa Test"
+- assertVisible:
+    id: "appt-checkin-btn"
+
+# ── AP06: Cancel the appointment ─────────────────────────────────────────────
+- tapOn:
+    id: "appt-cancel-btn"
+- assertVisible: "Huỷ lịch hẹn?"
+    optional: true
+- tapOn: "Huỷ lịch"
+    optional: true
+- tapOn: "OK"
+    optional: true
+
+# ── AP07: Check-in button is gone after cancel ───────────────────────────────
+- assertNotVisible:
+    id: "appt-checkin-btn"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

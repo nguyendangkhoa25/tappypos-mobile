@@ -17,11 +17,13 @@ import { PasswordInput } from '../../components/PasswordInput';
 import { useToastStore } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import type { SettingsScreenProps } from '../../types/navigation';
 
 export function ChangePasswordScreen({ navigation }: SettingsScreenProps<'ChangePassword'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const { show: showToast } = useToastStore();
   const { logout } = useAuthStore();
 
@@ -71,17 +73,26 @@ export function ChangePasswordScreen({ navigation }: SettingsScreenProps<'Change
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {t('settings.changePassword.title')}
           </Text>
+          <TouchableOpacity onPress={handleSubmit} disabled={!canSubmit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            {loading ? (
+              <ActivityIndicator size="small" color="#4f46e5" />
+            ) : (
+              <Text className={`${typo.labelBold} ${canSubmit ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-300 dark:text-gray-600'}`}>
+                {t('common.save')}
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-9">{t('settings.changePassword.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('settings.changePassword.hint')}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }} keyboardShouldPersistTaps="handled">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }} keyboardShouldPersistTaps="handled">
         <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 gap-4">
           <View>
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
               {t('settings.changePassword.currentLabel')}
             </Text>
             <PasswordInput
@@ -95,7 +106,7 @@ export function ChangePasswordScreen({ navigation }: SettingsScreenProps<'Change
           </View>
 
           <View>
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
               {t('settings.changePassword.newLabel')}
             </Text>
             <PasswordInput
@@ -110,7 +121,7 @@ export function ChangePasswordScreen({ navigation }: SettingsScreenProps<'Change
           </View>
 
           <View>
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
               {t('settings.changePassword.confirmLabel')}
             </Text>
             <PasswordInput
@@ -125,25 +136,10 @@ export function ChangePasswordScreen({ navigation }: SettingsScreenProps<'Change
           </View>
 
           {error ? (
-            <Text className="text-red-500 text-sm">{error}</Text>
+            <Text className={`${typo.caption} text-red-500`}>{error}</Text>
           ) : null}
         </View>
 
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={!canSubmit}
-          className={`rounded-2xl py-4 items-center justify-center ${
-            canSubmit ? 'bg-indigo-600 active:opacity-80' : 'bg-gray-200 dark:bg-gray-700'
-          }`}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className={`font-bold text-base ${canSubmit ? 'text-white' : 'text-gray-400 dark:text-gray-500'}`}>
-              {t('settings.changePassword.submitBtn')}
-            </Text>
-          )}
-        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );

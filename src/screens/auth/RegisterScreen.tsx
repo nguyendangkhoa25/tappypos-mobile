@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   ScrollView,
   Modal,
-  StyleSheet,
 } from 'react-native';
 import { isAxiosError } from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,16 +17,25 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PhoneInput } from '../../components/PhoneInput';
 import { PasswordInput } from '../../components/PasswordInput';
 import { LanguageChip } from '../../components/LanguageChip';
+import { FontSizeChip } from '../../components/FontSizeChip';
+import { useTypography } from '../../hooks/useTypography';
+import { useFontSizeStore } from '../../store/fontSizeStore';
 import { authExtApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
-import * as SecureStore from 'expo-secure-store';
 import type { AuthScreenProps } from '../../types/navigation';
 
 
 export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const { setStoredPhone, setAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    const prev = useFontSizeStore.getState().fontScale;
+    useFontSizeStore.setState({ fontScale: 'normal' });
+    return () => { useFontSizeStore.setState({ fontScale: prev }); };
+  }, []);
 
   const [rawPhone, setRawPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -51,13 +59,8 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
     return Object.keys(e).length === 0;
   };
 
-  const handleGoToLogin = async () => {
-    const tenantId = await SecureStore.getItemAsync('tenant_id');
-    if (tenantId) {
-      navigation.navigate('Login');
-    } else {
-      navigation.navigate('ShopId');
-    }
+  const handleGoToLogin = () => {
+    navigation.navigate('Login');
   };
 
   const handleRegister = async () => {
@@ -90,35 +93,42 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
         className="flex-1 bg-white dark:bg-gray-900"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Language toggle — floats at top-right within safe area */}
-        <View style={[styles.langFloat, { top: insets.top + 10 }]}>
-          <LanguageChip />
-        </View>
-
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 16, paddingBottom: 32 }}
-          keyboardShouldPersistTaps="handled"
+        {/* Fixed header: back + title + subtitle (left) | language/font chips (right) */}
+        <View
+          style={{ paddingTop: insets.top + 10, paddingBottom: 10 }}
+          className="flex-row items-start justify-between px-6 bg-white dark:bg-gray-900"
         >
-          <View className="flex-1 px-6">
-            <View className="mb-6">
+          <View className="flex-1 mr-3">
+            <View className="flex-row items-center gap-3 mb-1">
               <TouchableOpacity
                 onPress={() => navigation.goBack()}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
               </TouchableOpacity>
+              <Text className={`${typo.heading} text-gray-900 dark:text-white`}>
+                {t('auth.register.title')}
+              </Text>
             </View>
-
-            <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-              {t('auth.register.title')}
-            </Text>
-            <Text className="text-sm text-gray-500 dark:text-gray-400 mb-8">
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 ml-9`}>
               {t('auth.register.subtitle')}
             </Text>
+          </View>
+          <View className="items-end gap-2">
+            <LanguageChip />
+            <FontSizeChip />
+          </View>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="flex-1 px-6 pt-6">
 
             {/* Phone */}
             <View className="mb-4">
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
                 {t('auth.register.phoneLabel')}
               </Text>
               <PhoneInput
@@ -130,10 +140,10 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
               />
               {errors.phone && (
                 <View className="flex-row items-center mt-1 gap-1">
-                  <Text className="text-red-500 text-xs flex-1">{errors.phone}</Text>
+                  <Text className={`${typo.caption} text-red-500 flex-1`}>{errors.phone}</Text>
                   {phoneTaken && (
                     <TouchableOpacity onPress={() => navigation.replace('Login')}>
-                      <Text className="text-primary text-xs font-semibold">{t('auth.register.loginHere')}</Text>
+                      <Text className={`${typo.caption} text-primary font-semibold`}>{t('auth.register.loginHere')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -142,7 +152,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
 
             {/* Password */}
             <View className="mb-4">
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
                 {t('auth.register.passwordLabel')}
               </Text>
               <PasswordInput
@@ -155,13 +165,13 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
                 showRules
               />
               {errors.password && (
-                <Text className="text-red-500 text-xs mt-1">{errors.password}</Text>
+                <Text className={`${typo.caption} text-red-500 mt-1`}>{errors.password}</Text>
               )}
             </View>
 
             {/* Confirm */}
             <View className="mb-6">
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
                 {t('auth.register.confirmLabel')}
               </Text>
               <PasswordInput
@@ -180,13 +190,13 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
                     size={14}
                     color={passwordsMatch ? '#059669' : '#ef4444'}
                   />
-                  <Text className={`text-xs ${passwordsMatch ? 'text-green-600' : 'text-red-500'}`}>
+                  <Text className={`${typo.caption} ${passwordsMatch ? 'text-green-600' : 'text-red-500'}`}>
                     {passwordsMatch ? t('auth.register.passwordsMatch') : t('auth.register.passwordsNoMatch')}
                   </Text>
                 </View>
               )}
               {errors.confirm && !confirmPassword.length && (
-                <Text className="text-red-500 text-xs mt-1">{errors.confirm}</Text>
+                <Text className={`${typo.caption} text-red-500 mt-1`}>{errors.confirm}</Text>
               )}
             </View>
 
@@ -203,10 +213,10 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
               >
                 {tncAccepted && <MaterialCommunityIcons name="check" size={13} color="#fff" />}
               </View>
-              <Text className="text-sm text-gray-600 dark:text-gray-300 flex-1 leading-5">
+              <Text className={`${typo.caption} text-gray-600 dark:text-gray-300 flex-1 leading-5`}>
                 {t('auth.register.tncText')}{' '}
                 <Text
-                  className="text-primary font-semibold"
+                  className={`${typo.label} text-primary`}
                   onPress={() => setShowTncModal(true)}
                 >
                   {t('auth.register.tncLink')}
@@ -225,7 +235,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text
-                  className={`font-bold text-base ${canSubmit ? 'text-white' : 'text-gray-400 dark:text-gray-500'}`}
+                  className={`${typo.labelBold} ${canSubmit ? 'text-white' : 'text-gray-400 dark:text-gray-500'}`}
                 >
                   {t('auth.register.button')}
                 </Text>
@@ -233,9 +243,9 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
             </TouchableOpacity>
 
             <View className="flex-row justify-center mt-6">
-              <Text className="text-gray-500 dark:text-gray-400 text-sm">{t('auth.register.hasAccount')} </Text>
+              <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('auth.register.hasAccount')} </Text>
               <TouchableOpacity onPress={handleGoToLogin}>
-                <Text className="text-primary font-semibold text-sm">{t('auth.register.loginLink')}</Text>
+                <Text className={`${typo.label} text-primary`}>{t('auth.register.loginLink')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -250,7 +260,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
       >
         <View className="flex-1 bg-white dark:bg-gray-900" style={{ paddingTop: insets.top + 16 }}>
           <View className="flex-row items-center justify-between px-6 mb-4">
-            <Text className="text-lg font-bold text-gray-900 dark:text-white">
+            <Text className={`${typo.section} text-gray-900 dark:text-white`}>
               {t('auth.register.tncModalTitle')}
             </Text>
             <TouchableOpacity onPress={() => setShowTncModal(false)}>
@@ -261,7 +271,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
             className="flex-1 px-6"
             onMomentumScrollEnd={() => setTncAccepted(true)}
           >
-            <Text className="text-sm text-gray-700 dark:text-gray-300 leading-6">{t('auth.register.tncContent')}</Text>
+            <Text className={`${typo.caption} text-gray-700 dark:text-gray-300 leading-6`}>{t('auth.register.tncContent')}</Text>
             <View style={{ height: 32 }} />
           </ScrollView>
           <View className="px-6 pb-8 pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -269,7 +279,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
               className="bg-primary rounded-2xl py-4 items-center"
               onPress={() => { setTncAccepted(true); setShowTncModal(false); }}
             >
-              <Text className="text-white font-bold text-base">{t('auth.register.tncAgree')}</Text>
+              <Text className={`${typo.labelBold} text-white`}>{t('auth.register.tncAgree')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -278,10 +288,3 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
   );
 }
 
-const styles = StyleSheet.create({
-  langFloat: {
-    position: 'absolute',
-    right: 16,
-    zIndex: 10,
-  },
-});

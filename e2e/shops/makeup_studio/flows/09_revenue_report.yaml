@@ -1,0 +1,25 @@
+appId: com.knp.tappypos
+name: "MKUP 09 Revenue report — KPI tabs, total revenue visible (DASHBOARD/REVENUE feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-report"
+- assertNotVisible: "500"
+
+- assertVisible:
+    id: "report-total-revenue"
+
+- tapOn: "Chi phí"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn: "Doanh thu"
+    optional: true
+- assertVisible:
+    id: "report-total-revenue"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

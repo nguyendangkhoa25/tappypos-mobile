@@ -1,9 +1,12 @@
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { feedbackApi, type FeedbackData } from '../../services/api';
+import { ErrorState } from '../../components/ErrorState';
+import { ScreenSkeleton } from '../../components/ScreenSkeleton';
+import { useTypography } from '../../hooks/useTypography';
 import type { SettingsScreenProps } from '../../types/navigation';
 
 const STATUS_COLORS: Record<FeedbackData['status'], { bg: string; text: string }> = {
@@ -15,10 +18,11 @@ const STATUS_COLORS: Record<FeedbackData['status'], { bg: string; text: string }
 export function FeedbackHistoryScreen({ navigation }: SettingsScreenProps<'FeedbackHistory'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
 
-  const { data: items = [], isLoading } = useQuery({
+  const { data: items = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['feedbackHistory'],
-    queryFn: () => feedbackApi.getMy().then((r) => r.data.data),
+    queryFn: () => feedbackApi.getMy().then((r) => r.data.content),
     staleTime: 2 * 60_000,
   });
 
@@ -49,44 +53,45 @@ export function FeedbackHistoryScreen({ navigation }: SettingsScreenProps<'Feedb
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {t('settings.feedbackHistory.title')}
           </Text>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-9">{t('settings.feedbackHistory.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('settings.feedbackHistory.hint')}</Text>
       </View>
 
-      {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#4f46e5" />
-        </View>
+      {isError ? (
+        <ErrorState onRetry={refetch} />
+      ) : isLoading ? (
+        <ScreenSkeleton count={4} cardHeight={100} />
       ) : items.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
           <MaterialCommunityIcons name="message-text-outline" size={56} color="#d1d5db" />
-          <Text className="text-base font-semibold text-gray-400 mt-4 text-center">{t('settings.feedbackHistory.empty')}</Text>
-          <Text className="text-sm text-gray-400 mt-1 text-center">{t('settings.feedbackHistory.emptyHint')}</Text>
+          <Text className={`${typo.body} text-gray-400 mt-4 text-center`}>{t('settings.feedbackHistory.empty')}</Text>
+          <Text className={`${typo.caption} text-gray-400 mt-1 text-center`}>{t('settings.feedbackHistory.emptyHint')}</Text>
         </View>
       ) : (
         <FlatList
+          showsVerticalScrollIndicator={false}
           data={items}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, gap: 12 }}
           renderItem={({ item }) => {
-            const colors = STATUS_COLORS[item.status] ?? STATUS_COLORS.RECEIVED;
+            const colors = STATUS_COLORS[item.status as FeedbackData['status']] ?? STATUS_COLORS.RECEIVED;
             return (
               <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
                 <View className="flex-row items-start justify-between mb-2">
                   <View className="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                    <Text className="text-xs font-medium text-gray-600 dark:text-gray-400">{categoryLabel(item.category)}</Text>
+                    <Text className={`${typo.captionBold} text-gray-600 dark:text-gray-400`}>{categoryLabel(item.category)}</Text>
                   </View>
                   <View className={`px-3 py-1 rounded-full ${colors.bg}`}>
-                    <Text className={`text-xs font-medium ${colors.text}`}>{statusLabel(item.status)}</Text>
+                    <Text className={`${typo.captionBold} ${colors.text}`}>{statusLabel(item.status)}</Text>
                   </View>
                 </View>
-                <Text className="text-sm text-gray-700 dark:text-gray-300 leading-5" numberOfLines={3}>
+                <Text className={`${typo.caption} text-gray-700 dark:text-gray-300 leading-5`} numberOfLines={3}>
                   {item.content}
                 </Text>
-                <Text className="text-xs text-gray-400 mt-2">{formatDate(item.createdAt)}</Text>
+                <Text className={`${typo.caption} text-gray-400 mt-2`}>{formatDate(item.createdAt)}</Text>
               </View>
             );
           }}

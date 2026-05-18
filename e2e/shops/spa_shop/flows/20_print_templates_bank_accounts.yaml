@@ -1,0 +1,51 @@
+appId: com.knp.tappypos
+name: "SPA 20 Print templates + bank accounts — list, smoke test (PRINT_TEMPLATE + BANK_ACCOUNT)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → Print Templates ───────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-print"
+- assertVisible: "Mẫu in"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── PT01: First template card is accessible if any exist ─────────────────────
+- tapOn:
+    id: "print-template-row-0"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── Navigate to Settings → Bank Accounts ──────────────────────────────────────
+- tapOn:
+    id: "tab-more"
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- tapOn: "Tài khoản ngân hàng"
+- assertVisible: "Tài khoản ngân hàng"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── BA01: Add form is accessible ─────────────────────────────────────────────
+- tapOn: "Thêm tài khoản"
+    optional: true
+- tapOn:
+    text: "+"
+    optional: true
+- assertNotVisible: "500"
+- tapOn: "Huỷ"
+    optional: true
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

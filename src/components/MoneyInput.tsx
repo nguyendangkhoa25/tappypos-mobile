@@ -2,6 +2,7 @@ import { forwardRef, type Ref } from 'react';
 import { View, Text, TextInput, InputAccessoryView, Platform, type TextInputProps } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatMoneyDisplay, numberToWords } from '../utils/format';
+import { useTypography } from '../hooks/useTypography';
 
 const ACCESSORY_ID = 'money-input-accessory';
 
@@ -12,6 +13,7 @@ type Props = Omit<TextInputProps, 'value' | 'onChangeText' | 'keyboardType'> & {
 
 function MoneyInputInner({ rawValue, onChangeRaw, ...rest }: Props, ref: Ref<TextInput>) {
   const { i18n } = useTranslation();
+  const typo = useTypography();
   const displayValue = formatMoneyDisplay(rawValue);
   const words = rawValue ? numberToWords(parseInt(rawValue, 10), i18n.language) : '';
 
@@ -30,15 +32,15 @@ function MoneyInputInner({ rawValue, onChangeRaw, ...rest }: Props, ref: Ref<Tex
           onChangeText={handleChange}
           keyboardType="number-pad"
           inputAccessoryViewID={Platform.OS === 'ios' ? ACCESSORY_ID : undefined}
-          className="flex-1 px-3 py-3 text-base text-gray-900 dark:text-gray-100"
+          className={`flex-1 px-3 py-3 ${typo.inputSize} text-gray-900 dark:text-gray-100`}
           placeholderTextColor="#9ca3af"
         />
         <View className="px-2.5 py-3 bg-gray-50 border-l border-gray-200">
-          <Text className="text-gray-500 text-sm font-semibold">đ</Text>
+          <Text className={`text-gray-500 ${typo.label}`}>đ</Text>
         </View>
       </View>
       {words ? (
-        <Text className="text-xs text-indigo-600 mt-1 ml-1 italic">{words}</Text>
+        <Text className={`${typo.caption} text-indigo-600 mt-1 ml-1 italic`}>{words}</Text>
       ) : null}
       {Platform.OS === 'ios' && (
         <InputAccessoryView nativeID={ACCESSORY_ID}>

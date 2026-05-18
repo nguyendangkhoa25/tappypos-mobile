@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MoneyInput } from '../../components/MoneyInput';
 import { useCurrency } from '../../hooks/useCurrency';
+import { useTypography } from '../../hooks/useTypography';
 import type { ToolsScreenProps } from '../../types/navigation';
 
 type Props = ToolsScreenProps<'BillSplitter'>;
@@ -14,7 +15,8 @@ const MAX_PEOPLE = 20;
 
 export function BillSplitterScreen({ navigation }: Props) {
   const { t } = useTranslation();
-  const { top } = useSafeAreaInsets();
+  const typo = useTypography();
+  const { top, bottom } = useSafeAreaInsets();
   const { fmt } = useCurrency();
 
   const [total, setTotal] = useState('');
@@ -24,22 +26,24 @@ export function BillSplitterScreen({ navigation }: Props) {
   const perPerson = totalNum > 0 ? Math.ceil(totalNum / people) : 0;
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-gray-50" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View className="bg-cyan-600 px-6 pb-5" style={{ paddingTop: top + 16 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mb-3">
-          <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-        </TouchableOpacity>
-        <Text className="text-2xl font-bold text-white">{t('billSplit.title')}</Text>
+    <KeyboardAvoidingView className="flex-1 bg-gray-50 dark:bg-gray-900" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+          </TouchableOpacity>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('billSplit.title')}</Text>
+        </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-          <Text className="text-sm font-semibold text-gray-700 mb-2">{t('billSplit.total')}</Text>
+          <Text className={`${typo.label} text-gray-700 mb-2`}>{t('billSplit.total')}</Text>
           <MoneyInput rawValue={total} onChangeRaw={setTotal} placeholder="0" />
         </View>
 
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-          <Text className="text-sm font-semibold text-gray-700 mb-3">{t('billSplit.people')}</Text>
+          <Text className={`${typo.label} text-gray-700 mb-3`}>{t('billSplit.people')}</Text>
           <View className="flex-row items-center justify-center" style={{ gap: 24 }}>
             <TouchableOpacity
               onPress={() => setPeople((p) => Math.max(MIN_PEOPLE, p - 1))}
@@ -48,7 +52,7 @@ export function BillSplitterScreen({ navigation }: Props) {
             >
               <Text className={`text-2xl font-bold ${people <= MIN_PEOPLE ? 'text-gray-300' : 'text-gray-700'}`}>−</Text>
             </TouchableOpacity>
-            <Text className="text-4xl font-bold text-gray-900 w-16 text-center">{people}</Text>
+            <Text className="font-bold text-gray-900 dark:text-white w-16 text-center" style={{ fontSize: typo.displaySize }}>{people}</Text>
             <TouchableOpacity
               onPress={() => setPeople((p) => Math.min(MAX_PEOPLE, p + 1))}
               disabled={people >= MAX_PEOPLE}
@@ -61,8 +65,8 @@ export function BillSplitterScreen({ navigation }: Props) {
 
         {perPerson > 0 && (
           <View className="bg-cyan-50 rounded-2xl p-5 items-center border border-cyan-100">
-            <Text className="text-sm text-cyan-700 font-semibold mb-2">{t('billSplit.resultLabel')}</Text>
-            <Text className="text-4xl font-bold text-cyan-700">{fmt(perPerson)}</Text>
+            <Text className={`${typo.label} text-cyan-700 mb-2`}>{t('billSplit.resultLabel')}</Text>
+            <Text className={`${typo.heading} text-cyan-700`}>{fmt(perPerson)}</Text>
           </View>
         )}
       </ScrollView>

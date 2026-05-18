@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { appointmentApi, type AppointmentData, type CheckInPayload } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import { formatVnd } from '../../utils/format';
 import { Skeleton } from '../../components/Skeleton';
 import { useAlertStore } from '../../store/alertStore';
@@ -38,12 +39,13 @@ function statusConfig(status: AppointmentData['status'], t: ReturnType<typeof us
 }
 
 function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+  const typo = useTypography();
   return (
     <View className="flex-row items-start gap-3 py-2.5 border-b border-gray-50 dark:border-gray-700 last:border-0">
       <MaterialCommunityIcons name={icon as any} size={16} color="#9ca3af" style={{ marginTop: 1 }} />
       <View className="flex-1">
-        <Text className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{label}</Text>
-        <Text className="text-sm text-gray-900 dark:text-white mt-0.5">{value}</Text>
+        <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wide`}>{label}</Text>
+        <Text className={`${typo.caption} text-gray-900 dark:text-white mt-0.5`}>{value}</Text>
       </View>
     </View>
   );
@@ -53,6 +55,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
 
 export function AppointmentDetailScreen({ route, navigation }: Props) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const showAlert = useAlertStore((s) => s.show);
@@ -143,12 +146,15 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-gray-50 dark:bg-gray-900" style={{ paddingTop: insets.top }}>
-        <View className="flex-row items-center px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#4f46e5" />
-          </TouchableOpacity>
-          <Text className="ml-3 text-base font-bold text-gray-900 dark:text-white">{t('appt.detail')}</Text>
+      <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
+          <View className="flex-row items-center mb-0.5">
+            <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+              <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+            </TouchableOpacity>
+            <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('appt.detail')}</Text>
+          </View>
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-0 mt-0.5`}>{t('appt.detailHint')}</Text>
         </View>
         <View className="px-4 mt-4 gap-3">
           <Skeleton width="100%" height={100} borderRadius={16} />
@@ -162,7 +168,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   if (isError || !appt) {
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900 items-center justify-center" style={{ paddingTop: insets.top }}>
-        <Text className="text-gray-500">{t('common.error')}</Text>
+        <Text className={`${typo.caption} text-gray-500`}>{t('common.error')}</Text>
       </View>
     );
   }
@@ -175,32 +181,35 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   const totalPrice = appt.services.reduce((s, svc) => s + (svc.unitPrice ?? 0), 0);
 
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-gray-900" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#4f46e5" />
-        </TouchableOpacity>
-        <Text className="text-base font-bold text-gray-900 dark:text-white">{appt.appointmentNumber}</Text>
-        {canEdit ? (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('AppointmentForm', { appointmentId: appt.id })}
-            hitSlop={8}
-          >
-            <MaterialCommunityIcons name="pencil-outline" size={20} color="#4f46e5" />
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-        ) : (
-          <View style={{ width: 24 }} />
-        )}
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{appt.appointmentNumber}</Text>
+          {canEdit ? (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('AppointmentForm', { appointmentId: appt.id })}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MaterialCommunityIcons name="pencil-outline" size={22} color="#4f46e5" />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 26 }} />
+          )}
+        </View>
       </View>
 
       <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 120, paddingTop: 16, gap: 12, paddingHorizontal: 16 }}
       >
         {/* Status badge */}
         <View className={`flex-row items-center gap-2 rounded-2xl px-4 py-3 ${sc.bg}`}>
           <View className={`w-2.5 h-2.5 rounded-full ${sc.dot}`} />
-          <Text className={`text-sm font-bold ${sc.text}`}>{sc.label}</Text>
+          <Text className={`${typo.labelBold} ${sc.text}`}>{sc.label}</Text>
         </View>
 
         {/* Customer info */}
@@ -223,27 +232,27 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {/* Services */}
         {appt.services.length > 0 && (
           <View className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 border border-gray-100 dark:border-gray-700">
-            <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">{t('appt.servicesSection')}</Text>
+            <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wide mb-2`}>{t('appt.servicesSection')}</Text>
             {appt.services.map((svc, idx) => (
               <View
                 key={svc.id ?? idx}
                 className="flex-row items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700 last:border-0"
               >
                 <View className="flex-1 mr-2">
-                  <Text className="text-sm font-semibold text-gray-900 dark:text-white">{svc.productName}</Text>
+                  <Text className={`${typo.label} text-gray-900 dark:text-white`}>{svc.productName}</Text>
                   {svc.assignedEmployeeName ? (
-                    <Text className="text-xs text-gray-400 mt-0.5">{svc.assignedEmployeeName}</Text>
+                    <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{svc.assignedEmployeeName}</Text>
                   ) : null}
                 </View>
                 {svc.unitPrice > 0 && (
-                  <Text className="text-sm font-bold text-emerald-600">{formatVnd(svc.unitPrice)}</Text>
+                  <Text className={`${typo.labelBold} text-emerald-600`}>{formatVnd(svc.unitPrice)}</Text>
                 )}
               </View>
             ))}
             {totalPrice > 0 && (
               <View className="flex-row justify-between pt-2.5 mt-1 border-t border-gray-100 dark:border-gray-600">
-                <Text className="text-sm font-semibold text-gray-500">{t('appt.totalEstimate')}</Text>
-                <Text className="text-sm font-bold text-gray-900 dark:text-white">{formatVnd(totalPrice)}</Text>
+                <Text className={`${typo.label} text-gray-500`}>{t('appt.totalEstimate')}</Text>
+                <Text className={`${typo.labelBold} text-gray-900 dark:text-white`}>{formatVnd(totalPrice)}</Text>
               </View>
             )}
           </View>
@@ -252,8 +261,8 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {/* Note */}
         {appt.note ? (
           <View className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 border border-gray-100 dark:border-gray-700">
-            <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">{t('appt.noteSection')}</Text>
-            <Text className="text-sm text-gray-700 dark:text-gray-300">{appt.note}</Text>
+            <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wide mb-1`}>{t('appt.noteSection')}</Text>
+            <Text className={`${typo.caption} text-gray-700 dark:text-gray-300`}>{appt.note}</Text>
           </View>
         ) : null}
 
@@ -261,18 +270,19 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {isActive && (
           <View className="flex-row gap-3">
             <TouchableOpacity
+              testID="appt-cancel-btn"
               onPress={confirmCancel}
               disabled={isMutating}
               className="flex-1 py-3 rounded-xl border border-rose-200 items-center"
             >
-              <Text className="text-sm font-semibold text-rose-500">{t('appt.cancel')}</Text>
+              <Text className={`${typo.label} text-rose-500`}>{t('appt.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={confirmNoShow}
               disabled={isMutating}
               className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 items-center"
             >
-              <Text className="text-sm font-semibold text-gray-500">{t('appt.noShow')}</Text>
+              <Text className={`${typo.label} text-gray-500`}>{t('appt.noShow')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -287,7 +297,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
             {confirmMutation.isPending ? (
               <ActivityIndicator color="#4f46e5" />
             ) : (
-              <Text className="text-sm font-semibold text-indigo-600">{t('appt.confirm')}</Text>
+              <Text className={`${typo.label} text-indigo-600`}>{t('appt.confirm')}</Text>
             )}
           </TouchableOpacity>
         )}
@@ -295,7 +305,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {/* Delete (always visible for non-checked-in) */}
         {appt.status !== 'CHECKED_IN' && (
           <TouchableOpacity onPress={confirmDelete} disabled={isMutating} className="items-center py-2">
-            <Text className="text-xs text-gray-400">{t('appt.delete')}</Text>
+            <Text className={`${typo.caption} text-gray-400`}>{t('appt.delete')}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -307,6 +317,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
           style={{ paddingBottom: insets.bottom + 8, paddingTop: 12 }}
         >
           <TouchableOpacity
+            testID="appt-checkin-btn"
             onPress={() => checkInMutation.mutate()}
             disabled={isMutating}
             className="bg-indigo-600 rounded-2xl py-4 items-center"
@@ -316,7 +327,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
             ) : (
               <View className="flex-row items-center gap-2">
                 <MaterialCommunityIcons name="account-check-outline" size={20} color="white" />
-                <Text className="text-base font-bold text-white">{t('appt.checkIn')}</Text>
+                <Text className={`${typo.labelBold} text-white`}>{t('appt.checkIn')}</Text>
               </View>
             )}
           </TouchableOpacity>

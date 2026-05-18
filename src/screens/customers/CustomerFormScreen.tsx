@@ -17,7 +17,9 @@ import { customerApi, type CustomerFormPayload } from '../../services/api';
 import { useAlertStore } from '../../store/alertStore';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
+import { useTypography } from '../../hooks/useTypography';
 import { Skeleton } from '../../components/Skeleton';
+import { DatePickerInput } from '../../components/DatePickerInput';
 import { PhoneInput } from '../../components/PhoneInput';
 import type { HomeScreenProps } from '../../types/navigation';
 
@@ -64,18 +66,20 @@ const EMPTY_FORM: FormState = {
 };
 
 function SectionHeader({ icon, title }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; title: string }) {
+  const typo = useTypography();
   return (
     <View className="flex-row items-center mb-3 mt-1">
       <MaterialCommunityIcons name={icon} size={15} color="#6b7280" style={{ marginRight: 6 }} />
-      <Text className="text-xs font-bold text-gray-500 uppercase tracking-wide">{title}</Text>
+      <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase tracking-wide`}>{title}</Text>
     </View>
   );
 }
 
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+  const typo = useTypography();
   return (
     <View className="mb-4">
-      <Text className="text-sm font-medium text-gray-700 mb-1.5">{label}</Text>
+      <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-300 mb-1.5`}>{label}</Text>
       {children}
     </View>
   );
@@ -102,10 +106,11 @@ function StyledInput({
   autoFocus?: boolean;
   testID?: string;
 }) {
+  const typo = useTypography();
   return (
     <TextInput
       testID={testID}
-      className={`border border-gray-200 rounded-xl px-3 bg-white text-gray-900 ${multiline ? 'py-3 text-sm' : 'py-3 text-base'}`}
+      className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white py-3 ${typo.inputSize}`}
       value={value}
       onChangeText={onChangeText}
       placeholder={placeholder}
@@ -122,6 +127,7 @@ function StyledInput({
 
 export function CustomerFormScreen({ navigation, route }: Props) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const { top } = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { show: showAlert } = useAlertStore();
@@ -261,11 +267,16 @@ export function CustomerFormScreen({ navigation, route }: Props) {
 
   if (isEdit && loadingCustomer) {
     return (
-      <View className="flex-1 bg-gray-50">
-        <View className="bg-primary px-6 pb-5" style={{ paddingTop: top + 16 }}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-          </TouchableOpacity>
+      <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
+          <View className="flex-row items-center">
+            <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+              <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+            </TouchableOpacity>
+            <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
+              {isEdit ? t('customers.editCustomer') : t('customers.addCustomer')}
+            </Text>
+          </View>
         </View>
         <View className="px-4 pt-4" style={{ gap: 12 }}>
           {[0, 1, 2, 3].map((i) => <Skeleton key={i} height={52} borderRadius={12} />)}
@@ -276,29 +287,34 @@ export function CustomerFormScreen({ navigation, route }: Props) {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-50"
+      className="flex-1 bg-gray-50 dark:bg-gray-900"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View className="bg-primary px-6 pb-5" style={{ paddingTop: top + 16 }}>
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-white">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {isEdit ? t('customers.editCustomer') : t('customers.addCustomer')}
           </Text>
-          <View style={{ width: 24 }} />
+          <TouchableOpacity onPress={handleSubmit} disabled={isPending} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            {isPending ? <ActivityIndicator size="small" color="#4f46e5" /> : (
+              <Text className={`${typo.body} text-indigo-600 dark:text-indigo-400`}>{t('common.save')}</Text>
+            )}
+          </TouchableOpacity>
         </View>
-        <Text className="text-xs text-indigo-200 mt-1">{t('customers.formHint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('customers.formHint')}</Text>
       </View>
 
       <ScrollView
-        className="flex-1 px-4 pt-4"
-        contentContainerStyle={{ paddingBottom: 16 }}
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Section 1 – Basic Info */}
-        <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
           <SectionHeader icon="account-outline" title={t('customers.sectionBasic')} />
 
           <FormField label={`${t('customers.name')} *`}>
@@ -340,9 +356,9 @@ export function CustomerFormScreen({ navigation, route }: Props) {
                     key={g}
                     onPress={() => set('gender', selected ? null : g)}
                     activeOpacity={0.75}
-                    className={`flex-1 py-2.5 rounded-xl items-center border ${selected ? 'bg-primary border-primary' : 'bg-gray-50 border-gray-200'}`}
+                    className={`flex-1 py-2.5 rounded-xl items-center border ${selected ? 'bg-primary border-primary' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'}`}
                   >
-                    <Text className={`text-sm font-semibold ${selected ? 'text-white' : 'text-gray-600'}`}>
+                    <Text className={`${typo.label} ${selected ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
                       {label}
                     </Text>
                   </TouchableOpacity>
@@ -352,16 +368,19 @@ export function CustomerFormScreen({ navigation, route }: Props) {
           </FormField>
 
           <FormField label={t('customers.dateOfBirth')}>
-            <StyledInput
-              value={form.dateOfBirth}
-              onChangeText={(v) => set('dateOfBirth', v)}
-              placeholder={t('customers.dateOfBirthPlaceholder')}
-            />
+            <View className="border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 bg-white dark:bg-gray-700">
+              <DatePickerInput
+                value={form.dateOfBirth}
+                onChange={(v) => set('dateOfBirth', v)}
+                placeholder={t('customers.dateOfBirthPlaceholder')}
+                maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() - 18))}
+              />
+            </View>
           </FormField>
         </View>
 
         {/* Section 2 – Social Contact */}
-        <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
           <SectionHeader icon="message-outline" title={t('customers.sectionSocial')} />
 
           <FormField label={t('customers.zaloId')}>
@@ -383,7 +402,7 @@ export function CustomerFormScreen({ navigation, route }: Props) {
         </View>
 
         {/* Section 3 – Preferences & Notes */}
-        <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
           <SectionHeader icon="heart-outline" title={t('customers.sectionPrefs')} />
 
           <FormField label={t('customers.hairType')}>
@@ -402,7 +421,7 @@ export function CustomerFormScreen({ navigation, route }: Props) {
               multiline
               maxLength={500}
             />
-            <Text className="text-xs text-gray-400 text-right mt-1">
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 text-right mt-1`}>
               {form.preferredServices.length}/500
             </Text>
           </FormField>
@@ -436,7 +455,7 @@ export function CustomerFormScreen({ navigation, route }: Props) {
         </View>
 
         {/* Section 4 – ID Document */}
-        <View className="bg-white rounded-2xl p-4 mb-6 border border-gray-100">
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-6 border border-gray-100 dark:border-gray-700">
           <SectionHeader icon="card-account-details-outline" title={t('customers.sectionId')} />
 
           <FormField label={t('customers.idCardNumber')}>
@@ -476,27 +495,6 @@ export function CustomerFormScreen({ navigation, route }: Props) {
 
       </ScrollView>
 
-      {/* Fixed footer — always above keyboard thanks to KeyboardAvoidingView */}
-      <View className="px-4 pb-6 pt-3 bg-gray-50">
-        <TouchableOpacity
-          testID="customer-form-submit"
-          onPress={handleSubmit}
-          disabled={isPending}
-          activeOpacity={0.8}
-          className={`rounded-2xl py-4 items-center ${isPending ? 'bg-gray-300' : 'bg-primary'}`}
-        >
-          {isPending ? (
-            <View className="flex-row items-center">
-              <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
-              <Text className="text-white font-bold text-base">{t('customers.saving')}</Text>
-            </View>
-          ) : (
-            <Text className="text-white font-bold text-base">
-              {isEdit ? t('common.save') : t('customers.addCustomer')}
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
     </KeyboardAvoidingView>
   );
 }

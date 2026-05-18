@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MoneyInput } from '../../components/MoneyInput';
 import { useCurrency } from '../../hooks/useCurrency';
+import { useTypography } from '../../hooks/useTypography';
 import type { ToolsScreenProps } from '../../types/navigation';
 
 type Props = ToolsScreenProps<'Breakeven'>;
@@ -49,7 +50,8 @@ function calcBreakeven(upfrontA: number, monthlyA: number, upfrontB: number, mon
 
 export function BreakevenScreen({ navigation }: Props) {
   const { t } = useTranslation();
-  const { top } = useSafeAreaInsets();
+  const typo = useTypography();
+  const { top, bottom } = useSafeAreaInsets();
   const { fmt } = useCurrency();
 
   const [nameA, setNameA] = useState('');
@@ -80,37 +82,39 @@ export function BreakevenScreen({ navigation }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-gray-50" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View className="bg-rose-600 px-6 pb-5" style={{ paddingTop: top + 16 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mb-3">
-          <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-        </TouchableOpacity>
-        <Text className="text-2xl font-bold text-white">{t('breakeven.title')}</Text>
+    <KeyboardAvoidingView className="flex-1 bg-gray-50 dark:bg-gray-900" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+          </TouchableOpacity>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('breakeven.title')}</Text>
+        </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
         <View className="flex-row items-start bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100 mb-3">
           <Text className="text-indigo-400 mr-2 mt-0.5">💡</Text>
-          <Text className="text-xs text-indigo-600 leading-4 flex-1">{t('breakeven.hint')}</Text>
+          <Text className={`${typo.caption} text-indigo-600 leading-4 flex-1`}>{t('breakeven.hint')}</Text>
         </View>
 
         {/* Option A */}
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
           <View className="flex-row items-center mb-3">
             <View className="w-7 h-7 rounded-full bg-blue-100 items-center justify-center mr-2">
-              <Text className="text-xs font-bold text-blue-600">A</Text>
+              <Text className={`${typo.captionBold} text-blue-600`}>A</Text>
             </View>
             <TextInput
-              className="flex-1 text-sm font-semibold text-gray-700"
+              className={`flex-1 ${typo.inputSize} font-semibold text-gray-700`}
               value={nameA}
               onChangeText={setNameA}
               placeholder={t('breakeven.namePlaceholder')}
               placeholderTextColor="#9ca3af"
             />
           </View>
-          <Text className="text-xs text-gray-500 mb-1">{t('breakeven.upfront')}</Text>
+          <Text className={`${typo.caption} text-gray-500 mb-1`}>{t('breakeven.upfront')}</Text>
           <MoneyInput rawValue={upfrontA} onChangeRaw={setUpfrontA} placeholder="0" />
-          <Text className="text-xs text-gray-500 mb-1 mt-3">{t('breakeven.monthly')}</Text>
+          <Text className={`${typo.caption} text-gray-500 mb-1 mt-3`}>{t('breakeven.monthly')}</Text>
           <MoneyInput rawValue={monthlyA} onChangeRaw={setMonthlyA} placeholder="0" />
         </View>
 
@@ -118,49 +122,49 @@ export function BreakevenScreen({ navigation }: Props) {
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
           <View className="flex-row items-center mb-3">
             <View className="w-7 h-7 rounded-full bg-orange-100 items-center justify-center mr-2">
-              <Text className="text-xs font-bold text-orange-600">B</Text>
+              <Text className={`${typo.captionBold} text-orange-600`}>B</Text>
             </View>
             <TextInput
-              className="flex-1 text-sm font-semibold text-gray-700"
+              className={`flex-1 ${typo.inputSize} font-semibold text-gray-700`}
               value={nameB}
               onChangeText={setNameB}
               placeholder={t('breakeven.namePlaceholder')}
               placeholderTextColor="#9ca3af"
             />
           </View>
-          <Text className="text-xs text-gray-500 mb-1">{t('breakeven.upfront')}</Text>
+          <Text className={`${typo.caption} text-gray-500 mb-1`}>{t('breakeven.upfront')}</Text>
           <MoneyInput rawValue={upfrontB} onChangeRaw={setUpfrontB} placeholder="0" />
-          <Text className="text-xs text-gray-500 mb-1 mt-3">{t('breakeven.monthly')}</Text>
+          <Text className={`${typo.caption} text-gray-500 mb-1 mt-3`}>{t('breakeven.monthly')}</Text>
           <MoneyInput rawValue={monthlyB} onChangeRaw={setMonthlyB} placeholder="0" />
         </View>
 
         {result && (
           <View className="bg-rose-50 rounded-2xl p-4 border border-rose-100">
-            <Text className="text-sm font-bold text-rose-700 mb-3">{t('breakeven.resultsTitle')}</Text>
+            <Text className={`${typo.labelBold} text-rose-700 mb-3`}>{t('breakeven.resultsTitle')}</Text>
 
             <View className="bg-white rounded-xl p-3 mb-3 border border-rose-100">
-              <Text className="text-xs text-gray-500 mb-1">{t('breakeven.breakevenPoint')}</Text>
+              <Text className={`${typo.caption} text-gray-500 mb-1`}>{t('breakeven.breakevenPoint')}</Text>
               {result.breakevenMonths !== null ? (
                 <>
-                  <Text className="text-lg font-bold text-rose-600">{fmtMonths(result.breakevenMonths)}</Text>
-                  <Text className="text-xs text-gray-500 mt-1">{t('breakeven.breakevenNote', { a: labelA, b: labelB })}</Text>
+                  <Text className={`${typo.section} text-rose-600`}>{fmtMonths(result.breakevenMonths)}</Text>
+                  <Text className={`${typo.caption} text-gray-500 mt-1`}>{t('breakeven.breakevenNote', { a: labelA, b: labelB })}</Text>
                 </>
               ) : (
-                <Text className="text-sm font-bold text-gray-600">{t('breakeven.noBreakeven')}</Text>
+                <Text className={`${typo.labelBold} text-gray-600`}>{t('breakeven.noBreakeven')}</Text>
               )}
             </View>
 
-            <Text className="text-xs text-gray-500 mb-2">
+            <Text className={`${typo.caption} text-gray-500 mb-2`}>
               {result.breakevenMonths !== null ? t('breakeven.totalAtBreakeven') : t('breakeven.totalAt10yr')}
             </Text>
             <View className="flex-row mb-3" style={{ gap: 8 }}>
               <View className="flex-1 bg-blue-50 rounded-xl p-3 border border-blue-100">
-                <Text className="text-xs font-semibold text-blue-600 mb-1">{labelA}</Text>
-                <Text className="text-sm font-bold text-blue-700">{fmt(Math.round(result.totalA_at_breakeven))}</Text>
+                <Text className={`${typo.captionBold} text-blue-600 mb-1`}>{labelA}</Text>
+                <Text className={`${typo.labelBold} text-blue-700`}>{fmt(Math.round(result.totalA_at_breakeven))}</Text>
               </View>
               <View className="flex-1 bg-orange-50 rounded-xl p-3 border border-orange-100">
-                <Text className="text-xs font-semibold text-orange-600 mb-1">{labelB}</Text>
-                <Text className="text-sm font-bold text-orange-700">{fmt(Math.round(result.totalB_at_breakeven))}</Text>
+                <Text className={`${typo.captionBold} text-orange-600 mb-1`}>{labelB}</Text>
+                <Text className={`${typo.labelBold} text-orange-700`}>{fmt(Math.round(result.totalB_at_breakeven))}</Text>
               </View>
             </View>
 
@@ -171,7 +175,7 @@ export function BreakevenScreen({ navigation }: Props) {
                 color={result.cheaperOption === 'equal' ? '#9ca3af' : '#059669'}
                 style={{ marginRight: 6 }}
               />
-              <Text className="flex-1 text-xs text-gray-600">
+              <Text className={`${typo.caption} flex-1 text-gray-600`}>
                 {result.cheaperOption === 'equal'
                   ? t('breakeven.verdict_equal')
                   : t('breakeven.verdict_cheaper', { option: result.cheaperOption === 'A' ? labelA : labelB, amount: fmt(Math.round(result.savings10yr)) })}
@@ -182,7 +186,7 @@ export function BreakevenScreen({ navigation }: Props) {
 
         <View className="flex-row items-start bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 mt-3">
           <MaterialCommunityIcons name="information-outline" size={16} color="#d97706" style={{ marginTop: 1, marginRight: 6 }} />
-          <Text className="flex-1 text-xs text-amber-700 leading-4">{t('breakeven.disclaimer')}</Text>
+          <Text className={`${typo.caption} flex-1 text-amber-700 leading-4`}>{t('breakeven.disclaimer')}</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

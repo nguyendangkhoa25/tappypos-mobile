@@ -4,11 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { legalApi } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import type { SettingsScreenProps } from '../../types/navigation';
 
 export function TnCScreen({ navigation }: SettingsScreenProps<'TnC'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['tnc'],
@@ -28,7 +30,7 @@ export function TnCScreen({ navigation }: SettingsScreenProps<'TnC'>) {
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
           <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
         </TouchableOpacity>
-        <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1">
+        <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
           {t('settings.tnc.title')}
         </Text>
       </View>
@@ -40,18 +42,18 @@ export function TnCScreen({ navigation }: SettingsScreenProps<'TnC'>) {
       ) : isError ? (
         <View className="flex-1 items-center justify-center px-8">
           <MaterialCommunityIcons name="alert-circle-outline" size={48} color="#d1d5db" />
-          <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-3">{t('settings.tnc.loadError')}</Text>
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 text-center mt-3`}>{t('settings.tnc.loadError')}</Text>
           <TouchableOpacity onPress={() => refetch()} className="mt-4 border border-indigo-600 px-5 py-2 rounded-xl">
-            <Text className="text-indigo-600 font-medium">{t('common.retry')}</Text>
+            <Text className={`${typo.label} font-medium text-indigo-600`}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 24 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 24 }}>
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-xs text-gray-400">{t('settings.tnc.version', { version: data?.version ?? '1.0' })}</Text>
-            <Text className="text-xs text-gray-400">{t('settings.tnc.updatedAt', { date: formatDate(data?.updatedAt ?? new Date().toISOString()) })}</Text>
+            <Text className={`${typo.caption} text-gray-400`}>{t('settings.tnc.version', { version: data?.version ?? '1.0' })}</Text>
+            <Text className={`${typo.caption} text-gray-400`}>{t('settings.tnc.updatedAt', { date: formatDate(data?.updatedAt ?? new Date().toISOString()) })}</Text>
           </View>
-          <Text className="text-sm text-gray-700 dark:text-gray-300 leading-6">{data?.content ?? ''}</Text>
+          <Text className={`${typo.caption} text-gray-700 dark:text-gray-300 leading-6`}>{data?.content ?? ''}</Text>
         </ScrollView>
       )}
     </View>

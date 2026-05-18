@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MoneyInput } from '../../components/MoneyInput';
 import { formatVnd } from '../../utils/format';
+import { useTypography } from '../../hooks/useTypography';
 import type { ToolsScreenProps } from '../../types/navigation';
 
 type Props = ToolsScreenProps<'TaxCalculator'>;
@@ -56,7 +57,8 @@ const MAX_DEPENDENTS = 10;
 
 export function TaxCalculatorScreen({ navigation }: Props) {
   const { t } = useTranslation();
-  const { top } = useSafeAreaInsets();
+  const typo = useTypography();
+  const { top, bottom } = useSafeAreaInsets();
 
   const [gross, setGross] = useState('');
   const [dependents, setDependents] = useState(0);
@@ -116,33 +118,37 @@ export function TaxCalculatorScreen({ navigation }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-gray-50" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View className="bg-amber-600 px-6 pb-5" style={{ paddingTop: top + 16 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mb-3">
-          <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-        </TouchableOpacity>
-        <Text className="text-2xl font-bold text-white">{t('taxCalc.title')}</Text>
-        <Text className="text-amber-200 text-xs mt-1">{t('taxCalc.subtitle2026')}</Text>
+    <KeyboardAvoidingView className="flex-1 bg-gray-50 dark:bg-gray-900" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className={`${typo.heading} text-gray-900 dark:text-white`}>{t('taxCalc.title')}</Text>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('taxCalc.subtitle2026')}</Text>
+          </View>
+        </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
         <View className="flex-row items-start bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100 mb-3">
           <Text className="text-indigo-400 mr-2 mt-0.5">💡</Text>
-          <Text className="text-xs text-indigo-600 leading-4 flex-1">{t('taxCalc.hint')}</Text>
+          <Text className={`${typo.caption} text-indigo-600 leading-4 flex-1`}>{t('taxCalc.hint')}</Text>
         </View>
 
         <View className="flex-row items-start bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 mb-3">
           <MaterialCommunityIcons name="information-outline" size={16} color="#d97706" style={{ marginTop: 1, marginRight: 6 }} />
-          <Text className="flex-1 text-xs text-amber-700 leading-4">{t('taxCalc.disclaimer')}</Text>
+          <Text className={`${typo.caption} flex-1 text-amber-700 leading-4`}>{t('taxCalc.disclaimer')}</Text>
         </View>
 
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-          <Text className="text-sm font-semibold text-gray-700 mb-2">{t('taxCalc.grossIncome')}</Text>
+          <Text className={`${typo.label} text-gray-700 mb-2`}>{t('taxCalc.grossIncome')}</Text>
           <MoneyInput rawValue={gross} onChangeRaw={setGross} placeholder="0" />
         </View>
 
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-          <Text className="text-sm font-semibold text-gray-700 mb-3">{t('taxCalc.dependents')}</Text>
+          <Text className={`${typo.label} text-gray-700 mb-3`}>{t('taxCalc.dependents')}</Text>
           <View className="flex-row items-center justify-center" style={{ gap: 24 }}>
             <TouchableOpacity
               onPress={() => setDependents((d) => Math.max(MIN_DEPENDENTS, d - 1))}
@@ -151,7 +157,7 @@ export function TaxCalculatorScreen({ navigation }: Props) {
             >
               <Text className={`text-2xl font-bold ${dependents <= MIN_DEPENDENTS ? 'text-gray-300' : 'text-gray-700'}`}>−</Text>
             </TouchableOpacity>
-            <Text className="text-4xl font-bold text-gray-900 w-16 text-center">{dependents}</Text>
+            <Text className="font-bold text-gray-900 dark:text-white w-16 text-center" style={{ fontSize: typo.displaySize }}>{dependents}</Text>
             <TouchableOpacity
               onPress={() => setDependents((d) => Math.min(MAX_DEPENDENTS, d + 1))}
               disabled={dependents >= MAX_DEPENDENTS}
@@ -164,7 +170,7 @@ export function TaxCalculatorScreen({ navigation }: Props) {
 
         {hasIncome && (
           <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-            <Text className="text-sm font-bold text-gray-700 mb-3">{t('taxCalc.deductionsTitle')}</Text>
+            <Text className={`${typo.labelBold} text-gray-700 mb-3`}>{t('taxCalc.deductionsTitle')}</Text>
             <CalcRow label={t('taxCalc.grossIncome')} value={grossNum} />
             <View className="ml-2 mt-0.5 mb-0.5">
               <SIRow label={`BHXH 8%${bhxhCapped ? ' ⌈' : ''}`} value={bhxhAmt} isOverride={bhxhOverride !== ''} />
@@ -172,7 +178,7 @@ export function TaxCalculatorScreen({ navigation }: Props) {
               <SIRow label={`BHTN 1%${bhtnCapped ? ' ⌈' : ''}`} value={bhtnAmt} isOverride={bhtnOverride !== ''} />
             </View>
             {(bhxhCapped || bhtnCapped) && (
-              <Text className="text-xs text-amber-600 mb-1.5 ml-2">
+              <Text className={`${typo.caption} text-amber-600 mb-1.5 ml-2`}>
                 ⌈ {t('taxCalc.capApplied', { cap: formatVnd(bhxhCapped ? BHXH_BHYT_CAP : bhtnCap) })}
               </Text>
             )}
@@ -194,31 +200,31 @@ export function TaxCalculatorScreen({ navigation }: Props) {
 
         {hasIncome && (
           <View className="bg-amber-50 rounded-2xl p-4 mb-3 border border-amber-100">
-            <Text className="text-sm font-bold text-amber-700 mb-3">{t('taxCalc.taxBreakdown')}</Text>
+            <Text className={`${typo.labelBold} text-amber-700 mb-3`}>{t('taxCalc.taxBreakdown')}</Text>
             {bracketSlices.length === 0 ? (
-              <Text className="text-sm text-emerald-600 font-semibold">{t('taxCalc.noTax')}</Text>
+              <Text className={`${typo.label} text-emerald-600`}>{t('taxCalc.noTax')}</Text>
             ) : (
               <>
                 {bracketSlices.map((sl, i) => (
                   <View key={i} className="flex-row justify-between items-center mb-1.5">
-                    <Text className="text-xs text-amber-700 flex-1 mr-2">{(sl.rate * 100).toFixed(0)}% × {formatVnd(Math.round(sl.slice))}</Text>
-                    <Text className="text-xs font-semibold text-red-600">= {formatVnd(Math.round(sl.tax))}</Text>
+                    <Text className={`${typo.caption} text-amber-700 flex-1 mr-2`}>{(sl.rate * 100).toFixed(0)}% × {formatVnd(Math.round(sl.slice))}</Text>
+                    <Text className={`${typo.captionBold} text-red-600`}>= {formatVnd(Math.round(sl.tax))}</Text>
                   </View>
                 ))}
                 <View className="border-t border-amber-200 mt-2 pt-2 mb-1">
                   <View className="flex-row justify-between items-center">
-                    <Text className="text-sm font-bold text-gray-700">{t('taxCalc.estimatedTax')}</Text>
-                    <Text className="text-sm font-bold text-red-600">{formatVnd(Math.round(tax))}</Text>
+                    <Text className={`${typo.labelBold} text-gray-700`}>{t('taxCalc.estimatedTax')}</Text>
+                    <Text className={`${typo.labelBold} text-red-600`}>{formatVnd(Math.round(tax))}</Text>
                   </View>
                 </View>
                 <View className="border-t border-amber-200 mt-3 pt-3">
                   <View className="flex-row justify-between items-center mb-1">
-                    <Text className="text-sm font-bold text-gray-800">{t('taxCalc.netIncome')}</Text>
-                    <Text className="text-sm font-bold text-emerald-600">{formatVnd(Math.round(net))}</Text>
+                    <Text className={`${typo.labelBold} text-gray-800`}>{t('taxCalc.netIncome')}</Text>
+                    <Text className={`${typo.labelBold} text-emerald-600`}>{formatVnd(Math.round(net))}</Text>
                   </View>
                   <View className="flex-row justify-between items-center">
-                    <Text className="text-sm text-gray-600">{t('taxCalc.effectiveRate')}</Text>
-                    <Text className="text-sm font-bold text-amber-700">{effectiveRate.toFixed(1)}%</Text>
+                    <Text className={`${typo.caption} text-gray-600`}>{t('taxCalc.effectiveRate')}</Text>
+                    <Text className={`${typo.labelBold} text-amber-700`}>{effectiveRate.toFixed(1)}%</Text>
                   </View>
                 </View>
               </>
@@ -231,15 +237,15 @@ export function TaxCalculatorScreen({ navigation }: Props) {
           className="bg-white rounded-2xl px-4 py-3.5 mb-1 flex-row items-center justify-between border border-gray-100"
         >
           <View className="flex-1 mr-3">
-            <Text className="text-sm font-semibold text-gray-700">⚙️ {t('taxCalc.customizeTitle')}</Text>
-            <Text className="text-xs text-gray-400 mt-0.5">{t('taxCalc.customizeSubtitle')}</Text>
+            <Text className={`${typo.label} text-gray-700`}>⚙️ {t('taxCalc.customizeTitle')}</Text>
+            <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{t('taxCalc.customizeSubtitle')}</Text>
           </View>
-          <Text className="text-gray-400 text-sm">{showCustomize ? '▲' : '▼'}</Text>
+          <Text className={`${typo.caption} text-gray-400`}>{showCustomize ? '▲' : '▼'}</Text>
         </TouchableOpacity>
 
         {showCustomize && (
           <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-            <Text className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t('taxCalc.regionLabel')}</Text>
+            <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wider mb-2`}>{t('taxCalc.regionLabel')}</Text>
             <View className="flex-row mb-1" style={{ gap: 8 }}>
               {(['I', 'II', 'III', 'IV'] as Region[]).map((r) => (
                 <TouchableOpacity
@@ -247,13 +253,13 @@ export function TaxCalculatorScreen({ navigation }: Props) {
                   onPress={() => handleRegionChange(r)}
                   className={`flex-1 py-2 rounded-xl items-center border ${region === r ? 'bg-amber-500 border-amber-500' : 'border-gray-200'}`}
                 >
-                  <Text className={`text-xs font-bold ${region === r ? 'text-white' : 'text-gray-600'}`}>{t('taxCalc.vung')} {r}</Text>
+                  <Text className={`${typo.captionBold} ${region === r ? 'text-white' : 'text-gray-600'}`}>{t('taxCalc.vung')} {r}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <Text className="text-xs text-gray-400 mb-4">{t('taxCalc.regionNote', { cap: formatVnd(REGION_BHTN_CAP[region]) })}</Text>
+            <Text className={`${typo.caption} text-gray-400 mb-4`}>{t('taxCalc.regionNote', { cap: formatVnd(REGION_BHTN_CAP[region]) })}</Text>
 
-            <Text className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t('taxCalc.siSection')}</Text>
+            <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wider mb-3`}>{t('taxCalc.siSection')}</Text>
             <SIOverrideField label="BHXH" formula={`${formatVnd(BHXH_BHYT_CAP)} × 8%`} autoValue={autoBhxh} rawValue={bhxhOverride} onChangeRaw={setBhxhOverride} />
             <SIOverrideField label="BHYT" formula={`${formatVnd(BHXH_BHYT_CAP)} × 1.5%`} autoValue={autoBhyt} rawValue={bhytOverride} onChangeRaw={setBhytOverride} />
             <SIOverrideField
@@ -266,41 +272,41 @@ export function TaxCalculatorScreen({ navigation }: Props) {
 
             {(bhxhOverride !== '' || bhytOverride !== '' || bhtnOverride !== '') && (
               <TouchableOpacity onPress={() => { setBhxhOverride(''); setBhytOverride(''); setBhtnOverride(''); }} className="mb-4">
-                <Text className="text-xs text-indigo-500 text-right">{t('taxCalc.clearOverrides')}</Text>
+                <Text className={`${typo.label} text-indigo-500 text-right`}>{t('taxCalc.clearOverrides')}</Text>
               </TouchableOpacity>
             )}
 
-            <Text className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t('taxCalc.deductSection')}</Text>
-            <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('taxCalc.personalDeductLabel')}</Text>
+            <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wider mb-3`}>{t('taxCalc.deductSection')}</Text>
+            <Text className={`${typo.captionBold} text-gray-500 uppercase tracking-wide mb-1`}>{t('taxCalc.personalDeductLabel')}</Text>
             <View className="mb-3">
               <MoneyInput rawValue={personalDeductInput} onChangeRaw={setPersonalDeductInput} placeholder={String(DEFAULT_PERSONAL_DEDUCTION)} />
             </View>
-            <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('taxCalc.perDependentLabel')}</Text>
+            <Text className={`${typo.captionBold} text-gray-500 uppercase tracking-wide mb-1`}>{t('taxCalc.perDependentLabel')}</Text>
             <View className="mb-4">
               <MoneyInput rawValue={dependentDeductInput} onChangeRaw={setDependentDeductInput} placeholder={String(DEFAULT_DEPENDENT_DEDUCTION)} />
             </View>
 
             <TouchableOpacity onPress={handleReset} className="border border-gray-200 rounded-xl py-2.5 items-center">
-              <Text className="text-sm font-semibold text-gray-600">{t('taxCalc.resetDefaults')}</Text>
+              <Text className={`${typo.label} text-gray-600`}>{t('taxCalc.resetDefaults')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         <View className="bg-white rounded-2xl p-4 mt-2 border border-gray-100">
-          <Text className="text-sm font-bold text-gray-700 mb-3">{t('taxCalc.brackets')}</Text>
+          <Text className={`${typo.labelBold} text-gray-700 mb-3`}>{t('taxCalc.brackets')}</Text>
           {BRACKETS.map((b, i) => {
             const prevMax = i > 0 ? BRACKETS[i - 1].max : 0;
             const isActive = taxable > 0 && taxable > prevMax && taxable <= b.max;
             return (
               <View key={i} className={`flex-row justify-between items-center py-1.5 px-2 rounded-lg mb-1 ${isActive ? 'bg-amber-100' : ''}`}>
-                <Text className={`text-xs ${isActive ? 'font-bold text-amber-700' : 'text-gray-500'}`}>
+                <Text className={`${isActive ? `${typo.captionBold} text-amber-700` : `${typo.caption} text-gray-500`}`}>
                   {i === 0 ? `≤ ${formatVnd(b.max)}` : b.max === Infinity ? `> ${formatVnd(prevMax)}` : `${formatVnd(prevMax)} – ${formatVnd(b.max)}`}
                 </Text>
-                <Text className={`text-xs font-bold ${isActive ? 'text-amber-700' : 'text-gray-500'}`}>{(b.rate * 100).toFixed(0)}%</Text>
+                <Text className={`${typo.captionBold} ${isActive ? 'text-amber-700' : 'text-gray-500'}`}>{(b.rate * 100).toFixed(0)}%</Text>
               </View>
             );
           })}
-          <Text className="text-xs text-gray-400 mt-2 text-center">{t('taxCalc.bracketsNote')}</Text>
+          <Text className={`${typo.caption} text-gray-400 mt-2 text-center`}>{t('taxCalc.bracketsNote')}</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -308,11 +314,12 @@ export function TaxCalculatorScreen({ navigation }: Props) {
 }
 
 function CalcRow({ label, value, bold, subtle, highlight }: { label: string; value: number; bold?: boolean; subtle?: boolean; highlight?: boolean }) {
+  const typo = useTypography();
   const isNeg = value < 0;
   return (
     <View className="flex-row justify-between items-center mb-1.5">
-      <Text className={`text-sm flex-1 mr-2 ${bold ? 'font-bold text-gray-800' : subtle ? 'text-gray-500 italic' : 'text-gray-600'}`}>{label}</Text>
-      <Text className={`text-sm ${bold ? 'font-bold' : ''} ${highlight ? 'text-amber-700' : isNeg ? 'text-red-600' : subtle ? 'text-gray-600' : 'text-gray-800'}`}>
+      <Text className={`${bold ? `${typo.labelBold} text-gray-800` : subtle ? `${typo.caption} text-gray-500 italic` : `${typo.caption} text-gray-600`} flex-1 mr-2`}>{label}</Text>
+      <Text className={`${bold ? typo.labelBold : typo.caption} ${highlight ? 'text-amber-700' : isNeg ? 'text-red-600' : subtle ? 'text-gray-600' : 'text-gray-800'}`}>
         {isNeg ? '−' : ''}{formatVnd(Math.abs(Math.round(value)))}
       </Text>
     </View>
@@ -320,20 +327,22 @@ function CalcRow({ label, value, bold, subtle, highlight }: { label: string; val
 }
 
 function SIRow({ label, value, isOverride }: { label: string; value: number; isOverride: boolean }) {
+  const typo = useTypography();
   return (
     <View className="flex-row justify-between items-center mb-1">
-      <Text className="text-xs text-gray-400 flex-1 mr-2">{label}{isOverride ? ' ✎' : ''}</Text>
-      <Text className="text-xs text-red-500">−{formatVnd(Math.abs(Math.round(value)))}</Text>
+      <Text className={`${typo.caption} text-gray-400 flex-1 mr-2`}>{label}{isOverride ? ' ✎' : ''}</Text>
+      <Text className={`${typo.caption} text-red-500`}>−{formatVnd(Math.abs(Math.round(value)))}</Text>
     </View>
   );
 }
 
 function SIOverrideField({ label, formula, autoValue, rawValue, onChangeRaw }: { label: string; formula: string; autoValue: number; rawValue: string; onChangeRaw: (v: string) => void }) {
+  const typo = useTypography();
   return (
     <View className="mb-3">
       <View className="flex-row justify-between items-baseline mb-1">
-        <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</Text>
-        <Text className="text-xs text-gray-400">{formula} = {formatVnd(autoValue)}</Text>
+        <Text className={`${typo.captionBold} text-gray-500 uppercase tracking-wide`}>{label}</Text>
+        <Text className={`${typo.caption} text-gray-400`}>{formula} = {formatVnd(autoValue)}</Text>
       </View>
       <MoneyInput rawValue={rawValue} onChangeRaw={onChangeRaw} placeholder={String(autoValue)} />
     </View>

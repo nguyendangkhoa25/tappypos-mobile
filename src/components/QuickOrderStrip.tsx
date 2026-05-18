@@ -17,6 +17,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { cartApi, orderApi, productApi, type ProductData } from '../services/api';
 import { useToastStore } from '../store/toastStore';
 import { formatVnd } from '../utils/format';
+import { useTypography } from '../hooks/useTypography';
 
 const STORAGE_KEY = 'quick_order_products';
 const LAST_PAYMENT_KEY = 'last_payment_method';
@@ -58,6 +59,7 @@ type CheckoutSheetProps = {
 
 function QuickCheckoutSheet({ product, onClose, onSuccess }: CheckoutSheetProps) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const { show: showToast } = useToastStore();
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
@@ -107,10 +109,10 @@ function QuickCheckoutSheet({ product, onClose, onSuccess }: CheckoutSheetProps)
         {/* Product */}
         <View className="flex-row items-start justify-between mb-4">
           <View className="flex-1 mr-3">
-            <Text className="text-base font-bold text-gray-900 dark:text-gray-100" numberOfLines={2}>
+            <Text className={`${typo.body} text-gray-900 dark:text-gray-100`} numberOfLines={2}>
               {product.name}
             </Text>
-            <Text className="text-indigo-600 font-semibold mt-0.5">{formatVnd(product.price)}</Text>
+            <Text className={`text-indigo-600 ${typo.label} mt-0.5`}>{formatVnd(product.price)}</Text>
           </View>
           <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <MaterialCommunityIcons name="close" size={22} color="#9ca3af" />
@@ -141,12 +143,12 @@ function QuickCheckoutSheet({ product, onClose, onSuccess }: CheckoutSheetProps)
             onChangeText={setNote}
             placeholder={t('quickOrder.addNote')}
             placeholderTextColor="#9ca3af"
-            className="border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-gray-100 mb-3"
+            className={`border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-gray-100 mb-3`}
             multiline
           />
         ) : (
           <TouchableOpacity onPress={() => setShowNote(true)} className="mb-3">
-            <Text className="text-sm text-gray-400">{t('quickOrder.addNote')} ↓</Text>
+            <Text className={`${typo.caption} text-gray-400`}>{t('quickOrder.addNote')} ↓</Text>
           </TouchableOpacity>
         )}
 
@@ -167,7 +169,7 @@ function QuickCheckoutSheet({ product, onClose, onSuccess }: CheckoutSheetProps)
                 size={18}
                 color={payment === opt.key ? '#4f46e5' : '#9ca3af'}
               />
-              <Text className={`text-xs font-medium mt-0.5 ${payment === opt.key ? 'text-indigo-600' : 'text-gray-500'}`}>
+              <Text className={`${typo.label} mt-0.5 ${payment === opt.key ? 'text-indigo-600' : 'text-gray-500'}`}>
                 {opt.label}
               </Text>
             </TouchableOpacity>
@@ -178,9 +180,9 @@ function QuickCheckoutSheet({ product, onClose, onSuccess }: CheckoutSheetProps)
         {error ? (
           <View className="bg-amber-50 dark:bg-amber-900/20 rounded-xl px-4 py-3 mb-3 flex-row items-center gap-2">
             <MaterialCommunityIcons name="alert-outline" size={18} color="#f59e0b" />
-            <Text className="flex-1 text-sm text-amber-700 dark:text-amber-400">{error}</Text>
+            <Text className={`flex-1 ${typo.caption} text-amber-700 dark:text-amber-400`}>{error}</Text>
             <TouchableOpacity onPress={handleConfirm}>
-              <Text className="text-sm font-semibold text-amber-700 dark:text-amber-400">{t('quickOrder.errorRetry')}</Text>
+              <Text className={`${typo.label} text-amber-700 dark:text-amber-400`}>{t('quickOrder.errorRetry')}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -193,7 +195,7 @@ function QuickCheckoutSheet({ product, onClose, onSuccess }: CheckoutSheetProps)
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text className="text-white font-bold text-base">{t('quickOrder.confirm')}</Text>
+            : <Text className={`text-white ${typo.body}`}>{t('quickOrder.confirm')}</Text>
           }
         </TouchableOpacity>
       </View>
@@ -211,6 +213,7 @@ type ConfigSheetProps = {
 
 function ConfigSheet({ pinned, onSave, onClose }: ConfigSheetProps) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const [draft, setDraft] = useState<PinnedProduct[]>(pinned);
   const [search, setSearch] = useState('');
 
@@ -248,21 +251,21 @@ function ConfigSheet({ pinned, onSave, onClose }: ConfigSheetProps) {
       <View className="bg-white dark:bg-gray-900 rounded-t-3xl px-5 pt-5 pb-8" style={{ maxHeight: '80%' }}>
         {/* Header */}
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-base font-bold text-gray-900 dark:text-gray-100">{t('quickOrder.configTitle')}</Text>
+          <Text className={`${typo.section} text-gray-900 dark:text-gray-100`}>{t('quickOrder.configTitle')}</Text>
           <TouchableOpacity onPress={onClose}>
             <MaterialCommunityIcons name="close" size={22} color="#9ca3af" />
           </TouchableOpacity>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mb-4">{t('quickOrder.configHint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-4`}>{t('quickOrder.configHint')}</Text>
 
         {/* Pinned list */}
         {draft.length > 0 && (
           <View className="mb-3">
-            <Text className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('quickOrder.pinned')} ({draft.length}/{MAX_PINNED})</Text>
+            <Text className={`${typo.captionBold} text-gray-400 uppercase mb-2`}>{t('quickOrder.pinned')} ({draft.length}/{MAX_PINNED})</Text>
             {draft.map((p) => (
               <View key={p.id} className="flex-row items-center py-2 border-b border-gray-100 dark:border-gray-800">
-                <Text className="flex-1 text-sm text-gray-900 dark:text-gray-100" numberOfLines={1}>{p.name}</Text>
-                <Text className="text-sm text-gray-500 mr-3">{formatVnd(p.price)}</Text>
+                <Text className={`flex-1 ${typo.caption} text-gray-900 dark:text-gray-100`} numberOfLines={1}>{p.name}</Text>
+                <Text className={`${typo.caption} text-gray-500 mr-3`}>{formatVnd(p.price)}</Text>
                 <TouchableOpacity onPress={() => removeProduct(p.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <MaterialCommunityIcons name="close-circle-outline" size={20} color="#ef4444" />
                 </TouchableOpacity>
@@ -277,7 +280,7 @@ function ConfigSheet({ pinned, onSave, onClose }: ConfigSheetProps) {
             <View className="flex-row items-center bg-gray-100 dark:bg-gray-800 rounded-xl px-3 py-2.5 mb-2">
               <MaterialCommunityIcons name="magnify" size={18} color="#9ca3af" />
               <TextInput
-                className="flex-1 ml-2 text-sm text-gray-800 dark:text-gray-200"
+                className={`flex-1 ml-2 ${typo.inputSize} text-gray-800 dark:text-gray-200`}
                 placeholder={t('quickOrder.searchPlaceholder')}
                 placeholderTextColor="#9ca3af"
                 value={search}
@@ -296,8 +299,8 @@ function ConfigSheet({ pinned, onSave, onClose }: ConfigSheetProps) {
                     disabled={already}
                     className={`flex-row items-center py-2.5 border-b border-gray-100 dark:border-gray-800 ${already ? 'opacity-40' : ''}`}
                   >
-                    <Text className="flex-1 text-sm text-gray-900 dark:text-gray-100" numberOfLines={1}>{p.name}</Text>
-                    <Text className="text-sm text-indigo-600 mr-3">{formatVnd(p.price)}</Text>
+                    <Text className={`flex-1 ${typo.caption} text-gray-900 dark:text-gray-100`} numberOfLines={1}>{p.name}</Text>
+                    <Text className={`${typo.caption} text-indigo-600 mr-3`}>{formatVnd(p.price)}</Text>
                     {already
                       ? <MaterialCommunityIcons name="check" size={18} color="#4f46e5" />
                       : <MaterialCommunityIcons name="plus-circle-outline" size={20} color="#4f46e5" />
@@ -310,7 +313,7 @@ function ConfigSheet({ pinned, onSave, onClose }: ConfigSheetProps) {
         )}
 
         {draft.length >= MAX_PINNED && (
-          <Text className="text-xs text-amber-500 mb-2">{t('quickOrder.maxReached')}</Text>
+          <Text className={`${typo.caption} text-amber-500 mb-2`}>{t('quickOrder.maxReached')}</Text>
         )}
 
         {/* Actions */}
@@ -319,13 +322,13 @@ function ConfigSheet({ pinned, onSave, onClose }: ConfigSheetProps) {
             onPress={handleReset}
             className="flex-1 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 items-center"
           >
-            <Text className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('quickOrder.resetToTopSellers')}</Text>
+            <Text className={`${typo.label} text-gray-600 dark:text-gray-400`}>{t('quickOrder.resetToTopSellers')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleSave}
             className="flex-1 py-3 rounded-2xl bg-indigo-600 items-center"
           >
-            <Text className="text-sm font-bold text-white">{t('common.save')}</Text>
+            <Text className={`${typo.label} text-white`}>{t('common.save')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -341,6 +344,7 @@ type Props = {
 
 export function QuickOrderStrip({ onOrderCreated }: Props) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const qc = useQueryClient();
   const [pinned, setPinned] = useState<PinnedProduct[] | null>(null); // null = not loaded yet
   const [checkoutProduct, setCheckoutProduct] = useState<PinnedProduct | null>(null);
@@ -383,7 +387,7 @@ export function QuickOrderStrip({ onOrderCreated }: Props) {
     <>
       <View className="bg-white dark:bg-gray-800 px-4 pt-3 pb-2 border-b border-gray-100 dark:border-gray-700">
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+          <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase`}>
             {t('quickOrder.strip')}
           </Text>
           <TouchableOpacity onPress={() => setConfigOpen(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -399,10 +403,10 @@ export function QuickOrderStrip({ onOrderCreated }: Props) {
               className="bg-gray-50 dark:bg-gray-700 rounded-2xl px-3 py-2.5 items-start"
               style={{ minWidth: 110, maxWidth: 140 }}
             >
-              <Text className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1" numberOfLines={2}>
+              <Text className={`${typo.label} text-gray-900 dark:text-gray-100 mb-1`} numberOfLines={2}>
                 {p.name}
               </Text>
-              <Text className="text-xs text-indigo-600 font-medium">
+              <Text className={`${typo.caption} text-indigo-600`}>
                 {p.price > 0 ? formatVnd(p.price) : t('pos.goldPrice')}
               </Text>
             </TouchableOpacity>

@@ -1,0 +1,38 @@
+appId: com.knp.tappypos
+name: "SPA 11 Activity log — list renders, filter tabs (ACTIVITY_LOG feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Activity Log via More → Settings ──────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- tapOn: "Nhật ký hoạt động"
+- assertVisible: "Nhật ký hoạt động"
+- assertNotVisible: "500"
+
+# ── AL01: First entry is visible ──────────────────────────────────────────────
+- assertVisible:
+    id: "activity-entry-0"
+    optional: true
+
+# ── AL02: Filter by ORDER action ─────────────────────────────────────────────
+- tapOn: "Đơn hàng"
+    optional: true
+- assertNotVisible: "500"
+
+# ── AL03: Filter by product action ───────────────────────────────────────────
+- tapOn: "Sản phẩm"
+    optional: true
+- assertNotVisible: "500"
+
+# ── AL04: Reset filter ────────────────────────────────────────────────────────
+- tapOn: "Tất cả"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

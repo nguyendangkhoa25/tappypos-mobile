@@ -1,0 +1,28 @@
+appId: com.knp.tappypos
+name: "MKUP 16 Customer loyalty — points balance visible in customer detail (LOYALTY feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+
+- tapOn:
+    id: "customer-row-0"
+- assertVisible: "Điểm tích lũy"
+    optional: true
+
+- tapOn: "Xem lịch sử"
+    optional: true
+- assertVisible:
+    id: "loyalty-balance"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

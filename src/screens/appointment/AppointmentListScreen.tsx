@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,11 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { appointmentApi, type AppointmentData } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import { Skeleton } from '../../components/Skeleton';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
@@ -67,58 +68,62 @@ function useStatusStyle(status: AppointmentData['status'], t: ReturnType<typeof 
 
 function AppointmentCard({
   item,
+  index,
   onPress,
 }: {
   item: AppointmentData;
+  index: number;
   onPress: () => void;
 }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const s = useStatusStyle(item.status, t);
   const isDone = item.status === 'CANCELLED' || item.status === 'NO_SHOW' || item.status === 'CHECKED_IN';
 
   return (
     <TouchableOpacity
+      testID={`appointment-card-${index}`}
       onPress={onPress}
       className={`bg-white dark:bg-gray-800 rounded-2xl p-4 mb-3 mx-4 shadow-sm border border-gray-100 dark:border-gray-700 ${isDone ? 'opacity-60' : ''}`}
       activeOpacity={0.7}
     >
       <View className="flex-row items-start justify-between">
         <View className="flex-1 mr-2">
-          <Text className="text-base font-bold text-gray-900 dark:text-white" numberOfLines={1}>
+          <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
             {item.customerName}
           </Text>
           {item.customerPhone ? (
-            <Text className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.customerPhone}</Text>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{item.customerPhone}</Text>
           ) : null}
         </View>
         <View className={`px-2.5 py-1 rounded-full ${s.bg}`}>
-          <Text className={`text-xs font-semibold ${s.text}`}>{s.label}</Text>
+          <Text className={`${typo.captionBold} ${s.text}`}>{s.label}</Text>
         </View>
       </View>
 
       <View className="flex-row items-center gap-3 mt-2.5">
         <View className="flex-row items-center gap-1">
           <MaterialCommunityIcons name="clock-outline" size={13} color="#9ca3af" />
-          <Text className="text-xs text-gray-500 dark:text-gray-400">
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>
             {formatTime(item.scheduledStartTime)}
           </Text>
         </View>
         {item.durationMinutes > 0 && (
           <View className="flex-row items-center gap-1">
             <MaterialCommunityIcons name="timer-outline" size={13} color="#9ca3af" />
-            <Text className="text-xs text-gray-500 dark:text-gray-400">{item.durationMinutes}p</Text>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{item.durationMinutes}p</Text>
           </View>
         )}
         {item.services.length > 0 && (
           <View className="flex-row items-center gap-1">
-            <MaterialCommunityIcons name="scissors-cutting" size={13} color="#9ca3af" />
-            <Text className="text-xs text-gray-500 dark:text-gray-400">{item.services.length} dịch vụ</Text>
+            <MaterialCommunityIcons name="clipboard-list-outline" size={13} color="#9ca3af" />
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{item.services.length} dịch vụ</Text>
           </View>
         )}
       </View>
 
       {item.note ? (
-        <Text className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 italic" numberOfLines={1}>
+        <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-1.5 italic`} numberOfLines={1}>
           {item.note}
         </Text>
       ) : null}
@@ -140,52 +145,59 @@ function LoadingSkeleton() {
 
 export function AppointmentListScreen({ navigation }: Props) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
 
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState(today);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const dateStr = toDateStr(selectedDate);
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['appointments', dateStr],
     queryFn: async () => {
       const res = await appointmentApi.list(dateStr);
       return res.data.data;
     },
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 
   const items: AppointmentData[] = data?.content ?? [];
-  const groups = groupByHour(items);
+  const groups = useMemo(() => groupByHour(items), [items]);
 
   const isToday = toDateStr(today) === dateStr;
   const isTomorrow = toDateStr(new Date(today.getTime() + 86400000)) === dateStr;
 
-  function shiftDay(delta: number) {
+  const shiftDay = useCallback((delta: number) => {
     setSelectedDate((d) => {
       const next = new Date(d);
       next.setDate(next.getDate() + delta);
       return next;
     });
-  }
+  }, []);
 
-  const handleRefresh = useCallback(() => { refetch(); }, [refetch]);
+  const handleRefresh = useCallback(async () => {
+    setIsManualRefreshing(true);
+    await refetch();
+    setIsManualRefreshing(false);
+  }, [refetch]);
 
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-gray-900" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#4f46e5" />
-        </TouchableOpacity>
-        <Text className="text-base font-bold text-gray-900 dark:text-white">{t('appt.title')}</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('AppointmentForm', {})}
-          hitSlop={8}
-        >
-          <MaterialCommunityIcons name="plus" size={24} color="#4f46e5" />
-        </TouchableOpacity>
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center mb-0.5">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+          </TouchableOpacity>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('appt.title')}</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('AppointmentForm', {})} hitSlop={8}>
+            <MaterialCommunityIcons name="plus" size={24} color="#4f46e5" />
+          </TouchableOpacity>
+        </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-3 mt-0.5`}>{t('appt.hint')}</Text>
       </View>
 
       {/* Date navigator */}
@@ -194,12 +206,12 @@ export function AppointmentListScreen({ navigation }: Props) {
           <MaterialCommunityIcons name="chevron-left" size={24} color="#6b7280" />
         </TouchableOpacity>
         <View className="items-center">
-          <Text className="text-sm font-bold text-gray-900 dark:text-white">
+          <Text className={`${typo.labelBold} text-gray-900 dark:text-white`}>
             {isToday ? t('appt.today') : isTomorrow ? t('appt.tomorrow') : formatDisplayDate(dateStr)}
           </Text>
           {!isToday && !isTomorrow && (
             <TouchableOpacity onPress={() => setSelectedDate(today)}>
-              <Text className="text-xs text-indigo-500 mt-0.5">{t('appt.today')}</Text>
+              <Text className={`${typo.caption} text-indigo-500 mt-0.5`}>{t('appt.today')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -221,20 +233,22 @@ export function AppointmentListScreen({ navigation }: Props) {
         />
       ) : (
         <FlatList
+          showsVerticalScrollIndicator={false}
           data={groups}
           keyExtractor={(g) => g.hour}
-          refreshControl={<RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} />}
+          refreshControl={<RefreshControl refreshing={isManualRefreshing} onRefresh={handleRefresh} />}
           contentContainerStyle={{ paddingBottom: insets.bottom + 80, paddingTop: 8 }}
-          renderItem={({ item: group }) => (
+          renderItem={({ item: group, index: gIdx }) => (
             <View>
               <View className="flex-row items-center px-4 mb-2 mt-3">
-                <Text className="text-xs font-bold text-indigo-500 uppercase tracking-wide">{group.hour}</Text>
+                <Text className={`${typo.captionBold} text-indigo-500 uppercase tracking-wide`}>{group.hour}</Text>
                 <View className="flex-1 h-px bg-indigo-100 dark:bg-indigo-900/30 ml-2" />
               </View>
-              {group.data.map((appt) => (
+              {group.data.map((appt, aIdx) => (
                 <AppointmentCard
                   key={appt.id}
                   item={appt}
+                  index={gIdx * 100 + aIdx}
                   onPress={() => navigation.navigate('AppointmentDetail', { appointmentId: appt.id })}
                 />
               ))}
@@ -245,6 +259,7 @@ export function AppointmentListScreen({ navigation }: Props) {
 
       {/* FAB */}
       <TouchableOpacity
+        testID="appointment-add-fab"
         onPress={() => navigation.navigate('AppointmentForm', {})}
         className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-indigo-600 items-center justify-center shadow-lg"
         style={{ bottom: insets.bottom + 16 }}

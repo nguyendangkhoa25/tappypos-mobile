@@ -1,0 +1,39 @@
+appId: com.knp.tappypos
+name: "MKUP 06 Staff management — list, add (USER feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-staff"
+- assertVisible: "Nhân viên"
+- assertNotVisible: "500"
+
+- assertVisible:
+    id: "staff-row-0"
+
+- tapOn:
+    id: "staff-add-fab"
+- assertVisible: "Thêm nhân viên"
+    optional: true
+- assertVisible: "Tạo tài khoản"
+    optional: true
+
+- tapOn:
+    id: "staff-fullname"
+- inputText: "Thợ Makeup Test"
+
+- tapOn:
+    id: "staff-username"
+- inputText: "mkup_nv_test_e2e"
+
+- tapOn:
+    id: "staff-save-btn"
+- assertVisible: "Thợ Makeup Test"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

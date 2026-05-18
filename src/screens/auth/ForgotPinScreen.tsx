@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PasswordInput } from '../../components/PasswordInput';
+import { useTypography } from '../../hooks/useTypography';
 import { authApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useAlertStore } from '../../store/alertStore';
@@ -23,6 +24,7 @@ type Step = 'verify' | 'new_pin' | 'confirm_pin';
 export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const { show: showAlert } = useAlertStore();
   const { storedPhone, setAuthenticated, setPinEnabled } = useAuthStore();
   const [step, setStep] = useState<Step>('verify');
@@ -94,15 +96,15 @@ export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
           <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
         </TouchableOpacity>
 
-        <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('auth.forgotPin.title')}</Text>
-        <Text className="text-sm text-gray-500 dark:text-gray-400 mb-10 leading-5">
+        <Text className={`${typo.heading} text-gray-900 dark:text-white mb-2`}>{t('auth.forgotPin.title')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-10 leading-5`}>
           {t('auth.forgotPinExt.subtitle')}
         </Text>
 
         {step === 'verify' && (
           <>
             <View className="mb-6">
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
                 {t('auth.forgotPinExt.passwordLabel')}
               </Text>
               <PasswordInput
@@ -125,7 +127,7 @@ export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text
-                  className={`font-bold text-base ${!password ? 'text-gray-400 dark:text-gray-500' : 'text-white'}`}
+                  className={`${typo.labelBold} ${!password ? 'text-gray-400 dark:text-gray-500' : 'text-white'}`}
                 >
                   {t('auth.forgotPinExt.verify')}
                 </Text>
@@ -136,10 +138,10 @@ export function ForgotPinScreen({ navigation }: AuthScreenProps<'ForgotPin'>) {
 
         {(step === 'new_pin' || step === 'confirm_pin') && (
           <View className="items-center mt-4">
-            <Text className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+            <Text className={`${typo.section} text-gray-800 dark:text-gray-200 mb-2`}>
               {step === 'new_pin' ? t('auth.forgotPinExt.newPinTitle') : t('auth.pinSetup.confirmTitle')}
             </Text>
-            <Text className="text-sm text-gray-500 dark:text-gray-400 mb-8 text-center">
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-8 text-center`}>
               {step === 'new_pin'
                 ? t('auth.forgotPinExt.newPinSubtitle')
                 : t('auth.pinSetup.confirmSubtitle')}

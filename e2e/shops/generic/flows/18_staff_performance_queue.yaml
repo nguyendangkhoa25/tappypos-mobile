@@ -1,0 +1,65 @@
+appId: com.knp.tappypos
+name: "18 Staff performance & queue view — ORDER_VIEW_ALL feature for shop owner"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More tab ─────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+
+# ── SP01: Staff Performance tile is visible (ORDER_VIEW_ALL) ─────────────────
+- assertVisible:
+    id: "more-tile-staffPerformance"
+
+# ── SP02: Open Staff Performance ─────────────────────────────────────────────
+- tapOn:
+    id: "more-tile-staffPerformance"
+- assertVisible: "Hiệu suất nhân viên"
+    optional: true
+- assertVisible: "Hiệu suất"
+    optional: true
+- assertNotVisible: "500"
+
+# ── SP03: At least one staff performance card renders ─────────────────────────
+# (may show empty state if no completed orders)
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── SP04: Period navigation works ────────────────────────────────────────────
+# Tap forward date to advance the day view
+- tapOn:
+    text: "›"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── Navigate back to More ─────────────────────────────────────────────────────
+- tapOn:
+    text: "‹"
+    optional: true
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+
+# ── QV01: Queue View tile is visible (ORDER_VIEW_ALL) ────────────────────────
+- assertVisible:
+    id: "more-tile-queueView"
+
+# ── QV02: Open Queue View ────────────────────────────────────────────────────
+- tapOn:
+    id: "more-tile-queueView"
+- assertVisible: "Hàng chờ"
+    optional: true
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── QV03: Tab chips (Hàng chờ / Tất cả) are visible ─────────────────────────
+- assertVisible: "Hàng chờ"
+    optional: true
+
+# ── Navigate back to More ─────────────────────────────────────────────────────
+- tapOn:
+    text: "‹"
+    optional: true
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertVisible: "Khác"

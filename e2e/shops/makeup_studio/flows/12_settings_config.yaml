@@ -1,0 +1,33 @@
+appId: com.knp.tappypos
+name: "MKUP 12 Settings — shop info, POS config, bank accounts (SHOP_INFO feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- assertNotVisible: "500"
+
+- tapOn: "Thông tin cửa hàng"
+- assertVisible: "Thông tin cửa hàng"
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+
+- tapOn: "Cấu hình POS"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+    optional: true
+
+- tapOn: "Tài khoản ngân hàng"
+- assertVisible: "Tài khoản ngân hàng"
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

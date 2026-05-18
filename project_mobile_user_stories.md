@@ -34,10 +34,21 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 
 **US-09** As a returning shop owner, I want to switch shops from the login screen, so that I can log in to a different tenant without reinstalling the app.
 
+**US-153** As a user whose account is not linked to any shop (e.g. partial registration, data error), I want to see a clear error message when I try to log in, so that I know to contact support instead of repeatedly retrying.
+
+**US-154** As a barber/nail/spa/beauty shop owner, I want the Inventory menu item hidden from my app, so that I'm not confused by a feature that doesn't apply to my service-based business.
+
+**Acceptance notes (US-154):**
+- Service shop types (BARBER_SHOP, BARBER_SHOP_MEN, HAIR_SALON, NAIL_SHOP, LASH_PMU_STUDIO, SPA_SHOP, MASSAGE_SHOP, BEAUTY_CLINIC, MAKEUP_STUDIO) do not receive `INVENTORY` in their tenant feature set
+- `MoreScreen` gates the Inventory item with `has('INVENTORY')` — hidden when absent, no 403
+- Product-selling shops (CONVENIENCE_STORE, PHARMACY, ELECTRONICS, FASHION, JEWELRY, PAWN_SHOP etc.) still receive `INVENTORY`
+- A master admin can grant `INVENTORY` to a specific service shop on request if they sell retail products alongside their services
+
 **Acceptance notes:**
 - US-01: NOT_FOUND → inline error; SUSPENDED → alert with support contact
 - US-06: strength bar shows Yếu / Trung bình / Khá / Mạnh; 5-rule checklist updates live
 - US-07: T&C auto-checks when user scrolls to bottom of modal sheet
+- US-153: backend returns 400 "Tài khoản chưa được liên kết với cửa hàng nào. Vui lòng liên hệ quản trị viên." when user has no `tenant_id` and no master/agent role; mobile shows this message in an alert with a support contact button; this prevents the security hole where orphaned users could receive a master-user JWT
 
 ---
 
@@ -382,6 +393,19 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 
 ---
 
+## Epic 54 — Font Size Preference
+
+**US-169** As a shop owner, I want to choose a font size (Nhỏ / Vừa / Lớn) in Settings → Giao diện & Ngôn ngữ, so that I can read the app comfortably whether I'm using a small phone or need larger text.
+
+**Acceptance notes:**
+- 3 options: Nhỏ (compact, more info per screen) / Vừa (default, matches Report screen design) / Lớn (accessibility-friendly, +50% on headings)
+- Preference persisted to SecureStore key `fontScale`; survives app restart
+- Setting takes effect immediately across all screens that implement `useTypography()`
+- Rollout is incremental — screens adopt `useTypography()` one by one; unadopted screens stay at their existing size
+- See [[project_mobile_typography]] for full tier system and rollout status
+
+---
+
 ## Epic 55 — Cash Default for Street Food
 
 **US-170** As a street food stall owner, I want the checkout to pre-select "Tiền mặt" as the payment method by default, so that I don't need to tap anything for my most common transaction type.
@@ -414,9 +438,20 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 
 **US-44** As a shop owner, I want to view my order history filtered by date, payment method, and status, so that I can find a specific order quickly.
 
+**US-210** As a nail/barber/service shop owner, when I switch to the "Đơn Hàng" tab from the Create Order screen, I want to see the Orders screen title and hint message at the top, so that I always know which screen I'm on regardless of how I got there.
+
+**US-213** As a shop owner on the Orders screen, I want to see a period selector (Today / Week / Month / Year), a revenue + order count + avg-order-value summary, and a trend bar chart — all scoped to the selected period — so that I can gauge performance at a glance without opening a separate report.
+
+**US-214** As a shop owner, when I tap a status filter chip (e.g. Completed, Processing) on the Orders screen, I want the list to immediately clear and reload with only matching orders, so that I don't see a mix of old and new results while the new query is loading.
+
 **US-45** As a shop owner, I want to tap an order to see its full details (items, payment, customer), so that I can answer customer queries or resolve disputes.
 
 **US-46** As a shop owner, I want to cancel or complete an order from the detail screen, so that I can manage order status directly on my phone without using the web dashboard.
+
+**Acceptance notes (US-44, US-210, US-213, US-214):**
+- **US-210:** `OrderListScreen` always renders the title (`orders.title`) and hint (`orders.hint`) at the top of the header, regardless of `activeView`. When `activeView === 'ORDERS'` (navigated from BarberServiceScreen), the tab toggle (Bán hàng / Đơn Hàng) is rendered *below* the hint, not instead of it. `mb-2` on the hint when toggle follows; `mb-3` when no toggle.
+- **US-213:** Period state: `'day' | 'week' | 'month' | 'year'`; default `'day'`. `getPeriodRange(period)` computes `{ from, to, granularity }` — day→hour, week/month→day, year→month. Order list query key includes `from` and `to` so the list is always scoped to the selected period. Separate `orderApi.summary({ from, to })` query feeds 3 KPI cards (Doanh thu / Số đơn / TB/đơn). Separate `orderApi.chart({ from, to, granularity })` query feeds `<BarChart color="#4f46e5">` rendered in `ListHeaderComponent`. Changing period resets `page` and `allOrders`. Status filter chips and search are additive within the period.
+- **US-214:** Root cause — `allOrders` was not cleared when the status filter or search changed; the old list persisted visibly until the new query returned. Fix: `handleStatusChange`, `commitSearch`, and the search-clear button all call `setAllOrders([])` alongside `setPage(0)`. The list immediately becomes empty (skeleton shown via `isLoading` path) and repopulates when the new query resolves. Period change already called `setAllOrders([])` via its own `useEffect`.
 
 **Acceptance notes (US-45, US-46):**
 - OrderDetailScreen: indigo header + status badge; 4 cards (order meta, items, totals, cancellation)
@@ -602,10 +637,18 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 
 **US-53** As a shop owner, I want to update or delete an expense I recorded incorrectly, so that my reports stay accurate.
 
+**US-211** As a shop owner, I want the "Cố định" and "Phát sinh" filter chips on the Expenses screen to actually filter my expense list, so that I can focus on one cost group at a time.
+
+**US-215** As a shop owner, I want the expenses list to be sorted newest-first and to show whether each expense is "Cố định" or "Phát sinh" on the row, so that I can see my latest spending at a glance and immediately know which type each entry belongs to.
+
+**US-216** As a shop owner, I want to see order analytics on the customer detail screen — a period picker (30 days / 3 months / 6 months / 12 months), three KPI cards (total revenue, completed orders, avg order value), and a trend chart with day/week/month/year granularity — so that I can understand how much a customer contributes to my revenue over time.
+
 **Acceptance notes:**
 - US-48: chips have emoji + color; ordered by shop-type commonness; reorder on typing (diacritic-insensitive)
 - US-52: auto-prompt once per month on first Expenses screen open (AsyncStorage key); also available via manual "Sao chép" button; both use `useExpenseClonePrompt` hook
 - US-51: "Cố định" type in Add sheet + "Lưu vào chi phí mặc định" toggle
+- **US-211:** Filter chips are **client-side only** — the backend `category` param accepts only `ExpenseCategory` enum values (RENT, ELECTRICITY, etc.), not FIXED/VARIABLE. Do NOT pass `categoryFilter` as a query param. Instead, derive `displayedExpenses` from `allExpenses` using `FIXED_CATEGORIES` set (defined in `expenseCategories.ts`): RENT, ELECTRICITY, WATER, INTERNET, PHONE, SOFTWARE, INSURANCE. "Fixed" shows items whose `category` is in the set; "Variable" shows the rest. Empty state when a filter is active shows `expenses.emptyFilter` and hides the "Copy defaults" button.
+- **US-215:** Sort: backend receives `sort=date,desc` (or equivalent param); if the API doesn't support sorting, sort client-side on `allExpenses` by `date` descending before setting state. Type badge: each expense row shows a small pill — "Cố định" (gray) when `FIXED_CATEGORIES.has(expense.category)`, "Phát sinh" (amber) otherwise — positioned alongside the category name on the row.
 
 ---
 
@@ -939,11 +982,17 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 
 **US-153** As a barber shop owner, I want to see how many services are currently waiting and in-progress at the top of the selling screen, so that I can gauge shop busyness at a glance before creating a new order.
 
+**US-209** As a nail/barber/service shop owner, I want to see a standard hint message below the screen title on the Create Order screen, so that I know exactly how to tap a service to start an order and understand the flow without asking staff.
+
+**US-212** As a nail/barber/service shop owner, when I switch to the Orders tab and come back to the Create Order tab, I want my previously selected category filter to still be active, so that I don't lose my browsing context mid-session.
+
 **Acceptance notes:**
 - `QueueStatusBadge` in `BarberServiceScreen` header; two pills: amber "N chờ" (PENDING) + indigo "N đang làm" (IN_PROGRESS)
 - Both pills hidden when counts are zero
 - Data from `orderApi.pendingWorkItems({ size: 100 })`; `staleTime: 30_000`; invalidated after every checkout
 - Only shown on `BARBER_SHOP` (inside `BarberServiceScreen`); no feature gate beyond `POS`/`ORDER`
+- **US-209:** `BarberServiceScreen` renders `<Text className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-0">{t('barber.hint')}</Text>` between the title row and the view toggle (grid/list). The `barber.hint` i18n key provides: "💇 Tap a service to create an order and send it to the work queue — assign a staff member and add a note before confirming.\nFor retail products, set the quantity then confirm to complete the sale directly." (VI: "💇 Chạm vào dịch vụ để tạo đơn hàng và gửi vào hàng chờ — phân công nhân viên và thêm ghi chú trước khi xác nhận.\nVới sản phẩm bán lẻ, đặt số lượng rồi xác nhận để hoàn tất giao dịch ngay.")
+- **US-212:** `BarberServiceScreen` unmounts when `activeView` switches to `'ORDERS'` (POSMainScreen conditional render). `barberCategoryId` is stored in `useSellingStore` (Zustand, survives unmount) and used to initialise `selectedCategoryId` on remount: `useState<string | null>(barberCategoryId)`. Every category chip press calls `selectCategory(id)` which sets both local state and `setBarberCategoryId(id)`. `staleTime: 30_000` on the barberServices query avoids a redundant network call when switching back within 30 s. Loading condition `(productsLoading || (productsFetching && allServices.length === 0)) && page === 0` shows the skeleton grid instead of EmptyState during the initial fetch on remount.
 
 ---
 
@@ -1024,6 +1073,156 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 
 ---
 
+## Epic 61 — Pawn Shop / Tiệm cầm đồ (PAWN feature)
+
+**US-178** As a pawn shop owner, I want the Sell tab to show my list of active pawn contracts (instead of a product POS), so that managing contracts is my primary daily workflow.
+
+**US-179** As a pawn shop owner, I want to create a new pawn contract by selecting a customer and entering item details and loan terms, so the transaction is recorded with all required information.
+- Customer: search existing by name/phone, or walk-in (enter name + phone only, no full profile required)
+- Required: item name, pawn amount, interest rate, start date, due date
+
+**US-180** As a pawn shop owner, I want to select the item category (Điện tử / Phương tiện / Đồng hồ / Bất động sản / Chung), so I can enter the right category-specific fields for each asset type.
+
+**US-181** As a pawn shop owner, I want to enter category-specific details for each item type, so I have proof of the asset's identity:
+- Điện tử: hãng, model, IMEI/serial, dung lượng, màu, tình trạng
+- Phương tiện: biển số, hãng xe, model, năm SX, số khung, số máy
+- Đồng hồ: hãng, model, số serial, tình trạng
+- Bất động sản: địa chỉ, diện tích, loại giấy tờ
+- Chung: ghi chú tự do
+
+**US-182** As a pawn shop owner, I want to record item weight (and gem weight separately for jewelry), plus estimated market value, so I have an appraisal record alongside the loan amount.
+
+**US-183** As a pawn shop owner, I want to see the current gold buy/sell price as a reference banner when creating a pawn contract, so I can quickly estimate a fair loan amount for gold and jewelry items without leaving the form.
+
+**US-184** As a pawn shop owner, I want the interest rate field to pre-fill from my shop's configured default, so I don't re-enter it on every new contract.
+
+**US-185** As a pawn shop owner, I want to choose daily or monthly interest calculation mode per contract, so each contract matches the terms I verbally agreed with the customer.
+- Daily: principal × rate / 30 × days_held
+- Monthly: principal × rate × ceil(days_held / 30)
+
+**US-186** As a pawn shop owner, I want to view all active pawn contracts in a list sorted by due date (overdue first), so I know which customers to follow up on without manually scanning the list.
+
+**US-187** As a pawn shop owner, I want overdue contracts to be highlighted in red with an "X ngày quá hạn" badge, so critical items are impossible to miss.
+
+**US-188** As a pawn shop owner, I want a KPI row at the top of the pawn list showing total active contracts, total money loaned out (₫), and overdue count, so I have a quick business snapshot when I open the app.
+
+**US-189** As a pawn shop owner, I want to filter contracts by status (Đang cầm / Đã chuộc / Thanh lý / Hủy), so I can review completed or forfeited contracts without mixing them with active ones.
+
+**US-190** As a pawn shop owner, I want to search contracts by customer name, phone number, or item name, so I can find a specific contract in seconds when a customer calls.
+
+**US-191** As a pawn shop owner, I want to tap a contract card to view its full details — item info, customer, loan terms, current interest, and action history — so I have everything I need without switching screens.
+
+**US-192** As a pawn shop owner, I want to see a live interest meter on the detail screen (days held + accumulated interest + total to redeem), so I can quote the customer immediately on a phone call without doing manual maths.
+
+**US-193** As a pawn shop owner, I want to see a chronological audit timeline on the detail screen (created, extended, money requested, etc.), so I have a complete record of everything that happened on a contract.
+
+**US-194** As a pawn shop owner, I want to tap "Chuộc đồ" to calculate the exact redemption amount (principal + interest up to a chosen date), confirm the amount, and close the contract, so the transaction is finalised in a single flow.
+- Date picker defaults to today; can choose a past or future date
+- Breakdown shown: gốc + lãi = tổng cần chuộc
+
+**US-195** As a pawn shop owner, I want to tap "Gia hạn" to extend a contract's due date and optionally settle accumulated interest now, so the customer gets more time and our books stay clean.
+
+**US-196** As a pawn shop owner, I want to tap "Thanh lý" to forfeit a contract when the customer doesn't redeem, entering the forfeited amount, a reason, and the forfeiture date, so the item is recorded as shop property.
+
+**US-197** As a pawn shop owner, I want to see whether a forfeited contract resulted in a gain or loss (forfeited amount vs. principal loaned), so I can assess deal quality at a glance.
+
+**US-198** As a pawn shop owner, I want to record when a customer requests additional cash against an existing pawn ("xin thêm tiền"), entering the new amount and date, so the total outstanding is tracked accurately.
+
+**US-199** As a pawn shop owner, I want to see all additional disbursements for a contract listed in order, so I always know the full lending history.
+
+**US-200** As a pawn shop owner, I want to cancel a contract with a required reason text (for data-entry errors), so incorrect records can be voided without losing the audit trail.
+
+**US-201** As a pawn shop owner, I want to configure my shop's default interest rate and interest calculation method (daily / monthly), so every new contract pre-fills with the right values and I only adjust when terms differ.
+
+**US-202** As a pawn shop owner, I want contracts due in the next 3 days to appear in a "Sắp đáo hạn" chip filter, so I can proactively reach out to customers before they go overdue.
+
+**US-203** As a pawn shop owner, I want a red badge on the Sell tab showing the count of overdue contracts, so I notice them the moment I open the app even if I'm on a different screen.
+
+**US-204** As a pawn shop owner, I want to see a customer's full pawn history (all past and active contracts) from their Customer Detail screen, so I know their track record before creating a new contract.
+
+**US-205** As a pawn shop owner, I want to initiate a new pawn contract directly from a customer's profile, so I don't have to re-enter their details.
+
+**US-206** As a pawn shop owner, I want to update an existing pawn contract's item details or terms (before any lifecycle action like redeem or forfeit), so I can correct mistakes without cancelling and recreating it.
+
+**US-207** As a pawn shop owner, I want to hide a contract from the default list view (without deleting it), so test contracts or sensitive records don't appear in daily operation.
+
+**US-208** As a pawn shop owner, I want to export my pawn contract list to an Excel file, so I can share it with family or an accountant and keep an offline backup.
+
+**Acceptance notes:**
+- PAWN feature in JWT gates the entire module; `POSMainScreen` renders `<PawnListScreen />` when `shopTypeCode === 'PAWN_SHOP'`
+- `pawnApi` wraps all backend endpoints: `POST /pawns`, `POST /pawns/find`, `GET/PUT /pawns/{id}`, `DELETE /pawns`, `PATCH /pawns/{id}/cancel`, `POST /pawns/{id}/forfeit`, `POST /pawns/{id}/redeem`, `PUT /pawns/{id}/extend`, `POST /pawns/{id}/request-money`, `POST /pawns/kpi-section`, `GET/POST /pawns/settings`
+- `PawnListScreen`: `staleTime: 30_000`; `useFocusEffect` refetch; status filter tabs; search bar; KPI chips
+- `PawnDetailScreen`: action buttons context-sensitive by `pawnStatus` (PAWNED → Chuộc / Gia hạn / Thanh lý / Xin thêm tiền; others → read-only)
+- `PawnFormScreen`: customer picker (search + walk-in toggle); category chip selector; category-specific fields revealed by selection; gold price banner from `goldPriceApi.getCurrent()` with `staleTime: 5 * 60_000`
+- Action sheets (Redeem, Extend, Forfeit) rendered as bottom sheets inside `PawnDetailScreen`
+- Interest meter: computed client-side from `pawnAmount`, `interestRate`, `pawnDate`, `interestCalcMode` — no extra API call
+- Overdue badge: `counts.overdue > 0` drives a red dot on the Sell tab icon (same mechanism as table grid's status dots)
+- US-204/205: `CustomerDetail` screen gets a new "Lịch sử cầm đồ" section; tapping "Tạo hợp đồng cầm" pre-fills `customerId`
+- US-208: `POST /pawns/export` → downloads `.xlsx`; share via native share sheet
+
+---
+
+## Epic 62 — Staff Account Username with Tenant Suffix
+
+**US-217** As a shop owner creating a new staff account, I want to see the tenant suffix (e.g. `.24152`) displayed next to the username input, so that I understand what the full login username will be before I press save.
+
+**Acceptance notes:**
+- `tenantSuffix` is derived from `rawTenantId` using regex `/(\\d+)$/` — extracts the numeric segment after the last `-` (e.g. `bar-24152` → `24152`).
+- A small gray Text sits to the right of the username TextInput: `.{tenantSuffix}` (e.g. `.24152`).
+- On submit, `fullUsername = username.trim() + '.' + tenantSuffix`; this full value is sent to `POST /users` as `username`.
+- Edit mode: the suffix is informational only; the username field is disabled (read-only) on edit to prevent accidental changes.
+- If `tenantSuffix` is empty (can't parse), no suffix is shown and `fullUsername = username.trim()` (safe fallback).
+
+---
+
+## Epic 63 — Extended Staff Form with Collapsible Sections
+
+**US-218** As a shop owner managing my staff, I want the employee creation/edit form to be organized into collapsible sections (Account, Contact, Work Info, Personal, ID Card, Notes), so that I can see only the fields I need and expand sections when recording detailed HR information.
+
+**Acceptance notes:**
+- Section 1 "Tài khoản" (always open): username (+ suffix), password, nickname, full name, role — the minimum required to create a staff account.
+- Section 2 "Liên hệ" (collapsed by default): phone, email.
+- Section 3 "Thông tin công việc" (collapsed): hire date (DD/MM/YYYY → ISO), base salary (VND), commission rate (%).
+- Section 4 "Cá nhân" (collapsed): date of birth (DD/MM/YYYY → ISO), gender (Male/Female/Other dropdown), permanent address.
+- Section 5 "CMND / CCCD" (collapsed): ID card number, issue date (DD/MM/YYYY → ISO), issue place.
+- Section 6 "Ghi chú" (collapsed): free-text notes field (multiline).
+- All section-2–6 fields are optional — form submits successfully with only section-1 filled.
+- On edit mode load: any section with non-null data in `employeeProfile` auto-expands via a `useEffect` that adds the section key to the `openSections` Set.
+- Date helpers: `toIsoDate(DD/MM/YYYY) → YYYY-MM-DD | undefined`; `fromIsoDate(ISO | null) → DD/MM/YYYY | ''`.
+- `CollapseSection` component: header row = icon + title + chevron; body is hidden when closed; `isOpen` controlled by parent Set state.
+- Employee profile fields (all section-2–6) are persisted via `employeeApi.create(payload)` or `employeeApi.update(id, payload)` after the user account save succeeds.
+- Backend migration V006 adds `nick_name VARCHAR(100)` and makes `position` nullable on `employees`.
+
+---
+
+## Epic 64 — Employee Performance Dashboard on Staff Detail Screen
+
+**US-219** As a shop owner with ORDER_VIEW_ALL access, I want to see a performance summary and trend chart for each staff member on their detail screen, so that I can understand their contribution to revenue and order count over time.
+
+**US-220** As a shop owner with ORDER_VIEW_ALL access, I want to see the recent orders created by a specific staff member with a status filter, so that I can review their order history and spot issues without leaving the employee detail screen.
+
+**Acceptance notes (US-219):**
+- Performance section only renders in edit mode and only when `useAuthStore((s) => s.features).includes('ORDER_VIEW_ALL')`.
+- Summary KPIs (current month, from 1st to today): total revenue, order count, avg order value, completed count, cancelled count — fetched from `GET /orders/by-staff/summary?createdBy=&from=&to=`.
+- Trend chart: `GET /orders/by-staff/chart?createdBy=&from=&to=&granularity=` — granularity tabs (Ngày / Tuần / Tháng / Năm); data feeds `<TrendChart>` (BarChartDataPoint[]).
+- Both queries are lazy: only fire when the "Hiệu suất" section is open (`openSections.has('perf')`); `staleTime: 60_000`.
+- `staffUsername` is the full username (including `.{tenantSuffix}`) obtained from `existingUser.username` in edit mode.
+- Backend: 3 new endpoints all gated with `@RequiresFeature("ORDER_VIEW_ALL")`:
+  - `GET /orders/by-staff/summary` → `Map<String, Object>` with totalRevenue, orderCount, avgOrderValue, completedCount, cancelledCount
+  - `GET /orders/by-staff/chart` → `List<Map<String, Object>>` with label, value
+  - `GET /orders/by-staff` → paginated `Page<OrderDTO>`
+- Repository: 8 new native queries on `OrderRepository` following the existing `ByCustomer` pattern (replace `customer_id = :customerId` with `created_by = :createdBy`).
+
+**Acceptance notes (US-220):**
+- Order list section only renders when same conditions as US-219 apply.
+- Status filter chips: All / Pending / Completed / Cancelled; service shop types also show Pending.
+- Lazy: only fires when `openSections.has('orders')`; `page` resets to 0 on filter change.
+- Each order row shows: order code, date, total amount, status badge.
+- Empty state shows `staff.noOrders` i18n key when no matching orders.
+- `GET /orders/by-staff?createdBy=&status=&from=&to=&page=&size=10` → paginated list.
+
+---
+
 ## Final Story Map (complete)
 
 | Group | Epic | Stories | Feature Gate | Priority |
@@ -1052,7 +1251,7 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 | | Sold-Out Quick Toggle | US-168 | PRODUCT | MVP (Street Food) |
 | | Cash-Only Express Checkout | US-170–171 | POS | MVP (Street Food) |
 | | Take-Away Queue Number | US-173 | POS | MVP (Street Food) |
-| **Orders** | Order Management | US-44–46 | ORDER | MVP |
+| **Orders** | Order Management | US-44–46, US-210, US-213, US-214 | ORDER | MVP |
 | | Receipt Reprint | US-124 | ORDER | MVP |
 | **Products & Inventory** | Products | US-68–71 | PRODUCT | MVP |
 | | Inventory | US-72–74 | INVENTORY | MVP |
@@ -1063,7 +1262,7 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 | | Loyalty Points Redemption | US-130 | CUSTOMER | MVP |
 | | Recent Customers at Checkout | US-140 | CUSTOMER | MVP |
 | | Customer Order History Summary | US-148 | CUSTOMER | MVP |
-| **Expenses** | Expenses | US-47–53 | — | MVP |
+| **Expenses** | Expenses | US-47–53, US-211, US-215 | — | MVP |
 | | Expense Category Frequency | US-147 | — | MVP |
 | | Chi Chợ Market Expense Shortcut | US-169 | — | MVP (F&B / Street Food) |
 | **Notifications** | Notifications | US-59–62 | NOTIFICATION | MVP |
@@ -1083,15 +1282,19 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 | | First-Use Empty States | US-120 | — | MVP |
 | | Feedback | US-121–122 | FEEDBACK | MVP |
 | | Offline Order Queue | US-175 | OFFLINE_MODE | MVP (F&B / Street Food) |
+| **Staff Management** | Staff Username with Tenant Suffix | US-217 | — | MVP |
+| | Extended Staff Form (Collapsible Sections) | US-218 | — | MVP |
+| | Employee Performance Dashboard | US-219–220 | ORDER_VIEW_ALL | MVP |
 | **Vertical — Shop-Type Specific** | Gold Prices | US-117–119 | PAWN | MVP (JEWELRY only) |
 | | Barber Queue Status Badge | US-153 | POS / ORDER | MVP (BARBER_SHOP only) |
 | | Barber Employee Commission | US-154–155 | EMPLOYEE | MVP (BARBER_SHOP only) |
 | | F&B Shop Types & Table Management | US-156–167 | TABLE_SERVICE | MVP (F&B shops only) |
 | | Street Food Shop Types | US-176 | — | MVP (Street Food only) |
+| | Pawn Shop (Tiệm cầm đồ) | US-178–208 | PAWN | MVP (PAWN_SHOP only) |
 
-**Total: 177 user stories across 60 epics, 14 groups.**
+**Total: 218 user stories across 64 epics, 15 groups.**
 
-**Why:** Written in planning sessions 2026-05-10. US-132–147 added after UX review. US-148–149 added for customer order history and top-sellers. US-150–151 added 2026-05-11 for edit/delete customer. US-153–155 added 2026-05-13 for barber-specific features. US-156–167 added 2026-05-15 for F&B shop types and table management. US-168–176 added 2026-05-15 for street food / sidewalk eatery shop type. US-168b added, US-169/170/175 revised 2026-05-15 after design review (sold-out toggle all shop types; chi chợ via expense chip ordering; cash default seed; offline covers expenses too). Epics grouped by domain 2026-05-15.
+**Why:** Written in planning sessions 2026-05-10. US-132–147 added after UX review. US-148–149 added for customer order history and top-sellers. US-150–151 added 2026-05-11 for edit/delete customer. US-153–155 added 2026-05-13 for barber-specific features. US-156–167 added 2026-05-15 for F&B shop types and table management. US-168–176 added 2026-05-15 for street food / sidewalk eatery shop type. US-168b added, US-169/170/175 revised 2026-05-15 after design review (sold-out toggle all shop types; chi chợ via expense chip ordering; cash default seed; offline covers expenses too). Epics grouped by domain 2026-05-15. US-178–208 added 2026-05-15 for pawn shop / tiệm cầm đồ module. US-209 added 2026-05-16: BarberServiceScreen must display standard hint text (barber.hint) between title row and view toggle — bug fix for missing hint on Create Order screen. US-210 added 2026-05-16: OrderListScreen must always show title+hint regardless of activeView — bug fix for title/hint disappearing when switching to Đơn Hàng tab from service shop. US-211 added 2026-05-16: Expenses filter chips (Fixed/Variable) must be client-side — backend has no FIXED/VARIABLE type; passing those as category param caused 400 and showed all data. US-212 added 2026-05-16: BarberServiceScreen category filter must persist across tab switches — store barberCategoryId in useSellingStore; skeleton shown instead of EmptyState during refetch on remount. US-213 added 2026-05-16: OrderListScreen period tabs + summary KPI + bar chart scoped to selected period. US-214 added 2026-05-16: OrderListScreen status/search filter must clear allOrders immediately — bug fix for stale list persisting while new filtered query loads. US-215 added 2026-05-16: Expenses list must be sorted newest-first and each row must show a "Cố định" / "Phát sinh" type badge derived from FIXED_CATEGORIES. US-216 added 2026-05-16: CustomerDetailScreen — order analytics section with period picker (30d/90d/180d/365d), 3 KPI cards, TrendChart (day/week/month/year); backed by new backend endpoints GET /customers/{id}/orders/summary and /chart with customer-scoped native queries on OrderRepository. US-217 added 2026-05-16: StaffFormScreen username input shows .{tenantSuffix} suffix derived from tenantId regex; submitted username is fullUsername = input + '.' + suffix; edit mode shows suffix informational only with disabled field. US-218 added 2026-05-16: StaffFormScreen rewritten with 6 collapsible sections (Account, Contact, Work Info, Personal, ID Card, Notes); all section-2–6 fields optional; auto-expands sections with existing data on edit load; backed by employee profile API + backend migration V006 (nick_name column, nullable position). US-219–220 added 2026-05-16: StaffFormScreen edit mode shows employee performance section (gated by ORDER_VIEW_ALL feature): summary KPIs, TrendChart with day/week/month/year granularity, paginated order list with status filter chips; backed by 3 new backend endpoints GET /orders/by-staff/{summary,chart,} all gated @RequiresFeature("ORDER_VIEW_ALL"); 8 new OrderRepository native queries following ByCustomer pattern.
 **How to apply:** Reference during implementation to verify feature completeness. Each story maps to one or more screens in `project_mobile_screens.md`.
 
 **Feature coverage check:**
@@ -1107,8 +1310,9 @@ originSessionId: df315ccb-2945-419c-9cbb-2eed88eab878
 | FEEDBACK | US-121–122 | ✅ |
 | SHOP_SETTING | US-79–83, US-86–88, US-112–114, US-127–129, US-145 | ✅ |
 | ACTIVITY_LOG | US-97–99 | ✅ |
-| PAWN | US-117–119 | ✅ |
+| PAWN | US-117–119, US-178–208 | ✅ |
 | EMPLOYEE | US-154–155 | ✅ |
+| ORDER_VIEW_ALL | US-219–220 | ✅ |
 | TABLE_SERVICE | US-156–167 | ✅ |
 | OFFLINE_MODE | US-175 | ✅ |
 

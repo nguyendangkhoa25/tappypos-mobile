@@ -1,5 +1,6 @@
 import { ScrollView, TouchableOpacity, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useTypography } from '../hooks/useTypography';
 
 type Props = {
   phrases: string[];
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function QuickPhraseBar({ phrases, onSelect, visible }: Props) {
+  const typo = useTypography();
   if (!visible || phrases.length === 0) return null;
   return (
     <ScrollView
@@ -25,7 +27,7 @@ export function QuickPhraseBar({ phrases, onSelect, visible }: Props) {
             onSelect(phrase);
           }}
         >
-          <Text className="text-indigo-700 text-xs font-medium">{phrase}</Text>
+          <Text className={`text-indigo-700 ${typo.label}`}>{phrase}</Text>
         </TouchableOpacity>
       ))}
     </ScrollView>

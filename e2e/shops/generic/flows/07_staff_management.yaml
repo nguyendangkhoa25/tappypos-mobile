@@ -1,0 +1,74 @@
+appId: com.knp.tappypos
+name: "07 Staff management — list, create, view, delete"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → Staff ──────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-staff"
+- assertVisible: "Nhân viên"
+
+# ── Pre-cleanup: remove any leftover test user ────────────────────────────────
+- tapOn:
+    id: "staff-row-0"
+    optional: true
+- tapOn:
+    id: "staff-delete-btn"
+    optional: true
+- tapOn: "Xóa"
+    optional: true
+- tapOn: "OK"
+    optional: true
+
+# ── Navigate back to StaffList ────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-staff"
+- assertVisible: "Nhân viên"
+
+# ── S01: Verify at least one staff row (the owner) is visible ────────────────
+- assertVisible:
+    id: "staff-row-0"
+
+# ── S02: Tap FAB to open StaffFormScreen (create mode) ───────────────────────
+- tapOn:
+    id: "staff-add-fab"
+- assertVisible: "Thêm nhân viên"
+
+# ── S03: Fill fullName ───────────────────────────────────────────────────────
+- tapOn:
+    id: "staff-fullname"
+- inputText: "Maestro Test Staff"
+
+# ── S04: Fill username ───────────────────────────────────────────────────────
+- tapOn:
+    id: "staff-username"
+- inputText: "maestrostaff99"
+
+# ── S05: Save ────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "staff-save-btn"
+- assertVisible: "Nhân viên"
+
+# ── S06: New staff row appears ────────────────────────────────────────────────
+- assertVisible: "Maestro Test Staff"
+
+# ── S07: Tap row to open detail / edit ───────────────────────────────────────
+- tapOn:
+    id: "staff-row-0"
+- assertVisible:
+    id: "staff-fullname"
+
+# ── S08: Navigate back ───────────────────────────────────────────────────────
+- tapOn: "‹"
+    optional: true
+- tapOn:
+    text: "Nhân viên"
+    optional: true
+
+# ── Navigate back to More ─────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertVisible: "Khác"

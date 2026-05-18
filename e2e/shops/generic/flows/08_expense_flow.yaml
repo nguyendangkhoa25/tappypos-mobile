@@ -1,0 +1,42 @@
+appId: com.knp.tappypos
+name: "08 Expense flow — create expense, verify it appears, delete it"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Expenses tab ─────────────────────────────────────────────────
+- tapOn:
+    id: "tab-expenses"
+- assertVisible: "Chi phí"
+
+# ── E01: Tap FAB to open add-expense sheet ───────────────────────────────────
+- tapOn:
+    id: "expense-add-fab"
+- assertVisible: "Thêm chi phí"
+
+# ── E02: Fill description ────────────────────────────────────────────────────
+- tapOn:
+    id: "expense-desc-input"
+- inputText: "Chi phí test Maestro"
+
+# ── E03: Fill amount ─────────────────────────────────────────────────────────
+- tapOn:
+    id: "expense-amount-input"
+- inputText: "100000"
+- hideKeyboard
+
+# ── E04: Save ────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "expense-save-btn"
+
+# ── E05: Toast / success feedback appears ────────────────────────────────────
+- assertVisible: "Đã lưu"
+
+# ── E06: Expense appears in the list ─────────────────────────────────────────
+- assertVisible: "Chi phí test Maestro"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

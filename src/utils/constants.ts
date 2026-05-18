@@ -12,7 +12,7 @@ export const SUPPORT = {
 
 export const SHOP_TYPES = [
   { code: 'PHO_SHOP', name: 'Quán phở', emoji: '🍜', tenantPrefix: 'pho' },
-  { code: 'BARBER_SHOP', name: 'Tiệm cắt tóc', emoji: '✂️', tenantPrefix: 'toc' },
+  { code: 'BARBER_SHOP', name: 'Tiệm cắt tóc', emoji: '💈', tenantPrefix: 'toc' },
   { code: 'CAFE', name: 'Quán cà phê', emoji: '☕', tenantPrefix: 'cf' },
   { code: 'GROCERY', name: 'Cửa hàng tạp hóa', emoji: '🏪', tenantPrefix: 'tg' },
   { code: 'BAKERY', name: 'Tiệm bánh', emoji: '🥐', tenantPrefix: 'bm' },

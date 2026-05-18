@@ -1,0 +1,34 @@
+appId: com.knp.tappypos
+name: "SPA 17 Staff performance + queue view (ORDER_VIEW_ALL feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Staff Performance via More ────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-staffPerformance"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── SP01: Period navigation ───────────────────────────────────────────────────
+- tapOn: "›"
+    optional: true
+- tapOn: "‹"
+    optional: true
+
+# ── Navigate to Queue View ────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-queueView"
+- assertNotVisible: "500"
+
+# ── QV01: Hàng chờ tab is visible ────────────────────────────────────────────
+- assertVisible: "Hàng chờ"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

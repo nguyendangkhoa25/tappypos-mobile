@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -14,10 +14,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { inventoryApi, type InventoryItem } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
+import { ErrorState } from '../../components/ErrorState';
+import { ScreenSkeleton } from '../../components/ScreenSkeleton';
 
 type StockStatus = 'ok' | 'low' | 'out';
 
@@ -39,24 +42,42 @@ export function InventoryListScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const qc = useQueryClient();
   const { show: showToast } = useToastStore();
   const showErrorAlert = useErrorAlert();
 
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all');
+  const [search, setSearch] = useState('');
   const [adjustItem, setAdjustItem] = useState<InventoryItem | null>(null);
   const [newQty, setNewQty] = useState('');
   const [reason, setReason] = useState('reasonRecount');
   const [note, setNote] = useState('');
 
-  const { data: inventory = [], isLoading, refetch } = useQuery({
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+
+  const { data: inventory = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['inventory', filter],
     queryFn: () =>
       inventoryApi
         .list(filter === 'all' ? undefined : { status: filter as 'low' | 'out' })
         .then((r) => r.data.data),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
+
+  const onRefresh = useCallback(async () => {
+    setIsManualRefreshing(true);
+    await refetch();
+    setIsManualRefreshing(false);
+  }, [refetch]);
+
+  const openAdjust = useCallback((item: InventoryItem) => {
+    setAdjustItem(item);
+    setNewQty(item.quantity.toString());
+    setReason('reasonRecount');
+    setNote('');
+  }, []);
 
   const adjustMutation = useMutation({
     mutationFn: () =>
@@ -72,16 +93,14 @@ export function InventoryListScreen() {
     onError: showErrorAlert,
   });
 
-  const openAdjust = (item: InventoryItem) => {
-    setAdjustItem(item);
-    setNewQty(item.quantity.toString());
-    setReason('reasonRecount');
-    setNote('');
-  };
 
-  const totalSku = inventory.length;
-  const lowCount = inventory.filter((i) => getStatus(i) === 'low').length;
-  const outCount = inventory.filter((i) => getStatus(i) === 'out').length;
+  const displayedInventory = search.trim()
+    ? inventory.filter((i) => i.productName.toLowerCase().includes(search.toLowerCase()))
+    : inventory;
+
+  const totalSku = displayedInventory.length;
+  const lowCount = displayedInventory.filter((i) => getStatus(i) === 'low').length;
+  const outCount = displayedInventory.filter((i) => getStatus(i) === 'out').length;
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
@@ -94,9 +113,26 @@ export function InventoryListScreen() {
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900 dark:text-white flex-1">{t('inventory.title')}</Text>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('inventory.title')}</Text>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mb-3 mt-0.5">{t('inventory.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-3 mt-0.5`}>{t('inventory.hint')}</Text>
+        {/* Search */}
+        <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-3 py-2.5 mb-3">
+          <MaterialCommunityIcons name="magnify" size={20} color="#9ca3af" />
+          <TextInput
+            className={`flex-1 ml-2 ${typo.inputSize} text-gray-800 dark:text-gray-100`}
+            placeholder={t('inventory.searchPlaceholder')}
+            placeholderTextColor="#9ca3af"
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <MaterialCommunityIcons name="close-circle" size={18} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
+        </View>
         {/* Summary row */}
         <View className="flex-row gap-3 mb-3">
           {[
@@ -105,8 +141,8 @@ export function InventoryListScreen() {
             { labelKey: 'outOfStock', value: outCount, color: 'text-red-600' },
           ].map((stat) => (
             <View key={stat.labelKey} className="flex-1 bg-gray-50 dark:bg-gray-700 rounded-xl p-3 items-center">
-              <Text className={`text-xl font-bold ${stat.color}`}>{stat.value}</Text>
-              <Text className="text-xs text-gray-500 dark:text-gray-400 text-center mt-0.5">{t(`inventory.${stat.labelKey}`)}</Text>
+              <Text className={`${typo.section} ${stat.color}`}>{stat.value}</Text>
+              <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 text-center mt-0.5`}>{t(`inventory.${stat.labelKey}`)}</Text>
             </View>
           ))}
         </View>
@@ -121,7 +157,7 @@ export function InventoryListScreen() {
                 onPress={() => setFilter(f)}
                 className={`px-4 py-1.5 rounded-full border ${active ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
               >
-                <Text className={`text-sm font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                <Text className={`${typo.caption} font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                   {t(`inventory.${labelKey}`)}
                 </Text>
               </TouchableOpacity>
@@ -130,37 +166,42 @@ export function InventoryListScreen() {
         </View>
       </View>
 
-      {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#4f46e5" />
-        </View>
-      ) : inventory.length === 0 ? (
+      {isError ? (
+        <ErrorState onRetry={refetch} />
+      ) : isLoading ? (
+        <ScreenSkeleton count={5} cardHeight={68} />
+      ) : displayedInventory.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
           <MaterialCommunityIcons name="warehouse" size={56} color="#d1d5db" />
-          <Text className="text-base font-semibold text-gray-400 mt-4 text-center">{t('inventory.empty')}</Text>
-          <Text className="text-sm text-gray-400 mt-1 text-center">{t('inventory.emptyHint')}</Text>
+          <Text className={`${typo.body} text-gray-400 mt-4 text-center`}>
+            {search.trim() ? t('inventory.noResults') : t('inventory.empty')}
+          </Text>
+          {!search.trim() && (
+            <Text className={`${typo.caption} text-gray-400 mt-1 text-center`}>{t('inventory.emptyHint')}</Text>
+          )}
         </View>
       ) : (
         <FlatList
-          data={inventory}
+          showsVerticalScrollIndicator={false}
+          data={displayedInventory}
           keyExtractor={(i) => i.productId}
           contentContainerStyle={{ padding: 16, gap: 10 }}
-          refreshing={isLoading}
-          onRefresh={refetch}
+          refreshing={isManualRefreshing}
+          onRefresh={onRefresh}
           renderItem={({ item }) => {
             const status = getStatus(item);
             const s = STATUS_STYLES[status];
             return (
               <View className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 flex-row items-center">
                 <View className="flex-1">
-                  <Text className="text-base font-semibold text-gray-900 dark:text-white">{item.productName}</Text>
-                  <Text className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  <Text className={`${typo.labelBold} text-gray-900 dark:text-white`}>{item.productName}</Text>
+                  <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
                     {item.quantity} {item.unit}
                     {item.lowStockThreshold !== null && ` · ${t('inventory.threshold', { value: item.lowStockThreshold })}`}
                   </Text>
                 </View>
                 <View className={`px-2.5 py-1 rounded-full mr-3 ${s.bg}`}>
-                  <Text className={`text-xs font-medium ${s.text}`}>{t(`inventory.${s.labelKey}`)}</Text>
+                  <Text className={`${typo.captionBold} ${s.text}`}>{t(`inventory.${s.labelKey}`)}</Text>
                 </View>
                 <TouchableOpacity onPress={() => openAdjust(item)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <MaterialCommunityIcons name="pencil-outline" size={20} color="#4f46e5" />
@@ -177,25 +218,25 @@ export function InventoryListScreen() {
           <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-6" style={{ paddingBottom: insets.bottom + 16 }}>
             <View className="flex-row items-center justify-between mb-4">
               <View>
-                <Text className="text-lg font-bold text-gray-900 dark:text-white">{t('inventory.adjustTitle')}</Text>
-                <Text className="text-sm text-gray-500 dark:text-gray-400">{adjustItem?.productName}</Text>
+                <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('inventory.adjustTitle')}</Text>
+                <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{adjustItem?.productName}</Text>
               </View>
               <TouchableOpacity onPress={() => setAdjustItem(null)}>
                 <MaterialCommunityIcons name="close" size={22} color="#6b7280" />
               </TouchableOpacity>
             </View>
 
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('inventory.newQty')}</Text>
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('inventory.newQty')}</Text>
             <TextInput
               value={newQty}
               onChangeText={(v) => setNewQty(v.replace(/\D/g, ''))}
               placeholder={t('inventory.newQtyPlaceholder')}
               placeholderTextColor="#9ca3af"
               keyboardType="numeric"
-              className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4"
+              className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4`}
             />
 
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('inventory.reasonLabel')}</Text>
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('inventory.reasonLabel')}</Text>
             <View className="flex-row flex-wrap gap-2 mb-4">
               {REASONS.map((r) => (
                 <TouchableOpacity
@@ -203,7 +244,7 @@ export function InventoryListScreen() {
                   onPress={() => setReason(r)}
                   className={`px-3 py-1.5 rounded-xl border-2 ${reason === r ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-200 dark:border-gray-600'}`}
                 >
-                  <Text className={`text-sm font-medium ${reason === r ? 'text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                  <Text className={`${typo.caption} font-medium ${reason === r ? 'text-indigo-700 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-400'}`}>
                     {t(`inventory.${r}`)}
                   </Text>
                 </TouchableOpacity>
@@ -215,7 +256,7 @@ export function InventoryListScreen() {
               onChangeText={setNote}
               placeholder={t('inventory.notePlaceholder')}
               placeholderTextColor="#9ca3af"
-              className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4"
+              className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4`}
             />
 
             <TouchableOpacity
@@ -224,7 +265,7 @@ export function InventoryListScreen() {
               className={`rounded-2xl py-4 items-center ${adjustMutation.isPending || !newQty ? 'bg-gray-200 dark:bg-gray-700' : 'bg-indigo-600 active:opacity-80'}`}
             >
               {adjustMutation.isPending ? <ActivityIndicator color="#fff" /> : (
-                <Text className={`font-bold text-base ${!newQty ? 'text-gray-400' : 'text-white'}`}>
+                <Text className={`${typo.labelBold} ${!newQty ? 'text-gray-400' : 'text-white'}`}>
                   {t('common.save')}
                 </Text>
               )}

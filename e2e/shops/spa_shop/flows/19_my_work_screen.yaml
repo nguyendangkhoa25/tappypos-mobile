@@ -1,0 +1,28 @@
+appId: com.knp.tappypos
+name: "SPA 19 My Work screen — queue tab + available tab (MY_WORK feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to My Work via More ─────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-mywork"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── MW01: Switch to "Chờ nhận" (available) tab ───────────────────────────────
+- tapOn: "Chờ nhận"
+    optional: true
+- assertNotVisible: "500"
+
+# ── MW02: Switch back to my queue ────────────────────────────────────────────
+- tapOn: "Hàng chờ của tôi"
+    optional: true
+- assertNotVisible: "500"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

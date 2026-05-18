@@ -8,6 +8,7 @@ import {
   Linking,
   Platform,
 } from 'react-native';
+import { useTypography } from '../hooks/useTypography';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,6 +26,8 @@ import * as SecureStore from 'expo-secure-store';
 import { APP_STORE_URL, PLAY_STORE_URL } from '../utils/constants';
 import type { RootStackParamList } from '../types/navigation';
 import { appApi } from '../services/api';
+import { useSellingStore } from '../store/sellingStore';
+import { useFontSizeStore } from '../store/fontSizeStore';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -65,22 +68,23 @@ function SplashScreen() {
 
 function ForceUpdateScreen() {
   const storeUrl = Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
+  const typo = useTypography();
   return (
     <View className="flex-1 bg-primary items-center justify-center px-8">
       <View className="w-20 h-20 bg-white/20 rounded-3xl items-center justify-center mb-6">
         <Text className="text-4xl">🔄</Text>
       </View>
-      <Text className="text-white text-2xl font-bold text-center mb-3">
+      <Text className={`text-white ${typo.heading} text-center mb-3`}>
         Cần cập nhật ứng dụng
       </Text>
-      <Text className="text-white/80 text-sm text-center mb-8 leading-5">
+      <Text className={`text-white/80 ${typo.caption} text-center mb-8 leading-5`}>
         Phiên bản hiện tại không còn được hỗ trợ. Vui lòng cập nhật để tiếp tục sử dụng.
       </Text>
       <TouchableOpacity
         className="bg-white rounded-2xl px-8 py-4"
         onPress={() => Linking.openURL(storeUrl)}
       >
-        <Text className="text-primary font-bold text-base">Cập nhật ngay</Text>
+        <Text className={`text-primary ${typo.body}`}>Cập nhật ngay</Text>
       </TouchableOpacity>
     </View>
   );
@@ -90,16 +94,17 @@ function ForceUpdateScreen() {
 
 function SoftUpdateBanner({ onDismiss }: { onDismiss: () => void }) {
   const storeUrl = Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
+  const typo = useTypography();
   return (
     <View className="absolute top-0 left-0 right-0 bg-amber-400 flex-row items-center px-4 py-3 gap-3" style={{ zIndex: 999 }}>
-      <Text className="flex-1 text-sm font-semibold text-amber-900">
+      <Text className={`flex-1 ${typo.label} text-amber-900`}>
         Có phiên bản mới. Cập nhật để có trải nghiệm tốt hơn.
       </Text>
       <TouchableOpacity onPress={() => Linking.openURL(storeUrl)}>
-        <Text className="text-sm font-bold text-amber-900 underline">Cập nhật</Text>
+        <Text className={`${typo.labelBold} text-amber-900 underline`}>Cập nhật</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-        <Text className="text-amber-900 text-base font-bold">✕</Text>
+        <Text className={`text-amber-900 ${typo.body}`}>✕</Text>
       </TouchableOpacity>
     </View>
   );
@@ -127,6 +132,8 @@ export function RootNavigator() {
           useUserStore.getState().hydrate().catch(() => {}),
           usePrivacyStore.getState().hydrate().catch(() => {}),
           useThemeStore.getState().hydrate().catch(() => {}),
+          useSellingStore.getState().hydrate().catch(() => {}),
+          useFontSizeStore.getState().hydrate().catch(() => {}),
           SecureStore.getItemAsync('language').then((lang) => {
             if (lang && lang !== i18n.language) i18n.changeLanguage(lang);
           }).catch(() => {}),
@@ -187,7 +194,11 @@ export function RootNavigator() {
   // Background PIN lock
   useEffect(() => {
     const sub = AppState.addEventListener('change', async (nextState) => {
-      if (nextState === 'background') {
+      // Write on both 'inactive' and 'background': on iOS, force-closing via the
+      // app switcher fires 'inactive' then kills the process — 'background' may
+      // never fire, so the lock-timeout check in hydrateFromStorage would use a
+      // stale timestamp from a much earlier session.
+      if (nextState === 'inactive' || nextState === 'background') {
         bgTimestamp.current = Date.now();
         await AsyncStorage.setItem('backgroundTimestamp', String(Date.now()));
       } else if (nextState === 'active') {

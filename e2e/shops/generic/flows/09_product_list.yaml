@@ -1,0 +1,57 @@
+appId: com.knp.tappypos
+name: "09 Product list — browse, search, open detail (barber shop has PRODUCT feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → Products ──────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-products"
+- assertVisible: "Sản phẩm"
+
+# ── PR01: Product list loads ─────────────────────────────────────────────────
+- assertVisible:
+    id: "product-search-input"
+
+# ── PR02: At least one product card is visible ───────────────────────────────
+- assertVisible:
+    id: "product-card-.*"
+
+# ── PR03: Search for a product ───────────────────────────────────────────────
+- tapOn:
+    id: "product-search-input"
+- inputText: "cắt"
+- tapOn: "Tìm"
+    optional: true
+- pressKey: Enter
+    optional: true
+- hideKeyboard
+
+# ── PR04: Clear search ────────────────────────────────────────────────────────
+- tapOn:
+    id: "product-search-input"
+- eraseText: 20
+- hideKeyboard
+
+# ── PR05: Tap the first product card to open detail ──────────────────────────
+- tapOn:
+    id: "product-card-.*"
+- assertVisible: "Sản phẩm"
+    optional: true
+
+# ── PR06: Navigate back to list ───────────────────────────────────────────────
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── PR07: INVENTORY tile is NOT visible (barber shop has no INVENTORY feature) ─
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertNotVisible:
+    id: "more-tile-inventory"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

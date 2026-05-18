@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLocales } from 'expo-localization';
 import { utilitiesApi } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import { Skeleton } from '../../components/Skeleton';
 import type { ToolsScreenProps } from '../../types/navigation';
 
@@ -31,12 +32,13 @@ function getDefaultCurrency(): string {
 }
 
 function fmtVnd(n: number) {
-  return n.toLocaleString('vi-VN');
+  return n.toLocaleString('en-US');
 }
 
 export function CurrencyConverterScreen({ navigation }: Props) {
   const { t } = useTranslation();
-  const { top } = useSafeAreaInsets();
+  const typo = useTypography();
+  const { top, bottom } = useSafeAreaInsets();
 
   const defaultCurrency = useMemo(() => getDefaultCurrency(), []);
   const [selectedCode, setSelectedCode] = useState(() => getDefaultCurrency());
@@ -118,25 +120,27 @@ export function CurrencyConverterScreen({ navigation }: Props) {
     : null;
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="bg-primary px-6 pb-5" style={{ paddingTop: top + 16 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mb-3">
-          <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-        </TouchableOpacity>
-        <Text className="text-2xl font-bold text-white">{t('currencyConverter.title')}</Text>
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+          </TouchableOpacity>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('currencyConverter.title')}</Text>
+        </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Hint */}
         <View className="flex-row items-start bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100 mb-3">
           <Text className="text-indigo-400 mr-2 mt-0.5">💡</Text>
-          <Text className="text-xs text-indigo-600 leading-4 flex-1">{t('currencyConverter.hint')}</Text>
+          <Text className={`${typo.caption} text-indigo-600 leading-4 flex-1`}>{t('currencyConverter.hint')}</Text>
         </View>
 
         {/* Disclaimer */}
         <View className="flex-row items-start bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 mb-3">
           <MaterialCommunityIcons name="information-outline" size={16} color="#d97706" style={{ marginTop: 1, marginRight: 6 }} />
-          <Text className="flex-1 text-xs text-amber-700 leading-4">{t('currencyConverter.disclaimer')}</Text>
+          <Text className={`${typo.caption} flex-1 text-amber-700 leading-4`}>{t('currencyConverter.disclaimer')}</Text>
         </View>
 
         {/* Loading */}
@@ -151,14 +155,14 @@ export function CurrencyConverterScreen({ navigation }: Props) {
           <>
             <TouchableOpacity onPress={() => refetch()} className="flex-row items-center justify-center py-3 mb-3">
               <MaterialCommunityIcons name="refresh" size={16} color="#ef4444" style={{ marginRight: 6 }} />
-              <Text className="text-sm text-red-500 font-semibold">{t('currencyConverter.error')} · {t('currencyConverter.retry')}</Text>
+              <Text className={`${typo.caption} font-semibold text-red-500`}>{t('currencyConverter.error')} · {t('currencyConverter.retry')}</Text>
             </TouchableOpacity>
             <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-              <Text className="text-sm font-semibold text-gray-700 mb-2">
+              <Text className={`${typo.label} text-gray-700 mb-2`}>
                 {t('currencyConverter.manualRateLabel', { code: selectedCode })}
               </Text>
               <TextInput
-                className="border border-gray-300 rounded-xl px-3 py-3 text-base bg-white text-gray-900"
+                className={`border border-gray-300 rounded-xl px-3 py-3 ${typo.inputSize} bg-white text-gray-900`}
                 value={customRateInput}
                 onChangeText={setCustomRateInput}
                 keyboardType="decimal-pad"
@@ -173,7 +177,7 @@ export function CurrencyConverterScreen({ navigation }: Props) {
         {rates.length > 0 && (
           <>
             {fetchedAt && (
-              <Text className="text-xs text-gray-400 mb-3 text-right">
+              <Text className={`${typo.caption} text-gray-400 mb-3 text-right`}>
                 {t('currencyConverter.lastUpdated')}: {fetchedAt} · {data?.source}
               </Text>
             )}
@@ -188,8 +192,8 @@ export function CurrencyConverterScreen({ navigation }: Props) {
                       activeOpacity={0.75}
                       className={`flex-row items-center px-3 py-2 rounded-xl ${selectedCode === r.currencyCode ? 'bg-primary' : 'bg-gray-100'}`}
                     >
-                      <Text className="text-base mr-1.5">{CURRENCY_FLAG[r.currencyCode] ?? '🏳️'}</Text>
-                      <Text className={`text-sm font-bold ${selectedCode === r.currencyCode ? 'text-white' : 'text-gray-700'}`}>
+                      <Text className={`${typo.label} mr-1.5`}>{CURRENCY_FLAG[r.currencyCode] ?? '🏳️'}</Text>
+                      <Text className={`${typo.label} ${selectedCode === r.currencyCode ? 'text-white' : 'text-gray-700'}`}>
                         {r.currencyCode}
                       </Text>
                     </TouchableOpacity>
@@ -202,7 +206,7 @@ export function CurrencyConverterScreen({ navigation }: Props) {
             {selected && (
               <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
                 <View className="flex-row justify-between items-center mb-3">
-                  <Text className="text-sm font-semibold text-gray-700">
+                  <Text className={`${typo.label} text-gray-700`}>
                     {t('currencyConverter.currentRates')} · {CURRENCY_FLAG[selectedCode]} {selectedCode}/VND
                   </Text>
                   <TouchableOpacity
@@ -216,7 +220,7 @@ export function CurrencyConverterScreen({ navigation }: Props) {
                       color={customRateEnabled ? '#4f46e5' : '#9ca3af'}
                       style={{ marginRight: 4 }}
                     />
-                    <Text className={`text-xs font-semibold ${customRateEnabled ? 'text-primary' : 'text-gray-400'}`}>
+                    <Text className={`${typo.caption} font-semibold ${customRateEnabled ? 'text-primary' : 'text-gray-400'}`}>
                       {t('currencyConverter.customRate')}
                     </Text>
                   </TouchableOpacity>
@@ -230,8 +234,8 @@ export function CurrencyConverterScreen({ navigation }: Props) {
                       { label: t('currencyConverter.sell'),     rate: selected.sellRate },
                     ].map(({ label, rate }) => (
                       <View key={label} className="flex-1 bg-gray-50 rounded-xl px-3 py-2.5">
-                        <Text className="text-xs text-gray-400 mb-1">{label}</Text>
-                        <Text className="text-sm font-bold text-gray-800">
+                        <Text className={`${typo.caption} text-gray-400 mb-1`}>{label}</Text>
+                        <Text className={`${typo.label} text-gray-800`}>
                           {rate ? fmtVnd(Number(rate)) : '—'}
                         </Text>
                       </View>
@@ -239,11 +243,11 @@ export function CurrencyConverterScreen({ navigation }: Props) {
                   </View>
                 ) : (
                   <View>
-                    <Text className="text-xs text-gray-500 mb-1.5">
+                    <Text className={`${typo.caption} text-gray-500 mb-1.5`}>
                       {t('currencyConverter.manualRateLabel', { code: selectedCode })}
                     </Text>
                     <TextInput
-                      className="border border-primary rounded-xl px-3 py-3 text-base bg-white text-gray-900"
+                      className={`border border-primary rounded-xl px-3 py-3 ${typo.inputSize} bg-white text-gray-900`}
                       value={customRateInput}
                       onChangeText={setCustomRateInput}
                       keyboardType="decimal-pad"
@@ -252,7 +256,7 @@ export function CurrencyConverterScreen({ navigation }: Props) {
                       autoFocus
                     />
                     {customRate > 0 && (
-                      <Text className="text-xs text-primary mt-1.5">
+                      <Text className={`${typo.caption} text-primary mt-1.5`}>
                         1 {selectedCode} = {fmtVnd(customRate)} VND
                       </Text>
                     )}
@@ -277,7 +281,7 @@ export function CurrencyConverterScreen({ navigation }: Props) {
                   activeOpacity={0.75}
                   className={`flex-1 py-2.5 items-center ${direction === key ? 'bg-primary' : 'bg-white'}`}
                 >
-                  <Text className={`text-sm font-semibold ${direction === key ? 'text-white' : 'text-gray-600'}`}>
+                  <Text className={`${typo.label} ${direction === key ? 'text-white' : 'text-gray-600'}`}>
                     {label}
                   </Text>
                 </TouchableOpacity>
@@ -289,11 +293,11 @@ export function CurrencyConverterScreen({ navigation }: Props) {
         {/* Amount input */}
         {(selected || (isError && customRateInput)) && (
           <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-            <Text className="text-sm font-semibold text-gray-700 mb-2">
+            <Text className={`${typo.label} text-gray-700 mb-2`}>
               {direction === 'toVnd' ? selectedCode : 'VND'}
             </Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-3 py-3 text-base bg-white text-gray-900"
+              className={`border border-gray-300 rounded-xl px-3 py-3 ${typo.inputSize} bg-white text-gray-900`}
               value={amount}
               onChangeText={setAmount}
               keyboardType="decimal-pad"
@@ -306,7 +310,7 @@ export function CurrencyConverterScreen({ navigation }: Props) {
         {/* Result */}
         {result && (
           <View className="bg-primary-light rounded-2xl p-4 border border-indigo-200">
-            <Text className="text-sm font-bold text-primary mb-3">
+            <Text className={`${typo.labelBold} text-primary mb-3`}>
               {direction === 'toVnd' ? 'VND' : selectedCode}
             </Text>
 
@@ -333,13 +337,14 @@ export function CurrencyConverterScreen({ navigation }: Props) {
 }
 
 function RateRow({ label, rate, result }: { label: string; rate: number | null | undefined; result: string }) {
+  const typo = useTypography();
   return (
     <View className="flex-row justify-between items-center mb-2">
-      <Text className="text-sm text-gray-600">
+      <Text className={`${typo.caption} text-gray-600`}>
         {label}
-        {rate ? <Text className="text-xs text-gray-400"> ({fmtVnd(Number(rate))})</Text> : null}
+        {rate ? <Text className={`${typo.caption} text-gray-400`}> ({fmtVnd(Number(rate))})</Text> : null}
       </Text>
-      <Text className="text-sm font-bold text-primary">{result}</Text>
+      <Text className={`${typo.labelBold} text-primary`}>{result}</Text>
     </View>
   );
 }

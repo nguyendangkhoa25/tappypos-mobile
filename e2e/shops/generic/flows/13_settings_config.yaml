@@ -1,0 +1,47 @@
+appId: com.knp.tappypos
+name: "13 Settings config — open Settings, navigate Shop Info, verify POS config"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → Settings ──────────────────────────────────────────────
+- tapOn:
+    id: "tab-more"
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+
+# ── ST01: Shop info entry is visible ─────────────────────────────────────────
+- assertVisible: "Thông tin cửa hàng"
+
+# ── ST02: Tap Shop Info ───────────────────────────────────────────────────────
+- tapOn: "Thông tin cửa hàng"
+- assertVisible: "Thông tin cửa hàng"
+
+# ── ST03: Navigate back ───────────────────────────────────────────────────────
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── ST04: Tap POS Config ─────────────────────────────────────────────────────
+- tapOn: "Cấu hình POS"
+- assertVisible: "Cấu hình POS"
+
+# ── ST05: Navigate back ───────────────────────────────────────────────────────
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── ST06: SHOP_SETTING (Bank Accounts) is visible for barber shop owner ───────
+- assertVisible: "Tài khoản ngân hàng"
+
+# ── ST07: Verify logout button is visible ────────────────────────────────────
+- scrollToElement:
+    id: "settings-logout-btn"
+- assertVisible:
+    id: "settings-logout-btn"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

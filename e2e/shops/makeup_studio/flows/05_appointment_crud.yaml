@@ -1,0 +1,56 @@
+appId: com.knp.tappypos
+name: "MKUP 05 Appointment CRUD — create, cancel (APPOINTMENT feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-appointments"
+- assertVisible: "Lịch hẹn"
+- assertNotVisible: "500"
+
+# Create appointment
+- tapOn:
+    id: "appointment-add-fab"
+- assertVisible: "Đặt lịch hẹn"
+
+- tapOn:
+    id: "appt-customer-name"
+- inputText: "Khách Makeup Test"
+
+- tapOn:
+    id: "appt-customer-phone"
+- inputText: "0933444555"
+
+- tapOn:
+    text: "›"
+    optional: true
+
+- tapOn:
+    id: "appt-save-btn"
+- assertVisible: "Lịch hẹn"
+
+# Open and cancel
+- tapOn:
+    id: "appointment-card-0"
+- assertVisible: "Khách Makeup Test"
+- assertVisible:
+    id: "appt-checkin-btn"
+
+- tapOn:
+    id: "appt-cancel-btn"
+- assertVisible: "Huỷ lịch hẹn?"
+    optional: true
+- tapOn: "Huỷ lịch"
+    optional: true
+- tapOn: "OK"
+    optional: true
+
+- assertNotVisible:
+    id: "appt-checkin-btn"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

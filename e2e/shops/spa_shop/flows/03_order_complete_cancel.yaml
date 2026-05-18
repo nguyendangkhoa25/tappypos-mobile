@@ -1,0 +1,71 @@
+appId: com.knp.tappypos
+name: "SPA 03 Order complete + cancel — seed 2 PENDING orders via API, complete one, cancel one"
+---
+
+# ── Seed 2 PENDING orders via API (before login so no DEVICE_CONFLICT) ───────
+- runFlow: ../../../subflows/_create_pending_orders.yaml
+
+# ── Log in ────────────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Order list from Dashboard ────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn: "Đơn hàng"
+    optional: true
+- tapOn:
+    id: "dashboard-orders-btn"
+    optional: true
+- assertVisible: "Đơn hàng"
+    optional: true
+
+# Navigate via More if dashboard shortcut not available
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+    optional: true
+
+# ── Filter to PENDING orders ──────────────────────────────────────────────────
+- tapOn:
+    id: "order-filter-PENDING"
+    optional: true
+- assertVisible:
+    id: "order-row-0"
+
+# ── OC01: Open first PENDING order ───────────────────────────────────────────
+- tapOn:
+    id: "order-row-0"
+- assertVisible: "Chi tiết đơn hàng"
+- assertVisible:
+    id: "order-complete-btn"
+- assertVisible:
+    id: "order-cancel-btn"
+
+# ── OC02: Cancel this order ───────────────────────────────────────────────────
+- tapOn:
+    id: "order-cancel-btn"
+- assertVisible: "Hủy đơn hàng?"
+- tapOn: "Hủy đơn"
+- assertVisible: "Đã hủy"
+- assertNotVisible: "Hoàn thành"
+
+# ── Return to list ────────────────────────────────────────────────────────────
+- tapOn:
+    id: "order-detail-back-btn"
+- assertVisible:
+    id: "order-row-0"
+
+# ── OC03: Open second PENDING order and complete it ──────────────────────────
+- tapOn:
+    id: "order-row-0"
+- assertVisible: "Chi tiết đơn hàng"
+- assertVisible:
+    id: "order-complete-btn"
+- tapOn:
+    id: "order-complete-btn"
+- assertVisible: "Hoàn thành"
+- assertNotVisible: "Hủy đơn"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

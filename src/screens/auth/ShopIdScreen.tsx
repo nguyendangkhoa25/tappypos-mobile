@@ -18,6 +18,7 @@ import { FloatingLabelInput } from '../../components/FloatingLabelInput';
 import { LanguageChip } from '../../components/LanguageChip';
 import { tenantApi } from '../../services/api';
 import * as SecureStore from 'expo-secure-store';
+import { useTypography } from '../../hooks/useTypography';
 import type { AuthScreenProps } from '../../types/navigation';
 
 const LAST_SHOP_ID_KEY = 'last_tenant_id';
@@ -28,6 +29,7 @@ type LastShop = { id: string; name: string };
 export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const [shopId, setShopId] = useState('');
   const [error, setError] = useState<'' | 'not_found' | 'suspended' | 'network'>('');
   const [loading, setLoading] = useState(false);
@@ -101,8 +103,8 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
             <View className="w-20 h-20 rounded-3xl items-center justify-center mb-4" style={{ backgroundColor: '#4f46e5' }}>
               <MaterialCommunityIcons name="store" size={40} color="white" />
             </View>
-            <Text className="text-3xl font-bold text-gray-900 dark:text-white">TappyPOS</Text>
-            <Text className="text-base text-gray-500 dark:text-gray-400 mt-1">
+            <Text className={`${typo.heading} text-gray-900 dark:text-white`}>TappyPOS</Text>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1`}>
               {t('auth.shopId.subtitle')}
             </Text>
           </View>
@@ -136,35 +138,35 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
                 <MaterialCommunityIcons name="history" size={20} color="#4f46e5" />
               </View>
               <View className="flex-1">
-                <Text className="text-xs text-indigo-500 dark:text-indigo-400 mb-0.5">
+                <Text className={`${typo.caption} text-indigo-500 dark:text-indigo-400 mb-0.5`}>
                   {t('auth.shopId.recentlyUsed')}
                 </Text>
-                <Text className="text-sm font-bold text-indigo-800 dark:text-indigo-200" numberOfLines={1}>
+                <Text className={`${typo.labelBold} text-indigo-800 dark:text-indigo-200`} numberOfLines={1}>
                   {lastShop.name}
                 </Text>
-                <Text className="text-xs text-indigo-400 dark:text-indigo-500">{lastShop.id}</Text>
+                <Text className={`${typo.caption} text-indigo-400 dark:text-indigo-500`}>{lastShop.id}</Text>
               </View>
               <MaterialCommunityIcons name="chevron-right" size={20} color="#6366f1" />
             </TouchableOpacity>
           )}
 
           {error === 'not_found' && (
-            <Text testID="shop-id-error-not-found" className="text-red-500 text-sm mt-2">
+            <Text testID="shop-id-error-not-found" className={`${typo.caption} text-red-500 mt-2`}>
               {t('auth.shopId.notFound')}
             </Text>
           )}
           {error === 'suspended' && (
             <View testID="shop-id-error-suspended" className="mt-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3">
-              <Text className="text-amber-700 dark:text-amber-300 text-sm font-medium">
+              <Text className={`${typo.label} text-amber-700 dark:text-amber-300`}>
                 {t('auth.shopId.suspended')}
               </Text>
-              <Text className="text-amber-600 dark:text-amber-400 text-xs mt-1">
+              <Text className={`${typo.caption} text-amber-600 dark:text-amber-400 mt-1`}>
                 {t('auth.shopId.suspendedSupport', { phone: '0901 234 567' })}
               </Text>
             </View>
           )}
           {error === 'network' && (
-            <Text testID="shop-id-error-network" className="text-red-500 text-sm mt-2">
+            <Text testID="shop-id-error-network" className={`${typo.caption} text-red-500 mt-2`}>
               {t('auth.shopId.networkError')}
             </Text>
           )}
@@ -183,7 +185,7 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text
-                className={`font-bold text-base ${
+                className={`${typo.labelBold} ${
                   !shopId.trim() ? 'text-gray-400 dark:text-gray-500' : 'text-white'
                 }`}
               >
@@ -196,13 +198,13 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
             className="items-center mt-4"
             onPress={() => navigation.navigate('ForgotShopId')}
           >
-            <Text className="text-sm text-primary">{t('auth.shopId.forgotShopId')}</Text>
+            <Text className={`${typo.caption} text-primary`}>{t('auth.shopId.forgotShopId')}</Text>
           </TouchableOpacity>
 
           <View className="flex-row justify-center mt-4">
-            <Text className="text-gray-500 dark:text-gray-400 text-sm">{t('auth.shopId.noAccount')} </Text>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('auth.shopId.noAccount')} </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text className="text-primary font-semibold text-sm">{t('auth.shopId.register')}</Text>
+              <Text className={`${typo.label} text-primary`}>{t('auth.shopId.register')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -210,7 +212,7 @@ export function ShopIdScreen({ navigation }: AuthScreenProps<'ShopId'>) {
             className="items-center mt-3 py-2"
             onPress={() => navigation.navigate('Login', { noTenantRequired: true })}
           >
-            <Text className="text-sm text-gray-400 dark:text-gray-500 text-center">
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 text-center`}>
               {t('auth.shopId.pendingOnboarding')}
             </Text>
           </TouchableOpacity>

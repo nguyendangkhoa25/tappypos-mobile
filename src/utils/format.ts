@@ -3,6 +3,21 @@ export function formatVnd(amount: number | null | undefined): string {
   return amount.toLocaleString('vi-VN') + ' ₫';
 }
 
+/**
+ * Format a decimal number using "," as thousands separator and "." as decimal separator.
+ * e.g. formatDecimal(1.2) → "1.2"
+ *      formatDecimal(0.32) → "0.32"
+ *      formatDecimal(1234.567, 2) → "1,234.57"
+ * Use for weight (chỉ, gram), quantities, rates — anything with decimal places.
+ */
+export function formatDecimal(value: number | null | undefined, decimals?: number): string {
+  if (value == null) return '—';
+  return value.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: decimals ?? 4,
+  });
+}
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   // Parse YYYY-MM-DD manually to avoid timezone/engine quirks in React Native

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { DatePickerModal } from './DatePickerModal';
+import { useTypography } from '../hooks/useTypography';
 
 type Props = {
   value: string; // 'YYYY-MM-DD' or ''
@@ -26,6 +27,7 @@ function toISO(d: Date): string {
 
 export function DatePickerInput({ value, onChange, placeholder, minimumDate, maximumDate }: Props) {
   const { t, i18n } = useTranslation();
+  const typo = useTypography();
   const [show, setShow] = useState(false);
 
   const selected = toDate(value);
@@ -44,10 +46,10 @@ export function DatePickerInput({ value, onChange, placeholder, minimumDate, max
         activeOpacity={0.7}
       >
         {displayText
-          ? <Text className="text-base text-gray-900 dark:text-gray-100">{displayText}</Text>
-          : <Text className="text-base text-gray-400 dark:text-gray-500">{placeholder ?? t('common.selectDate')}</Text>
+          ? <Text className={`${typo.body} text-gray-900 dark:text-gray-100`}>{displayText}</Text>
+          : <Text className={`${typo.body} text-gray-400 dark:text-gray-500`}>{placeholder ?? t('common.selectDate')}</Text>
         }
-        <Text className="text-base">📅</Text>
+        <Text className={`${typo.body}`}>📅</Text>
       </TouchableOpacity>
 
       <DatePickerModal

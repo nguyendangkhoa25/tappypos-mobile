@@ -1,0 +1,51 @@
+appId: com.knp.tappypos
+name: "17 Customer loyalty — view points balance, tier, transaction history (LOYALTY feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Customer list ─────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+
+# ── LY01: Need a customer to view loyalty on — use first row ─────────────────
+- assertVisible:
+    id: "customer-row-0"
+
+- tapOn:
+    id: "customer-row-0"
+- assertVisible:
+    id: "customer-delete-btn"
+
+# ── LY02: Loyalty section is visible in customer detail ───────────────────────
+# LOYALTY feature is enabled for barber shop
+- assertVisible: "Điểm tích lũy"
+    optional: true
+
+# ── LY03: Navigate to loyalty history ────────────────────────────────────────
+# "Xem lịch sử" link navigates to CustomerLoyaltyScreen
+- tapOn: "Xem lịch sử"
+    optional: true
+
+# If CustomerLoyaltyScreen opened — verify the balance element is present
+- assertVisible:
+    id: "loyalty-balance"
+    optional: true
+- assertNotVisible: "500"
+
+# ── LY04: Navigate back to customer list ─────────────────────────────────────
+- tapOn:
+    text: "‹"
+    optional: true
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useTypography } from '../hooks/useTypography';
 
 type Props = {
   visible: boolean;
@@ -15,6 +16,7 @@ const ITEM_H = 44;
 
 export function DatePickerModal({ visible, value, onChange, onClose, maximumDate, minimumDate }: Props) {
   const { t, i18n } = useTranslation();
+  const typo = useTypography();
   const [viewYear, setViewYear] = useState(value.getFullYear());
   const [viewMonth, setViewMonth] = useState(value.getMonth());
   const [mode, setMode] = useState<'day' | 'yearMonth'>('day');
@@ -139,12 +141,12 @@ export function DatePickerModal({ visible, value, onChange, onClose, maximumDate
                   disabled={!canGoPrev}
                   className="w-10 h-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700"
                 >
-                  <Text className={`text-lg font-bold ${canGoPrev ? 'text-gray-700 dark:text-gray-200' : 'text-gray-300 dark:text-gray-600'}`}>‹</Text>
+                  <Text className={`${typo.section} ${canGoPrev ? 'text-gray-700 dark:text-gray-200' : 'text-gray-300 dark:text-gray-600'}`}>‹</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={() => setMode('yearMonth')} className="flex-row items-center gap-1 px-3 py-1 rounded-xl bg-gray-100 dark:bg-gray-700">
-                  <Text className="text-base font-bold text-gray-900 dark:text-gray-100 capitalize">{monthLabel}</Text>
-                  <Text className="text-xs text-indigo-500">▾</Text>
+                  <Text className={`${typo.section} text-gray-900 dark:text-gray-100 capitalize`}>{monthLabel}</Text>
+                  <Text className={`${typo.caption} text-indigo-500`}>▾</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -152,7 +154,7 @@ export function DatePickerModal({ visible, value, onChange, onClose, maximumDate
                   disabled={!canGoNext}
                   className="w-10 h-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700"
                 >
-                  <Text className={`text-lg font-bold ${canGoNext ? 'text-gray-700 dark:text-gray-200' : 'text-gray-300 dark:text-gray-600'}`}>›</Text>
+                  <Text className={`${typo.section} ${canGoNext ? 'text-gray-700 dark:text-gray-200' : 'text-gray-300 dark:text-gray-600'}`}>›</Text>
                 </TouchableOpacity>
               </View>
 
@@ -160,7 +162,7 @@ export function DatePickerModal({ visible, value, onChange, onClose, maximumDate
               <View className="flex-row mb-1">
                 {weekdays.map((d) => (
                   <View key={d} className="flex-1 items-center py-1">
-                    <Text className="text-xs font-semibold text-gray-400 dark:text-gray-500">{d}</Text>
+                    <Text className={`${typo.label} text-gray-400 dark:text-gray-500`}>{d}</Text>
                   </View>
                 ))}
               </View>
@@ -179,7 +181,7 @@ export function DatePickerModal({ visible, value, onChange, onClose, maximumDate
                           }`}
                         >
                           <Text
-                            className={`text-sm ${
+                            className={`${typo.caption} ${
                               isSelected(day)
                                 ? 'text-white font-bold'
                                 : isDisabled(day)
@@ -204,11 +206,11 @@ export function DatePickerModal({ visible, value, onChange, onClose, maximumDate
             <>
               {/* Year + month picker */}
               <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-base font-bold text-gray-900 dark:text-gray-100">
+                <Text className={`${typo.section} text-gray-900 dark:text-gray-100`}>
                   {t('datePickerModal.selectYearMonth')}
                 </Text>
                 <TouchableOpacity onPress={() => setMode('day')} className="px-3 py-1 rounded-xl bg-gray-100 dark:bg-gray-700">
-                  <Text className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                  <Text className={`${typo.label} text-indigo-600 dark:text-indigo-400`}>
                     {t('common.cancel')}
                   </Text>
                 </TouchableOpacity>
@@ -224,7 +226,7 @@ export function DatePickerModal({ visible, value, onChange, onClose, maximumDate
                       style={{ height: ITEM_H }}
                       className={`items-center justify-center border-b border-gray-100 dark:border-gray-800 ${y === viewYear ? 'bg-indigo-50 dark:bg-indigo-950' : ''}`}
                     >
-                      <Text className={`text-sm font-semibold ${y === viewYear ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                      <Text className={`${typo.label} ${y === viewYear ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'}`}>
                         {y}
                       </Text>
                     </TouchableOpacity>
@@ -249,7 +251,7 @@ export function DatePickerModal({ visible, value, onChange, onClose, maximumDate
                           }`}
                           style={{ width: '44%', height: 40 }}
                         >
-                          <Text className={`text-sm font-semibold capitalize ${
+                          <Text className={`${typo.label} capitalize ${
                             active ? 'text-white' : disabled ? 'text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300'
                           }`}>
                             {name}

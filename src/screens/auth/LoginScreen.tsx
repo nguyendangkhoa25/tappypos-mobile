@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,38 +16,30 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ClearableInput } from '../../components/ClearableInput';
 import { PasswordInput } from '../../components/PasswordInput';
 import { LanguageChip } from '../../components/LanguageChip';
+import { useTypography } from '../../hooks/useTypography';
 import { authApi } from '../../services/api';
 import { SUPPORT } from '../../utils/constants';
 import { useAuthStore } from '../../store/authStore';
 import { useAlertStore } from '../../store/alertStore';
-import * as SecureStore from 'expo-secure-store';
 import type { AuthScreenProps } from '../../types/navigation';
 
 export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const typo = useTypography();
   const { setAuthenticated, setStoredPhone } = useAuthStore();
   const { show: showAlert } = useAlertStore();
-  const noTenantRequired = route?.params?.noTenantRequired ?? false;
 
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [shopName, setShopName] = useState('');
   const passwordRef = useRef<TextInput>(null);
 
-  useEffect(() => {
-    if (!noTenantRequired) {
-      SecureStore.getItemAsync('shop_name').then((v) => { if (v) setShopName(v); });
-    }
-  }, [noTenantRequired]);
-
-  const handleChangeShop = async () => {
-    await SecureStore.deleteItemAsync('tenant_id');
-    await SecureStore.deleteItemAsync('shop_name');
-    navigation.replace('ShopId');
-  };
+  const welcomeMessage = useMemo(() => {
+    const messages = t('auth.login.welcomeMessages', { returnObjects: true }) as string[];
+    return Array.isArray(messages) ? messages[Math.floor(Math.random() * messages.length)] : '';
+  }, [i18n.language]);
 
   const handleLogin = async () => {
     const trimmedPhone = phone.trim();
@@ -97,44 +89,8 @@ export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
       >
         <View className="flex-1 px-6">
           {/* Top bar */}
-          <View className="mb-8">
-            <View className="flex-row items-center justify-between">
-              {noTenantRequired ? (
-                <TouchableOpacity
-                  onPress={() => navigation.goBack()}
-                  className="flex-row items-center gap-1"
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <MaterialCommunityIcons name="chevron-left" size={20} color="#4f46e5" />
-                  <Text className="text-sm text-primary font-semibold">{t('auth.login.backToShopId')}</Text>
-                </TouchableOpacity>
-              ) : (
-                <View className="flex-row items-center gap-2">
-                  <MaterialCommunityIcons name="store-outline" size={16} color="#9ca3af" />
-                  {shopName ? (
-                    <Text className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      {shopName}
-                    </Text>
-                  ) : (
-                    <Text className="text-sm text-gray-400 dark:text-gray-500">{t('auth.login.shopLabel')}</Text>
-                  )}
-                </View>
-              )}
-              <View className="flex-row items-center gap-3">
-                {!noTenantRequired && (
-                  <TouchableOpacity onPress={handleChangeShop} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Text className="text-sm text-primary font-semibold">{t('auth.login.changeShop')}</Text>
-                  </TouchableOpacity>
-                )}
-                {noTenantRequired && <LanguageChip />}
-              </View>
-            </View>
-            {/* Language chip drops below the row when Change Shop is visible */}
-            {!noTenantRequired && (
-              <View className="items-end mt-2">
-                <LanguageChip />
-              </View>
-            )}
+          <View className="items-end mb-8">
+            <LanguageChip />
           </View>
 
           {/* Header */}
@@ -142,15 +98,22 @@ export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
             <View className="w-16 h-16 rounded-2xl items-center justify-center mb-4" style={{ backgroundColor: '#4f46e5' }}>
               <MaterialCommunityIcons name="store" size={36} color="white" />
             </View>
-            <Text className="text-3xl font-bold text-gray-900 dark:text-white">{t('auth.login.title')}</Text>
-            <Text className="text-base text-gray-500 dark:text-gray-400 mt-1">
-              {noTenantRequired ? t('auth.login.subtitleOnboarding') : t('auth.login.subtitleFull')}
+            <Text className={`${typo.heading} text-gray-900 dark:text-white`}>{t('auth.login.title')}</Text>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1`}>
+              {t('auth.login.subtitleFull')}
             </Text>
+            {!!welcomeMessage && (
+              <View className="mt-4 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl">
+                <Text className={`${typo.caption} text-indigo-700 dark:text-indigo-300 text-center leading-5`}>
+                  {welcomeMessage}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Phone */}
           <View className="mb-4">
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
               {t('auth.login.phoneLabel')}
             </Text>
             <ClearableInput
@@ -168,7 +131,7 @@ export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
 
           {/* Password */}
           <View className="mb-2">
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
               {t('auth.login.passwordLabel')}
             </Text>
             <PasswordInput
@@ -185,7 +148,7 @@ export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
 
           {/* Inline error */}
           {phoneError ? (
-            <Text testID="login-error" className="text-red-500 text-sm mt-1 mb-2">{phoneError}</Text>
+            <Text testID="login-error" className={`${typo.caption} text-red-500 mt-1 mb-2`}>{phoneError}</Text>
           ) : null}
 
           {/* Forgot password */}
@@ -193,7 +156,7 @@ export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
             className="self-end mb-6"
             onPress={() => navigation.navigate('ForgotPassword', { prefillPhone: phone.trim() })}
           >
-            <Text className="text-sm text-primary">{t('auth.login.forgotPassword')}</Text>
+            <Text className={`${typo.caption} text-primary`}>{t('auth.login.forgotPassword')}</Text>
           </TouchableOpacity>
 
           {/* Login button */}
@@ -209,7 +172,7 @@ export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text
-                className={`font-bold text-base ${
+                className={`${typo.labelBold} ${
                   !phone || !password ? 'text-gray-400 dark:text-gray-500' : 'text-white'
                 }`}
               >
@@ -220,9 +183,9 @@ export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
 
           {/* Register link */}
           <View className="flex-row justify-center mt-6">
-            <Text className="text-gray-500 dark:text-gray-400 text-sm">{t('auth.login.noAccount')} </Text>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('auth.login.noAccount')} </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text className="text-primary font-semibold text-sm">{t('auth.login.registerLink')}</Text>
+              <Text className={`${typo.label} text-primary`}>{t('auth.login.registerLink')}</Text>
             </TouchableOpacity>
           </View>
         </View>

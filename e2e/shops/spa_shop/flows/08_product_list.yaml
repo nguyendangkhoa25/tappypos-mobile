@@ -1,0 +1,46 @@
+appId: com.knp.tappypos
+name: "SPA 08 Product list — search spa services, verify blocked inventory (PRODUCT feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Products via More ────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-products"
+- assertVisible: "Sản phẩm"
+- assertNotVisible: "500"
+
+# ── PL01: Search for a spa service ───────────────────────────────────────────
+- tapOn:
+    id: "product-search-input"
+- inputText: "massage"
+- hideKeyboard
+- assertNotVisible: "500"
+
+# ── PL02: Clear search ────────────────────────────────────────────────────────
+- tapOn:
+    id: "product-search-input"
+- eraseText: 50
+- hideKeyboard
+
+# ── PL03: First product card is accessible ────────────────────────────────────
+- tapOn:
+    id: "product-card-.*"
+    optional: true
+- assertNotVisible: "500"
+# Navigate back if we went into a product detail
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── PL04: INVENTORY tile is NOT present in More (spa has no inventory) ────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertNotVisible:
+    id: "more-tile-inventory"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

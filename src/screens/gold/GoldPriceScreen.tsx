@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { goldPriceApi, type GoldPrice } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import { formatVnd, formatDate } from '../../utils/format';
 import { BarChart } from '../../components/BarChart';
 import { DatePickerInput } from '../../components/DatePickerInput';
@@ -29,6 +30,7 @@ function todayIso(): string {
 export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceMain'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const qc = useQueryClient();
   const { show: showToast } = useToastStore();
   const showErrorAlert = useErrorAlert();
@@ -94,10 +96,10 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
           <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
         </TouchableOpacity>
         <View className="flex-1">
-          <Text className="text-lg font-bold text-gray-900 dark:text-white">{t('gold.title')}</Text>
-          <Text className="text-xs text-gray-500 dark:text-gray-400">{t('gold.hint')}</Text>
+          <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('gold.title')}</Text>
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('gold.hint')}</Text>
           {current && (
-            <Text className="text-xs text-gray-400">{t('gold.lastUpdated', { time: formatDate(current.date) })}</Text>
+            <Text className={`${typo.caption} text-gray-400`}>{t('gold.lastUpdated', { time: formatDate(current.date) })}</Text>
           )}
         </View>
         <TouchableOpacity onPress={openSheet} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -110,31 +112,31 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
           <ActivityIndicator color="#4f46e5" />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
           {/* Price cards */}
           {current ? (
             <View className="flex-row gap-3">
               <View className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-4">
-                <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('gold.buyPrice')}</Text>
-                <Text className="text-xl font-bold text-blue-600">{formatVnd(current.buyPrice)}</Text>
-                <Text className="text-xs text-gray-400 mt-0.5">{t('gold.perChi')}</Text>
+                <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{t('gold.buyPrice')}</Text>
+                <Text className={`${typo.section} text-blue-600`}>{formatVnd(current.buyPrice)}</Text>
+                <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{t('gold.perChi')}</Text>
               </View>
               <View className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-4">
-                <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('gold.sellPrice')}</Text>
-                <Text className="text-xl font-bold text-indigo-600">{formatVnd(current.sellPrice)}</Text>
-                <Text className="text-xs text-gray-400 mt-0.5">{t('gold.perChi')}</Text>
+                <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{t('gold.sellPrice')}</Text>
+                <Text className={`${typo.section} text-indigo-600`}>{formatVnd(current.sellPrice)}</Text>
+                <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{t('gold.perChi')}</Text>
               </View>
             </View>
           ) : (
             <View className="bg-white dark:bg-gray-800 rounded-2xl p-8 items-center">
               <MaterialCommunityIcons name="gold" size={48} color="#d1d5db" />
-              <Text className="text-base font-semibold text-gray-400 mt-3 text-center">{t('gold.noData')}</Text>
-              <Text className="text-sm text-gray-400 mt-1 text-center">{t('gold.noDataHint')}</Text>
+              <Text className={`${typo.body} text-gray-400 mt-3 text-center`}>{t('gold.noData')}</Text>
+              <Text className={`${typo.caption} text-gray-400 mt-1 text-center`}>{t('gold.noDataHint')}</Text>
               <TouchableOpacity
                 onPress={openSheet}
                 className="mt-4 bg-indigo-600 px-6 py-3 rounded-2xl"
               >
-                <Text className="text-white font-semibold">{t('gold.updateTitle')}</Text>
+                <Text className={`${typo.label} text-white`}>{t('gold.updateTitle')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -142,7 +144,7 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
           {/* 7-day buy price chart */}
           {history.length > 1 && (
             <View className="bg-white dark:bg-gray-800 rounded-2xl px-4 pt-4 pb-2">
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('gold.history7day')}</Text>
+              <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-1`}>{t('gold.history7day')}</Text>
               <BarChart
                 data={[...history].reverse().map((g) => ({ label: g.date, value: g.buyPrice }))}
                 color="#4f46e5"
@@ -154,15 +156,15 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
           {/* History */}
           {history.length > 0 && (
             <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('gold.history')}</Text>
+              <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-3`}>{t('gold.history')}</Text>
               {history.map((g: GoldPrice, idx: number) => (
                 <View key={g.date}>
                   {idx > 0 && <View className="h-px bg-gray-100 dark:bg-gray-700 my-2" />}
                   <View className="flex-row items-center">
-                    <Text className="text-sm text-gray-600 dark:text-gray-400 flex-1">{formatDate(g.date)}</Text>
+                    <Text className={`${typo.caption} text-gray-600 dark:text-gray-400 flex-1`}>{formatDate(g.date)}</Text>
                     <View className="items-end">
-                      <Text className="text-xs text-blue-500">{t('gold.buyLabel')}: {formatVnd(g.buyPrice)}</Text>
-                      <Text className="text-xs text-indigo-600">{t('gold.sellLabel')}: {formatVnd(g.sellPrice)}</Text>
+                      <Text className={`${typo.caption} text-blue-500`}>{t('gold.buyLabel')}: {formatVnd(g.buyPrice)}</Text>
+                      <Text className={`${typo.caption} text-indigo-600`}>{t('gold.sellLabel')}: {formatVnd(g.sellPrice)}</Text>
                     </View>
                   </View>
                 </View>
@@ -176,14 +178,19 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
       <Modal visible={sheetVisible} animationType="slide" transparent>
         <KeyboardAvoidingView className="flex-1 justify-end" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View className="bg-white dark:bg-gray-800 rounded-t-3xl p-6" style={{ paddingBottom: insets.bottom + 16 }}>
-            <View className="flex-row items-center justify-between mb-5">
-              <Text className="text-lg font-bold text-gray-900 dark:text-white">{t('gold.updateTitle')}</Text>
-              <TouchableOpacity onPress={() => setSheetVisible(false)}>
+            <View className="flex-row items-center mb-5">
+              <TouchableOpacity onPress={() => setSheetVisible(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
                 <MaterialCommunityIcons name="close" size={22} color="#6b7280" />
+              </TouchableOpacity>
+              <Text className={`${typo.section} text-gray-900 dark:text-white flex-1`}>{t('gold.updateTitle')}</Text>
+              <TouchableOpacity onPress={() => createMutation.mutate()} disabled={createMutation.isPending || !canSave} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                {createMutation.isPending ? <ActivityIndicator size="small" color="#4f46e5" /> : (
+                  <Text className={`${typo.labelBold} ${canSave ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-300 dark:text-gray-600'}`}>{t('common.save')}</Text>
+                )}
               </TouchableOpacity>
             </View>
 
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('gold.updateDate')}</Text>
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('gold.updateDate')}</Text>
             <View className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 bg-gray-50 dark:bg-gray-700 mb-4">
               <DatePickerInput
                 value={form.date}
@@ -192,27 +199,27 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
               />
             </View>
 
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('gold.updateBuy')}</Text>
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('gold.updateBuy')}</Text>
             <TextInput
               value={form.buyPrice}
               onChangeText={(v) => setForm({ ...form, buyPrice: v.replace(/\D/g, '') })}
               placeholder="0"
               placeholderTextColor="#9ca3af"
               keyboardType="numeric"
-              className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4"
+              className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4`}
             />
 
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('gold.updateSell')}</Text>
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('gold.updateSell')}</Text>
             <TextInput
               value={form.sellPrice}
               onChangeText={(v) => setForm({ ...form, sellPrice: v.replace(/\D/g, '') })}
               placeholder="0"
               placeholderTextColor="#9ca3af"
               keyboardType="numeric"
-              className={`border rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-1 ${sellLtBuy ? 'border-amber-400' : 'border-gray-200 dark:border-gray-600'}`}
+              className={`border rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-1 ${sellLtBuy ? 'border-amber-400' : 'border-gray-200 dark:border-gray-600'}`}
             />
             {sellLtBuy && (
-              <Text className="text-xs text-amber-500 mb-3">{t('gold.warnSellLtBuy')}</Text>
+              <Text className={`${typo.caption} text-amber-500 mb-3`}>{t('gold.warnSellLtBuy')}</Text>
             )}
             {!sellLtBuy && <View className="mb-3" />}
 
@@ -221,22 +228,9 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
               onChangeText={(v) => setForm({ ...form, note: v })}
               placeholder={t('gold.updateNotePlaceholder')}
               placeholderTextColor="#9ca3af"
-              className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4"
+              className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4`}
             />
 
-            <TouchableOpacity
-              onPress={() => createMutation.mutate()}
-              disabled={createMutation.isPending || !canSave}
-              className={`rounded-2xl py-4 items-center ${createMutation.isPending || !canSave ? 'bg-gray-200 dark:bg-gray-700' : 'bg-indigo-600 active:opacity-80'}`}
-            >
-              {createMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text className={`font-bold text-base ${!canSave ? 'text-gray-400' : 'text-white'}`}>
-                  {t('common.save')}
-                </Text>
-              )}
-            </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </Modal>

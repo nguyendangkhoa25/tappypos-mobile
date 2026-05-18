@@ -1,36 +1,50 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   FlatList,
-  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useAlertStore } from '../../store/alertStore';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { comboApi, type ComboData } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
+import { ErrorState } from '../../components/ErrorState';
+import { ScreenSkeleton } from '../../components/ScreenSkeleton';
 import { formatVnd } from '../../utils/format';
 import type { ComboScreenProps } from '../../types/navigation';
 
 export function ComboListScreen({ navigation }: ComboScreenProps<'ComboList'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const qc = useQueryClient();
   const { show: showAlert } = useAlertStore();
   const { show: showToast } = useToastStore();
   const showErrorAlert = useErrorAlert();
   const [showActive, setShowActive] = useState<boolean | undefined>(true);
+  const [search, setSearch] = useState('');
 
-  const { data: combos = [], isLoading, refetch } = useQuery({
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+
+  const { data: combos = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['combos', showActive],
     queryFn: () => comboApi.list(showActive).then((r) => r.data.data),
     staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
   });
+
+  const onRefresh = useCallback(async () => {
+    setIsManualRefreshing(true);
+    await refetch();
+    setIsManualRefreshing(false);
+  }, [refetch]);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => comboApi.delete(id),
@@ -60,6 +74,13 @@ export function ComboListScreen({ navigation }: ComboScreenProps<'ComboList'>) {
     { active: false, labelKey: 'filterHidden' },
   ];
 
+  const displayedCombos = search.trim()
+    ? combos.filter((c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        (c.description ?? '').toLowerCase().includes(search.toLowerCase())
+      )
+    : combos;
+
   const savings = (combo: ComboData) => combo.totalIndividualPrice - combo.price;
 
   return (
@@ -73,7 +94,7 @@ export function ComboListScreen({ navigation }: ComboScreenProps<'ComboList'>) {
             <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
               <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
             </TouchableOpacity>
-            <Text className="text-xl font-bold text-gray-900 dark:text-white flex-1">{t('combos.title')}</Text>
+            <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('combos.title')}</Text>
           </View>
           <TouchableOpacity
             onPress={() => navigation.navigate('ComboEdit', {})}
@@ -82,7 +103,24 @@ export function ComboListScreen({ navigation }: ComboScreenProps<'ComboList'>) {
             <MaterialCommunityIcons name="plus" size={24} color="#4f46e5" />
           </TouchableOpacity>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('combos.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-3`}>{t('combos.hint')}</Text>
+        {/* Search */}
+        <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-3 py-2.5 mb-3">
+          <MaterialCommunityIcons name="magnify" size={20} color="#9ca3af" />
+          <TextInput
+            className={`flex-1 ml-2 ${typo.inputSize} text-gray-800 dark:text-gray-100`}
+            placeholder={t('combos.searchPlaceholder')}
+            placeholderTextColor="#9ca3af"
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <MaterialCommunityIcons name="close-circle" size={18} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
+        </View>
         <View className="flex-row gap-2 pb-3">
           {filters.map((f) => {
             const active = showActive === f.active;
@@ -92,7 +130,7 @@ export function ComboListScreen({ navigation }: ComboScreenProps<'ComboList'>) {
                 onPress={() => setShowActive(f.active)}
                 className={`px-4 py-1.5 rounded-full border ${active ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
               >
-                <Text className={`text-sm font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                <Text className={`${typo.caption} font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                   {t(`combos.${f.labelKey}`)}
                 </Text>
               </TouchableOpacity>
@@ -101,38 +139,45 @@ export function ComboListScreen({ navigation }: ComboScreenProps<'ComboList'>) {
         </View>
       </View>
 
-      {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#4f46e5" />
-        </View>
-      ) : combos.length === 0 ? (
+      {isError ? (
+        <ErrorState onRetry={refetch} />
+      ) : isLoading ? (
+        <ScreenSkeleton count={4} cardHeight={110} />
+      ) : displayedCombos.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
           <Text style={{ fontSize: 56 }}>🍱</Text>
-          <Text className="text-base font-semibold text-gray-400 mt-4 text-center">{t('combos.empty')}</Text>
-          <Text className="text-sm text-gray-400 mt-1 text-center">{t('combos.emptyHint')}</Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ComboEdit', {})}
-            className="mt-6 bg-indigo-600 px-6 py-3 rounded-2xl"
-          >
-            <Text className="text-white font-semibold">{t('combos.addBtn')}</Text>
-          </TouchableOpacity>
+          <Text className={`${typo.body} text-gray-400 mt-4 text-center`}>
+            {search.trim() ? t('combos.noResults') : t('combos.empty')}
+          </Text>
+          {!search.trim() && (
+            <>
+              <Text className={`${typo.caption} text-gray-400 mt-1 text-center`}>{t('combos.emptyHint')}</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ComboEdit', {})}
+                className="mt-6 bg-indigo-600 px-6 py-3 rounded-2xl"
+              >
+                <Text className={`${typo.label} text-white`}>{t('combos.addBtn')}</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       ) : (
         <FlatList
-          data={combos}
+          showsVerticalScrollIndicator={false}
+          data={displayedCombos}
           keyExtractor={(c) => c.id}
           contentContainerStyle={{ padding: 16, gap: 10 }}
-          refreshing={isLoading}
-          onRefresh={refetch}
+          refreshing={isManualRefreshing}
+          onRefresh={onRefresh}
           renderItem={({ item }) => {
             const saving = savings(item);
             return (
               <View className={`bg-white dark:bg-gray-800 rounded-2xl p-4 ${!item.active ? 'opacity-60' : ''}`}>
                 <View className="flex-row items-start justify-between mb-2">
                   <View className="flex-1 mr-2">
-                    <Text className="text-base font-bold text-gray-900 dark:text-white">{item.name}</Text>
+                    <Text className={`${typo.labelBold} text-gray-900 dark:text-white`}>{item.name}</Text>
                     {item.description ? (
-                      <Text className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{item.description}</Text>
+                      <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{item.description}</Text>
                     ) : null}
                   </View>
                   <View className="flex-row gap-2 items-center">
@@ -150,14 +195,14 @@ export function ComboListScreen({ navigation }: ComboScreenProps<'ComboList'>) {
                     </TouchableOpacity>
                   </View>
                 </View>
-                <Text className="text-sm text-gray-500 dark:text-gray-400 mb-2" numberOfLines={1}>
+                <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-2`} numberOfLines={1}>
                   {item.items.map((i) => i.productName).join(' · ')}
                 </Text>
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-base font-bold text-indigo-600">{formatVnd(item.price)}</Text>
+                  <Text className={`${typo.labelBold} text-indigo-600`}>{formatVnd(item.price)}</Text>
                   {saving > 0 && (
                     <View className="bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-1 rounded-full">
-                      <Text className="text-xs font-medium text-indigo-700 dark:text-indigo-400">
+                      <Text className={`${typo.captionBold} text-indigo-700 dark:text-indigo-400`}>
                         {t('combos.savings', { amount: formatVnd(saving) })}
                       </Text>
                     </View>
@@ -167,7 +212,7 @@ export function ComboListScreen({ navigation }: ComboScreenProps<'ComboList'>) {
                   onPress={() => toggleMutation.mutate(item)}
                   className="mt-3 border border-gray-200 dark:border-gray-600 rounded-xl py-2 items-center"
                 >
-                  <Text className="text-sm text-gray-600 dark:text-gray-400">
+                  <Text className={`${typo.caption} text-gray-600 dark:text-gray-400`}>
                     {item.active ? t('combos.filterHidden') : t('combos.filterActive')}
                   </Text>
                 </TouchableOpacity>

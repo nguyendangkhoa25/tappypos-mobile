@@ -9,11 +9,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNetworkStore } from '../store/networkStore';
+import { useTypography } from '../hooks/useTypography';
 
 const CONTENT_H = 42;
 
 export function OfflineBanner() {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const { isMaintenance, isOffline } = useNetworkStore();
   const visible = isMaintenance || isOffline;
@@ -53,7 +55,7 @@ export function OfflineBanner() {
       ]}
       pointerEvents="none"
     >
-      <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{label}</Text>
+      <Text className={`${typo.caption} font-semibold text-white`}>{label}</Text>
     </Animated.View>
   );
 }

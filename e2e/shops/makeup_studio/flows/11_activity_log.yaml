@@ -1,0 +1,31 @@
+appId: com.knp.tappypos
+name: "MKUP 11 Activity log — list renders, filter tabs (ACTIVITY_LOG feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- tapOn: "Nhật ký hoạt động"
+- assertVisible: "Nhật ký hoạt động"
+- assertNotVisible: "500"
+
+- assertVisible:
+    id: "activity-entry-0"
+    optional: true
+
+- tapOn: "Đơn hàng"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn: "Sản phẩm"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn: "Tất cả"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

@@ -1,0 +1,63 @@
+appId: com.knp.tappypos
+name: "22 Bank transfer payment + walk-in customer — checkout with BANK_TRANSFER, QR visible"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Sell tab ──────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+
+# ── BT01: Add a service to cart ──────────────────────────────────────────────
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible:
+    id: "barber-cart-count"
+
+# ── BT02: Open checkout ───────────────────────────────────────────────────────
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Hoàn tất đơn hàng"
+- assertVisible: "Phương thức thanh toán"
+
+# ── BT03: Walk-in customer (Khách lẻ) is default pre-selected ────────────────
+# If a walk-in customer is pre-filled, the customer section shows their name
+# (This tests US: walkthrough customer auto-selected at checkout)
+- assertVisible: "Khách lẻ"
+    optional: true
+
+# ── BT04: Select BANK_TRANSFER payment method ─────────────────────────────────
+- assertVisible:
+    id: "payment-method-CASH"
+- tapOn:
+    id: "payment-method-BANK_TRANSFER"
+- assertVisible:
+    id: "payment-method-BANK_TRANSFER"
+
+# ── BT05: Bank QR code section appears (if bank account is configured) ────────
+# QR code image or instruction text should be visible
+- assertVisible: "Chuyển khoản"
+    optional: true
+- assertNotVisible: "500"
+
+# ── BT06: Switch back to CASH and complete the order ─────────────────────────
+- tapOn:
+    id: "payment-method-CASH"
+- tapOn:
+    id: "barber-place-order-btn"
+- assertVisible: "Đặt hàng thành công!"
+
+# ── BT07: New order clears cart ───────────────────────────────────────────────
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Dịch vụ"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

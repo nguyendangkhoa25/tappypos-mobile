@@ -6,11 +6,13 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { useAlertStore } from '../../store/alertStore';
+import { useTypography } from '../../hooks/useTypography';
 import type { SettingsScreenProps } from '../../types/navigation';
 
 export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const { pinEnabled, biometricEnabled, setPinEnabled, setBiometricEnabled } = useAuthStore();
   const { show: showAlert } = useAlertStore();
   const [biometricAvailable, setBiometricAvailable] = useState(false);
@@ -80,28 +82,28 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
   const biometricToggleEnabled = biometricEnabled && pinEnabled && biometricAvailable;
 
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-gray-900" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <View className="px-4 pt-4 pb-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            className="mr-3 p-1"
+            className="mr-3"
           >
-            <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {t('settings.securitySettings.title')}
           </Text>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-9">{t('settings.securitySettings.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('settings.securitySettings.hint')}</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 40 }}>
 
         {/* PIN section */}
-        <Text className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">
+        <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1`}>
           {t('settings.securitySettings.sectionPin')}
         </Text>
         <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden mb-4">
@@ -110,10 +112,10 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
               <MaterialCommunityIcons name="numeric" size={20} color="#4f46e5" />
             </View>
             <View className="flex-1 mr-3">
-              <Text className="text-sm font-semibold text-gray-800 dark:text-white">
+              <Text className={`${typo.label} text-gray-800 dark:text-white`}>
                 {t('settings.securitySettings.pinTitle')}
               </Text>
-              <Text className="text-xs text-gray-400 dark:text-gray-500 mt-0.5" numberOfLines={2}>
+              <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5`} numberOfLines={2}>
                 {t('settings.securitySettings.pinSubtitle')}
               </Text>
             </View>
@@ -133,7 +135,7 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
                 className="flex-row items-center justify-between px-4 py-4"
                 activeOpacity={0.7}
               >
-                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-300`}>
                   {t('settings.securitySettings.changePin')}
                 </Text>
                 <MaterialCommunityIcons name="chevron-right" size={18} color="#9ca3af" />
@@ -143,7 +145,7 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
         </View>
 
         {/* Biometric section */}
-        <Text className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">
+        <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1`}>
           {t('settings.securitySettings.sectionBiometric')}
         </Text>
         <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden mb-4">
@@ -152,10 +154,10 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
               <MaterialCommunityIcons name={biometricIcon as any} size={20} color="#16a34a" />
             </View>
             <View className="flex-1 mr-3">
-              <Text className="text-sm font-semibold text-gray-800 dark:text-white">
+              <Text className={`${typo.label} text-gray-800 dark:text-white`}>
                 {biometricLabel}
               </Text>
-              <Text className="text-xs text-gray-400 dark:text-gray-500 mt-0.5" numberOfLines={2}>
+              <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5`} numberOfLines={2}>
                 {checkingBiometric ? t('common.loading') : biometricSubtitle}
               </Text>
             </View>
@@ -176,7 +178,7 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
         {/* Info note */}
         <View className="flex-row items-start gap-2 px-1">
           <MaterialCommunityIcons name="information-outline" size={14} color="#9ca3af" style={{ marginTop: 1 }} />
-          <Text className="text-xs text-gray-400 dark:text-gray-500 flex-1 leading-4">
+          <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 flex-1 leading-4`}>
             {t('settings.securitySettings.infoNote')}
           </Text>
         </View>

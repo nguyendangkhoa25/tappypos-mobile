@@ -1,0 +1,97 @@
+appId: com.knp.tappypos
+name: "06 Appointment CRUD — create, view detail, cancel, delete"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → Appointments ──────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-appointments"
+- assertVisible: "Lịch hẹn"
+
+# ── Pre-cleanup: remove any leftover test appointment ────────────────────────
+- tapOn:
+    id: "appointment-card-0"
+    optional: true
+- tapOn:
+    id: "appt-cancel-btn"
+    optional: true
+- tapOn: "Hủy lịch"
+    optional: true
+- tapOn: "OK"
+    optional: true
+- tapOn:
+    id: "appt-delete-btn"
+    optional: true
+- tapOn: "Xóa"
+    optional: true
+- tapOn: "OK"
+    optional: true
+
+# ── Navigate back to list ─────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-appointments"
+- assertVisible: "Lịch hẹn"
+
+# ── A01: Tap FAB to create new appointment ───────────────────────────────────
+- tapOn:
+    id: "appointment-add-fab"
+- assertVisible: "Đặt lịch hẹn"
+
+# ── A02: Fill customer name ──────────────────────────────────────────────────
+- tapOn:
+    id: "appt-customer-name"
+- inputText: "Khách Test Maestro"
+
+# ── A03: Fill customer phone ─────────────────────────────────────────────────
+- tapOn:
+    id: "appt-customer-phone"
+- inputText: "0912999888"
+
+# ── A04: Advance date (tap ">" chevron once to pick next available day) ───────
+# AppointmentFormScreen uses a custom arrow chevron picker — no native picker
+- tapOn:
+    text: "›"
+    optional: true
+
+# ── A05: Save the appointment ────────────────────────────────────────────────
+- tapOn:
+    id: "appt-save-btn"
+- assertVisible: "Lịch hẹn"
+
+# ── A06: The new appointment card appears in the list ────────────────────────
+- assertVisible: "Khách Test Maestro"
+
+# ── A07: Tap the appointment to open detail ──────────────────────────────────
+- tapOn:
+    id: "appointment-card-0"
+- assertVisible: "Khách Test Maestro"
+- assertVisible:
+    id: "appt-checkin-btn"
+
+# ── A08: Cancel the appointment ─────────────────────────────────────────────
+- tapOn:
+    id: "appt-cancel-btn"
+- tapOn: "Hủy lịch"
+- tapOn: "OK"
+    optional: true
+
+# ── A09: Status changes to CANCELLED — check-in button gone ─────────────────
+- assertNotVisible:
+    id: "appt-checkin-btn"
+
+# ── A10: Delete the appointment ──────────────────────────────────────────────
+- tapOn:
+    id: "appt-delete-btn"
+    optional: true
+- tapOn: "Xóa"
+    optional: true
+- tapOn: "OK"
+    optional: true
+
+# ── Navigate back to More ─────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertVisible: "Khác"

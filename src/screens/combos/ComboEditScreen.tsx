@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -20,16 +20,38 @@ import { useToastStore } from '../../store/toastStore';
 import { useAlertStore } from '../../store/alertStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { comboApi, productExtApi, type ComboItem, type ProductData } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import { formatVnd } from '../../utils/format';
 import type { ComboScreenProps } from '../../types/navigation';
 
 type FormItem = { productId: string; productName: string; quantity: number; price: number };
+
+function SectionHeader({ icon, title }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; title: string }) {
+  const typo = useTypography();
+  return (
+    <View className="flex-row items-center mb-3 mt-1">
+      <MaterialCommunityIcons name={icon} size={15} color="#6b7280" style={{ marginRight: 6 }} />
+      <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase tracking-wide`}>{title}</Text>
+    </View>
+  );
+}
+
+function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+  const typo = useTypography();
+  return (
+    <View className="mb-4">
+      <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-300 mb-1.5`}>{label}</Text>
+      {children}
+    </View>
+  );
+}
 
 export function ComboEditScreen({ navigation, route }: ComboScreenProps<'ComboEdit'>) {
   const { comboId } = route.params ?? {};
   const isEdit = !!comboId;
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const qc = useQueryClient();
   const { show: showToast } = useToastStore();
   const { show: showAlert } = useAlertStore();
@@ -124,30 +146,22 @@ export function ComboEditScreen({ navigation, route }: ComboScreenProps<'ComboEd
       className="flex-1 bg-gray-50 dark:bg-gray-900"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View
-        className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
-        style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
-      >
+      {/* Header */}
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`} numberOfLines={1}>
             {isEdit ? t('combos.editTitle') : t('combos.createTitle')}
           </Text>
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={saveMutation.isPending}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            {saveMutation.isPending ? (
-              <ActivityIndicator size="small" color="#4f46e5" />
-            ) : (
-              <Text className="font-semibold text-base text-indigo-600">{t('common.save')}</Text>
+          <TouchableOpacity onPress={handleSave} disabled={saveMutation.isPending} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            {saveMutation.isPending ? <ActivityIndicator size="small" color="#4f46e5" /> : (
+              <Text className={`${typo.labelBold} text-indigo-600 dark:text-indigo-400`}>{t('common.save')}</Text>
             )}
           </TouchableOpacity>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-9">{t('combos.editHint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('combos.editHint')}</Text>
       </View>
 
       {loadingEdit ? (
@@ -155,21 +169,25 @@ export function ComboEditScreen({ navigation, route }: ComboScreenProps<'ComboEd
           <ActivityIndicator color="#4f46e5" />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }} keyboardShouldPersistTaps="handled">
-          {/* Basic info */}
-          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 gap-4">
-            <View>
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('combos.nameLabel')}</Text>
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Section: Basic info */}
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
+            <SectionHeader icon="information-outline" title={t('combos.sectionInfo')} />
+            <FormField label={`${t('combos.nameLabel')} *`}>
               <TextInput
                 value={name}
                 onChangeText={(v) => { setName(v); setError(''); }}
                 placeholder={t('combos.namePlaceholder')}
                 placeholderTextColor="#9ca3af"
-                className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700"
+                className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-white dark:bg-gray-700`}
               />
-            </View>
-            <View>
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('combos.descLabel')}</Text>
+            </FormField>
+            <FormField label={t('combos.descLabel')}>
               <TextInput
                 value={description}
                 onChangeText={setDescription}
@@ -178,91 +196,99 @@ export function ComboEditScreen({ navigation, route }: ComboScreenProps<'ComboEd
                 multiline
                 numberOfLines={2}
                 textAlignVertical="top"
-                className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700"
+                className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-white dark:bg-gray-700`}
               />
-            </View>
+            </FormField>
           </View>
 
-          {/* Products */}
-          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                {t('combos.productsLabel')} ({items.length})
+          {/* Section: Products */}
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
+            <View className="flex-row items-center mb-3 mt-1">
+              <MaterialCommunityIcons name="package-variant" size={15} color="#6b7280" style={{ marginRight: 6 }} />
+              <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase tracking-wide flex-1`}>
+                {t('combos.sectionProducts')} ({items.length})
               </Text>
               <TouchableOpacity
                 onPress={() => setPickerVisible(true)}
-                className="flex-row items-center gap-1"
+                className="flex-row items-center"
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={{ gap: 4 }}
               >
                 <MaterialCommunityIcons name="plus" size={16} color="#4f46e5" />
-                <Text className="text-sm text-indigo-600 font-semibold">{t('combos.addProduct')}</Text>
+                <Text className={`${typo.label} text-indigo-600 dark:text-indigo-400`}>{t('combos.addProduct')}</Text>
               </TouchableOpacity>
             </View>
             {items.map((item, idx) => (
               <View key={item.productId}>
                 {idx > 0 && <View className="h-px bg-gray-100 dark:bg-gray-700 my-2" />}
-                <View className="flex-row items-center gap-2">
+                <View className="flex-row items-center" style={{ gap: 8 }}>
                   <View className="flex-1">
-                    <Text className="text-sm font-medium text-gray-900 dark:text-white">{item.productName}</Text>
-                    <Text className="text-xs text-gray-500 mt-0.5">{formatVnd(item.price)} × {item.quantity}</Text>
+                    <Text className={`${typo.caption} font-medium text-gray-900 dark:text-white`}>{item.productName}</Text>
+                    <Text className={`${typo.caption} text-gray-500 mt-0.5`}>{formatVnd(item.price)} × {item.quantity}</Text>
                   </View>
                   <TouchableOpacity onPress={() => updateQty(item.productId, -1)} className="w-8 h-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
                     <MaterialCommunityIcons name="minus" size={16} color="#6b7280" />
                   </TouchableOpacity>
-                  <Text className="text-base font-bold text-gray-900 dark:text-white w-6 text-center">{item.quantity}</Text>
+                  <Text className={`${typo.labelBold} text-gray-900 dark:text-white w-6 text-center`}>{item.quantity}</Text>
                   <TouchableOpacity onPress={() => updateQty(item.productId, 1)} className="w-8 h-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
                     <MaterialCommunityIcons name="plus" size={16} color="#6b7280" />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => removeItem(item.productId)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="ml-1">
+                  <TouchableOpacity onPress={() => removeItem(item.productId)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                     <MaterialCommunityIcons name="close-circle" size={18} color="#ef4444" />
                   </TouchableOpacity>
                 </View>
               </View>
             ))}
             {items.length === 0 && (
-              <Text className="text-sm text-gray-400 text-center py-2">{t('combos.validationProducts')}</Text>
+              <Text className={`${typo.caption} text-gray-400 text-center py-2`}>{t('combos.validationProducts')}</Text>
             )}
           </View>
 
-          {/* Price */}
-          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('combos.priceLabel')}</Text>
-            <TextInput
-              value={price}
-              onChangeText={(v) => { setPrice(v.replace(/\D/g, '')); setError(''); }}
-              placeholder={t('combos.pricePlaceholder')}
-              placeholderTextColor="#9ca3af"
-              keyboardType="numeric"
-              className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-3"
-            />
+          {/* Section: Price */}
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
+            <SectionHeader icon="tag-outline" title={t('combos.sectionPrice')} />
+            <FormField label={`${t('combos.priceLabel')} *`}>
+              <TextInput
+                value={price}
+                onChangeText={(v) => { setPrice(v.replace(/\D/g, '')); setError(''); }}
+                placeholder={t('combos.pricePlaceholder')}
+                placeholderTextColor="#9ca3af"
+                keyboardType="numeric"
+                className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-white dark:bg-gray-700`}
+              />
+            </FormField>
             <View className="flex-row justify-between">
-              <Text className="text-sm text-gray-500">{t('combos.retailTotal')}</Text>
-              <Text className="text-sm text-gray-700 dark:text-gray-300">{formatVnd(retailTotal)}</Text>
+              <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('combos.retailTotal')}</Text>
+              <Text className={`${typo.caption} text-gray-700 dark:text-gray-300`}>{formatVnd(retailTotal)}</Text>
             </View>
             {savings > 0 && (
               <View className="flex-row justify-between mt-1">
-                <Text className="text-sm text-indigo-600">{t('combos.savingsLabel')}</Text>
-                <Text className="text-sm font-semibold text-indigo-600">{formatVnd(savings)}</Text>
+                <Text className={`${typo.caption} text-indigo-600 dark:text-indigo-400`}>{t('combos.savingsLabel')}</Text>
+                <Text className={`${typo.label} text-indigo-600 dark:text-indigo-400`}>{formatVnd(savings)}</Text>
               </View>
             )}
           </View>
 
-          {/* Status */}
-          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex-row items-center justify-between">
-            <Text className="text-base text-gray-900 dark:text-white">{t('combos.active')}</Text>
-            <Switch value={active} onValueChange={setActive} trackColor={{ true: '#4f46e5' }} thumbColor="#fff" />
+          {/* Section: Status */}
+          <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
+            <SectionHeader icon="toggle-switch-outline" title={t('combos.sectionStatus')} />
+            <View className="flex-row items-center justify-between">
+              <Text className={`${typo.caption} text-gray-900 dark:text-white`}>{t('combos.active')}</Text>
+              <Switch value={active} onValueChange={setActive} trackColor={{ true: '#4f46e5' }} thumbColor="#fff" />
+            </View>
           </View>
 
-          {error ? <Text className="text-red-500 text-sm px-1">{error}</Text> : null}
+          {error ? <Text className={`${typo.caption} text-red-500 px-4`}>{error}</Text> : null}
         </ScrollView>
       )}
+
 
       {/* Product Picker Modal */}
       <Modal visible={pickerVisible} animationType="slide" transparent>
         <View className="flex-1 bg-black/40 justify-end">
           <View className="bg-white dark:bg-gray-800 rounded-t-3xl" style={{ maxHeight: '70%', paddingBottom: insets.bottom }}>
             <View className="flex-row items-center justify-between px-4 pt-5 pb-3">
-              <Text className="text-lg font-bold text-gray-900 dark:text-white">{t('combos.addProduct')}</Text>
+              <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('combos.addProduct')}</Text>
               <TouchableOpacity onPress={() => setPickerVisible(false)}>
                 <MaterialCommunityIcons name="close" size={22} color="#6b7280" />
               </TouchableOpacity>
@@ -273,7 +299,7 @@ export function ComboEditScreen({ navigation, route }: ComboScreenProps<'ComboEd
                 onChangeText={setPickerSearch}
                 placeholder={t('combos.searchPlaceholder')}
                 placeholderTextColor="#9ca3af"
-                className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700"
+                className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 ${typo.inputSize} text-gray-900 dark:text-white bg-white dark:bg-gray-700`}
               />
             </View>
             {loadingProducts ? (
@@ -293,8 +319,8 @@ export function ComboEditScreen({ navigation, route }: ComboScreenProps<'ComboEd
                       className={`flex-row items-center py-3 border-b border-gray-100 dark:border-gray-700 ${added ? 'opacity-40' : ''}`}
                     >
                       <View className="flex-1">
-                        <Text className="text-base text-gray-900 dark:text-white">{p.name}</Text>
-                        <Text className="text-sm text-indigo-600 mt-0.5">{formatVnd(p.price)}</Text>
+                        <Text className={`${typo.caption} text-gray-900 dark:text-white`}>{p.name}</Text>
+                        <Text className={`${typo.caption} text-indigo-600 dark:text-indigo-400 mt-0.5`}>{formatVnd(p.price)}</Text>
                       </View>
                       {added ? (
                         <MaterialCommunityIcons name="check-circle" size={20} color="#4f46e5" />

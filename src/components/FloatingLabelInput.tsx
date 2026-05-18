@@ -1,6 +1,7 @@
 import { useRef, useState, forwardRef } from 'react';
 import { Animated, TextInput, TouchableOpacity, View, type TextInputProps } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTypography } from '../hooks/useTypography';
 
 type Props = Omit<TextInputProps, 'value'> & {
   label: string;
@@ -11,6 +12,7 @@ type Props = Omit<TextInputProps, 'value'> & {
 export const FloatingLabelInput = forwardRef<TextInput, Props>(
   ({ label, value, onFocus, onBlur, onClear, ...rest }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
+    const typo = useTypography();
     const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
 
     const isActive = isFocused || value.length > 0;
@@ -65,7 +67,8 @@ export const FloatingLabelInput = forwardRef<TextInput, Props>(
           <TextInput
             ref={ref}
             value={value}
-            style={{ flex: 1, fontSize: 15, color: '#111827', paddingVertical: 12 }}
+            className={`${typo.inputSize}`}
+            style={{ flex: 1, color: '#111827', paddingVertical: 12 }}
             placeholderTextColor="transparent"
             placeholder=" "
             onFocus={(e) => { setIsFocused(true); animate(1); onFocus?.(e); }}

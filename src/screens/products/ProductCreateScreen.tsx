@@ -20,6 +20,7 @@ import { useAlertStore } from '../../store/alertStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { formatVnd } from '../../utils/format';
 import { isDynamicPriceType, getDefaultUnit } from '../../constants/productConstants';
+import { useTypography } from '../../hooks/useTypography';
 import type { ProductsScreenProps } from '../../types/navigation';
 
 type Props = ProductsScreenProps<'ProductCreate'>;
@@ -34,21 +35,31 @@ type FormState = {
   durationMinutes: string;
 };
 
+function SectionHeader({ icon, title }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; title: string }) {
+  const typo = useTypography();
+  return (
+    <View className="flex-row items-center mb-3 mt-1">
+      <MaterialCommunityIcons name={icon} size={15} color="#6b7280" style={{ marginRight: 6 }} />
+      <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase tracking-wide`}>{title}</Text>
+    </View>
+  );
+}
+
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+  const typo = useTypography();
   return (
     <View className="mb-4">
-      <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-        {label}
-      </Text>
+      <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-300 mb-1.5`}>{label}</Text>
       {children}
     </View>
   );
 }
 
 function StyledInput(props: React.ComponentProps<typeof TextInput>) {
+  const typo = useTypography();
   return (
     <TextInput
-      className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-base text-gray-900"
+      className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 bg-white dark:bg-gray-700 ${typo.inputSize} text-gray-900 dark:text-white`}
       placeholderTextColor="#9ca3af"
       {...props}
     />
@@ -57,6 +68,7 @@ function StyledInput(props: React.ComponentProps<typeof TextInput>) {
 
 export function ProductCreateScreen({ navigation }: Props) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const { top, bottom } = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { show: showAlert } = useAlertStore();
@@ -140,63 +152,63 @@ export function ProductCreateScreen({ navigation }: Props) {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-50"
+      className="flex-1 bg-gray-50 dark:bg-gray-900"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Header */}
-      <View className="bg-primary px-6 pb-5" style={{ paddingTop: top + 16 }}>
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-white">{t('products.addProduct')}</Text>
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={mutation.isPending}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            {mutation.isPending ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text className="text-white font-bold text-base">{t('common.save')}</Text>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`} numberOfLines={1}>{t('products.addProduct')}</Text>
+          <TouchableOpacity onPress={handleSave} disabled={mutation.isPending} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            {mutation.isPending ? <ActivityIndicator size="small" color="#4f46e5" /> : (
+              <Text className={`${typo.body} text-indigo-600 dark:text-indigo-400`}>{t('common.save')}</Text>
             )}
           </TouchableOpacity>
         </View>
-        <Text className="text-xs text-indigo-200 mt-1">{t('products.addHint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('products.addHint')}</Text>
       </View>
 
       <ScrollView
-        className="flex-1 px-4 pt-4"
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottom + 24 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Product type selector */}
-        <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100">
+        {/* Section 1 — Product type */}
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
+          <SectionHeader icon="cube-outline" title={t('products.sectionType')} />
           <FormField label={`${t('products.productType')} *`}>
             <TouchableOpacity
-              className={`border rounded-xl px-4 py-3 flex-row items-center justify-between ${
-                selectedType ? 'bg-indigo-50 border-indigo-200' : 'bg-gray-50 border-gray-200'
+              className={`border rounded-xl px-3 py-3 flex-row items-center justify-between ${
+                selectedType
+                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700'
+                  : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
               }`}
               onPress={() => setTypePickerVisible(true)}
               disabled={typesLoading}
             >
               {selectedType ? (
                 <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
-                  <View className="bg-indigo-100 rounded-lg px-2 py-0.5">
-                    <Text className="text-xs font-bold text-indigo-700">{selectedType.code}</Text>
+                  <View className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg px-2 py-0.5">
+                    <Text className={`${typo.captionBold} text-indigo-700 dark:text-indigo-300`}>{selectedType.code}</Text>
                   </View>
-                  <Text className="text-base text-gray-900 font-medium flex-1">{selectedType.name}</Text>
+                  <Text className={`${typo.label} font-medium text-gray-900 dark:text-white flex-1`}>{selectedType.name}</Text>
                 </View>
               ) : (
-                <Text className="text-base text-gray-400 flex-1">{t('products.selectType')}</Text>
+                <Text className={`${typo.label} text-gray-400 dark:text-gray-500 flex-1`}>{t('products.selectType')}</Text>
               )}
               <MaterialCommunityIcons name="chevron-down" size={20} color="#9ca3af" />
             </TouchableOpacity>
           </FormField>
         </View>
 
-        {/* Main fields */}
-        <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100">
+        {/* Section 2 — Main info */}
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
+          <SectionHeader icon="information-outline" title={t('products.sectionInfo')} />
+
           <FormField label={`${t('products.name')} *`}>
             <StyledInput
               value={form.name}
@@ -207,9 +219,9 @@ export function ProductCreateScreen({ navigation }: Props) {
           </FormField>
 
           {isDynamic ? (
-            <View className="mb-4 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 flex-row items-center" style={{ gap: 8 }}>
+            <View className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl px-4 py-3 flex-row items-center" style={{ gap: 8 }}>
               <MaterialCommunityIcons name="gold" size={18} color="#d97706" />
-              <Text className="text-sm text-yellow-700 flex-1">{t('products.goldPrice')}</Text>
+              <Text className={`${typo.caption} text-yellow-700 dark:text-yellow-400 flex-1`}>{t('products.goldPrice')}</Text>
             </View>
           ) : (
             <FormField label={t('products.price')}>
@@ -220,7 +232,7 @@ export function ProductCreateScreen({ navigation }: Props) {
                 keyboardType="numeric"
               />
               {form.price ? (
-                <Text className="text-xs text-gray-400 mt-1 ml-1">= {formatVnd(Number(form.price))}</Text>
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-1 ml-1`}>= {formatVnd(Number(form.price))}</Text>
               ) : null}
             </FormField>
           )}
@@ -246,10 +258,10 @@ export function ProductCreateScreen({ navigation }: Props) {
 
           <FormField label={t('products.category')}>
             <TouchableOpacity
-              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex-row items-center justify-between"
+              className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 flex-row items-center justify-between"
               onPress={() => setCategoryPickerVisible(true)}
             >
-              <Text className={form.categoryName ? 'text-gray-900 text-base' : 'text-gray-400 text-base'}>
+              <Text className={`${typo.label} ${form.categoryName ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>
                 {form.categoryName ?? t('products.selectCategory')}
               </Text>
               <MaterialCommunityIcons name="chevron-down" size={20} color="#9ca3af" />
@@ -257,15 +269,17 @@ export function ProductCreateScreen({ navigation }: Props) {
           </FormField>
         </View>
 
-        {/* Description */}
-        <View className="bg-white rounded-2xl p-4 border border-gray-100">
+        {/* Section 3 — Description */}
+        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
+          <SectionHeader icon="text-box-outline" title={t('products.sectionDescription')} />
           <FormField label={t('products.description')}>
-            <StyledInput
+            <TextInput
+              className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 bg-white dark:bg-gray-700 ${typo.inputSize} text-gray-900 dark:text-white`}
               value={form.description}
               onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
               placeholder={t('products.descriptionPlaceholder')}
+              placeholderTextColor="#9ca3af"
               multiline
-              numberOfLines={4}
               textAlignVertical="top"
               style={{ minHeight: 100 }}
             />
@@ -285,9 +299,9 @@ export function ProductCreateScreen({ navigation }: Props) {
           activeOpacity={1}
           onPress={() => setTypePickerVisible(false)}
         />
-        <View className="bg-white rounded-t-3xl px-4 pt-4" style={{ paddingBottom: bottom + 16 }}>
+        <View className="bg-white dark:bg-gray-800 rounded-t-3xl px-4 pt-4" style={{ paddingBottom: bottom + 16 }}>
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-gray-900">{t('products.selectType')}</Text>
+            <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('products.selectType')}</Text>
             <TouchableOpacity onPress={() => setTypePickerVisible(false)}>
               <MaterialCommunityIcons name="close" size={22} color="#6b7280" />
             </TouchableOpacity>
@@ -300,18 +314,18 @@ export function ProductCreateScreen({ navigation }: Props) {
               const isSelected = selectedType?.id === item.id;
               return (
                 <TouchableOpacity
-                  className={`flex-row items-center px-4 py-3.5 rounded-xl mb-1 ${isSelected ? 'bg-indigo-50' : ''}`}
+                  className={`flex-row items-center px-4 py-3.5 rounded-xl mb-1 ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}
                   onPress={() => selectType(item)}
                 >
-                  <View className="bg-indigo-100 rounded-lg px-2 py-0.5 mr-3">
-                    <Text className="text-xs font-bold text-indigo-700">{item.code}</Text>
+                  <View className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg px-2 py-0.5 mr-3">
+                    <Text className={`${typo.captionBold} text-indigo-700 dark:text-indigo-300`}>{item.code}</Text>
                   </View>
                   <View className="flex-1">
-                    <Text className={`text-base font-medium ${isSelected ? 'text-primary' : 'text-gray-800'}`}>
+                    <Text className={`${typo.label} font-medium ${isSelected ? 'text-primary dark:text-indigo-400' : 'text-gray-800 dark:text-gray-200'}`}>
                       {item.name}
                     </Text>
                     {item.description ? (
-                      <Text className="text-xs text-gray-400 mt-0.5" numberOfLines={1}>{item.description}</Text>
+                      <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5`} numberOfLines={1}>{item.description}</Text>
                     ) : null}
                   </View>
                   {isSelected && <MaterialCommunityIcons name="check" size={20} color="#4f46e5" />}
@@ -334,9 +348,9 @@ export function ProductCreateScreen({ navigation }: Props) {
           activeOpacity={1}
           onPress={() => setCategoryPickerVisible(false)}
         />
-        <View className="bg-white rounded-t-3xl px-4 pt-4" style={{ paddingBottom: bottom + 16 }}>
+        <View className="bg-white dark:bg-gray-800 rounded-t-3xl px-4 pt-4" style={{ paddingBottom: bottom + 16 }}>
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-gray-900">{t('products.selectCategory')}</Text>
+            <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('products.selectCategory')}</Text>
             <TouchableOpacity onPress={() => setCategoryPickerVisible(false)}>
               <MaterialCommunityIcons name="close" size={22} color="#6b7280" />
             </TouchableOpacity>
@@ -349,15 +363,15 @@ export function ProductCreateScreen({ navigation }: Props) {
               const isSelected = item === null ? form.categoryId === null : form.categoryId === item.id;
               return (
                 <TouchableOpacity
-                  className={`flex-row items-center px-4 py-3.5 rounded-xl mb-1 ${isSelected ? 'bg-indigo-50' : ''}`}
+                  className={`flex-row items-center px-4 py-3.5 rounded-xl mb-1 ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}
                   onPress={() => selectCategory(item)}
                 >
                   {item ? (
-                    <Text className="text-xl mr-3">{item.emoji}</Text>
+                    <Text className={`${typo.section} mr-3`}>{item.emoji}</Text>
                   ) : (
                     <MaterialCommunityIcons name="tag-off-outline" size={20} color="#9ca3af" style={{ marginRight: 12 }} />
                   )}
-                  <Text className={`text-base flex-1 ${isSelected ? 'text-primary font-semibold' : 'text-gray-700'}`}>
+                  <Text className={`${typo.label} flex-1 ${isSelected ? 'text-primary dark:text-indigo-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}>
                     {item?.name ?? t('products.noCategory')}
                   </Text>
                   {isSelected && <MaterialCommunityIcons name="check" size={20} color="#4f46e5" />}

@@ -16,6 +16,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "nguyendangkhoa25@gmail.com",
+        "ascAppId": "6770521683",
+        "appleTeamId": "JANRX6WR5A"
+      }
+    }
   }
 }

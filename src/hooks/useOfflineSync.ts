@@ -1,10 +1,25 @@
 import { useEffect, useRef } from 'react';
-import NetInfo from '@react-native-community/netinfo';
+import { AppState, type AppStateStatus } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { cartApi, expenseApi } from '../services/api';
+import { cartApi, expenseApi, BASE_URL } from '../services/api';
 import { useNetworkStore } from '../store/networkStore';
 import { useOfflineQueueStore } from '../store/offlineQueueStore';
 import { useToastStore } from '../store/toastStore';
+
+const POLL_MS = 30_000;
+
+async function isOnline(): Promise<boolean> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  try {
+    await fetch(`${BASE_URL}/app/version`, { method: 'HEAD', signal: controller.signal });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export function useOfflineSync() {
   const { setOffline } = useNetworkStore();
@@ -24,7 +39,6 @@ export function useOfflineSync() {
     let synced = 0;
     const total = orders.length + expenses.length;
 
-    // Expenses first (simpler, no conflict risk)
     for (const expense of expenses) {
       updateExpenseStatus(expense.id, 'syncing');
       try {
@@ -41,7 +55,6 @@ export function useOfflineSync() {
       }
     }
 
-    // Orders
     for (const order of orders) {
       updateOrderStatus(order.id, 'syncing');
       try {
@@ -72,14 +85,24 @@ export function useOfflineSync() {
     }
   };
 
+  const checkAndSync = async () => {
+    const online = await isOnline();
+    const wasOffline = useNetworkStore.getState().isOffline;
+    setOffline(!online);
+    if (online && wasOffline) {
+      syncQueue();
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      const offline = !(state.isConnected && state.isInternetReachable !== false);
-      setOffline(offline);
-      if (!offline) {
-        syncQueue();
-      }
+    checkAndSync();
+    const interval = setInterval(checkAndSync, POLL_MS);
+    const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
+      if (next === 'active') checkAndSync();
     });
-    return unsubscribe;
+    return () => {
+      clearInterval(interval);
+      sub.remove();
+    };
   }, []);
 }

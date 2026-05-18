@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTypography } from '../../hooks/useTypography';
 import type { ToolsScreenProps } from '../../types/navigation';
 
 type Props = ToolsScreenProps<'UtilitiesHub'>;
@@ -104,21 +105,29 @@ const TOOL_GROUPS: ToolGroup[] = [
 
 export function UtilitiesScreen({ navigation }: Props) {
   const { t } = useTranslation();
-  const { top } = useSafeAreaInsets();
+  const typo = useTypography();
+  const { top, bottom } = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="bg-primary px-6 pb-6" style={{ paddingTop: top + 16 }}>
-        <Text className="text-2xl font-bold text-white mb-1">{t('tools.title')}</Text>
-        <Text className="text-sm text-indigo-200">{t('tools.subtitle')}</Text>
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+          </TouchableOpacity>
+          <View>
+            <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('tools.title')}</Text>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('tools.subtitle')}</Text>
+          </View>
+        </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
         {TOOL_GROUPS.map((group) => (
           <View key={group.titleKey} className="mb-5">
             <View className="flex-row items-center mb-3">
               <MaterialCommunityIcons name={group.icon} size={15} color="#6b7280" style={{ marginRight: 6 }} />
-              <Text className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+              <Text className={`${typo.captionBold} text-gray-500 uppercase tracking-wide`}>
                 {t(group.titleKey)}
               </Text>
             </View>
@@ -138,10 +147,10 @@ export function UtilitiesScreen({ navigation }: Props) {
                   >
                     <MaterialCommunityIcons name={tool.icon} size={24} color={tool.color} />
                   </View>
-                  <Text className="text-sm font-bold text-gray-900 mb-1" numberOfLines={2}>
+                  <Text className={`${typo.labelBold} text-gray-900 mb-1`} numberOfLines={2}>
                     {t(tool.titleKey)}
                   </Text>
-                  <Text className="text-xs text-gray-500" numberOfLines={2}>
+                  <Text className={`${typo.caption} text-gray-500`} numberOfLines={2}>
                     {t(tool.descKey)}
                   </Text>
                 </TouchableOpacity>

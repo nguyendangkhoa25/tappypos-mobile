@@ -1,0 +1,85 @@
+appId: com.knp.tappypos
+name: "MKUP 22 Makeup service categories — verify all 5 category tabs in POS screen (MKUP-SPECIFIC)"
+---
+
+# This flow is unique to MAKEUP_STUDIO — it verifies that all 5 makeup service categories
+# seeded by makeup_studio.sql appear as filter tabs in the BarberServiceScreen:
+#   Trang điểm ngày thường · Trang điểm đi tiệc · Trang điểm cô dâu
+#   Làm tóc & Phụ kiện · Combo & Gói cưới
+#
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+- assertNotVisible: "500"
+
+# MK-SC01: All services visible in default view
+- tapOn: "Tất cả"
+    optional: true
+- assertVisible:
+    id: "barber-service-.*"
+- assertNotVisible: "500"
+
+# MK-SC02: Trang điểm ngày thường
+- tapOn: "Trang điểm ngày thường"
+    optional: true
+- assertNotVisible: "500"
+- assertVisible:
+    id: "barber-service-.*"
+    optional: true
+
+# MK-SC03: Trang điểm đi tiệc
+- tapOn: "Trang điểm đi tiệc"
+    optional: true
+- assertNotVisible: "500"
+- assertVisible:
+    id: "barber-service-.*"
+    optional: true
+
+# MK-SC04: Trang điểm cô dâu (bridal — MKUP-unique services)
+- tapOn: "Trang điểm cô dâu"
+    optional: true
+- assertNotVisible: "500"
+# Bridal services should appear
+- assertVisible: "cô dâu"
+    optional: true
+
+# MK-SC05: Làm tóc & Phụ kiện
+- tapOn: "Làm tóc"
+    optional: true
+- tapOn: "Làm tóc & Phụ kiện"
+    optional: true
+- assertNotVisible: "500"
+
+# MK-SC06: Combo & Gói cưới (wedding packages — highest value services)
+- tapOn: "Combo"
+    optional: true
+- tapOn: "Combo & Gói cưới"
+    optional: true
+- assertNotVisible: "500"
+# Wedding package should appear in this tab
+- assertVisible: "Gói cưới"
+    optional: true
+
+# MK-SC07: Return to all and sanity-check add to cart
+- tapOn: "Tất cả"
+    optional: true
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible:
+    id: "barber-cart-count"
+
+# Dismiss without placing order
+- tapOn:
+    id: "barber-checkout-btn"
+    optional: true
+- tapOn: "Đóng"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

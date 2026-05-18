@@ -1,0 +1,33 @@
+appId: com.knp.tappypos
+name: "MKUP 07 Expense flow — create makeup supply expense (EXPENSE feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-expenses"
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "expense-add-fab"
+
+- tapOn:
+    id: "expense-desc-input"
+- inputText: "Mỹ phẩm makeup test"
+
+- tapOn:
+    id: "expense-amount-input"
+- inputText: "350000"
+
+- tapOn:
+    id: "expense-save-btn"
+- assertVisible: "Đã lưu"
+    optional: true
+- assertNotVisible: "500"
+
+- assertVisible: "Mỹ phẩm makeup test"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

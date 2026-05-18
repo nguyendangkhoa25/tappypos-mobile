@@ -1,0 +1,42 @@
+appId: com.knp.tappypos
+name: "MKUP 08 Product list — search makeup services, verify blocked inventory (PRODUCT feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-products"
+- assertVisible: "Sản phẩm"
+- assertNotVisible: "500"
+
+# Search for a makeup service
+- tapOn:
+    id: "product-search-input"
+- inputText: "trang điểm"
+- hideKeyboard
+- assertNotVisible: "500"
+
+# Clear search
+- tapOn:
+    id: "product-search-input"
+- eraseText: 50
+- hideKeyboard
+
+# Tap first product
+- tapOn:
+    id: "product-card-.*"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+    optional: true
+
+# Inventory tile absent
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertNotVisible:
+    id: "more-tile-inventory"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

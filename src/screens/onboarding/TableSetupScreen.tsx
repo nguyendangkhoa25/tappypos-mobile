@@ -13,21 +13,21 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useOnboardingStore, type TableSetup } from '../../store/onboardingStore';
 import { OnboardingHeader } from './OnboardingHeader';
+import { useOnboardingFlow } from '../../hooks/useOnboardingFlow';
+import { useTypography } from '../../hooks/useTypography';
 import type { OnboardingScreenProps } from '../../types/navigation';
 
 export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSetup'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { tables, setTables, addTable, removeTable, shopTypeCode } = useOnboardingStore();
+  const typo = useTypography();
+  const { tables, setTables, addTable, removeTable } = useOnboardingStore();
+  const { totalSteps, getStepIndex, getNextScreen } = useOnboardingFlow();
 
   const [autoCount, setAutoCount] = useState('');
   const [manualNumber, setManualNumber] = useState('');
   const [manualCapacity, setManualCapacity] = useState('4');
   const [manualLocation, setManualLocation] = useState('');
-
-  // F&B shops with TABLE_SERVICE = 5-step onboarding
-  const isFnb = true;
-  const totalSteps = isFnb ? 5 : 4;
 
   const handleAutoGenerate = () => {
     const count = parseInt(autoCount, 10);
@@ -54,12 +54,12 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
   };
 
   const handleContinue = () => {
-    navigation.navigate('Step3');
+    navigation.navigate(getNextScreen('TABLE_SETUP') as any);
   };
 
   const handleSkip = () => {
     setTables([]);
-    navigation.navigate('Step3');
+    navigation.navigate(getNextScreen('TABLE_SETUP') as any);
   };
 
   return (
@@ -68,8 +68,8 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View className="px-6" style={{ paddingTop: insets.top + 8 }}>
-        <OnboardingHeader step={2} total={totalSteps} onBack={() => navigation.goBack()} />
-        <Text className="text-2xl font-bold text-gray-900 dark:text-white mt-4 mb-1">
+        <OnboardingHeader step={getStepIndex('TABLE_SETUP')} total={totalSteps} onBack={() => navigation.goBack()} />
+        <Text className={`${typo.heading} text-gray-900 dark:text-white mt-4 mb-1`}>
           {t('onboarding.tableSetup.title')}
         </Text>
         <View className="mb-4 gap-1.5 mt-1">
@@ -82,7 +82,7 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
           ).map(({ icon, key }) => (
             <View key={key} className="flex-row items-center gap-2">
               <MaterialCommunityIcons name={icon} size={13} color="#9ca3af" />
-              <Text className="text-xs text-gray-400 dark:text-gray-500 flex-1 leading-4">
+              <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 flex-1 leading-4`}>
                 {t(key)}
               </Text>
             </View>
@@ -98,7 +98,7 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
         <View className="px-6 pb-6 gap-5">
           {/* Auto-generate section */}
           <View className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4">
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-200 mb-3`}>
               {t('onboarding.tableSetup.autoGenLabel')}
             </Text>
             <View className="flex-row gap-2 items-center">
@@ -108,7 +108,7 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
                   onChangeText={setAutoCount}
                   placeholder={t('onboarding.tableSetup.autoGenCount')}
                   keyboardType="numeric"
-                  className="border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 ${typo.inputSize} bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
                   placeholderTextColor="#9ca3af"
                 />
               </View>
@@ -117,12 +117,12 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
                 disabled={!autoCount.trim()}
                 className={`rounded-xl px-4 py-3 ${autoCount.trim() ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
               >
-                <Text className={`font-semibold text-sm ${autoCount.trim() ? 'text-white' : 'text-gray-400'}`}>
+                <Text className={`${typo.label} ${autoCount.trim() ? 'text-white' : 'text-gray-400'}`}>
                   {t('onboarding.tableSetup.generateBtn')}
                 </Text>
               </TouchableOpacity>
             </View>
-            <Text className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-2`}>
               {t('onboarding.tableSetup.autoGenHint')}
             </Text>
           </View>
@@ -130,7 +130,7 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
           {/* Current table list */}
           {tables.length > 0 && (
             <View>
-              <Text className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">
+              <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2`}>
                 {t('onboarding.tableSetup.tableCount', { count: tables.length })}
               </Text>
               <View className="bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden">
@@ -142,14 +142,14 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
                     }`}
                   >
                     <MaterialCommunityIcons name="table-chair" size={16} color="#6b7280" />
-                    <Text className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-200 ml-2">
+                    <Text className={`${typo.caption} flex-1 font-medium text-gray-700 dark:text-gray-200 ml-2`}>
                       {table.tableNumber}
                     </Text>
-                    <Text className="text-xs text-gray-400 dark:text-gray-500 mr-3">
+                    <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mr-3`}>
                       {t('onboarding.tableSetup.capacityHint', { count: table.capacity })}
                     </Text>
                     {table.location ? (
-                      <Text className="text-xs text-gray-400 dark:text-gray-500 mr-2">{table.location}</Text>
+                      <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mr-2`}>{table.location}</Text>
                     ) : null}
                     <TouchableOpacity
                       onPress={() => removeTable(index)}
@@ -165,7 +165,7 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
 
           {/* Manual add section */}
           <View>
-            <Text className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
+            <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3`}>
               {t('onboarding.tableSetup.manualLabel')}
             </Text>
             <View className="gap-3">
@@ -173,32 +173,32 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
                 value={manualNumber}
                 onChangeText={setManualNumber}
                 placeholder={t('onboarding.tableSetup.tableNumberPlaceholder')}
-                className="border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 ${typo.inputSize} bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
                 placeholderTextColor="#9ca3af"
                 autoCapitalize="words"
               />
               <View className="flex-row gap-2">
                 <View className="flex-1">
-                  <Text className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+                  <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mb-1`}>
                     {t('onboarding.tableSetup.capacityLabel')}
                   </Text>
                   <TextInput
                     value={manualCapacity}
                     onChangeText={setManualCapacity}
                     keyboardType="numeric"
-                    className="border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 ${typo.inputSize} bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+                  <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mb-1`}>
                     {t('onboarding.tableSetup.locationLabel')}
                   </Text>
                   <TextInput
                     value={manualLocation}
                     onChangeText={setManualLocation}
                     placeholder={t('onboarding.tableSetup.locationPlaceholder')}
-                    className="border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 ${typo.inputSize} bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
                     placeholderTextColor="#9ca3af"
                   />
                 </View>
@@ -208,7 +208,7 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
                 disabled={!manualNumber.trim()}
                 className={`rounded-xl py-3 items-center ${manualNumber.trim() ? 'bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700' : 'bg-gray-100 dark:bg-gray-800'}`}
               >
-                <Text className={`text-sm font-semibold ${manualNumber.trim() ? 'text-primary' : 'text-gray-400'}`}>
+                <Text className={`${typo.label} ${manualNumber.trim() ? 'text-primary' : 'text-gray-400'}`}>
                   + {t('onboarding.tableSetup.addTableBtn')}
                 </Text>
               </TouchableOpacity>
@@ -227,7 +227,7 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             className="px-2 py-3.5"
           >
-            <Text className="font-semibold text-sm text-gray-400 dark:text-gray-500">
+            <Text className={`${typo.label} text-gray-400 dark:text-gray-500`}>
               {t('onboarding.common.skip')}
             </Text>
           </TouchableOpacity>
@@ -235,12 +235,12 @@ export function TableSetupScreen({ navigation }: OnboardingScreenProps<'TableSet
             className="flex-1 bg-primary active:opacity-80 rounded-2xl py-3.5 flex-row items-center justify-center gap-2"
             onPress={handleContinue}
           >
-            <Text className="text-white font-bold text-base">
+            <Text className={`${typo.labelBold} text-white`}>
               {t('onboarding.common.continue')}
             </Text>
             {tables.length > 0 && (
               <View className="bg-white/25 rounded-full px-2 py-0.5">
-                <Text className="text-white text-xs font-bold">{tables.length}</Text>
+                <Text className={`${typo.captionBold} text-white`}>{tables.length}</Text>
               </View>
             )}
           </TouchableOpacity>

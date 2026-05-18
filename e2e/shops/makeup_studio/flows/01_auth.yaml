@@ -1,0 +1,17 @@
+appId: com.knp.tappypos
+name: "MKUP 01 Auth — login with makeup studio credentials, skip PIN, arrive at Dashboard"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- assertVisible: "Tổng quan"
+- assertNotVisible: "500"
+
+# Sell tab shows makeup service screen (BarberServiceScreen)
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

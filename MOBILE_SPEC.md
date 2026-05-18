@@ -21,7 +21,6 @@ The design bar is: *a 45-year-old phở shop owner should complete any task on t
 
 ### Out of scope (mobile MVP)
 - Admin: user management, shop config, salary generation, vendor/purchase orders
-- Pawn management
 - Inventory adjustments
 - Reports / export
 - Push notifications (backend exists; mobile integration is Phase 2)
@@ -239,6 +238,80 @@ This is the highest-value feature for day-to-day use.
 
 ---
 
+### Epic G — More Screen & Shop Config Navigation
+
+Reorganisation of the More tab to group features by purpose and promote shop config to a dedicated section (previously buried inside Settings).
+
+**Implemented:** 2026-05-17
+
+#### Navigation architecture
+
+The More tab (`MoreNavigator`) hosts all feature modules plus the Settings sub-navigator. Shop-config screens are now registered in both `MoreNavigator` and `SettingsNavigator` so they remain reachable from either path.
+
+```
+More tab (MoreNavigator)
+├── MoreMain  (MoreScreen)
+│   ├── Section "Danh mục"           → Products, Categories, Combos, Inventory*
+│   ├── Section "Khách & Nhân viên"  → Customers, Appointments*, Staff*, Staff Performance*
+│   ├── Section "Vận hành"           → My Work, Queue View*, Gold Price*, Notifications*
+│   ├── Section "Cấu hình cửa hàng" (list rows)
+│   │   → ShopInfo, POSConfig, BankAccounts*, DefaultExpenses, PrintTemplates, LoyaltyConfig*
+│   └── Settings entry (row)  →  SettingsNavigator
+└── [all sub-screens registered as MoreStack screens]
+
+Settings screen (personal only)
+├── Profile card
+├── Account: Profile Update, Change Password, Security
+├── Hiển thị & Thông báo: Display, Notification Preferences*
+├── Hỗ trợ: Utilities Hub, Feedback*, Feedback History*, Hotline, Email, Zalo
+└── Hệ thống: Activity Log, T&C, Delete Account
+
+* gated by feature flag
+```
+
+| ID | Story | Acceptance Criteria | Status |
+|---|---|---|---|
+| G-1 | As a shop owner, I want shop-related config (POS, bank accounts, print templates, loyalty) grouped under "Cấu hình cửa hàng" in the More tab so that I don't have to dig into Settings to configure my shop | More screen shows a list-style "Cấu hình cửa hàng" section. All shop config screens are reachable from it. | `[x]` |
+| G-2 | As a shop owner, I want the More screen to group catalogue and people features separately so that I can find what I need without scrolling a flat list | 4 labelled sections: Danh mục, Khách & Nhân viên, Vận hành, Cấu hình cửa hàng. | `[x]` |
+| G-3 | As a shop owner, I want the Settings screen to contain only personal/account options so that shop config and personal config are clearly separated | Settings screen has no Shop section. Sections: Account (Profile Update, Change Password, Security), Hiển thị & Thông báo, Hỗ trợ, Hệ thống. | `[x]` |
+
+---
+
+### Epic H — Notification Triggers
+
+In-app notification delivery for high-value shop events. Backend is polling-based (`GET /api/notifications/unread-count` every 30 s); no push infrastructure required.
+
+**Implemented:** 2026-05-17  
+**Recipients:** `SHOP_OWNER` and `MANAGER` roles within the tenant.
+
+#### H-1 — New order created
+
+| Attribute | Detail |
+|---|---|
+| Trigger | `CartServiceImpl.checkout()` — fires after order is persisted and activity log is written |
+| Type | `Notification.NotificationType.ORDER` |
+| Title | `notification.order.new.title` → `"Đơn hàng mới #<orderNumber>"` |
+| Body | `notification.order.new.message` → `"Tổng cộng: <amount> ₫[ · <customerName>]"` |
+| Delivery | `notificationService.pushToRolesAsync(...)` — fire-and-forget, never blocks checkout |
+
+#### H-2 — Low stock threshold crossed
+
+| Attribute | Detail |
+|---|---|
+| Trigger | `InventoryServiceImpl.removeStock()` — fires only when stock crosses **from above to at-or-below** the `reorderLevel` (edge-crossing, not on every decrement) |
+| Condition | `stockBefore > reorderLevel && stockAfter <= reorderLevel` |
+| Type | `Notification.NotificationType.LOW_STOCK` |
+| Title | `notification.inventory.low_stock.title` → `"Hàng sắp hết: <productName>"` |
+| Body | `notification.inventory.low_stock.message` → `"Còn <qty> đơn vị (ngưỡng tối thiểu: <reorderLevel>)"` |
+| Delivery | `notificationService.pushToRolesAsync(...)` — fire-and-forget |
+
+| ID | Story | Acceptance Criteria | Status |
+|---|---|---|---|
+| H-1 | As a shop owner or manager, I want to receive an in-app notification when a new order is placed so that I know sales activity in real time | Notification appears in the bell within ~30 s of checkout. Title includes order number; body includes total and customer name if not walk-in. | `[x]` |
+| H-2 | As a shop owner or manager, I want to receive a low-stock alert the first time a product's stock drops to or below its reorder level so that I know when to restock | Notification fires exactly once per "restock → deplete" cycle; does not spam on every subsequent sale. | `[x]` |
+
+---
+
 ## 7. API Mapping
 
 All endpoints are already live on the backend. No new endpoints needed for MVP except the `refreshInBody` login flag.
@@ -310,14 +383,13 @@ These apply to every screen:
 Auth · Dashboard · POS · Orders · Products · Profile
 
 ### Phase 2
-- Push notifications (backend already built)
+- Push notifications (backend already built; NEW_ORDER and LOW_STOCK triggers implemented — see Epic H)
 - Salary: employee views own payslip (`GET /api/salary?employeeId=me`)
 - Customer lookup + loyalty points at checkout
 - Inventory alerts widget on dashboard
 - Barcode scanner for POS product search (`expo-barcode-scanner`)
 
 ### Phase 3
-- Pawn contracts (view only)
 - Revenue chart widget
 - Offline-capable product catalogue cache (SQLite via `expo-sqlite`)
 - Tablet-optimised POS layout (two-column: product grid left, cart right)

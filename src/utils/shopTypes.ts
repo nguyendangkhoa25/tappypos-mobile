@@ -9,7 +9,7 @@ export const SHOP_TYPE_GROUPS: ShopTypeGroup[] = [
   { id: 'PUB',         emoji: '🍺' },
   { id: 'GROCERY',     emoji: '🏪' },
   { id: 'FASHION',     emoji: '👗' },
-  { id: 'BEAUTY',      emoji: '✂️' },
+  { id: 'BEAUTY',      emoji: '💇' },
   { id: 'HEALTH',      emoji: '💊' },
   { id: 'GOLD',        emoji: '💍' },
   { id: 'ELECTRONICS', emoji: '📱' },
@@ -122,4 +122,8 @@ export const FB_BACKEND_CODES = new Set([
 export function isFnbShop(backendCode: string | null | undefined): boolean {
   if (!backendCode) return false;
   return FB_BACKEND_CODES.has(backendCode);
+}
+
+export function isPawnShop(backendCode: string | null | undefined): boolean {
+  return backendCode === 'PAWN_SHOP';
 }

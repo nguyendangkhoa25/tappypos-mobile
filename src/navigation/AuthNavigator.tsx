@@ -16,11 +16,9 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export function AuthNavigator() {
   const { storedPhone, pinEnabled } = useAuthStore();
-  const hasTenantId = !!useAuthStore.getState().tenantId;
 
-  // Return to stored shop login if tenant known + PIN enabled
   const initialRoute: keyof AuthStackParamList =
-    storedPhone && pinEnabled ? 'PinLogin' : hasTenantId ? 'Login' : 'ShopId';
+    storedPhone && pinEnabled ? 'PinLogin' : 'Login';
 
   return (
     <View style={{ flex: 1 }}>

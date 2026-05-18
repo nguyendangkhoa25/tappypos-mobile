@@ -203,28 +203,120 @@ export type SettingsStackParamList = {
 
 ---
 
-## Overflow Menu (⋯) Items & Feature Gating
+## More Tab Items & Feature Gating
 
-Bottom sheet, two groups separated by a divider. Empty groups (all items gated out) hide their divider.
+`MoreScreen` renders two grid sections + a full-width Settings row. Items with no `has()` guard are **always visible in the UI** — but their backend controllers still require a feature; missing it produces a 403 error.
 
-**Group 1 — Quản lý:**
+**Section 1 — Quản lý (always-visible grid, no UI gate):**
 
-| Item | Feature | Hidden if absent |
+| Item | UI gate | Backend feature required | 403 if missing? |
+|---|---|---|---|
+| 📦 Sản phẩm | None | `PRODUCT` | Yes |
+| 🏭 Tồn kho | None | `INVENTORY` | Yes |
+| 👥 Khách hàng | None | `CUSTOMER` | Yes |
+| 🎁 Combo | None | `POS` | Yes |
+| 🏷️ Danh mục | None | `PRODUCT` | Yes |
+| 🖨️ Mẫu in | None | `PRINT_TEMPLATE` | Yes |
+| 👤 Nhân viên | `has('USER')` | `USER` | Hidden |
+
+**Section 2 — Vận hành (feature-gated grid):**
+
+| Item | UI gate | Backend feature required | 403 if missing? |
+|---|---|---|---|
+| 💰 Giá vàng | `has('GOLD_PRICE') \|\| has('PAWN')` | `GOLD_PRICE` / `PAWN` | Hidden |
+| 📋 Công việc của tôi | None | `MY_WORK` | Yes |
+| 👁 Xem hàng đợi | `has('ORDER_VIEW_ALL')` | `ORDER_VIEW_ALL` | Hidden |
+| 📊 Hiệu suất nhân viên | `has('ORDER_VIEW_ALL')` | `ORDER_VIEW_ALL` | Hidden |
+| 📅 Lịch hẹn | `has('APPOINTMENT')` | `APPOINTMENT` | Hidden |
+| 🔔 Thông báo | `has('NOTIFICATION')` | `NOTIFICATION` | Hidden |
+
+> **Rule:** if an item has no UI gate, the feature must be in the tenant's JWT or the screen throws a 403 error on first API call. Always-visible items must always be in the effective feature intersection.
+
+---
+
+## Shop-Type Feature Matrix
+
+### Service shops (Barber / Beauty)
+
+Applies to: `BARBER_SHOP`, `BARBER_SHOP_MEN`, `HAIR_SALON`, `NAIL_SHOP`, `LASH_PMU_STUDIO`, `SPA_SHOP`, `MASSAGE_SHOP`, `BEAUTY_CLINIC`, `MAKEUP_STUDIO`.
+
+All use the shared `serviceBase` tenant feature list.
+
+**Tenant features (`serviceBase` in `OnboardingController`):**
+```
+DASHBOARD, ORDER, ORDER_VIEW_ALL, MY_WORK, PRODUCT, POS,
+CUSTOMER, LOYALTY, COMMISSION, EMPLOYEE, SALARY, EXPENSE,
+REVENUE, USER, APPOINTMENT, NOTIFICATION, FEEDBACK,
+ACTIVITY_LOG, SHOP_INFO, PRINT_TEMPLATE, BANK_ACCOUNT,
+INVOICE, ACCOUNTING, INVENTORY
+```
+
+**SHOP_OWNER role features (`TenantProvisioningService.ROLE_FEATURES`):**
+```
+DASHBOARD, ORDER, ORDER_VIEW_ALL, MY_WORK, PRODUCT, PROMOTION,
+EMPLOYEE, SALARY, CUSTOMER, LOYALTY, INVOICE, ACCOUNTING, REVENUE, EXPENSE,
+USER, SHOP_INFO, PRINT_TEMPLATE, BANK_ACCOUNT, VENDOR, INVENTORY, POS,
+ACTIVITY_LOG, PAWN, COMMISSION, NOTIFICATION, FEEDBACK, APPOINTMENT
+```
+
+**Effective JWT features (tenant ∩ role — what the user actually gets):**
+
+| Feature | In JWT? | What breaks if missing |
 |---|---|---|
-| 📦 Sản phẩm | `PRODUCT` | Yes |
-| 👥 Khách hàng | `CUSTOMER` | Yes |
-| 🏭 Tồn kho | `INVENTORY` | Yes |
-| 🖨️ Mẫu in | `SHOP_SETTING` | Yes |
-| 💰 Giá vàng hôm nay | `PAWN` | Yes (JEWELRY shops only) |
+| `DASHBOARD` | ✓ | Home tab + Report tab disappear |
+| `POS` | ✓ | Sell tab disappears; Combo menu + Cart APIs 403 |
+| `ORDER` | ✓ | Sell tab disappears; order list 403 |
+| `ORDER_VIEW_ALL` | ✓ | Queue View + Staff Performance hidden (by design) |
+| `PRODUCT` | ✓ | Products + Categories menus 403 |
+| `CUSTOMER` | ✓ | Customers menu 403 |
+| `LOYALTY` | ✓ | Loyalty endpoints 403 on customer screen |
+| `INVENTORY` | ✗ not in serviceBase | Inventory menu hidden (UI gate in MoreScreen) — service shops don't track product stock; master admin can grant on request |
+| `APPOINTMENT` | ✓ | Appointments hidden from More (key feature for these shops) |
+| `MY_WORK` | ✓ | My Work menu 403 |
+| `PRINT_TEMPLATE` | ✓ | Print Templates menu 403 |
+| `EMPLOYEE` | ✓ | Employee management 403 |
+| `SALARY` | ✓ | Salary management 403 |
+| `COMMISSION` | ✓ | Commission on checkout 403 |
+| `EXPENSE` | ✓ | Expenses tab API 403 |
+| `REVENUE` | ✓ | Report screen revenue data 403 |
+| `USER` | ✓ | Staff menu hidden (by design — has UI gate) |
+| `NOTIFICATION` | ✓ | Notifications hidden (by design — has UI gate) |
+| `SHOP_INFO` | ✓ | Settings → Shop Info 403 |
+| `PRINT_TEMPLATE` | ✓ | Print Templates 403 |
+| `BANK_ACCOUNT` | ✓ | Settings → Bank Accounts 403 |
+| `INVOICE` | ✓ | Invoice endpoints 403 |
+| `ACCOUNTING` | ✓ | Accounting tab 403 |
+| `ACTIVITY_LOG` | ✓ | Activity Log in Settings 403 |
+| `FEEDBACK` | ✓ | Feedback submission 403 |
+| `PROMOTION` | ✗ not in serviceBase | (not needed for service shops) |
+| `VENDOR` | ✗ not in serviceBase | (not needed for service shops) |
+| `PAWN` | ✗ not in serviceBase | (not needed) |
+| `GOLD_PRICE` | ✗ not in serviceBase | (not needed) |
 
-**Group 2 — Cửa hàng:**
+> **MoreScreen UI gates summary:** `USER`, `GOLD_PRICE`/`PAWN`, `ORDER_VIEW_ALL` (×2), `APPOINTMENT`, `NOTIFICATION`, and now **`INVENTORY`** are all conditionally rendered. Any feature not gated in UI but required by backend will 403 on first API call — avoid this pattern for new features.
 
-| Item | Feature | Hidden if absent |
+### Login flow — how tenant is resolved (no X-Tenant-ID required)
+
+The mobile app **never sends `X-Tenant-ID` on login or token refresh**. Username is unique across the platform; the backend auto-detects the tenant:
+
+1. `POST /api/auth/login` arrives with no `X-Tenant-ID`.
+2. Backend does a global user lookup (`ORDER BY tenant_id NULLS LAST`) — shop users come first, master users last.
+3. If user has a `tenant_id`: backend restores `TenantContext`, then computes feature intersection using explicit `tenantId` bind param (not `current_tenant_id()` — that DB session var is NULL at this point).
+4. If user has no `tenant_id` and has `MASTER_TENANT` or `AGENT` role: master login proceeds.
+5. If user has no `tenant_id` and has only shop roles: **error 400 "Tài khoản chưa được liên kết với cửa hàng nào"** — never treated as master.
+
+> **Critical backend gotcha:** `TenantRlsAspect` sets `app.current_tenant` once at `@Transactional` start. Mid-method calls to `tenantContext.setCurrentTenant()` update the ThreadLocal but NOT the DB session var. All role-feature queries in auth flows must use explicit `tenantId` bind params — see `RoleFeatureRepository.findActiveFeatureNamesByRoleNamesAndTenantId()`.
+
+### Known issues fixed (2026-05-15)
+
+| Issue | Root cause | Fix |
 |---|---|---|
-| 🏪 Thông tin cửa hàng | — | Never |
-| 🎛️ Cấu hình POS | `POS` | Yes |
-| 💰 Chi phí cố định mặc định | — | Never |
-| 📋 Combo sản phẩm | `POS` | Yes |
+| Inventory menu → 403 for service shops | `INVENTORY` missing from `serviceBase` | Added `INVENTORY` to `serviceBase` in `OnboardingController` |
+| Appointments hidden for barber/beauty owners | `APPOINTMENT` missing from `SHOP_OWNER` role | Added `APPOINTMENT` + `ORDER_VIEW_ALL` to `SHOP_OWNER` in `TenantProvisioningService.ROLE_FEATURES` |
+| All tabs missing after login/refresh | Login without `X-Tenant-ID` → `TenantRlsAspect` set `app.current_tenant=NULL` → role-features query used `current_tenant_id()` → matched master roles only → empty JWT features | Backend: added `findActiveFeatureNamesByRoleNamesAndTenantId()` with explicit tenantId; `TenantFeatureService` uses it when tenant context is known |
+| Orphaned shop user could get `isMasterUser: true` JWT | No guard when `user.tenantId == null` and user has shop role | Backend: `doAuthenticate()` + `refreshAccessToken()` now throw 400 if no tenant + no master/agent role |
+
+> **Existing tenants provisioned before 2026-05-15** need a DB patch to add missing features + fresh login to get a new JWT.
 
 ---
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { orderApi, type WorkItemDTO } from '../../services/api';
 import { formatVnd, formatDateTime } from '../../utils/format';
 import { useFeatureCheck } from '../../hooks/useFeature';
+import { useTypography } from '../../hooks/useTypography';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
 import { Skeleton } from '../../components/Skeleton';
@@ -45,19 +46,20 @@ function formatWeekLabel(day: number, month: number, year: number): string {
 }
 
 function BarChart({ data }: { data: { label: string; count: number }[] }) {
+  const typo = useTypography();
   const max = Math.max(...data.map((d) => d.count), 1);
   return (
     <View className="flex-row items-end justify-around h-24 px-2">
       {data.map((d, i) => (
         <View key={i} className="items-center flex-1 mx-0.5">
           {d.count > 0 && (
-            <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{d.count}</Text>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{d.count}</Text>
           )}
           <View
             className="w-full rounded-t-sm bg-indigo-500"
             style={{ height: Math.max((d.count / max) * 72, d.count > 0 ? 4 : 0) }}
           />
-          <Text className="text-xs text-gray-400 dark:text-gray-500 mt-1" numberOfLines={1}>
+          <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-1`} numberOfLines={1}>
             {d.label}
           </Text>
         </View>
@@ -68,6 +70,7 @@ function BarChart({ data }: { data: { label: string; count: number }[] }) {
 
 export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHistory'>) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const has = useFeatureCheck();
   const [filterType, setFilterType] = useState<FilterType>('DAY');
@@ -93,18 +96,21 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
     queryKey: ['workItems', 'completed', filterType, day, month, year, debouncedKeyword],
     queryFn: () => orderApi.completedWorkItems({ ...filterParams, keyword: debouncedKeyword || undefined }).then((r) => r.data.data.content),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: ['workItems', 'summary', filterType, day, month, year],
     queryFn: () => orderApi.workItemSummary(filterParams).then((r) => r.data.data),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   const { data: trend } = useQuery({
     queryKey: ['workItems', 'trend', filterType, day, month, year],
     queryFn: () => orderApi.workItemTrend(filterParams).then((r) => r.data.data),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   const onRefresh = useCallback(async () => {
@@ -145,7 +151,55 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
     return m > 0 ? t('myWork.durationHourMin', { hours: h, minutes: m }) : t('myWork.durationHour', { hours: h });
   }
 
-  const chartData = (trend ?? []).map((d) => ({ label: d.label, count: d.count }));
+  const chartData = useMemo(
+    () => (trend ?? []).map((d) => ({ label: d.label, count: d.count })),
+    [trend],
+  );
+
+  const listEmpty = useMemo(() => (
+    isLoading ? (
+      <View className="px-4 gap-y-3">
+        {[1, 2, 3].map((i) => <Skeleton key={i} height={80} borderRadius={16} />)}
+      </View>
+    ) : isError ? (
+      <ErrorState onRetry={refetch} />
+    ) : (
+      <EmptyState icon="✅" title={t('myWork.emptyHistory')} />
+    )
+  ), [isLoading, isError, refetch, t]);
+
+  const renderItem = useCallback(({ item }: { item: WorkItemDTO }) => (
+    <View className="bg-white dark:bg-gray-800 rounded-2xl mx-4 mb-3 p-4 shadow-sm">
+      <View className="flex-row justify-between items-start">
+        <View className="flex-1 mr-3">
+          <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
+            {item.productName}
+          </Text>
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
+            {item.orderNumber} · {item.customerName ?? t('pos.walkIn')}
+          </Text>
+        </View>
+        <View className="items-end gap-0.5">
+          <Text className={`${typo.labelBold} text-emerald-600`}>{formatVnd(item.amount)}</Text>
+          {has('COMMISSION') && item.commissionAmount != null && item.commissionAmount > 0 && (
+            <View className="flex-row items-center gap-1">
+              <Text className={`${typo.captionBold} text-amber-500`}>
+                +{formatVnd(item.commissionAmount)}
+              </Text>
+              {item.commissionRate != null && item.commissionRate > 0 && (
+                <Text className="text-[10px] text-gray-400">({item.commissionRate}%)</Text>
+              )}
+            </View>
+          )}
+        </View>
+      </View>
+      {item.completedAt && (
+        <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-2`}>
+          {t('myWork.completedAt', { time: formatDateTime(item.completedAt) })}
+        </Text>
+      )}
+    </View>
+  ), [t, has, typo]);
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
@@ -155,10 +209,10 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
         style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
       >
         <View className="flex-row items-center mb-4">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-            <MaterialCommunityIcons name="arrow-left" size={24} color="#4f46e5" />
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900 dark:text-white flex-1">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {t('myWork.historyTitle')}
           </Text>
         </View>
@@ -173,7 +227,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
                 onPress={() => setFilterType(f.key)}
                 className={`px-4 py-1.5 rounded-full border ${active ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
               >
-                <Text className={`text-sm font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                <Text className={`${typo.caption} font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                   {f.label}
                 </Text>
               </TouchableOpacity>
@@ -186,6 +240,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
         data={completed ?? []}
         keyExtractor={(item) => String(item.itemId)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         ListHeaderComponent={
           <View>
@@ -196,7 +251,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
                   <TouchableOpacity onPress={() => shiftDay(-1)} className="p-1">
                     <MaterialCommunityIcons name="chevron-left" size={22} color="#4f46e5" />
                   </TouchableOpacity>
-                  <Text className="text-sm font-semibold text-gray-800 dark:text-white">
+                  <Text className={`${typo.label} text-gray-800 dark:text-white`}>
                     {day}/{month}/{year}
                   </Text>
                   <TouchableOpacity onPress={() => shiftDay(1)} className="p-1">
@@ -210,7 +265,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
                   <TouchableOpacity onPress={() => shiftWeek(-1)} className="p-1">
                     <MaterialCommunityIcons name="chevron-left" size={22} color="#4f46e5" />
                   </TouchableOpacity>
-                  <Text className="text-sm font-semibold text-gray-800 dark:text-white">
+                  <Text className={`${typo.label} text-gray-800 dark:text-white`}>
                     {formatWeekLabel(day, month, year)}
                   </Text>
                   <TouchableOpacity onPress={() => shiftWeek(1)} className="p-1">
@@ -227,7 +282,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
                       onPress={() => setMonth(m)}
                       className={`px-3 py-1 rounded-full border ${month === m ? 'bg-indigo-600 border-indigo-600' : 'border-gray-200 dark:border-gray-600'}`}
                     >
-                      <Text className={`text-xs font-medium ${month === m ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                      <Text className={`${typo.caption} font-medium ${month === m ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                         T{m}/{year}
                       </Text>
                     </TouchableOpacity>
@@ -238,7 +293,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
                       onPress={() => setYear(y)}
                       className={`px-3 py-1 rounded-full border ${year === y && filterType === 'MONTH' && month === month ? 'border-indigo-600' : 'border-gray-200 dark:border-gray-600'}`}
                     >
-                      <Text className="text-xs text-gray-500 dark:text-gray-400">{y}</Text>
+                      <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{y}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -252,7 +307,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
                       onPress={() => setYear(y)}
                       className={`px-4 py-1.5 rounded-full border ${year === y ? 'bg-indigo-600 border-indigo-600' : 'border-gray-200 dark:border-gray-600'}`}
                     >
-                      <Text className={`text-sm font-medium ${year === y ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                      <Text className={`${typo.caption} font-medium ${year === y ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                         {y}
                       </Text>
                     </TouchableOpacity>
@@ -269,7 +324,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
                 onChangeText={setKeyword}
                 placeholder={t('myWork.searchPlaceholder')}
                 placeholderTextColor="#9ca3af"
-                className="flex-1 py-2.5 px-2 text-gray-900 dark:text-white text-sm"
+                className={`flex-1 py-2.5 px-2 text-gray-900 dark:text-white ${typo.inputSize}`}
               />
               {keyword.length > 0 && (
                 <TouchableOpacity onPress={() => setKeyword('')}>
@@ -286,45 +341,45 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
                 <View>
                   <View className="flex-row mb-3">
                     <View className="flex-1 items-center">
-                      <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('myWork.statCount')}</Text>
-                      <Text className="text-xl font-bold text-indigo-600">{summary?.completedCount ?? 0}</Text>
+                      <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{t('myWork.statCount')}</Text>
+                      <Text className={`${typo.section} text-indigo-600`}>{summary?.completedCount ?? 0}</Text>
                     </View>
                     <View className="w-px bg-gray-100 dark:bg-gray-700" />
                     <View className="flex-1 items-center">
-                      <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('myWork.statRevenue')}</Text>
-                      <Text className="text-base font-bold text-emerald-600">{formatVnd(summary?.totalRevenue)}</Text>
+                      <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{t('myWork.statRevenue')}</Text>
+                      <Text className={`${typo.labelBold} text-emerald-600`}>{formatVnd(summary?.totalRevenue)}</Text>
                     </View>
                   </View>
                   <View className="h-px bg-gray-100 dark:bg-gray-700 mb-3" />
                   <View className="flex-row">
                     <View className="flex-1 items-center">
-                      <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('myWork.statDuration')}</Text>
-                      <Text className="text-base font-bold text-gray-800 dark:text-white">
+                      <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{t('myWork.statDuration')}</Text>
+                      <Text className={`${typo.labelBold} text-gray-800 dark:text-white`}>
                         {formatDuration(summary?.totalDurationMinutes ?? 0)}
                       </Text>
                     </View>
                     <View className="w-px bg-gray-100 dark:bg-gray-700" />
                     <View className="flex-1 items-center">
-                      <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('myWork.statCommission')}</Text>
-                      <Text className="text-base font-bold text-amber-600">{formatVnd(summary?.totalCommission)}</Text>
+                      <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{t('myWork.statCommission')}</Text>
+                      <Text className={`${typo.labelBold} text-amber-600`}>{formatVnd(summary?.totalCommission)}</Text>
                     </View>
                   </View>
                 </View>
               ) : (
                 <View className="flex-row">
                   <View className="flex-1 items-center">
-                    <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('myWork.statCount')}</Text>
-                    <Text className="text-xl font-bold text-indigo-600">{summary?.completedCount ?? 0}</Text>
+                    <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{t('myWork.statCount')}</Text>
+                    <Text className={`${typo.section} text-indigo-600`}>{summary?.completedCount ?? 0}</Text>
                   </View>
                   <View className="w-px bg-gray-100 dark:bg-gray-700" />
                   <View className="flex-1 items-center">
-                    <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('myWork.statRevenue')}</Text>
-                    <Text className="text-base font-bold text-emerald-600">{formatVnd(summary?.totalRevenue)}</Text>
+                    <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{t('myWork.statRevenue')}</Text>
+                    <Text className={`${typo.labelBold} text-emerald-600`}>{formatVnd(summary?.totalRevenue)}</Text>
                   </View>
                   <View className="w-px bg-gray-100 dark:bg-gray-700" />
                   <View className="flex-1 items-center">
-                    <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('myWork.statDuration')}</Text>
-                    <Text className="text-base font-bold text-gray-800 dark:text-white">
+                    <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-1`}>{t('myWork.statDuration')}</Text>
+                    <Text className={`${typo.labelBold} text-gray-800 dark:text-white`}>
                       {formatDuration(summary?.totalDurationMinutes ?? 0)}
                     </Text>
                   </View>
@@ -339,54 +394,13 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
               </View>
             )}
 
-            <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-4 mt-4 mb-2">
+            <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase tracking-wide px-4 mt-4 mb-2`}>
               {t('myWork.detail')}
             </Text>
           </View>
         }
-        ListEmptyComponent={
-          isLoading ? (
-            <View className="px-4 gap-y-3">
-              {[1, 2, 3].map((i) => <Skeleton key={i} height={80} borderRadius={16} />)}
-            </View>
-          ) : isError ? (
-            <ErrorState onRetry={refetch} />
-          ) : (
-            <EmptyState icon="✅" title={t('myWork.emptyHistory')} />
-          )
-        }
-        renderItem={({ item }: { item: WorkItemDTO }) => (
-          <View className="bg-white dark:bg-gray-800 rounded-2xl mx-4 mb-3 p-4 shadow-sm">
-            <View className="flex-row justify-between items-start">
-              <View className="flex-1 mr-3">
-                <Text className="text-base font-semibold text-gray-900 dark:text-white" numberOfLines={1}>
-                  {item.productName}
-                </Text>
-                <Text className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                  {item.orderNumber} · {item.customerName ?? t('pos.walkIn')}
-                </Text>
-              </View>
-              <View className="items-end gap-0.5">
-                <Text className="text-sm font-bold text-emerald-600">{formatVnd(item.amount)}</Text>
-                {has('COMMISSION') && item.commissionAmount != null && item.commissionAmount > 0 && (
-                  <View className="flex-row items-center gap-1">
-                    <Text className="text-xs text-amber-500 font-semibold">
-                      +{formatVnd(item.commissionAmount)}
-                    </Text>
-                    {item.commissionRate != null && item.commissionRate > 0 && (
-                      <Text className="text-[10px] text-gray-400">({item.commissionRate}%)</Text>
-                    )}
-                  </View>
-                )}
-              </View>
-            </View>
-            {item.completedAt && (
-              <Text className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                {t('myWork.completedAt', { time: formatDateTime(item.completedAt) })}
-              </Text>
-            )}
-          </View>
-        )}
+        ListEmptyComponent={listEmpty}
+        renderItem={renderItem}
       />
     </View>
   );

@@ -1,0 +1,9 @@
+# Reusable subflow: navigate to the More tab (Khác) and wait for it to settle.
+# Precondition: user is already logged in and on any main tab.
+# Result: MoreScreen is visible.
+appId: com.knp.tappypos
+---
+
+- tapOn:
+    id: "tab-more"
+- assertVisible: "Khác"

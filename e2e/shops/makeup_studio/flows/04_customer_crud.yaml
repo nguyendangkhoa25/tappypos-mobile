@@ -1,0 +1,84 @@
+appId: com.knp.tappypos
+name: "MKUP 04 Customer CRUD — create, view, delete (CUSTOMER feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+
+# Pre-cleanup
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Makeup Test Maestro"
+- hideKeyboard
+- tapOn:
+    id: "customer-row-0"
+    optional: true
+- tapOn:
+    id: "customer-delete-btn"
+    optional: true
+- tapOn:
+    text: "Xóa khách hàng"
+    optional: true
+- tapOn:
+    text: "OK"
+    optional: true
+
+- hideKeyboard
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+
+# Create
+- tapOn:
+    id: "customer-add-fab"
+- assertVisible: "Thêm khách hàng"
+
+- tapOn:
+    id: "customer-name"
+- inputText: "Makeup Test Maestro"
+
+- tapOn:
+    id: "customer-phone"
+- inputText: ${NEW_CUSTOMER_PHONE}
+
+- tapOn:
+    id: "customer-form-submit"
+- assertVisible: "Đã thêm khách hàng"
+- tapOn: "OK"
+
+# Verify
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Maestro"
+- hideKeyboard
+- assertVisible: "Maestro"
+- tapOn:
+    id: "customer-row-0"
+- assertVisible:
+    id: "customer-delete-btn"
+
+# Delete
+- tapOn:
+    id: "customer-delete-btn"
+- assertVisible: "Xóa khách hàng?"
+- tapOn: "Xóa khách hàng"
+- assertVisible: "Đã xóa khách hàng"
+- tapOn: "OK"
+- assertNotVisible:
+    id: "customer-row-0"

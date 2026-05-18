@@ -1,0 +1,49 @@
+appId: com.knp.tappypos
+name: "SPA 07 Expense flow — create expense via tab (EXPENSE feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Expenses tab ─────────────────────────────────────────────────
+- tapOn:
+    id: "tab-expenses"
+- assertVisible: "Chi tiêu"
+    optional: true
+- assertVisible: "Khoản chi"
+    optional: true
+- assertNotVisible: "500"
+
+# ── EX01: Open add expense form ───────────────────────────────────────────────
+- tapOn:
+    id: "expense-add-fab"
+- assertVisible: "Thêm khoản chi"
+    optional: true
+- assertVisible: "Khoản chi mới"
+    optional: true
+
+# ── EX02: Fill in description (spa-relevant expense) ─────────────────────────
+- tapOn:
+    id: "expense-desc-input"
+- inputText: "Dầu massage test"
+
+# ── EX03: Fill in amount ──────────────────────────────────────────────────────
+- tapOn:
+    id: "expense-amount-input"
+- inputText: "250000"
+
+# ── EX04: Save ────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "expense-save-btn"
+- assertVisible: "Đã lưu"
+    optional: true
+- assertNotVisible: "500"
+
+# ── EX05: Expense appears in list ─────────────────────────────────────────────
+- assertVisible: "Dầu massage test"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

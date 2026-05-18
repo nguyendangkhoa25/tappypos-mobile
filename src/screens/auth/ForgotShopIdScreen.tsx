@@ -15,12 +15,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TextInput } from 'react-native';
 import { ClearableInput } from '../../components/ClearableInput';
 import { PhoneInput } from '../../components/PhoneInput';
+import { useTypography } from '../../hooks/useTypography';
 import { SUPPORT } from '../../utils/constants';
 import type { AuthScreenProps } from '../../types/navigation';
 
 export function ForgotShopIdScreen({ navigation }: AuthScreenProps<'ForgotShopId'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const [shopName, setShopName] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,17 +56,17 @@ export function ForgotShopIdScreen({ navigation }: AuthScreenProps<'ForgotShopId
             <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
           </TouchableOpacity>
 
-          <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+          <Text className={`${typo.heading} text-gray-900 dark:text-white mb-1`}>
             {t('auth.forgotShopId.title')}
           </Text>
-          <Text className="text-sm text-gray-500 dark:text-gray-400 mb-8 leading-5">
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-8 leading-5`}>
             {t('auth.forgotShopId.subtitle')}
           </Text>
 
           {!sent ? (
             <>
               <View className="mb-4">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
                   {t('auth.forgotShopId.shopNameLabel')}
                 </Text>
                 <ClearableInput
@@ -80,7 +82,7 @@ export function ForgotShopIdScreen({ navigation }: AuthScreenProps<'ForgotShopId
               </View>
 
               <View className="mb-6">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
                   {t('auth.forgotShopId.phoneLabel')}
                 </Text>
                 <PhoneInput
@@ -106,7 +108,7 @@ export function ForgotShopIdScreen({ navigation }: AuthScreenProps<'ForgotShopId
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Text
-                    className={`font-bold text-base ${!shopName.trim() ? 'text-gray-400 dark:text-gray-500' : 'text-white'}`}
+                    className={`${typo.labelBold} ${!shopName.trim() ? 'text-gray-400 dark:text-gray-500' : 'text-white'}`}
                   >
                     {t('auth.forgotShopId.send')}
                   </Text>
@@ -116,17 +118,17 @@ export function ForgotShopIdScreen({ navigation }: AuthScreenProps<'ForgotShopId
           ) : (
             <View className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-5 items-center mb-6">
               <Text className="text-3xl mb-3">✅</Text>
-              <Text className="text-base font-bold text-indigo-700 dark:text-indigo-300 text-center mb-1">
+              <Text className={`${typo.body} text-indigo-700 dark:text-indigo-300 text-center mb-1`}>
                 {t('auth.forgotShopId.sentTitle')}
               </Text>
-              <Text className="text-sm text-indigo-600 dark:text-indigo-400 text-center leading-5">
+              <Text className={`${typo.caption} text-indigo-600 dark:text-indigo-400 text-center leading-5`}>
                 {t('auth.forgotShopId.sentDesc')}
               </Text>
             </View>
           )}
 
           <View className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-2xl p-4">
-            <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-3`}>
               {t('auth.forgotShopId.supportTitle')}
             </Text>
             <TouchableOpacity
@@ -134,14 +136,14 @@ export function ForgotShopIdScreen({ navigation }: AuthScreenProps<'ForgotShopId
               onPress={() => Linking.openURL(`tel:${SUPPORT.phone}`)}
             >
               <MaterialCommunityIcons name="phone-outline" size={18} color="#4f46e5" />
-              <Text className="text-primary font-medium text-sm">{SUPPORT.phone}</Text>
+              <Text className={`${typo.caption} text-primary font-medium`}>{SUPPORT.phone}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="flex-row items-center gap-3 py-2"
               onPress={() => Linking.openURL(`mailto:${SUPPORT.email}`)}
             >
               <MaterialCommunityIcons name="email-outline" size={18} color="#4f46e5" />
-              <Text className="text-primary font-medium text-sm">{SUPPORT.email}</Text>
+              <Text className={`${typo.caption} text-primary font-medium`}>{SUPPORT.email}</Text>
             </TouchableOpacity>
           </View>
         </View>

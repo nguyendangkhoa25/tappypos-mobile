@@ -1,0 +1,99 @@
+appId: com.knp.tappypos
+name: "16 Appointment check-in → POS golden path — the core barber shop workflow"
+---
+
+# This flow tests the end-to-end barber workflow:
+# Book appointment → confirm → check in → POS opens with customer → place order
+#
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Step 1: Create a fresh appointment ────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-appointments"
+- assertVisible: "Lịch hẹn"
+
+- tapOn:
+    id: "appointment-add-fab"
+- assertVisible: "Đặt lịch hẹn"
+
+- tapOn:
+    id: "appt-customer-name"
+- inputText: "Khách Check-In Test"
+
+- tapOn:
+    id: "appt-customer-phone"
+- inputText: "0911555666"
+
+- tapOn:
+    id: "appt-save-btn"
+- assertVisible: "Lịch hẹn"
+
+# ── Step 2: Open the appointment just created (first card) ────────────────────
+- tapOn:
+    id: "appointment-card-0"
+- assertVisible: "Khách Check-In Test"
+
+# ── CI01: Check-in button is visible (status is PENDING/CONFIRMED) ────────────
+- assertVisible:
+    id: "appt-checkin-btn"
+
+# ── CI02: Tap check-in ────────────────────────────────────────────────────────
+- tapOn:
+    id: "appt-checkin-btn"
+
+# ── CI03: Success alert appears — tap action button to open POS ───────────────
+# The alert has an action button to navigate to Sell → POSMain with checkInPayload
+- assertVisible: "Check-in thành công"
+    optional: true
+- tapOn: "Xem đơn"
+    optional: true
+- tapOn: "Mở đơn hàng"
+    optional: true
+- tapOn: "OK"
+    optional: true
+
+# ── CI04: POS/Barber service screen is now open ───────────────────────────────
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+
+# ── CI05: Add a service and complete the order ───────────────────────────────
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Hoàn tất đơn hàng"
+
+- tapOn:
+    id: "barber-place-order-btn"
+- assertVisible: "Đặt hàng thành công!"
+- assertVisible:
+    id: "order-success-number"
+
+# ── CI06: Start new order ─────────────────────────────────────────────────────
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Dịch vụ"
+
+# ── CI07: Verify checked-in appointment no longer shows check-in button ───────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-appointments"
+- assertVisible: "Lịch hẹn"
+# Appointment is now CHECKED_IN — check-in button gone
+- tapOn:
+    id: "appointment-card-0"
+    optional: true
+- assertNotVisible:
+    id: "appt-checkin-btn"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

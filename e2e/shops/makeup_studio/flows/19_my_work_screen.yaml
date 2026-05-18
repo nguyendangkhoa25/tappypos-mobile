@@ -1,0 +1,23 @@
+appId: com.knp.tappypos
+name: "MKUP 19 My Work screen — queue tab + available tab (MY_WORK feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-mywork"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+- tapOn: "Chờ nhận"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn: "Hàng chờ của tôi"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

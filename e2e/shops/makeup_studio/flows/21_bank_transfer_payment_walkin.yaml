@@ -1,0 +1,55 @@
+appId: com.knp.tappypos
+name: "MKUP 21 Bank transfer payment + walk-in customer (BANK_TRANSFER payment method)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+
+# Add a makeup service
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible:
+    id: "barber-cart-count"
+
+# Open checkout
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Hoàn tất đơn hàng"
+- assertVisible: "Phương thức thanh toán"
+
+# Walk-in customer default
+- assertVisible: "Khách lẻ"
+    optional: true
+
+# Select BANK_TRANSFER
+- assertVisible:
+    id: "payment-method-CASH"
+- tapOn:
+    id: "payment-method-BANK_TRANSFER"
+- assertVisible:
+    id: "payment-method-BANK_TRANSFER"
+
+- assertVisible: "Chuyển khoản"
+    optional: true
+- assertNotVisible: "500"
+
+# Switch to CASH and complete
+- tapOn:
+    id: "payment-method-CASH"
+- tapOn:
+    id: "barber-place-order-btn"
+- assertVisible: "Đặt hàng thành công!"
+
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Dịch vụ"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

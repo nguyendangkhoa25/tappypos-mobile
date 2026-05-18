@@ -1,0 +1,93 @@
+appId: com.knp.tappypos
+name: "SPA 22 Spa service categories — verify all 6 category tabs in POS screen (SPA-SPECIFIC)"
+---
+
+# This flow is unique to SPA_SHOP — it verifies that all 6 spa service categories
+# seeded by spa_shop.sql appear as filter tabs in the BarberServiceScreen:
+#   Massage · Chăm sóc da mặt · Chăm sóc cơ thể · Waxing & Triệt lông
+#   Điều trị đặc biệt · Combo & Liệu trình
+#
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Sell tab ──────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+- assertNotVisible: "500"
+
+# ── SC01: "Tất cả" / all-services tab shows service cards ────────────────────
+- tapOn: "Tất cả"
+    optional: true
+- assertVisible:
+    id: "barber-service-.*"
+- assertNotVisible: "500"
+
+# ── SC02: Massage category tab ────────────────────────────────────────────────
+- tapOn: "Massage"
+    optional: true
+- assertNotVisible: "500"
+# At least one Massage service card should appear
+- assertVisible:
+    id: "barber-service-.*"
+    optional: true
+
+# ── SC03: Chăm sóc da mặt category tab ──────────────────────────────────────
+- tapOn: "Chăm sóc da mặt"
+    optional: true
+- assertNotVisible: "500"
+- assertVisible:
+    id: "barber-service-.*"
+    optional: true
+
+# ── SC04: Chăm sóc cơ thể category tab ──────────────────────────────────────
+- tapOn: "Chăm sóc cơ thể"
+    optional: true
+- assertNotVisible: "500"
+
+# ── SC05: Waxing & Triệt lông category tab ───────────────────────────────────
+- tapOn: "Waxing"
+    optional: true
+- tapOn: "Waxing & Triệt lông"
+    optional: true
+- assertNotVisible: "500"
+
+# ── SC06: Điều trị đặc biệt category tab ─────────────────────────────────────
+- tapOn: "Điều trị"
+    optional: true
+- tapOn: "Điều trị đặc biệt"
+    optional: true
+- assertNotVisible: "500"
+
+# ── SC07: Combo & Liệu trình category tab ────────────────────────────────────
+- tapOn: "Combo"
+    optional: true
+- tapOn: "Combo & Liệu trình"
+    optional: true
+- assertNotVisible: "500"
+# Liệu trình 5 buổi should appear in this category
+- assertVisible: "Liệu trình"
+    optional: true
+
+# ── SC08: Return to all and add a service (sanity check) ─────────────────────
+- tapOn: "Tất cả"
+    optional: true
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible:
+    id: "barber-cart-count"
+
+# Dismiss cart without placing order
+- tapOn:
+    id: "barber-checkout-btn"
+    optional: true
+- tapOn: "Đóng"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

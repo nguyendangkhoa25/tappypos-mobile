@@ -35,6 +35,11 @@ export const FB_CATEGORY_ORDER: ExpenseCategory[] = [
   'TAX', 'BANK_FEE', 'INSURANCE', 'MAINTENANCE', 'OTHER',
 ];
 
+// Categories that are typically recurring / predictable (fixed costs)
+export const FIXED_CATEGORIES = new Set<string>([
+  'RENT', 'ELECTRICITY', 'WATER', 'INTERNET', 'PHONE', 'SOFTWARE', 'INSURANCE',
+]);
+
 export const CATEGORY_EMOJI: Record<string, string> = {
   RENT:         '🏠',
   ELECTRICITY:  '⚡',

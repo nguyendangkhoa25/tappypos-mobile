@@ -21,12 +21,14 @@ import { useAlertStore } from '../../store/alertStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { useFeatureCheck } from '../../hooks/useFeature';
 import { formatVnd } from '../../utils/format';
+import { useTypography } from '../../hooks/useTypography';
 import { MoneyInput } from '../../components/MoneyInput';
 import { EmptyState } from '../../components/EmptyState';
 import type { POSScreenProps } from '../../types/navigation';
 
 export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const has = useFeatureCheck();
   const { items, updateQty, updatePrice, removeItem, discount, getTotal, clearCart, selectedCustomer, setCustomer, tableId, tableLabel } = useCartStore();
@@ -111,14 +113,14 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
   };
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-white dark:bg-gray-900" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-        <TouchableOpacity className="mr-3 p-1" onPress={() => navigation.goBack()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
+      <View className="flex-row items-center px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+        <TouchableOpacity className="mr-3" onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-900 flex-1">{t('pos.cart')}</Text>
-        <Text className="text-sm text-gray-500">{t('pos.itemCount', { count: items.length })}</Text>
+        <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('pos.cart')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('pos.itemCount', { count: items.length })}</Text>
       </View>
 
       {items.length === 0 ? (
@@ -134,21 +136,21 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
           {/* Customer picker — prominent, full-width */}
           {has('CUSTOMER') && (
             <TouchableOpacity
-              className="mx-4 mt-4 rounded-2xl border-2 border-primary bg-primary-light px-4 py-4 flex-row items-center active:opacity-80"
+              className="mx-4 mt-4 rounded-2xl border-2 border-primary bg-primary-light dark:bg-indigo-900/30 px-4 py-4 flex-row items-center active:opacity-80"
               onPress={() => setCustomerSheet(true)}
             >
               <View className="w-10 h-10 rounded-full bg-primary items-center justify-center mr-3">
                 <MaterialCommunityIcons name="account" size={20} color="white" />
               </View>
               <View className="flex-1">
-                <Text className="text-xs font-semibold text-primary uppercase tracking-wide mb-0.5">
+                <Text className={`${typo.captionBold} text-primary uppercase tracking-wide mb-0.5`}>
                   {t('pos.customer')}
                 </Text>
-                <Text className="text-base font-bold text-gray-900">
+                <Text className={`${typo.labelBold} text-gray-900 dark:text-white`}>
                   {selectedCustomer ? selectedCustomer.name : t('pos.walkIn')}
                 </Text>
                 {selectedCustomer && (
-                  <Text className="text-xs text-gray-500">{selectedCustomer.phone}</Text>
+                  <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{selectedCustomer.phone}</Text>
                 )}
               </View>
               <MaterialCommunityIcons
@@ -163,10 +165,11 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
             data={items}
             keyExtractor={(item) => item.productId}
             className="flex-1 mt-2"
+            showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
-              <View className="flex-row items-center px-4 py-4 border-b border-gray-50">
+              <View className="flex-row items-center px-4 py-4 border-b border-gray-50 dark:border-gray-700/50">
                 <View className="flex-1">
-                  <Text className="font-semibold text-gray-800" numberOfLines={2}>
+                  <Text className={`${typo.label} text-gray-800 dark:text-gray-100`} numberOfLines={2}>
                     {item.name}
                   </Text>
                   {/* Tap price to edit */}
@@ -175,7 +178,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
                     className="self-start mt-0.5"
                   >
                     <View className="flex-row items-center gap-1">
-                      <Text className="text-sm text-primary font-bold">
+                      <Text className={`${typo.label} font-bold text-primary`}>
                         {formatVnd(item.price)}
                       </Text>
                       <MaterialCommunityIcons name="pencil-outline" size={12} color="#4f46e5" />
@@ -186,7 +189,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
                 {/* Qty controls */}
                 <View className="flex-row items-center gap-1 mx-3">
                   <TouchableOpacity
-                    className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center active:opacity-70"
+                    className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 items-center justify-center active:opacity-70"
                     onPress={() => {
                       if (item.quantity === 1) {
                         handleRemove(item.productId, item.name);
@@ -202,13 +205,13 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
                     />
                   </TouchableOpacity>
 
-                  <Text className="w-8 text-center font-bold text-gray-800 text-base">
+                  <Text className={`w-8 text-center ${typo.labelBold} text-gray-800 dark:text-gray-100`}>
                     {item.quantity}
                   </Text>
 
                   <TouchableOpacity
                     testID={`qty-plus-${item.productId}`}
-                    className="w-8 h-8 rounded-full bg-primary-light items-center justify-center active:opacity-70"
+                    className="w-8 h-8 rounded-full bg-primary-light dark:bg-indigo-900/30 items-center justify-center active:opacity-70"
                     onPress={() => updateQty(item.productId, item.quantity + 1)}
                   >
                     <MaterialCommunityIcons name="plus" size={16} color="#4f46e5" />
@@ -216,7 +219,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
                 </View>
 
                 {/* Line total */}
-                <Text className="w-24 text-right font-semibold text-gray-800">
+                <Text className={`w-24 text-right ${typo.label} text-gray-800 dark:text-gray-100`}>
                   {formatVnd(item.price * item.quantity)}
                 </Text>
               </View>
@@ -225,25 +228,25 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
 
           {/* Summary + checkout */}
           <View
-            className="bg-white border-t border-gray-100 px-4 pt-4"
+            className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 px-4 pt-4"
             style={{ paddingBottom: insets.bottom + 16 }}
           >
             {discount > 0 && (
               <>
                 <View className="flex-row justify-between mb-1">
-                  <Text className="text-gray-500">{t('orders.subtotal')}</Text>
-                  <Text className="text-gray-700">{formatVnd(subtotal)}</Text>
+                  <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('orders.subtotal')}</Text>
+                  <Text className={`${typo.caption} text-gray-700 dark:text-gray-300`}>{formatVnd(subtotal)}</Text>
                 </View>
                 <View className="flex-row justify-between mb-2">
-                  <Text className="text-gray-500">{t('pos.discount')}</Text>
+                  <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('pos.discount')}</Text>
                   <Text className="text-warning font-semibold">-{formatVnd(discount)}</Text>
                 </View>
               </>
             )}
 
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-lg font-bold text-gray-900">{t('pos.total')}</Text>
-              <Text className="text-2xl font-bold text-primary">{formatVnd(total)}</Text>
+              <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('pos.total')}</Text>
+              <Text className={`${typo.heading} text-primary`}>{formatVnd(total)}</Text>
             </View>
 
             <TouchableOpacity
@@ -257,7 +260,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
               ) : (
                 <>
                   <MaterialCommunityIcons name="content-save-outline" size={18} color="#4f46e5" style={{ marginRight: 6 }} />
-                  <Text className="text-primary font-bold text-base">{t('pos.saveOrder')}</Text>
+                  <Text className={`${typo.labelBold} text-primary`}>{t('pos.saveOrder')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -266,7 +269,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
               className="bg-primary rounded-2xl py-4 items-center active:opacity-80"
               onPress={() => navigation.navigate('Checkout')}
             >
-              <Text className="text-white font-bold text-lg">{t('pos.checkout')}</Text>
+              <Text className={`${typo.labelBold} text-white`}>{t('pos.checkout')}</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -286,27 +289,27 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
         />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View
-            className="bg-white rounded-t-3xl px-5 pt-5"
+            className="bg-white dark:bg-gray-800 rounded-t-3xl px-5 pt-5"
             style={{ paddingBottom: insets.bottom + 24, maxHeight: '80%' }}
           >
-            <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-4" />
-            <Text className="text-lg font-bold text-gray-900 mb-4">{t('pos.selectCustomer')}</Text>
+            <View className="w-10 h-1 bg-gray-200 dark:bg-gray-600 rounded-full self-center mb-4" />
+            <Text className={`${typo.section} text-gray-900 dark:text-white mb-4`}>{t('pos.selectCustomer')}</Text>
 
             {/* Walk-in — always first, prominent */}
             <TouchableOpacity
               className={`flex-row items-center p-4 rounded-2xl border-2 mb-3 ${
-                !selectedCustomer ? 'border-primary bg-primary-light' : 'border-gray-200 bg-gray-50'
+                !selectedCustomer ? 'border-primary bg-primary-light dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
               }`}
               onPress={() => { setCustomer(null); setCustomerSheet(false); }}
             >
-              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${!selectedCustomer ? 'bg-primary' : 'bg-gray-300'}`}>
+              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${!selectedCustomer ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-500'}`}>
                 <MaterialCommunityIcons name="account-outline" size={20} color="white" />
               </View>
               <View className="flex-1">
-                <Text className={`font-bold text-base ${!selectedCustomer ? 'text-primary' : 'text-gray-700'}`}>
+                <Text className={`${typo.labelBold} ${!selectedCustomer ? 'text-primary' : 'text-gray-700 dark:text-gray-200'}`}>
                   {t('pos.walkIn')}
                 </Text>
-                <Text className="text-xs text-gray-400">{t('pos.walkInHint')}</Text>
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{t('pos.walkInHint')}</Text>
               </View>
               {!selectedCustomer && (
                 <MaterialCommunityIcons name="check-circle" size={22} color="#4f46e5" />
@@ -314,10 +317,10 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
             </TouchableOpacity>
 
             {/* Search */}
-            <View className="flex-row items-center bg-gray-100 rounded-xl px-3 py-2.5 mb-3">
+            <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-3 py-2.5 mb-3">
               <MaterialCommunityIcons name="magnify" size={18} color="#9ca3af" />
               <TextInput
-                className="flex-1 ml-2 text-base text-gray-800"
+                className={`flex-1 ml-2 ${typo.inputSize} text-gray-800 dark:text-gray-100`}
                 placeholder={t('pos.searchCustomer')}
                 placeholderTextColor="#9ca3af"
                 value={customerSearch}
@@ -335,7 +338,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
                 return (
                   <TouchableOpacity
                     className={`flex-row items-center p-3.5 rounded-xl mb-2 border ${
-                      active ? 'border-primary bg-primary-light' : 'border-gray-100 bg-white'
+                      active ? 'border-primary bg-primary-light dark:bg-indigo-900/30' : 'border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700'
                     }`}
                     onPress={() => {
                       setCustomer({ id: c.id, name: c.name, phone: c.phone });
@@ -343,14 +346,14 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
                       setCustomerSearch('');
                     }}
                   >
-                    <View className={`w-9 h-9 rounded-full items-center justify-center mr-3 ${active ? 'bg-primary' : 'bg-gray-200'}`}>
-                      <Text className={`text-sm font-bold ${active ? 'text-white' : 'text-gray-600'}`}>
+                    <View className={`w-9 h-9 rounded-full items-center justify-center mr-3 ${active ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'}`}>
+                      <Text className={`${typo.label} ${active ? 'text-white' : 'text-gray-600 dark:text-gray-200'}`}>
                         {c.name.charAt(0).toUpperCase()}
                       </Text>
                     </View>
                     <View className="flex-1">
-                      <Text className={`font-semibold ${active ? 'text-primary' : 'text-gray-800'}`}>{c.name}</Text>
-                      <Text className="text-xs text-gray-400">{c.phone}</Text>
+                      <Text className={`${typo.label} ${active ? 'text-primary' : 'text-gray-800 dark:text-gray-100'}`}>{c.name}</Text>
+                      <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{c.phone}</Text>
                     </View>
                     {active && <MaterialCommunityIcons name="check-circle" size={20} color="#4f46e5" />}
                   </TouchableOpacity>
@@ -358,7 +361,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
               }}
               ListEmptyComponent={
                 customerSearch.length >= 2 ? (
-                  <Text className="text-center text-gray-400 py-4">{t('pos.noCustomerFound')}</Text>
+                  <Text className={`${typo.caption} text-center text-gray-400 dark:text-gray-500 py-4`}>{t('pos.noCustomerFound')}</Text>
                 ) : null
               }
             />
@@ -379,19 +382,17 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
           onPress={() => setEditingItem(null)}
         />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View className="bg-white rounded-t-3xl px-6 pt-5" style={{ paddingBottom: insets.bottom + 24 }}>
-            <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-4" />
-            <Text className="text-base font-bold text-gray-900 mb-3">{t('pos.editPrice')}</Text>
-            <MoneyInput
-              rawValue={editPrice}
-              onChangeRaw={setEditPrice}
-              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-2xl font-bold text-gray-900 mb-4"
-            />
+          <View className="bg-white dark:bg-gray-800 rounded-t-3xl px-6 pt-5" style={{ paddingBottom: insets.bottom + 24 }}>
+            <View className="w-10 h-1 bg-gray-200 dark:bg-gray-600 rounded-full self-center mb-4" />
+            <Text className={`${typo.labelBold} text-gray-900 dark:text-white mb-3`}>{t('pos.editPrice')}</Text>
+            <View className="mb-4">
+              <MoneyInput rawValue={editPrice} onChangeRaw={setEditPrice} />
+            </View>
             <TouchableOpacity
               className="bg-primary rounded-2xl py-4 items-center active:opacity-80"
               onPress={confirmPriceEdit}
             >
-              <Text className="text-white font-bold text-base">{t('common.save')}</Text>
+              <Text className={`${typo.labelBold} text-white`}>{t('common.save')}</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

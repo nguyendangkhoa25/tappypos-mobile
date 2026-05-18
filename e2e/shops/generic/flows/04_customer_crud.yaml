@@ -1,0 +1,105 @@
+appId: com.knp.tappypos
+name: "04 Customer CRUD — create, view detail, delete"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Customer list via Dashboard ───────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+
+# ── Pre-cleanup: delete any leftover active customer from an incomplete prior run
+# List search is by name; customer-row-0 testID avoids matching the search input itself
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Khách Test Maestro"
+- hideKeyboard
+- tapOn:
+    id: "customer-row-0"
+    optional: true
+- tapOn:
+    id: "customer-delete-btn"
+    optional: true
+- tapOn:
+    text: "Xóa khách hàng"
+    optional: true
+- tapOn:
+    text: "OK"
+    optional: true
+
+# ── Dismiss keyboard, re-navigate to guarantee clean CustomerList state ───────
+- hideKeyboard
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+
+# ── M06b: Search for an existing customer (verifies search works) ─────────────
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Test"
+- tapOn:
+    id: "customer-search-input"
+- eraseText: 50
+- hideKeyboard
+
+# ── M07d: Open CustomerFormScreen to create a new customer ──────────────────
+- tapOn:
+    id: "customer-add-fab"
+- assertVisible: "Thêm khách hàng"
+
+# ── M07d: Fill in required fields ────────────────────────────────────────────
+- tapOn:
+    id: "customer-name"
+- inputText: "Khách Test Maestro"
+
+- tapOn:
+    id: "customer-phone"
+- inputText: ${NEW_CUSTOMER_PHONE}
+
+# ── M07d: Submit the form ─────────────────────────────────────────────────────
+- tapOn:
+    id: "customer-form-submit"
+- assertVisible: "Đã thêm khách hàng"
+- tapOn: "OK"
+
+# ── Re-navigate to get a fresh CustomerList ───────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-customers-btn"
+- assertVisible: "Khách hàng"
+
+# ── M06: Search for the new customer (forces a fresh queryFn run) ─────────────
+# Searching by ASCII "Maestro" uses a new query key — avoids stale-cache empty state
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Maestro"
+- hideKeyboard
+- assertVisible: "Maestro"
+
+# ── M07: Tap the new customer to open detail ─────────────────────────────────
+- tapOn:
+    id: "customer-row-0"
+- assertVisible:
+    id: "customer-delete-btn"
+
+# ── M07b: Delete the customer ────────────────────────────────────────────────
+- tapOn:
+    id: "customer-delete-btn"
+- assertVisible: "Xóa khách hàng?"
+- tapOn: "Xóa khách hàng"
+- assertVisible: "Đã xóa khách hàng"
+- tapOn: "OK"
+
+# ── Verify no customer rows remain in the search results ──────────────────────
+- assertNotVisible:
+    id: "customer-row-0"

@@ -1,0 +1,46 @@
+appId: com.knp.tappypos
+name: "SPA 06 Staff management — list, add (USER feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Staff list via More ──────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-staff"
+- assertVisible: "Nhân viên"
+- assertNotVisible: "500"
+
+# ── ST01: At least one staff row exists (the owner account) ──────────────────
+- assertVisible:
+    id: "staff-row-0"
+
+# ── ST02: Open form to add a new staff member ────────────────────────────────
+- tapOn:
+    id: "staff-add-fab"
+- assertVisible: "Thêm nhân viên"
+    optional: true
+- assertVisible: "Tạo tài khoản"
+    optional: true
+
+# ── ST03: Fill in required fields ────────────────────────────────────────────
+- tapOn:
+    id: "staff-fullname"
+- inputText: "Nhân Viên Spa Test"
+
+- tapOn:
+    id: "staff-username"
+- inputText: "spa_nv_test_e2e"
+
+# ── ST04: Save ────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "staff-save-btn"
+- assertVisible: "Nhân Viên Spa Test"
+    optional: true
+- assertNotVisible: "500"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

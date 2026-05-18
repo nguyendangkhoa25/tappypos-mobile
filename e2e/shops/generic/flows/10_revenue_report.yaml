@@ -1,0 +1,32 @@
+appId: com.knp.tappypos
+name: "10 Revenue report — open Report tab, assert KPI values render (DASHBOARD feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Report tab ────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-report"
+- assertVisible: "Báo cáo"
+
+# ── R01: Revenue tab is selected by default ───────────────────────────────────
+- assertVisible: "Doanh thu"
+
+# ── R02: Total revenue KPI card renders ──────────────────────────────────────
+- assertVisible:
+    id: "report-total-revenue"
+
+# ── R03: Switch to Expenses tab ───────────────────────────────────────────────
+- tapOn: "Chi phí"
+- assertVisible: "Chi phí"
+
+# ── R04: Switch back to Revenue ───────────────────────────────────────────────
+- tapOn: "Doanh thu"
+- assertVisible:
+    id: "report-total-revenue"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

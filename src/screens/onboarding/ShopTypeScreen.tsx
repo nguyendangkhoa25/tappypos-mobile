@@ -17,30 +17,38 @@ import {
   type SpecificShopType,
 } from '../../utils/shopTypes';
 import { useOnboardingStore } from '../../store/onboardingStore';
+import { useAuthStore } from '../../store/authStore';
 import { OnboardingHeader } from './OnboardingHeader';
+import { useTypography } from '../../hooks/useTypography';
 import type { OnboardingScreenProps } from '../../types/navigation';
 
 export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const { shopTypeCode, setShopType, setStep2, setStep3, completeStep } = useOnboardingStore();
+  const logout = useAuthStore((s) => s.logout);
   const [selected, setSelected] = useState<string>(shopTypeCode ?? '');
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
+
+  const canGoBack = navigation.canGoBack();
 
   // Two cards per row with 24px side padding and 8px gap between cards
   const cardWidth = (Dimensions.get('window').width - 48 - 8) / 2;
 
   const filteredTypes = useMemo(() => {
-    const q = filter.toLowerCase().trim();
+    const normalize = (s: string) =>
+      s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const q = normalize(filter.trim());
     const byGroup = activeGroup
       ? SPECIFIC_SHOP_TYPES.filter((s) => s.group === activeGroup)
       : SPECIFIC_SHOP_TYPES;
     if (!q) return byGroup;
     return byGroup.filter((type) => {
-      const name = t(`onboarding.shopType.specific.${type.id}.name`);
-      const examples = t(`onboarding.shopType.specific.${type.id}.examples`, { defaultValue: '' });
-      return name.toLowerCase().includes(q) || examples.toLowerCase().includes(q);
+      const name = normalize(t(`onboarding.shopType.specific.${type.id}.name`));
+      const examples = normalize(t(`onboarding.shopType.specific.${type.id}.examples`, { defaultValue: '' }));
+      return name.includes(q) || examples.includes(q);
     });
   }, [activeGroup, filter, t]);
 
@@ -77,7 +85,7 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
       >
         <Text style={{ fontSize: 28 }}>{type.emoji}</Text>
         <Text
-          className={`text-xs font-semibold text-center mt-1.5 leading-4 ${
+          className={`${typo.captionBold} text-center mt-1.5 leading-4 ${
             isSelected ? 'text-primary dark:text-indigo-300' : 'text-gray-700 dark:text-gray-200'
           }`}
           numberOfLines={2}
@@ -107,13 +115,20 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
             <OnboardingHeader
               step={0}
               total={4}
-              onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+              onBack={canGoBack ? () => navigation.goBack() : undefined}
             />
+            {!canGoBack && (
+              <TouchableOpacity onPress={logout} className="self-end mt-1 py-1">
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
+                  {t('auth.logout')}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            <Text className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-1">
+            <Text className={`${typo.heading} text-gray-900 dark:text-white mt-6 mb-1`}>
               {t('onboarding.shopType.title')}
             </Text>
-            <Text className="text-sm text-gray-500 dark:text-gray-400 leading-5 mb-4">
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 leading-5 mb-4`}>
               {t('onboarding.shopType.subtitle')}
             </Text>
 
@@ -128,7 +143,7 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
                 }}
                 placeholder={t('onboarding.shopType.filterPlaceholder')}
                 placeholderTextColor="#9ca3af"
-                className="flex-1 text-sm text-gray-800 dark:text-gray-100"
+                className={`flex-1 ${typo.inputSize} text-gray-800 dark:text-gray-100`}
                 returnKeyType="done"
               />
               {filter.length > 0 && (
@@ -156,7 +171,7 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
               }`}
             >
               <Text
-                className={`text-sm font-semibold ${
+                className={`${typo.label} ${
                   showGrouped ? 'text-white' : 'text-gray-600 dark:text-gray-300'
                 }`}
               >
@@ -179,7 +194,7 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
                 >
                   <Text style={{ fontSize: 14 }}>{group.emoji}</Text>
                   <Text
-                    className={`text-sm font-semibold ${
+                    className={`${typo.label} ${
                       isActive ? 'text-white' : 'text-gray-600 dark:text-gray-300'
                     }`}
                   >
@@ -200,7 +215,7 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
                   <View key={group.id}>
                     <View className="flex-row items-center gap-2 mb-3">
                       <Text style={{ fontSize: 15 }}>{group.emoji}</Text>
-                      <Text className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                      <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-widest`}>
                         {t(`onboarding.shopType.groups.${group.id}`)}
                       </Text>
                     </View>
@@ -219,7 +234,7 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
                   {filteredTypes.map((type) => renderGridCard(type))}
                 </View>
               ) : (
-                <Text className="text-sm text-gray-400 dark:text-gray-500 text-center py-10">
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 text-center py-10`}>
                   {t('onboarding.shopType.noResults')}
                 </Text>
               )}
@@ -240,7 +255,7 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
           disabled={!selected}
         >
           <Text
-            className={`font-bold text-base ${
+            className={`${typo.labelBold} ${
               selected ? 'text-white' : 'text-gray-400 dark:text-gray-500'
             }`}
           >

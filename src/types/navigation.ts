@@ -34,6 +34,8 @@ export type OnboardingStackParamList = {
   ShopType: undefined;
   Step1: undefined;
   Step2: undefined;
+  PawnFeature: undefined;
+  PawnInterest: undefined;
   TableSetup: undefined;
   Step3: undefined;
   Step4: undefined;
@@ -77,11 +79,16 @@ export type SellingStackParamList = {
   OrderSuccess: { orderId: string; orderNumber: string; total: number; savedOffline?: boolean };
   OrderList: undefined;
   OrderDetail: { orderId: string };
+  PawnList: undefined;
+  PawnDetail: { pawnId: number };
+  PawnForm: { pawnId?: number; customerId?: number; customerName?: string };
+  PawnSettings: undefined;
 };
 
 export type SettingsStackParamList = {
   SettingsMain: undefined;
   ProfileUpdate: undefined;
+  ProfileSettings: undefined;
   ChangePassword: undefined;
   ShopInfo: undefined;
   POSConfig: undefined;
@@ -97,6 +104,7 @@ export type SettingsStackParamList = {
   FeedbackHistory: undefined;
   Subscription: undefined;
   BankAccounts: undefined;
+  LoyaltyConfig: undefined;
   // Tools (moved from tab bar)
   UtilitiesHub: undefined;
   CurrencyConverter: undefined;
@@ -147,6 +155,15 @@ export type CategoryStackParamList = {
   CategoryList: undefined;
 };
 
+export type ExpensesStackParamList = {
+  ExpenseMain: undefined;
+  ExpenseAdd: { existingNames: string[]; monthFrom: string; monthTo: string };
+};
+
+export type ReportStackParamList = {
+  ReportMain: undefined;
+};
+
 export type MyWorkStackParamList = {
   MyWorkMain: undefined;
   MyWorkHistory: undefined;
@@ -171,6 +188,8 @@ export type ToolsStackParamList = {
 
 export type MoreStackParamList = {
   MoreMain: undefined;
+  ProfileUpdate: undefined;
+  ProfileSettings: undefined;
   Products: undefined;
   Categories: undefined;
   Customers: undefined;
@@ -188,6 +207,25 @@ export type MoreStackParamList = {
   AppointmentList: undefined;
   AppointmentDetail: { appointmentId: number };
   AppointmentForm: { appointmentId?: number };
+  // Shop config (moved from Settings)
+  ShopInfo: undefined;
+  POSConfig: undefined;
+  BankAccounts: undefined;
+  DefaultExpenses: undefined;
+  LoyaltyConfig: undefined;
+  Display: undefined;
+  NotificationPreferences: undefined;
+  // Support (moved from Settings)
+  UtilitiesHub: undefined;
+  Feedback: undefined;
+  CurrencyConverter: undefined;
+  InterestCalculator: undefined;
+  LoanCalculator: undefined;
+  TaxCalculator: undefined;
+  BillSplitter: undefined;
+  BudgetRule: undefined;
+  Breakeven: undefined;
+  MarketGoldPrices: undefined;
 };
 
 export type MoreScreenProps<T extends keyof MoreStackParamList> =

@@ -1,0 +1,58 @@
+appId: com.knp.tappypos
+name: "SPA 02 POS golden path — spa service card → add to order → checkout → success"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Sell tab (BarberServiceScreen shows spa services) ─────────────
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+
+# ── SP01: First service card is visible ──────────────────────────────────────
+# barber-service-<name> testID — tap the first one rendered (regex match)
+- tapOn:
+    id: "barber-service-.*"
+
+# ── SP02: AddItemSheet appears ───────────────────────────────────────────────
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+
+# ── SP03: CartBar appears with count 1 ───────────────────────────────────────
+- assertVisible:
+    id: "barber-cart-count"
+- assertVisible: "1"
+
+# ── SP04: Add a second service ────────────────────────────────────────────────
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible: "2"
+
+# ── SP05: Open CheckoutSheet ─────────────────────────────────────────────────
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Hoàn tất đơn hàng"
+- assertVisible: "Phương thức thanh toán"
+
+# ── SP06: Default payment is Cash ────────────────────────────────────────────
+- assertVisible:
+    id: "payment-method-CASH"
+
+# ── SP07: Place order ────────────────────────────────────────────────────────
+- tapOn:
+    id: "barber-place-order-btn"
+
+# ── SP08: Order success screen ───────────────────────────────────────────────
+- assertVisible: "Đặt hàng thành công!"
+- assertVisible:
+    id: "order-success-number"
+
+# ── SP09: Start a new order ──────────────────────────────────────────────────
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Dịch vụ"

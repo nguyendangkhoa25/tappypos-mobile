@@ -20,6 +20,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { tableApi, type ShopTable } from '../../services/api';
 import { useCartStore } from '../../store/cartStore';
+import { useErrorAlert } from '../../hooks/useErrorAlert';
+import { useTypography } from '../../hooks/useTypography';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { SellingStackParamList } from '../../types/navigation';
 
@@ -68,9 +70,11 @@ function formatElapsed(minutes: number): string {
 export function TableGridScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
   const setTable = useCartStore((s) => s.setTable);
+  const showErrorAlert = useErrorAlert();
 
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,6 +117,7 @@ export function TableGridScreen() {
       setNewLocation('');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     },
+    onError: showErrorAlert,
   });
 
   const locations = useMemo(() => {
@@ -160,19 +165,19 @@ export function TableGridScreen() {
         {/* Table icon + name */}
         <View className="flex-row items-center gap-1.5 mb-1">
           <MaterialCommunityIcons name={styles.icon as never} size={14} color={styles.iconColor} />
-          <Text className="font-bold text-gray-900 dark:text-white text-sm flex-1" numberOfLines={1}>
+          <Text className={`${typo.label} text-gray-900 dark:text-white flex-1`} numberOfLines={1}>
             {table.tableNumber}
           </Text>
         </View>
 
-        <Text className="text-xs text-gray-400 dark:text-gray-500">
+        <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
           {t('tableGrid.capacity', { count: table.capacity })}
         </Text>
 
         {/* Status + order info */}
         <View className="mt-auto pt-2 gap-1">
           <View className={`rounded-full px-2 py-0.5 self-start ${styles.badge}`}>
-            <Text className={`text-xs font-semibold ${styles.badgeText}`}>
+            <Text className={`${typo.captionBold} ${styles.badgeText}`}>
               {t(`tableGrid.status.${table.status.toLowerCase()}`)}
             </Text>
           </View>
@@ -180,12 +185,12 @@ export function TableGridScreen() {
           {table.status === 'OCCUPIED' && (
             <>
               {table.currentOrderNumber && (
-                <Text className="text-xs text-red-600 dark:text-red-400 font-medium" numberOfLines={1}>
+                <Text className={`${typo.captionBold} text-red-600 dark:text-red-400`} numberOfLines={1}>
                   #{table.currentOrderNumber}
                 </Text>
               )}
               {table.elapsedMinutes != null && table.elapsedMinutes > 0 && (
-                <Text className="text-xs text-gray-400 dark:text-gray-500">
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
                   ⏱ {formatElapsed(table.elapsedMinutes)}
                 </Text>
               )}
@@ -200,7 +205,7 @@ export function TableGridScreen() {
     <View className="flex-1 bg-gray-50 dark:bg-gray-900" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-        <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1">
+        <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
           {t('tableGrid.title')}
         </Text>
         {/* Status summary chips */}
@@ -208,16 +213,16 @@ export function TableGridScreen() {
           <View className="flex-row gap-2 mr-2">
             <View className="flex-row items-center gap-1">
               <View className="w-2 h-2 rounded-full bg-green-400" />
-              <Text className="text-xs font-semibold text-gray-600 dark:text-gray-300">{counts.available}</Text>
+              <Text className={`${typo.captionBold} text-gray-600 dark:text-gray-300`}>{counts.available}</Text>
             </View>
             <View className="flex-row items-center gap-1">
               <View className="w-2 h-2 rounded-full bg-red-400" />
-              <Text className="text-xs font-semibold text-gray-600 dark:text-gray-300">{counts.occupied}</Text>
+              <Text className={`${typo.captionBold} text-gray-600 dark:text-gray-300`}>{counts.occupied}</Text>
             </View>
             {counts.other > 0 && (
               <View className="flex-row items-center gap-1">
                 <View className="w-2 h-2 rounded-full bg-gray-400" />
-                <Text className="text-xs font-semibold text-gray-600 dark:text-gray-300">{counts.other}</Text>
+                <Text className={`${typo.captionBold} text-gray-600 dark:text-gray-300`}>{counts.other}</Text>
               </View>
             )}
           </View>
@@ -247,7 +252,7 @@ export function TableGridScreen() {
                 : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
             }`}
           >
-            <Text className={`text-xs font-semibold ${!selectedLocation ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+            <Text className={`${typo.captionBold} ${!selectedLocation ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
               {t('tableGrid.allAreas')}
             </Text>
           </TouchableOpacity>
@@ -261,7 +266,7 @@ export function TableGridScreen() {
                   : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
               }`}
             >
-              <Text className={`text-xs font-semibold ${selectedLocation === loc ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+              <Text className={`${typo.captionBold} ${selectedLocation === loc ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
                 {loc}
               </Text>
             </TouchableOpacity>
@@ -277,14 +282,14 @@ export function TableGridScreen() {
       ) : filtered.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
           <MaterialCommunityIcons name="table-chair" size={56} color="#d1d5db" />
-          <Text className="text-gray-400 dark:text-gray-500 text-center mt-3 text-base font-semibold">
+          <Text className={`${typo.body} text-gray-400 dark:text-gray-500 text-center mt-3`}>
             {t('tableGrid.noTables')}
           </Text>
           <TouchableOpacity
             onPress={() => setFabVisible(true)}
             className="mt-4 bg-primary rounded-2xl px-6 py-3"
           >
-            <Text className="text-white font-bold">{t('tableGrid.addFirstTable')}</Text>
+            <Text className={`${typo.labelBold} text-white`}>{t('tableGrid.addFirstTable')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -329,11 +334,11 @@ export function TableGridScreen() {
             style={{ paddingBottom: insets.bottom + 24 }}
           >
             <View className="w-10 h-1 bg-gray-200 dark:bg-gray-600 rounded-full self-center mb-4" />
-            <Text className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            <Text className={`${typo.section} text-gray-900 dark:text-white mb-4`}>
               {t('tableGrid.addTable')}
             </Text>
 
-            <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
+            <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>
               {t('tableGrid.tableNumber')}
             </Text>
             <TextInput
@@ -341,14 +346,14 @@ export function TableGridScreen() {
               onChangeText={setNewNumber}
               placeholder={t('tableGrid.tableNumberPlaceholder')}
               placeholderTextColor="#9ca3af"
-              className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-3"
+              className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-3`}
               autoCapitalize="words"
               autoFocus
             />
 
             <View className="flex-row gap-3 mb-4">
               <View className="flex-1">
-                <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
+                <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>
                   {t('tableGrid.capacityLabel')}
                 </Text>
                 <TextInput
@@ -356,11 +361,11 @@ export function TableGridScreen() {
                   onChangeText={setNewCapacity}
                   keyboardType="numeric"
                   placeholderTextColor="#9ca3af"
-                  className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700"
+                  className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700`}
                 />
               </View>
               <View className="flex-1">
-                <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
+                <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>
                   {t('tableGrid.area')}
                 </Text>
                 <TextInput
@@ -368,7 +373,7 @@ export function TableGridScreen() {
                   onChangeText={setNewLocation}
                   placeholder={t('tableGrid.areaPlaceholder')}
                   placeholderTextColor="#9ca3af"
-                  className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700"
+                  className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700`}
                 />
               </View>
             </View>
@@ -385,7 +390,7 @@ export function TableGridScreen() {
               {createMutation.isPending ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text className={`font-bold text-base ${newNumber.trim() ? 'text-white' : 'text-gray-400'}`}>
+                <Text className={`${typo.labelBold} ${newNumber.trim() ? 'text-white' : 'text-gray-400'}`}>
                   {t('tableGrid.addTable')}
                 </Text>
               )}

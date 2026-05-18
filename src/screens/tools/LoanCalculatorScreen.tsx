@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MoneyInput } from '../../components/MoneyInput';
 import { useCurrency } from '../../hooks/useCurrency';
+import { useTypography } from '../../hooks/useTypography';
 import type { ToolsScreenProps } from '../../types/navigation';
 
 type Props = ToolsScreenProps<'LoanCalculator'>;
@@ -57,7 +58,8 @@ const PREVIEW_ROWS = 6;
 
 export function LoanCalculatorScreen({ navigation }: Props) {
   const { t } = useTranslation();
-  const { top } = useSafeAreaInsets();
+  const typo = useTypography();
+  const { top, bottom } = useSafeAreaInsets();
 
   const [amount, setAmount] = useState('');
   const [rate, setRate] = useState('');
@@ -85,30 +87,32 @@ export function LoanCalculatorScreen({ navigation }: Props) {
   const displayRows = showAllRows ? rows : rows.slice(0, PREVIEW_ROWS);
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-gray-50" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View className="bg-violet-600 px-6 pb-5" style={{ paddingTop: top + 16 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mb-3">
-          <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-        </TouchableOpacity>
-        <Text className="text-2xl font-bold text-white">{t('loanCalc.title')}</Text>
+    <KeyboardAvoidingView className="flex-1 bg-gray-50 dark:bg-gray-900" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+          </TouchableOpacity>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('loanCalc.title')}</Text>
+        </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
         <View className="flex-row items-start bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100 mb-3">
           <Text className="text-indigo-400 mr-2 mt-0.5">💡</Text>
-          <Text className="text-xs text-indigo-600 leading-4 flex-1">{t('loanCalc.hint')}</Text>
+          <Text className={`${typo.caption} text-indigo-600 leading-4 flex-1`}>{t('loanCalc.hint')}</Text>
         </View>
 
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-          <Text className="text-sm font-semibold text-gray-700 mb-2">{t('loanCalc.amount')}</Text>
+          <Text className={`${typo.label} text-gray-700 mb-2`}>{t('loanCalc.amount')}</Text>
           <MoneyInput rawValue={amount} onChangeRaw={setAmount} placeholder="0" />
         </View>
 
         <View className="flex-row mb-3" style={{ gap: 10 }}>
           <View className="flex-1 bg-white rounded-2xl p-4 border border-gray-100">
-            <Text className="text-sm font-semibold text-gray-700 mb-2">{t('loanCalc.rate')}</Text>
+            <Text className={`${typo.label} text-gray-700 mb-2`}>{t('loanCalc.rate')}</Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-3 py-3 text-base bg-white text-gray-900"
+              className={`border border-gray-300 rounded-xl px-3 py-3 ${typo.inputSize} bg-white text-gray-900`}
               value={rate}
               onChangeText={setRate}
               keyboardType="decimal-pad"
@@ -117,9 +121,9 @@ export function LoanCalculatorScreen({ navigation }: Props) {
             />
           </View>
           <View className="flex-1 bg-white rounded-2xl p-4 border border-gray-100">
-            <Text className="text-sm font-semibold text-gray-700 mb-2">{t('loanCalc.term')}</Text>
+            <Text className={`${typo.label} text-gray-700 mb-2`}>{t('loanCalc.term')}</Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-3 py-3 text-base bg-white text-gray-900"
+              className={`border border-gray-300 rounded-xl px-3 py-3 ${typo.inputSize} bg-white text-gray-900`}
               value={term}
               onChangeText={setTerm}
               keyboardType="number-pad"
@@ -130,7 +134,7 @@ export function LoanCalculatorScreen({ navigation }: Props) {
         </View>
 
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-          <Text className="text-sm font-semibold text-gray-700 mb-3">{t('loanCalc.repaymentMethod')}</Text>
+          <Text className={`${typo.label} text-gray-700 mb-3`}>{t('loanCalc.repaymentMethod')}</Text>
           <View className="flex-row rounded-xl overflow-hidden border border-gray-200">
             {(['reducing', 'emi'] as RepaymentMethod[]).map((m) => (
               <TouchableOpacity
@@ -139,7 +143,7 @@ export function LoanCalculatorScreen({ navigation }: Props) {
                 activeOpacity={0.75}
                 className={`flex-1 py-2.5 items-center px-2 ${method === m ? 'bg-violet-600' : 'bg-white'}`}
               >
-                <Text className={`text-xs font-semibold text-center ${method === m ? 'text-white' : 'text-gray-600'}`}>
+                <Text className={`${typo.caption} font-semibold text-center ${method === m ? 'text-white' : 'text-gray-600'}`}>
                   {t(`loanCalc.${m}`)}
                 </Text>
               </TouchableOpacity>
@@ -149,7 +153,7 @@ export function LoanCalculatorScreen({ navigation }: Props) {
 
         <TouchableOpacity onPress={() => setShowIncomeInput((v) => !v)} activeOpacity={0.75} className="flex-row items-center mb-3">
           <MaterialCommunityIcons name={showIncomeInput ? 'chevron-down' : 'chevron-right'} size={14} color="#7c3aed" />
-          <Text className="text-xs font-semibold text-violet-600 ml-1">{t('loanCalc.monthlyIncome')}</Text>
+          <Text className={`${typo.captionBold} text-violet-600 ml-1`}>{t('loanCalc.monthlyIncome')}</Text>
         </TouchableOpacity>
 
         {showIncomeInput && (
@@ -170,14 +174,14 @@ export function LoanCalculatorScreen({ navigation }: Props) {
                   color={isOverBudget ? '#dc2626' : '#059669'}
                   style={{ marginRight: 6 }}
                 />
-                <Text className={`flex-1 text-xs font-semibold ${isOverBudget ? 'text-red-600' : 'text-emerald-600'}`}>
+                <Text className={`${typo.captionBold} flex-1 ${isOverBudget ? 'text-red-600' : 'text-emerald-600'}`}>
                   {t(isOverBudget ? 'loanCalc.affordabilityWarning' : 'loanCalc.affordabilityOk', { pct: affordancePct })}
                 </Text>
               </View>
             )}
 
             <View className="bg-violet-50 rounded-2xl p-4 mb-3 border border-violet-100">
-              <Text className="text-sm font-bold text-violet-700 mb-3">{t('loanCalc.resultsTitle')}</Text>
+              <Text className={`${typo.labelBold} text-violet-700 mb-3`}>{t('loanCalc.resultsTitle')}</Text>
               <SummaryRow label={method === 'emi' ? t('loanCalc.monthlyPayment') : t('loanCalc.firstMonthPayment')} value={firstPayment} highlight />
               <SummaryRow label={t('loanCalc.totalInterest')} value={totalInterest} red />
               <View className="border-t border-violet-200 mt-2 pt-2">
@@ -187,27 +191,27 @@ export function LoanCalculatorScreen({ navigation }: Props) {
 
             <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-3">
               <View className="px-4 py-3 border-b border-gray-100">
-                <Text className="text-sm font-bold text-gray-700">{t('loanCalc.amortization')}</Text>
+                <Text className={`${typo.labelBold} text-gray-700`}>{t('loanCalc.amortization')}</Text>
               </View>
               <View className="flex-row px-3 py-2 bg-gray-50">
-                <Text className="w-10 text-xs font-bold text-gray-500">{t('loanCalc.month')}</Text>
-                <Text className="flex-1 text-xs font-bold text-gray-500 text-right">{t('loanCalc.payment')}</Text>
-                <Text className="flex-1 text-xs font-bold text-gray-500 text-right">{t('loanCalc.principal')}</Text>
-                <Text className="flex-1 text-xs font-bold text-gray-500 text-right">{t('loanCalc.interest')}</Text>
-                <Text className="flex-1 text-xs font-bold text-gray-500 text-right">{t('loanCalc.remaining')}</Text>
+                <Text className={`${typo.captionBold} w-10 text-gray-500`}>{t('loanCalc.month')}</Text>
+                <Text className={`${typo.captionBold} flex-1 text-gray-500 text-right`}>{t('loanCalc.payment')}</Text>
+                <Text className={`${typo.captionBold} flex-1 text-gray-500 text-right`}>{t('loanCalc.principal')}</Text>
+                <Text className={`${typo.captionBold} flex-1 text-gray-500 text-right`}>{t('loanCalc.interest')}</Text>
+                <Text className={`${typo.captionBold} flex-1 text-gray-500 text-right`}>{t('loanCalc.remaining')}</Text>
               </View>
               {displayRows.map((row, idx) => (
                 <View key={row.month} className={`flex-row px-3 py-2 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                  <Text className="w-10 text-xs text-gray-500">{row.month}</Text>
-                  <Text className="flex-1 text-xs font-semibold text-gray-800 text-right">{compactMoney(row.payment)}</Text>
-                  <Text className="flex-1 text-xs text-violet-600 text-right">{compactMoney(row.principal)}</Text>
-                  <Text className="flex-1 text-xs text-red-500 text-right">{compactMoney(row.interest)}</Text>
-                  <Text className="flex-1 text-xs text-gray-600 text-right">{compactMoney(row.remaining)}</Text>
+                  <Text className={`${typo.caption} w-10 text-gray-500`}>{row.month}</Text>
+                  <Text className={`${typo.captionBold} flex-1 text-gray-800 text-right`}>{compactMoney(row.payment)}</Text>
+                  <Text className={`${typo.caption} flex-1 text-violet-600 text-right`}>{compactMoney(row.principal)}</Text>
+                  <Text className={`${typo.caption} flex-1 text-red-500 text-right`}>{compactMoney(row.interest)}</Text>
+                  <Text className={`${typo.caption} flex-1 text-gray-600 text-right`}>{compactMoney(row.remaining)}</Text>
                 </View>
               ))}
               {rows.length > PREVIEW_ROWS && (
                 <TouchableOpacity onPress={() => setShowAllRows((v) => !v)} activeOpacity={0.75} className="px-4 py-3 items-center border-t border-gray-100">
-                  <Text className="text-xs font-semibold text-violet-600">
+                  <Text className={`${typo.captionBold} text-violet-600`}>
                     {showAllRows ? t('loanCalc.collapse') : t('loanCalc.showAll', { n: rows.length })}
                   </Text>
                 </TouchableOpacity>
@@ -218,7 +222,7 @@ export function LoanCalculatorScreen({ navigation }: Props) {
 
         <View className="flex-row items-start bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 mt-2">
           <MaterialCommunityIcons name="information-outline" size={16} color="#d97706" style={{ marginTop: 1, marginRight: 6 }} />
-          <Text className="flex-1 text-xs text-amber-700 leading-4">{t('loanCalc.disclaimer')}</Text>
+          <Text className={`${typo.caption} flex-1 text-amber-700 leading-4`}>{t('loanCalc.disclaimer')}</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -227,10 +231,11 @@ export function LoanCalculatorScreen({ navigation }: Props) {
 
 function SummaryRow({ label, value, highlight, bold, red }: { label: string; value: number; highlight?: boolean; bold?: boolean; red?: boolean }) {
   const { fmt } = useCurrency();
+  const typo = useTypography();
   return (
     <View className="flex-row justify-between items-center mb-2">
-      <Text className={`text-sm ${bold || highlight ? 'font-bold text-gray-800' : 'text-gray-600'}`}>{label}</Text>
-      <Text className={`text-sm font-bold ${red ? 'text-red-600' : highlight ? 'text-violet-700' : 'text-gray-800'}`}>
+      <Text className={`${bold || highlight ? `${typo.labelBold} text-gray-800` : `${typo.caption} text-gray-600`}`}>{label}</Text>
+      <Text className={`${typo.labelBold} ${red ? 'text-red-600' : highlight ? 'text-violet-700' : 'text-gray-800'}`}>
         {fmt(Math.round(value))}
       </Text>
     </View>

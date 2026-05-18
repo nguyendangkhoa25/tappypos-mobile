@@ -1,0 +1,45 @@
+appId: com.knp.tappypos
+name: "11 Notifications — open list, verify items render, mark all read (NOTIFICATION feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → Notifications ─────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-notifications"
+- assertVisible: "Thông báo"
+
+# ── N01: Notification list screen loads ──────────────────────────────────────
+# Filter chips are always visible even if list is empty
+- assertVisible: "Tất cả"
+
+# ── N02: If any notifications exist, first row is visible ────────────────────
+- assertVisible:
+    id: "notification-row-0"
+    optional: true
+
+# ── N03: Tap the first notification to mark as read (if unread) ──────────────
+- tapOn:
+    id: "notification-row-0"
+    optional: true
+
+# ── N04: Switch to Unread filter ─────────────────────────────────────────────
+- tapOn: "Chưa đọc"
+    optional: true
+
+# ── N05: Switch to Order filter ──────────────────────────────────────────────
+- tapOn: "Đơn hàng"
+    optional: true
+
+# ── N06: Switch back to All ───────────────────────────────────────────────────
+- tapOn: "Tất cả"
+    optional: true
+
+# ── Navigate back ─────────────────────────────────────────────────────────────
+- tapOn:
+    text: "‹"
+    optional: true
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertVisible: "Khác"

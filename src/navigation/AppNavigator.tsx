@@ -14,6 +14,7 @@ import { useOfflineSync } from '../hooks/useOfflineSync';
 // Tab screens
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
 import { ExpensesScreen } from '../screens/main/ExpensesScreen';
+import { ExpenseAddScreen } from '../screens/main/ExpenseAddScreen';
 import { ReportScreen } from '../screens/main/ReportScreen';
 import { SettingsScreen } from '../screens/settings/SettingsScreen';
 
@@ -24,9 +25,14 @@ import { CheckoutScreen } from '../screens/pos/CheckoutScreen';
 import { OrderSuccessScreen } from '../screens/pos/OrderSuccessScreen';
 import { OrderListScreen } from '../screens/orders/OrderListScreen';
 import { OrderDetailScreen } from '../screens/orders/OrderDetailScreen';
+import { PawnListScreen } from '../screens/pawn/PawnListScreen';
+import { PawnDetailScreen } from '../screens/pawn/PawnDetailScreen';
+import { PawnFormScreen } from '../screens/pawn/PawnFormScreen';
+import { PawnSettingsScreen } from '../screens/pawn/PawnSettingsScreen';
 
 // Settings sub-screens
 import { ProfileScreen as ProfileUpdateScreen } from '../screens/profile/ProfileScreen';
+import { ProfileUpdateScreen as ProfileSettingsScreen } from '../screens/settings/ProfileUpdateScreen';
 import { ChangePasswordScreen } from '../screens/settings/ChangePasswordScreen';
 import { ShopInfoScreen } from '../screens/settings/ShopInfoScreen';
 import { POSConfigScreen } from '../screens/settings/POSConfigScreen';
@@ -42,6 +48,7 @@ import { FeedbackScreen } from '../screens/settings/FeedbackScreen';
 import { FeedbackHistoryScreen } from '../screens/settings/FeedbackHistoryScreen';
 import { SubscriptionScreen } from '../screens/settings/SubscriptionScreen';
 import { BankAccountsScreen } from '../screens/settings/BankAccountsScreen';
+import { LoyaltyConfigScreen } from '../screens/settings/LoyaltyConfigScreen';
 
 // Tools screens (now inside Settings stack)
 import { UtilitiesScreen } from '../screens/tools/UtilitiesScreen';
@@ -95,6 +102,8 @@ import type {
   ProductStackParamList,
   MyWorkStackParamList,
   MoreStackParamList,
+  ExpensesStackParamList,
+  ReportStackParamList,
 } from '../types/navigation';
 
 // ── Navigators ────────────────────────────────────────────────────────────────
@@ -102,6 +111,7 @@ import type {
 const Tab = createBottomTabNavigator<AppTabParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const SellStack = createNativeStackNavigator<SellingStackParamList>();
+const ExpenseStack = createNativeStackNavigator<ExpensesStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 const MoreStack = createNativeStackNavigator<MoreStackParamList>();
 const CustomerStack = createNativeStackNavigator<CustomerStackParamList>();
@@ -111,6 +121,7 @@ const PrintStack = createNativeStackNavigator<PrintTemplateStackParamList>();
 const GoldStack = createNativeStackNavigator<GoldPriceStackParamList>();
 const ProductStack = createNativeStackNavigator<ProductStackParamList>();
 const MyWorkStack = createNativeStackNavigator<MyWorkStackParamList>();
+const ReportStack = createNativeStackNavigator<ReportStackParamList>();
 
 function HomeNavigator() {
   return (
@@ -133,15 +144,37 @@ function SellingNavigator() {
       <SellStack.Screen name="OrderSuccess" component={OrderSuccessScreen} />
       <SellStack.Screen name="OrderList" component={OrderListScreen} />
       <SellStack.Screen name="OrderDetail" component={OrderDetailScreen} />
+      <SellStack.Screen name="PawnList" component={PawnListScreen} />
+      <SellStack.Screen name="PawnDetail" component={PawnDetailScreen} />
+      <SellStack.Screen name="PawnForm" component={PawnFormScreen} />
+      <SellStack.Screen name="PawnSettings" component={PawnSettingsScreen} />
     </SellStack.Navigator>
+  );
+}
+
+function ExpenseNavigator() {
+  return (
+    <ExpenseStack.Navigator screenOptions={{ headerShown: false }}>
+      <ExpenseStack.Screen name="ExpenseMain" component={ExpensesScreen} />
+      <ExpenseStack.Screen name="ExpenseAdd" component={ExpenseAddScreen} />
+    </ExpenseStack.Navigator>
+  );
+}
+
+function ReportNavigator() {
+  return (
+    <ReportStack.Navigator screenOptions={{ headerShown: false }}>
+      <ReportStack.Screen name="ReportMain" component={ReportScreen} />
+    </ReportStack.Navigator>
   );
 }
 
 function SettingsNavigator() {
   return (
-    <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
+    <SettingsStack.Navigator screenOptions={{ headerShown: false, gestureEnabled: true, fullScreenGestureEnabled: true }}>
       <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
       <SettingsStack.Screen name="ProfileUpdate" component={ProfileUpdateScreen} />
+      <SettingsStack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
       <SettingsStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <SettingsStack.Screen name="ShopInfo" component={ShopInfoScreen} />
       <SettingsStack.Screen name="POSConfig" component={POSConfigScreen} />
@@ -157,6 +190,7 @@ function SettingsNavigator() {
       <SettingsStack.Screen name="FeedbackHistory" component={FeedbackHistoryScreen} />
       <SettingsStack.Screen name="Subscription" component={SubscriptionScreen} />
       <SettingsStack.Screen name="BankAccounts" component={BankAccountsScreen} />
+      <SettingsStack.Screen name="LoyaltyConfig" component={LoyaltyConfigScreen} />
       {/* Tools — accessible from Settings */}
       <SettingsStack.Screen name="UtilitiesHub" component={UtilitiesScreen} />
       <SettingsStack.Screen name="CurrencyConverter" component={CurrencyConverterScreen} />
@@ -173,8 +207,10 @@ function SettingsNavigator() {
 
 function MoreNavigator() {
   return (
-    <MoreStack.Navigator screenOptions={{ headerShown: false }}>
+    <MoreStack.Navigator screenOptions={{ headerShown: false, gestureEnabled: true, fullScreenGestureEnabled: true }}>
       <MoreStack.Screen name="MoreMain" component={MoreScreen} />
+      <MoreStack.Screen name="ProfileUpdate" component={ProfileUpdateScreen} />
+      <MoreStack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
       <MoreStack.Screen name="Products" component={ProductNavigator} />
       <MoreStack.Screen name="Categories" component={CategoryNavigator} />
       <MoreStack.Screen name="Customers" component={CustomerNavigator} />
@@ -192,8 +228,41 @@ function MoreNavigator() {
       <MoreStack.Screen name="AppointmentList" component={AppointmentListScreen} />
       <MoreStack.Screen name="AppointmentDetail" component={AppointmentDetailScreen} />
       <MoreStack.Screen name="AppointmentForm" component={AppointmentFormScreen} />
+      {/* Shop config screens — accessible from More > Shop Config section */}
+      <MoreStack.Screen name="ShopInfo" component={ShopInfoScreen} />
+      <MoreStack.Screen name="POSConfig" component={POSConfigScreen} />
+      <MoreStack.Screen name="BankAccounts" component={BankAccountsScreen} />
+      <MoreStack.Screen name="DefaultExpenses" component={DefaultExpensesScreen} />
+      <MoreStack.Screen name="LoyaltyConfig" component={LoyaltyConfigScreen} />
+      <MoreStack.Screen name="Display" component={DisplayScreen} />
+      <MoreStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
+      {/* Support screens — accessible from More > Support section */}
+      <MoreStack.Screen name="UtilitiesHub" component={UtilitiesScreen} />
+      <MoreStack.Screen name="Feedback" component={FeedbackScreen} />
+      <MoreStack.Screen name="CurrencyConverter" component={CurrencyConverterScreen} />
+      <MoreStack.Screen name="InterestCalculator" component={InterestCalculatorScreen} />
+      <MoreStack.Screen name="LoanCalculator" component={LoanCalculatorScreen} />
+      <MoreStack.Screen name="TaxCalculator" component={TaxCalculatorScreen} />
+      <MoreStack.Screen name="BillSplitter" component={BillSplitterScreen} />
+      <MoreStack.Screen name="BudgetRule" component={BudgetRuleScreen} />
+      <MoreStack.Screen name="Breakeven" component={BreakevenScreen} />
+      <MoreStack.Screen name="MarketGoldPrices" component={MarketGoldPricesScreen} />
     </MoreStack.Navigator>
   );
+}
+
+// ── Side-effect component ─────────────────────────────────────────────────────
+// Runs all hooks that trigger re-renders (query fetches, token refresh, offline
+// sync). Keeping them here instead of in AppNavigator means their re-renders
+// stay isolated to this null component and never cascade into the Tab navigator,
+// eliminating the NavigationStateContext concurrent-render race.
+
+function AppEffects() {
+  useBootstrap();
+  useTokenRefresh();
+  useOfflineSync();
+  useNotificationBadge(); // warms the cache used by NotificationBell in screen headers
+  return null;
 }
 
 // ── Tab Navigator ─────────────────────────────────────────────────────────────
@@ -202,13 +271,10 @@ export function AppNavigator() {
   const { t } = useTranslation();
   const has = useFeatureCheck();
   const insets = useSafeAreaInsets();
-  const unreadCount = useNotificationBadge();
-  useBootstrap();
-  useTokenRefresh();
-  useOfflineSync();
 
   return (
     <View style={{ flex: 1 }}>
+      <AppEffects />
       <OfflineBanner />
       <Tab.Navigator
         screenOptions={{
@@ -255,9 +321,10 @@ export function AppNavigator() {
       {/* 3 — Expenses */}
       <Tab.Screen
         name="Expenses"
-        component={ExpensesScreen}
+        component={ExpenseNavigator}
         options={{
           title: t('expenses.title'),
+          tabBarButton: (props) => <Pressable {...props} testID="tab-expenses" />,
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="wallet-outline" color={color} size={size} />
           ),
@@ -268,9 +335,10 @@ export function AppNavigator() {
       {has('DASHBOARD') && (
         <Tab.Screen
           name="Report"
-          component={ReportScreen}
+          component={ReportNavigator}
           options={{
             title: t('report.title'),
+            tabBarButton: (props) => <Pressable {...props} testID="tab-report" />,
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="chart-areaspline" color={color} size={size} />
             ),
@@ -282,11 +350,15 @@ export function AppNavigator() {
       <Tab.Screen
         name="More"
         component={MoreNavigator}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('More', { screen: 'MoreMain' });
+          },
+        })}
         options={{
           title: t('more.title'),
           tabBarButton: (props) => <Pressable {...props} testID="tab-more" />,
-          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
-          tabBarBadgeStyle: { fontSize: 10 },
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="dots-horizontal" color={color} size={size} />
           ),
@@ -374,8 +446,9 @@ export function MyWorkNavigator() {
   );
 }
 
+const NotifStack = createNativeStackNavigator();
+
 export function NotificationNavigator() {
-  const NotifStack = createNativeStackNavigator();
   return (
     <NotifStack.Navigator screenOptions={{ headerShown: false }}>
       <NotifStack.Screen name="NotificationList" component={NotificationScreen} />

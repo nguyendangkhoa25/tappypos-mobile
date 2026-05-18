@@ -1,0 +1,55 @@
+appId: com.knp.tappypos
+name: "MKUP 03 Order complete + cancel — seed 2 PENDING orders via API, complete one, cancel one"
+---
+
+# Seed orders via API (before login)
+- runFlow: ../../../subflows/_create_pending_orders.yaml
+
+- runFlow: ../../../subflows/_login.yaml
+
+# Navigate to orders
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "dashboard-orders-btn"
+    optional: true
+
+- tapOn:
+    id: "order-filter-PENDING"
+    optional: true
+- assertVisible:
+    id: "order-row-0"
+
+# OC01: Cancel first PENDING order
+- tapOn:
+    id: "order-row-0"
+- assertVisible: "Chi tiết đơn hàng"
+- assertVisible:
+    id: "order-cancel-btn"
+- tapOn:
+    id: "order-cancel-btn"
+- assertVisible: "Hủy đơn hàng?"
+- tapOn: "Hủy đơn"
+- assertVisible: "Đã hủy"
+- assertNotVisible: "Hoàn thành"
+
+- tapOn:
+    id: "order-detail-back-btn"
+- assertVisible:
+    id: "order-row-0"
+
+# OC02: Complete second PENDING order
+- tapOn:
+    id: "order-row-0"
+- assertVisible: "Chi tiết đơn hàng"
+- assertVisible:
+    id: "order-complete-btn"
+- tapOn:
+    id: "order-complete-btn"
+- assertVisible: "Hoàn thành"
+- assertNotVisible: "Hủy đơn"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

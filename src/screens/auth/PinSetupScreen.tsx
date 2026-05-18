@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PinPad } from '../../components/PinPad';
+import { useTypography } from '../../hooks/useTypography';
 import { authApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useAlertStore } from '../../store/alertStore';
@@ -14,6 +15,7 @@ type Step = 'enter' | 'confirm';
 export function PinSetupScreen({ navigation, route }: any) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const { show: showAlert } = useAlertStore();
   const { setAuthenticated, setPinEnabled } = useAuthStore();
   const { pendingAccessToken, pendingRefreshToken, isFirstSetup, mode } = route.params ?? {};
@@ -112,10 +114,10 @@ export function PinSetupScreen({ navigation, route }: any) {
           onChangeText={handleKeyInput}
           style={{ position: 'absolute', opacity: 0, width: 1, height: 1 }}
         />
-        <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <Text className={`${typo.heading} text-gray-900 dark:text-white mb-2`}>
           {isConfirmStep ? t('auth.pinSetup.confirmTitle') : (mode === 'change' ? t('settings.securitySettings.changePinTitle') : t('auth.pinSetup.title'))}
         </Text>
-        <Text className="text-base text-gray-500 dark:text-gray-400 mb-12 text-center">
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-12 text-center`}>
           {isConfirmStep ? t('auth.pinSetup.confirmSubtitle') : t('auth.pinSetup.subtitle')}
         </Text>
 
@@ -127,7 +129,7 @@ export function PinSetupScreen({ navigation, route }: any) {
 
         {!isConfirmStep && isFirstSetup && !isSettingsMode && (
           <TouchableOpacity className="mt-8" onPress={handleSkip}>
-            <Text className="text-gray-400 dark:text-gray-500 text-base">
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
               {t('auth.pinSetupExt.skipFull')}
             </Text>
           </TouchableOpacity>
@@ -138,7 +140,7 @@ export function PinSetupScreen({ navigation, route }: any) {
             className="mt-8"
             onPress={() => { setStep('enter'); setFirstPin(''); setConfirmPin(''); }}
           >
-            <Text className="text-gray-400 dark:text-gray-500 text-base">{t('auth.pinSetupExt.back')}</Text>
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{t('auth.pinSetupExt.back')}</Text>
           </TouchableOpacity>
         )}
       </View>

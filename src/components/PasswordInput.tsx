@@ -1,6 +1,7 @@
 import { forwardRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, type TextInputProps } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTypography } from '../hooks/useTypography';
 
 type Rule = { label: string; test: (v: string) => boolean };
 
@@ -32,6 +33,7 @@ type Props = Omit<TextInputProps, 'value' | 'secureTextEntry'> & {
 export const PasswordInput = forwardRef<TextInput, Props>(
   ({ value, showRules = false, showStrength = true, ...rest }, ref) => {
     const [show, setShow] = useState(false);
+    const typo = useTypography();
     const strength = value.length > 0 ? getStrength(value) : 0;
 
     return (
@@ -41,7 +43,7 @@ export const PasswordInput = forwardRef<TextInput, Props>(
             ref={ref}
             value={value}
             secureTextEntry={!show}
-            className="flex-1 py-4 text-base text-gray-900 dark:text-gray-100"
+            className={`flex-1 py-4 ${typo.inputSize} text-gray-900 dark:text-gray-100`}
             placeholderTextColor="#9ca3af"
             {...rest}
           />
@@ -65,7 +67,7 @@ export const PasswordInput = forwardRef<TextInput, Props>(
                 />
               ))}
             </View>
-            <Text className="text-xs" style={{ color: STRENGTH_COLORS[strength] }}>
+            <Text className={typo.caption} style={{ color: STRENGTH_COLORS[strength] }}>
               {STRENGTH_LABELS[strength]}
             </Text>
           </View>
@@ -82,7 +84,7 @@ export const PasswordInput = forwardRef<TextInput, Props>(
                     size={14}
                     color={passed ? '#059669' : '#9ca3af'}
                   />
-                  <Text className={`text-xs ${passed ? 'text-primary' : 'text-gray-400'}`}>
+                  <Text className={`${typo.caption} ${passed ? 'text-primary' : 'text-gray-400'}`}>
                     {rule.label}
                   </Text>
                 </View>

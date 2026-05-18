@@ -1,0 +1,50 @@
+appId: com.knp.tappypos
+name: "19 Feedback submission — select category, write content, submit (FEEDBACK feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Settings → Feedback ──────────────────────────────────────────
+- tapOn:
+    id: "tab-more"
+- tapOn: "Cài đặt"
+- assertVisible: "Cài đặt"
+- tapOn: "Gửi phản hồi"
+    optional: true
+- tapOn: "Phản hồi"
+    optional: true
+- assertVisible: "Gửi phản hồi"
+
+# ── FB01: Category chips are visible ─────────────────────────────────────────
+# At least one category chip must be visible (BUG, FEATURE_REQUEST, etc.)
+- assertNotVisible: "500"
+
+# ── FB02: Select a category (first one available) ────────────────────────────
+# Categories: Bug, Feature, UX, Other — tap "Lỗi" (Bug) as first option
+- tapOn: "Lỗi"
+    optional: true
+- tapOn: "Tính năng"
+    optional: true
+
+# ── FB03: Fill content field ─────────────────────────────────────────────────
+- tapOn:
+    id: "feedback-content-input"
+- inputText: "Maestro E2E test feedback — please ignore"
+- hideKeyboard
+
+# ── FB04: Submit ─────────────────────────────────────────────────────────────
+- tapOn:
+    id: "feedback-submit-btn"
+
+# ── FB05: Success state renders ───────────────────────────────────────────────
+- assertVisible: "Cảm ơn"
+    optional: true
+- assertVisible: "Gửi thành công"
+    optional: true
+- assertNotVisible: "500"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

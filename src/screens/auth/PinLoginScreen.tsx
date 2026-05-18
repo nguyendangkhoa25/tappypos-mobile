@@ -6,6 +6,7 @@ import { isAxiosError } from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { PinPad } from '../../components/PinPad';
+import { useTypography } from '../../hooks/useTypography';
 import { authApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useAlertStore } from '../../store/alertStore';
@@ -19,6 +20,7 @@ const LOCKOUT_MS = 30 * 60 * 1000;
 export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
   const { show: showAlert } = useAlertStore();
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -146,9 +148,7 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
   };
 
   const handleChangeShop = async () => {
-    await SecureStore.deleteItemAsync('tenant_id');
-    await SecureStore.deleteItemAsync('shop_name');
-    navigation.replace('ShopId');
+    navigation.replace('Login');
   };
 
   const isLocked = !!lockedUntil;
@@ -178,15 +178,15 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
       <View className="w-full flex-row justify-between items-center mb-8">
         <View />
         <TouchableOpacity onPress={handleChangeShop}>
-          <Text className="text-sm text-primary font-semibold">{t('auth.pinLoginExt.changeShop')}</Text>
+          <Text className={`${typo.label} text-primary`}>{t('auth.pinLoginExt.changeShop')}</Text>
         </TouchableOpacity>
       </View>
 
-      <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+      <Text className={`${typo.heading} text-gray-900 dark:text-white mb-2`}>
         {nickname ? t('auth.pinLoginExt.greeting', { name: nickname }) : t('auth.pinLogin.title')}
       </Text>
       {storedPhone && (
-        <Text className="text-base text-gray-500 dark:text-gray-400 mb-12">
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-12`}>
           {maskPhone(storedPhone)}
         </Text>
       )}
@@ -194,16 +194,16 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
       {isLocked ? (
         <View className="items-center mt-8">
           <Text className="text-4xl mb-4">🔒</Text>
-          <Text className="text-base font-semibold text-gray-700 dark:text-gray-300 text-center mb-2">
+          <Text className={`${typo.body} text-gray-700 dark:text-gray-300 text-center mb-2`}>
             {t('auth.pinLoginExt.lockedTimer', {
               time: `${Math.floor(remainingSecs / 60)}:${String(remainingSecs % 60).padStart(2, '0')}`,
             })}
           </Text>
-          <Text className="text-sm text-gray-500 dark:text-gray-400 text-center">
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 text-center`}>
             {t('auth.pinLoginExt.lockedDesc')}
           </Text>
           <TouchableOpacity className="mt-6" onPress={() => navigation.navigate('Login')}>
-            <Text className="text-primary font-semibold">{t('auth.pinLoginExt.loginByPassword')}</Text>
+            <Text className={`${typo.label} text-primary`}>{t('auth.pinLoginExt.loginByPassword')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -218,10 +218,10 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
       {!isLocked && (
         <>
           <TouchableOpacity className="mt-8" onPress={() => navigation.navigate('ForgotPin')}>
-            <Text className="text-primary text-base">{t('auth.pinLogin.forgotPin')}</Text>
+            <Text className={`${typo.caption} text-primary`}>{t('auth.pinLogin.forgotPin')}</Text>
           </TouchableOpacity>
           <TouchableOpacity className="mt-4" onPress={() => navigation.navigate('Login')}>
-            <Text className="text-gray-400 dark:text-gray-500 text-sm">{t('auth.pinLoginExt.loginByPassword')}</Text>
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{t('auth.pinLoginExt.loginByPassword')}</Text>
           </TouchableOpacity>
         </>
       )}

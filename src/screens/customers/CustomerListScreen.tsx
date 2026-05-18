@@ -14,6 +14,9 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { customerApi, type CustomerData } from '../../services/api';
 import { PAGE_SIZE } from '../../utils/constants';
+import { useTypography } from '../../hooks/useTypography';
+import { ErrorState } from '../../components/ErrorState';
+import { ScreenSkeleton } from '../../components/ScreenSkeleton';
 import type { HomeScreenProps } from '../../types/navigation';
 
 type Props = HomeScreenProps<'CustomerList'>;
@@ -32,44 +35,45 @@ function CustomerCard({
   onPress: () => void;
 }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   return (
     <TouchableOpacity
       testID={`customer-row-${index}`}
       onPress={onPress}
       activeOpacity={0.75}
-      className="bg-white rounded-2xl p-4 mb-3 border border-gray-100"
+      className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-3 border border-gray-100 dark:border-gray-700"
     >
       <View className="flex-row items-center">
         <View className="w-11 h-11 rounded-full bg-indigo-50 items-center justify-center mr-3">
-          <Text className="text-base font-bold text-indigo-600">
+          <Text className={`${typo.labelBold} text-indigo-600`}>
             {item.name.charAt(0).toUpperCase()}
           </Text>
         </View>
         <View className="flex-1">
-          <Text className="text-base font-semibold text-gray-900" numberOfLines={1}>
+          <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
             {item.name}
           </Text>
-          <Text className="text-sm text-gray-500">{item.phone}</Text>
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{item.phone}</Text>
         </View>
         <MaterialCommunityIcons name="chevron-right" size={20} color="#d1d5db" />
       </View>
 
-      <View className="flex-row mt-3 pt-3 border-t border-gray-50" style={{ gap: 16 }}>
+      <View className="flex-row mt-3 pt-3 border-t border-gray-50 dark:border-gray-700" style={{ gap: 16 }}>
         <View className="flex-row items-center">
           <MaterialCommunityIcons name="shopping-outline" size={14} color="#9ca3af" style={{ marginRight: 4 }} />
-          <Text className="text-xs text-gray-500">
+          <Text className={`${typo.caption} text-gray-500`}>
             {item.totalOrders} {t('customers.orders')}
           </Text>
         </View>
         <View className="flex-row items-center">
           <MaterialCommunityIcons name="star-outline" size={14} color="#9ca3af" style={{ marginRight: 4 }} />
-          <Text className="text-xs text-gray-500">
+          <Text className={`${typo.caption} text-gray-500`}>
             {item.points} {t('customers.points')}
           </Text>
         </View>
         {item.totalSpend > 0 && (
           <View className="flex-row items-center flex-1 justify-end">
-            <Text className="text-xs font-semibold text-indigo-600">
+            <Text className={`${typo.captionBold} text-indigo-600`}>
               {fmtVnd(item.totalSpend)}
             </Text>
           </View>
@@ -81,6 +85,7 @@ function CustomerCard({
 
 export function CustomerListScreen({ navigation }: Props) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const { top, bottom } = useSafeAreaInsets();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -90,7 +95,7 @@ export function CustomerListScreen({ navigation }: Props) {
   const isLoadingMore = useRef(false);
   const canLoadMore = useRef(false);
 
-  const { isLoading, isFetching, refetch, data } = useQuery({
+  const { isLoading, isError, isFetching, refetch, data } = useQuery({
     queryKey: ['customers', search, page],
     queryFn: async () => {
       const res = await customerApi.list({ search: search || undefined, page, size: PAGE_SIZE });
@@ -136,7 +141,7 @@ export function CustomerListScreen({ navigation }: Props) {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <View
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
@@ -146,9 +151,9 @@ export function CustomerListScreen({ navigation }: Props) {
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-2">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900 dark:text-white flex-1">{t('customers.title')}</Text>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('customers.title')}</Text>
         </View>
-        <Text className="text-xs text-gray-500 dark:text-gray-400 mb-3 mt-0.5">{t('customers.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-3 mt-0.5`}>{t('customers.hint')}</Text>
 
         {/* Search */}
         <View className="flex-row items-center gap-2">
@@ -156,7 +161,7 @@ export function CustomerListScreen({ navigation }: Props) {
             <MaterialCommunityIcons name="magnify" size={20} color="#9ca3af" />
             <TextInput
               testID="customer-search-input"
-              className="flex-1 ml-2 text-base text-gray-800 dark:text-white"
+              className={`flex-1 ml-2 ${typo.inputSize} text-gray-800 dark:text-white`}
               placeholder={t('customers.searchPlaceholder')}
               placeholderTextColor="#9ca3af"
               value={searchInput}
@@ -178,19 +183,18 @@ export function CustomerListScreen({ navigation }: Props) {
             className="bg-indigo-600 rounded-xl px-4 py-2.5 items-center justify-center"
             activeOpacity={0.8}
           >
-            <Text className="text-white font-semibold text-sm">{t('customers.searchButton')}</Text>
+            <Text className={`${typo.label} text-white`}>{t('customers.searchButton')}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {isLoading && page === 0 ? (
-        <View className="px-4 pt-4 gap-3">
-          {[0, 1, 2, 3].map((i) => (
-            <View key={i} className="h-20 bg-gray-200 rounded-2xl animate-pulse" />
-          ))}
-        </View>
+      {isError ? (
+        <ErrorState onRetry={() => { setPage(0); refetch(); }} />
+      ) : isLoading && page === 0 ? (
+        <ScreenSkeleton count={4} cardHeight={88} />
       ) : (
         <FlatList
+          showsVerticalScrollIndicator={false}
           data={allItems}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: bottom + 80 }}
@@ -210,8 +214,8 @@ export function CustomerListScreen({ navigation }: Props) {
             !isLoading ? (
               <View className="items-center py-16">
                 <MaterialCommunityIcons name="account-group-outline" size={48} color="#d1d5db" />
-                <Text className="text-gray-400 font-semibold mt-3">{t('customers.noCustomers')}</Text>
-                <Text className="text-gray-400 text-sm mt-1">{t('customers.noCustomersHint')}</Text>
+                <Text className={`${typo.body} text-gray-400 mt-3`}>{t('customers.noCustomers')}</Text>
+                <Text className={`${typo.caption} text-gray-400 mt-1`}>{t('customers.noCustomersHint')}</Text>
               </View>
             ) : null
           }
@@ -230,8 +234,8 @@ export function CustomerListScreen({ navigation }: Props) {
         testID="customer-add-fab"
         onPress={() => navigation.navigate('CustomerForm', {})}
         activeOpacity={0.85}
-        className="absolute bottom-8 right-6 w-14 h-14 bg-indigo-600 rounded-full items-center justify-center"
-        style={{ elevation: 6, shadowColor: '#4f46e5', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }}
+        className="absolute right-5 w-14 h-14 bg-indigo-600 rounded-full items-center justify-center shadow-lg"
+        style={{ bottom: bottom + 16, elevation: 6, shadowColor: '#4f46e5', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }}
       >
         <MaterialCommunityIcons name="plus" size={28} color="white" />
       </TouchableOpacity>

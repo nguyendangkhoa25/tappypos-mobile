@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTypography } from '../../hooks/useTypography';
 
 type Props = {
   step: number;
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function OnboardingHeader({ step, total, onBack }: Props) {
+  const typo = useTypography();
   return (
     <View className="flex-row items-center gap-3">
       {onBack ? (
@@ -33,7 +35,7 @@ export function OnboardingHeader({ step, total, onBack }: Props) {
         ))}
       </View>
 
-      <Text className="text-xs text-gray-400 dark:text-gray-500 font-medium w-8 text-right">
+      <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 font-medium w-8 text-right`}>
         {step + 1} / {total}
       </Text>
     </View>

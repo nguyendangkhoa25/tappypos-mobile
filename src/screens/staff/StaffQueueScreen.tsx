@@ -12,7 +12,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { orderApi, employeeApi, type WorkItemDTO, type EmployeeData } from '../../services/api';
+import { useTypography } from '../../hooks/useTypography';
 import { Skeleton } from '../../components/Skeleton';
+import { ErrorState } from '../../components/ErrorState';
 import type { MoreScreenProps } from '../../types/navigation';
 
 type Props = MoreScreenProps<'QueueView'>;
@@ -55,17 +57,19 @@ function StatChip({
   value: number;
   color: string;
 }) {
+  const typo = useTypography();
   return (
     <View className="flex-1 bg-white dark:bg-gray-800 rounded-2xl py-3 px-2 items-center border border-gray-100 dark:border-gray-700">
       <MaterialCommunityIcons name={icon as any} size={20} color={color} />
-      <Text className="text-lg font-bold text-gray-900 dark:text-white mt-1">{value}</Text>
-      <Text className="text-xs text-gray-400 text-center" numberOfLines={1}>{label}</Text>
+      <Text className={`${typo.section} text-gray-900 dark:text-white mt-1`}>{value}</Text>
+      <Text className={`${typo.caption} text-gray-400 text-center`} numberOfLines={1}>{label}</Text>
     </View>
   );
 }
 
 function WorkItemCard({ item, compact = false }: { item: WorkItemDTO; compact?: boolean }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const isWorking = item.status === 'IN_PROGRESS';
   const accentColor = isWorking ? '#10b981' : '#f59e0b';
 
@@ -75,11 +79,11 @@ function WorkItemCard({ item, compact = false }: { item: WorkItemDTO; compact?: 
         className="rounded-xl px-3 py-2 border"
         style={{ borderColor: accentColor + '40', backgroundColor: accentColor + '10' }}
       >
-        <Text className="text-xs font-semibold text-gray-800 dark:text-gray-100" numberOfLines={1}>
+        <Text className={`${typo.captionBold} text-gray-800 dark:text-gray-100`} numberOfLines={1}>
           {item.productName}
         </Text>
         {item.customerName ? (
-          <Text className="text-xs text-gray-500 dark:text-gray-400 mt-0.5" numberOfLines={1}>
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`} numberOfLines={1}>
             {item.customerName}
           </Text>
         ) : null}
@@ -95,33 +99,33 @@ function WorkItemCard({ item, compact = false }: { item: WorkItemDTO; compact?: 
       <View className="flex-row items-center justify-between mb-1.5">
         <View className="flex-row items-center gap-1.5 flex-1 mr-2">
           <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: accentColor }} />
-          <Text style={{ color: accentColor }} className="text-xs font-bold uppercase tracking-wide">
+          <Text style={{ color: accentColor }} className={`${typo.captionBold} uppercase tracking-wide`}>
             {isWorking ? t('queue.statusWorking') : t('queue.statusWaiting')}
           </Text>
         </View>
         {item.durationMinutes > 0 && (
           <View className="flex-row items-center gap-1">
             <MaterialCommunityIcons name="clock-outline" size={12} color="#9ca3af" />
-            <Text className="text-xs text-gray-400">{fmtDuration(item.durationMinutes)}</Text>
+            <Text className={`${typo.caption} text-gray-400`}>{fmtDuration(item.durationMinutes)}</Text>
           </View>
         )}
       </View>
 
-      <Text className="text-sm font-bold text-gray-900 dark:text-white" numberOfLines={1}>
+      <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
         {item.productName}
       </Text>
 
       <View className="flex-row items-center justify-between mt-1.5">
         <View className="flex-row items-center gap-1 flex-1 mr-2">
           <MaterialCommunityIcons name="account-outline" size={13} color="#9ca3af" />
-          <Text className="text-xs text-gray-500 dark:text-gray-400" numberOfLines={1}>
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`} numberOfLines={1}>
             {item.customerName ?? '—'}
           </Text>
         </View>
-        <Text className="text-xs text-gray-400">#{item.orderNumber}</Text>
+        <Text className={`${typo.caption} text-gray-400`}>#{item.orderNumber}</Text>
       </View>
 
-      <Text className="text-xs text-gray-400 mt-1">
+      <Text className={`${typo.caption} text-gray-400 mt-1`}>
         {fmtTime(item.orderCreatedAt)}
       </Text>
     </View>
@@ -135,6 +139,7 @@ function EmployeeCard({ employee, inProgress, pending, waitMin }: {
   waitMin: number;
 }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const isFree = inProgress.length === 0 && pending.length === 0;
   const isWorking = inProgress.length > 0;
   const color = avatarColor(employee.fullName);
@@ -159,11 +164,11 @@ function EmployeeCard({ employee, inProgress, pending, waitMin }: {
         </View>
 
         <View className="flex-1">
-          <Text className="text-base font-bold text-gray-900 dark:text-white" numberOfLines={1}>
+          <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
             {employee.fullName}
           </Text>
           {employee.position ? (
-            <Text className="text-xs text-gray-400">{employee.position}</Text>
+            <Text className={`${typo.caption} text-gray-400`}>{employee.position}</Text>
           ) : null}
         </View>
 
@@ -172,7 +177,7 @@ function EmployeeCard({ employee, inProgress, pending, waitMin }: {
           style={{ backgroundColor: statusColor + '15' }}
         >
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: statusColor }} />
-          <Text style={{ color: statusColor }} className="text-xs font-semibold">
+          <Text style={{ color: statusColor }} className={`${typo.captionBold}`}>
             {statusLabel}
           </Text>
         </View>
@@ -186,7 +191,7 @@ function EmployeeCard({ employee, inProgress, pending, waitMin }: {
       {/* Queue — PENDING items shown as compact chips */}
       {pending.length > 0 && (
         <View className="mt-3">
-          <Text className="text-xs font-medium text-gray-400 mb-1.5">{t('queue.labelNext')}</Text>
+          <Text className={`${typo.captionBold} text-gray-400 mb-1.5`}>{t('queue.labelNext')}</Text>
           <View className="flex-row flex-wrap gap-2">
             {pending.map((item) => (
               <View key={item.itemId} className="flex-1" style={{ minWidth: '45%', maxWidth: '100%' }}>
@@ -201,7 +206,7 @@ function EmployeeCard({ employee, inProgress, pending, waitMin }: {
       {isFree && (
         <View className="flex-row items-center gap-2 mt-3 pt-3 border-t border-gray-50 dark:border-gray-700">
           <MaterialCommunityIcons name="check-circle-outline" size={16} color="#9ca3af" />
-          <Text className="text-sm text-gray-400">{t('queue.noWork')}</Text>
+          <Text className={`${typo.caption} text-gray-400`}>{t('queue.noWork')}</Text>
         </View>
       )}
 
@@ -209,7 +214,7 @@ function EmployeeCard({ employee, inProgress, pending, waitMin }: {
       {!isFree && waitMin > 0 && (
         <View className="flex-row items-center gap-1.5 mt-2 pt-2.5 border-t border-gray-50 dark:border-gray-700">
           <MaterialCommunityIcons name="timer-sand" size={13} color="#9ca3af" />
-          <Text className="text-xs text-gray-400">{t('queue.doneIn', { min: waitMin })}</Text>
+          <Text className={`${typo.caption} text-gray-400`}>{t('queue.doneIn', { min: waitMin })}</Text>
         </View>
       )}
     </View>
@@ -218,13 +223,14 @@ function EmployeeCard({ employee, inProgress, pending, waitMin }: {
 
 function UnassignedSection({ items }: { items: WorkItemDTO[] }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   if (items.length === 0) return null;
 
   return (
     <View className="mb-4">
       <View className="flex-row items-center gap-2 mb-2">
         <View className="w-2 h-2 rounded-full bg-rose-400" />
-        <Text className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+        <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase tracking-wide`}>
           {t('queue.sectionUnassigned')} · {items.length}
         </Text>
       </View>
@@ -232,21 +238,21 @@ function UnassignedSection({ items }: { items: WorkItemDTO[] }) {
         {items.map((item) => (
           <View key={item.itemId} style={{ width: 180 }} className="mx-1">
             <View className="bg-white dark:bg-gray-800 rounded-2xl p-3 border border-rose-100 dark:border-rose-900/40">
-              <Text className="text-sm font-bold text-gray-900 dark:text-white" numberOfLines={1}>
+              <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
                 {item.productName}
               </Text>
               <View className="flex-row items-center gap-1 mt-1">
                 <MaterialCommunityIcons name="account-outline" size={13} color="#9ca3af" />
-                <Text className="text-xs text-gray-400" numberOfLines={1}>
+                <Text className={`${typo.caption} text-gray-400`} numberOfLines={1}>
                   {item.customerName ?? '—'}
                 </Text>
               </View>
               <View className="flex-row items-center justify-between mt-1.5">
-                <Text className="text-xs text-gray-400">#{item.orderNumber}</Text>
+                <Text className={`${typo.caption} text-gray-400`}>#{item.orderNumber}</Text>
                 {item.durationMinutes > 0 && (
                   <View className="flex-row items-center gap-1">
                     <MaterialCommunityIcons name="clock-outline" size={12} color="#9ca3af" />
-                    <Text className="text-xs text-gray-400">{fmtDuration(item.durationMinutes)}</Text>
+                    <Text className={`${typo.caption} text-gray-400`}>{fmtDuration(item.durationMinutes)}</Text>
                   </View>
                 )}
               </View>
@@ -270,6 +276,7 @@ type ConcurrentSession = {
 
 function ConcurrentSessionsSection({ sessions }: { sessions: ConcurrentSession[] }) {
   const { t } = useTranslation();
+  const typo = useTypography();
   if (sessions.length === 0) return null;
 
   return (
@@ -277,7 +284,7 @@ function ConcurrentSessionsSection({ sessions }: { sessions: ConcurrentSession[]
       {/* Section header */}
       <View className="flex-row items-center gap-2 mb-2.5">
         <View className="w-2 h-2 rounded-full bg-teal-400" />
-        <Text className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex-1">
+        <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase tracking-wide flex-1`}>
           {t('queue.sectionConcurrent')} · {sessions.length}
         </Text>
       </View>
@@ -297,11 +304,11 @@ function ConcurrentSessionsSection({ sessions }: { sessions: ConcurrentSession[]
               <View className="flex-1 mr-2">
                 <View className="flex-row items-center gap-2">
                   <MaterialCommunityIcons name="account-multiple-outline" size={15} color="#0d9488" />
-                  <Text className="text-sm font-bold text-gray-900 dark:text-white" numberOfLines={1}>
+                  <Text className={`${typo.labelBold} text-gray-900 dark:text-white`} numberOfLines={1}>
                     {session.customerName ?? '—'}
                   </Text>
                 </View>
-                <Text className="text-xs text-gray-400 mt-0.5 ml-5">
+                <Text className={`${typo.caption} text-gray-400 mt-0.5 ml-5`}>
                   #{session.orderNumber}
                   {session.maxDuration > 0 ? `  ·  ${fmtDuration(session.maxDuration)}` : ''}
                 </Text>
@@ -309,8 +316,8 @@ function ConcurrentSessionsSection({ sessions }: { sessions: ConcurrentSession[]
 
               {/* Tech count badge */}
               <View className="bg-teal-50 dark:bg-teal-900/30 rounded-full px-2.5 py-1 flex-row items-center gap-1">
-                <MaterialCommunityIcons name="scissors-cutting" size={12} color="#0d9488" />
-                <Text className="text-xs font-bold text-teal-700 dark:text-teal-400">
+                <MaterialCommunityIcons name="account-multiple-outline" size={12} color="#0d9488" />
+                <Text className={`${typo.captionBold} text-teal-700 dark:text-teal-400`}>
                   {t('queue.splitBadge', { count: techCount })}
                 </Text>
               </View>
@@ -334,7 +341,7 @@ function ConcurrentSessionsSection({ sessions }: { sessions: ConcurrentSession[]
                     <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: dotColor, marginTop: 1 }} />
 
                     {/* Service name */}
-                    <Text className="flex-1 text-sm text-gray-800 dark:text-gray-200 font-medium" numberOfLines={1}>
+                    <Text className={`flex-1 ${typo.caption} text-gray-800 dark:text-gray-200 font-medium`} numberOfLines={1}>
                       {item.productName}
                     </Text>
 
@@ -347,7 +354,7 @@ function ConcurrentSessionsSection({ sessions }: { sessions: ConcurrentSession[]
                         >
                           <Text style={{ color: empColor, fontSize: 10, fontWeight: '700' }}>{initials}</Text>
                         </View>
-                        <Text className="text-xs text-gray-500 dark:text-gray-400" numberOfLines={1}>
+                        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`} numberOfLines={1}>
                           {item.assignedEmployeeName}
                         </Text>
                       </View>
@@ -364,10 +371,10 @@ function ConcurrentSessionsSection({ sessions }: { sessions: ConcurrentSession[]
                 size={13}
                 color={anyWorking ? '#10b981' : '#f59e0b'}
               />
-              <Text className="text-xs" style={{ color: anyWorking ? '#10b981' : '#f59e0b', fontWeight: '600' }}>
+              <Text className={`${typo.captionBold}`} style={{ color: anyWorking ? '#10b981' : '#f59e0b' }}>
                 {anyWorking ? t('queue.statusWorking') : t('queue.statusWaiting')}
               </Text>
-              <Text className="text-xs text-gray-400 ml-auto">{t('queue.concurrentHint')}</Text>
+              <Text className={`${typo.caption} text-gray-400 ml-auto`}>{t('queue.concurrentHint')}</Text>
             </View>
           </View>
         );
@@ -413,9 +420,10 @@ function LoadingSkeleton() {
 
 export function StaffQueueScreen({ navigation }: Props) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const { top, bottom } = useSafeAreaInsets();
 
-  const { data, isLoading, isRefetching, refetch, dataUpdatedAt } = useQuery({
+  const { data, isLoading, isError, isRefetching, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['adminQueue'],
     queryFn: async () => {
       const [assignedRes, availableRes, employeesRes] = await Promise.all([
@@ -526,7 +534,7 @@ export function StaffQueueScreen({ navigation }: Props) {
             color={hasFree ? '#10b981' : '#f59e0b'}
           />
           <Text
-            className={`text-sm font-semibold flex-1 ${
+            className={`${typo.label} flex-1 ${
               hasFree
                 ? 'text-emerald-700 dark:text-emerald-400'
                 : 'text-amber-700 dark:text-amber-400'
@@ -547,7 +555,7 @@ export function StaffQueueScreen({ navigation }: Props) {
 
       {/* Section label */}
       {employeeRows.length > 0 && (
-        <Text className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">
+        <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1`}>
           {t('queue.sectionEmployees')} · {employeeRows.length}
         </Text>
       )}
@@ -570,12 +578,16 @@ export function StaffQueueScreen({ navigation }: Props) {
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-xl font-bold text-gray-900 dark:text-white">
+            <Text className={`${typo.section} text-gray-900 dark:text-white`}>
               {t('queue.title')}
             </Text>
-            {updatedTime && (
-              <Text className="text-xs text-gray-400 mt-0.5">
+            {updatedTime ? (
+              <Text className={`${typo.caption} text-gray-400 mt-0.5`}>
                 {t('queue.updatedAt', { time: updatedTime })}
+              </Text>
+            ) : (
+              <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
+                {t('queue.hint')}
               </Text>
             )}
           </View>
@@ -592,12 +604,15 @@ export function StaffQueueScreen({ navigation }: Props) {
         </View>
       </View>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorState onRetry={refetch} />
+      ) : isLoading ? (
         <LoadingSkeleton />
       ) : (
         <FlatList
           data={employeeRows}
           keyExtractor={(item) => item.employee.id}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 16, paddingBottom: bottom + 24 }}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#4f46e5" />
@@ -615,10 +630,10 @@ export function StaffQueueScreen({ navigation }: Props) {
             !isLoading ? (
               <View className="items-center py-16">
                 <MaterialCommunityIcons name="account-clock-outline" size={52} color="#d1d5db" />
-                <Text className="text-gray-400 font-semibold mt-3 text-base text-center">
+                <Text className={`${typo.body} text-gray-400 mt-3 text-center`}>
                   {t('queue.empty')}
                 </Text>
-                <Text className="text-gray-400 text-sm mt-1 text-center px-8">
+                <Text className={`${typo.caption} text-gray-400 mt-1 text-center px-8`}>
                   {t('queue.emptyHint')}
                 </Text>
               </View>

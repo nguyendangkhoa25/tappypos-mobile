@@ -1,0 +1,88 @@
+appId: com.knp.tappypos
+name: "MKUP 15 Appointment check-in → POS — core makeup studio workflow (APPOINTMENT + POS)"
+---
+
+# Core workflow: book appointment → check in → makeup POS → place order
+#
+- runFlow: ../../../subflows/_login.yaml
+
+# Create appointment
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-appointments"
+- assertVisible: "Lịch hẹn"
+
+- tapOn:
+    id: "appointment-add-fab"
+- assertVisible: "Đặt lịch hẹn"
+
+- tapOn:
+    id: "appt-customer-name"
+- inputText: "Cô Dâu Check-In Test"
+
+- tapOn:
+    id: "appt-customer-phone"
+- inputText: "0911888999"
+
+- tapOn:
+    id: "appt-save-btn"
+- assertVisible: "Lịch hẹn"
+
+# Check in
+- tapOn:
+    id: "appointment-card-0"
+- assertVisible: "Cô Dâu Check-In Test"
+- assertVisible:
+    id: "appt-checkin-btn"
+
+- tapOn:
+    id: "appt-checkin-btn"
+
+- assertVisible: "Check-in thành công"
+    optional: true
+- tapOn: "Xem đơn"
+    optional: true
+- tapOn: "Mở đơn hàng"
+    optional: true
+- tapOn: "OK"
+    optional: true
+
+# Makeup POS
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Hoàn tất đơn hàng"
+
+- tapOn:
+    id: "barber-place-order-btn"
+- assertVisible: "Đặt hàng thành công!"
+- assertVisible:
+    id: "order-success-number"
+
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Dịch vụ"
+
+# Verify appointment updated
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-appointments"
+- assertVisible: "Lịch hẹn"
+- tapOn:
+    id: "appointment-card-0"
+    optional: true
+- assertNotVisible:
+    id: "appt-checkin-btn"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

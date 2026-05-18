@@ -1,0 +1,38 @@
+appId: com.knp.tappypos
+name: "14 Security — blocked features absent for barber shop (INVENTORY, GOLD_PRICE, PAWN, VENDOR)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More tab ─────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+
+# ── SEC01: INVENTORY tile is absent ──────────────────────────────────────────
+- assertNotVisible:
+    id: "more-tile-inventory"
+
+# ── SEC02: GOLD_PRICE tile is absent ─────────────────────────────────────────
+- assertNotVisible:
+    id: "more-tile-goldPrice"
+
+# ── SEC03: Sell tab shows BarberServiceScreen (not standard POS product list) ─
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+# Standard POS search input must NOT be visible (different screen)
+- assertNotVisible: "Tìm sản phẩm..."
+
+# ── SEC04: Navigate back to More, verify APPOINTMENT tile IS visible ──────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertVisible:
+    id: "more-tile-appointments"
+
+# ── SEC05: VENDOR (nhà cung cấp) tile is absent ──────────────────────────────
+# No vendor tile exists for barber shop
+- assertNotVisible: "Nhà cung cấp"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

@@ -1,0 +1,61 @@
+appId: com.knp.tappypos
+name: "15 Order history — list orders, filter by status, open detail (ORDER + ORDER_VIEW_ALL)"
+---
+
+# ── Setup: log in (barber shop owner has ORDER + ORDER_VIEW_ALL) ──────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to home → orders via dashboard ───────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"
+
+# ── OR01: Tap "Đơn hàng" shortcut on dashboard ────────────────────────────────
+- tapOn:
+    text: "Đơn hàng"
+- assertVisible: "Đơn hàng"
+
+# ── OR02: Order list has at least one row (from prior test runs) ──────────────
+- assertVisible:
+    id: "order-row-0"
+
+# ── OR03: Filter chips are visible ───────────────────────────────────────────
+- assertVisible:
+    id: "order-filter-all"
+
+# ── OR04: Filter by COMPLETED ────────────────────────────────────────────────
+- tapOn:
+    id: "order-filter-COMPLETED"
+    optional: true
+- assertNotVisible: "500"
+
+# ── OR05: Filter by CANCELLED ────────────────────────────────────────────────
+- tapOn:
+    id: "order-filter-CANCELLED"
+    optional: true
+- assertNotVisible: "500"
+
+# ── OR06: Reset to all ────────────────────────────────────────────────────────
+- tapOn:
+    id: "order-filter-all"
+    optional: true
+- assertVisible:
+    id: "order-row-0"
+
+# ── OR07: Tap first order → open detail ──────────────────────────────────────
+- tapOn:
+    id: "order-row-0"
+- assertVisible:
+    id: "order-detail-back-btn"
+- assertNotVisible: "500"
+
+# ── OR08: Back to list ────────────────────────────────────────────────────────
+- tapOn:
+    id: "order-detail-back-btn"
+- assertVisible:
+    id: "order-row-0"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

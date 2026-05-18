@@ -1,0 +1,57 @@
+appId: com.knp.tappypos
+name: "05 Barber POS — pick service → add to order → checkout → success"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Sell tab (BarberServiceScreen) ───────────────────────────────
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Tạo đơn mới"
+
+# ── B01: First service card is visible ───────────────────────────────────────
+# barber-service-<name> — tap the first one rendered (regex match)
+- tapOn:
+    id: "barber-service-.*"
+
+# ── B02: AddItemSheet appears — confirm "Thêm vào đơn" ──────────────────────
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+
+# ── B03: CartBar appears with count 1 ────────────────────────────────────────
+- assertVisible:
+    id: "barber-cart-count"
+- assertVisible: "1"
+
+# ── B04: Add a second service ────────────────────────────────────────────────
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible: "2"
+
+# ── B05: Open CheckoutSheet ──────────────────────────────────────────────────
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Xem đơn hàng"
+- assertVisible: "Phương thức thanh toán"
+
+# ── B06: Default payment is Cash ─────────────────────────────────────────────
+- assertVisible: "Tiền mặt"
+
+# ── B07: Place order ─────────────────────────────────────────────────────────
+- tapOn:
+    id: "barber-place-order-btn"
+
+# ── B08: Order success screen ────────────────────────────────────────────────
+- assertVisible: "Đặt hàng thành công!"
+- assertVisible:
+    id: "order-success-number"
+
+# ── B09: Start a new order ───────────────────────────────────────────────────
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Tạo đơn mới"

@@ -2,10 +2,12 @@ import { View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useTypography } from '../../hooks/useTypography';
 
 export function ScanScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const typo = useTypography();
 
   return (
     <View
@@ -24,13 +26,13 @@ export function ScanScreen() {
           <MaterialCommunityIcons name="barcode-scan" size={72} color="#c7d2fe" />
         </View>
 
-        <Text className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+        <Text className={`${typo.section} text-gray-800 dark:text-white mb-2`}>
           {t('scan.title')}
         </Text>
-        <Text className="text-sm text-gray-400 dark:text-gray-500 text-center leading-5">
+        <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 text-center leading-5`}>
           {t('scan.coming')}
         </Text>
-        <Text className="text-xs text-gray-300 dark:text-gray-600 text-center mt-1">
+        <Text className={`${typo.caption} text-gray-300 dark:text-gray-600 text-center mt-1`}>
           {t('scan.comingHint')}
         </Text>
       </View>

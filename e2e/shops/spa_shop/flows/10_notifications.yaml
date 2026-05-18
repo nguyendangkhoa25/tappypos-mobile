@@ -1,0 +1,33 @@
+appId: com.knp.tappypos
+name: "SPA 10 Notifications — list renders, filter chips visible (NOTIFICATION feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Notifications via More ───────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-notifications"
+- assertVisible: "Thông báo"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── NT01: Tap first notification if any exist ─────────────────────────────────
+- tapOn:
+    id: "notification-row-0"
+    optional: true
+- assertNotVisible: "500"
+# Back if went into detail
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── NT02: Filter tabs are visible ─────────────────────────────────────────────
+- assertVisible: "Tất cả"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

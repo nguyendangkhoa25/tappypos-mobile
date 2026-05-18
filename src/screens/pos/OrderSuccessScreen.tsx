@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import * as Print from 'expo-print';
 import { orderApi } from '../../services/api';
 import { formatVnd } from '../../utils/format';
+import { useTypography } from '../../hooks/useTypography';
 import type { OrderDetail } from '../../services/api';
 import type { POSScreenProps } from '../../types/navigation';
 
@@ -88,6 +89,7 @@ function buildReceiptHtml(order: OrderDetail, t: (k: string) => string): string 
 
 export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderSuccess'>) {
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
   const { orderId, orderNumber, total, savedOffline } = route.params;
 
@@ -140,46 +142,46 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
 
   return (
     <View
-      className="flex-1 bg-white items-center justify-center px-8"
+      className="flex-1 bg-white dark:bg-gray-900 items-center justify-center px-8"
       style={{ paddingBottom: insets.bottom + 16, paddingTop: insets.top + 16 }}
     >
       {/* Success icon */}
-      <View className="w-24 h-24 bg-indigo-50 rounded-full items-center justify-center mb-6">
+      <View className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/30 rounded-full items-center justify-center mb-6">
         <MaterialCommunityIcons name="check-circle" size={56} color="#4f46e5" />
       </View>
 
-      <Text className="text-2xl font-bold text-gray-900 mb-2 text-center">
+      <Text className={`${typo.heading} text-gray-900 dark:text-white mb-2 text-center`}>
         {savedOffline ? t('pos.savedOfflineTitle') : t('pos.orderSuccess')}
       </Text>
 
       {savedOffline && (
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-1.5 mb-3 gap-x-1.5">
+        <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-1.5 mb-3 gap-x-1.5">
           <MaterialCommunityIcons name="wifi-off" size={14} color="#6b7280" />
-          <Text className="text-sm text-gray-600 font-medium">{t('pos.savedOffline')}</Text>
+          <Text className={`${typo.caption} font-medium text-gray-600 dark:text-gray-300`}>{t('pos.savedOffline')}</Text>
         </View>
       )}
 
       <View className="items-center mb-10">
-        <Text testID="order-success-number" className="text-gray-500 text-base">
+        <Text testID="order-success-number" className={`${typo.caption} text-gray-500 dark:text-gray-400`}>
           {savedOffline ? t('pos.willSyncWhenOnline') : (
             <>
               {t('pos.orderNumber')}{' '}
-              <Text className="font-bold text-gray-800">#{orderNumber}</Text>
+              <Text className={`${typo.caption} font-bold text-gray-800 dark:text-gray-100`}>#{orderNumber}</Text>
             </>
           )}
         </Text>
-        <Text className="text-3xl font-bold text-indigo-600 mt-2">{formatVnd(total)}</Text>
+        <Text className={`${typo.heading} text-indigo-600 mt-2`}>{formatVnd(total)}</Text>
 
         {orderData?.paymentMethod && (
           <View className="items-center mt-3 gap-y-1">
-            <View className="flex-row items-center gap-x-1.5 bg-gray-100 rounded-full px-4 py-1.5">
+            <View className="flex-row items-center gap-x-1.5 bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-1.5">
               <Text>{PM_EMOJI[orderData.paymentMethod] ?? '💰'}</Text>
-              <Text className="text-sm font-medium text-gray-700">
+              <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-200`}>
                 {t(PM_I18N[orderData.paymentMethod] ?? 'pos.cash')}
               </Text>
             </View>
             {orderData.paymentMethod === 'CASH' && (orderData.changeAmount ?? 0) > 0 && (
-              <Text className="text-sm text-emerald-600 font-medium">
+              <Text className={`${typo.caption} font-medium text-emerald-600`}>
                 {t('pos.change')}: {formatVnd(orderData.changeAmount!)}
               </Text>
             )}
@@ -192,8 +194,8 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
         <TouchableOpacity
           className={`w-full rounded-2xl py-4 items-center justify-center flex-row gap-2 mb-3 border-2 ${
             !orderData || printing
-              ? 'border-gray-200 bg-gray-50'
-              : 'border-indigo-200 bg-indigo-50 active:opacity-70'
+              ? 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
+              : 'border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 active:opacity-70'
           }`}
           onPress={handlePrint}
           disabled={!orderData || printing}
@@ -208,8 +210,8 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
             />
           )}
           <Text
-            className={`font-semibold text-base ${
-              !orderData || printing ? 'text-gray-400' : 'text-indigo-700'
+            className={`${typo.labelBold} ${
+              !orderData || printing ? 'text-gray-400 dark:text-gray-500' : 'text-indigo-700 dark:text-indigo-400'
             }`}
           >
             {printing ? t('pos.printing') : t('pos.printReceipt')}
@@ -223,8 +225,8 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
         className="w-full rounded-2xl py-4 items-center bg-indigo-600 active:opacity-80"
         onPress={handleNewOrder}
       >
-        <Text className="text-white font-bold text-base">{t('pos.newOrder')}</Text>
-        <Text className="text-indigo-300 text-xs mt-0.5">{t('pos.autoReturn', { count: countdown })}</Text>
+        <Text className={`${typo.labelBold} text-white`}>{t('pos.newOrder')}</Text>
+        <Text className={`${typo.caption} text-indigo-300 mt-0.5`}>{t('pos.autoReturn', { count: countdown })}</Text>
       </TouchableOpacity>
     </View>
   );

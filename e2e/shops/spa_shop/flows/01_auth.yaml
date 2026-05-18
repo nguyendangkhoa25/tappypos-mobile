@@ -1,0 +1,20 @@
+appId: com.knp.tappypos
+name: "SPA 01 Auth — login with spa shop credentials, skip PIN, arrive at Dashboard"
+---
+
+# ── SPA01: Full login flow ────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── SPA01-A: Dashboard tab is the default home ───────────────────────────────
+- assertVisible: "Tổng quan"
+- assertNotVisible: "500"
+
+# ── SPA01-B: Sell tab shows spa service screen ───────────────────────────────
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Dịch vụ"
+
+# ── SPA01-C: Return to home ───────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

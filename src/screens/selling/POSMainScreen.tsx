@@ -9,6 +9,7 @@ import { BarberServiceScreen } from './BarberServiceScreen';
 import { TableGridScreen } from './TableGridScreen';
 import { ScanScreen } from '../scan/ScanScreen';
 import { OrderListScreen } from '../orders/OrderListScreen';
+import { PawnListScreen } from '../pawn/PawnListScreen';
 import type { SellingScreenProps } from '../../types/navigation';
 
 const SCAN_SHOP_CODES = ['CONVENIENCE_STORE', 'FOOD_BEVERAGE', 'PHARMACY', 'ELECTRONICS'];
@@ -46,6 +47,7 @@ export function POSMainScreen(props: SellingScreenProps<'POSMain'>) {
     return <TableGridScreen />;
   }
 
+  if (code === 'PAWN_SHOP' && has('PAWN')) return <PawnListScreen />;
   if (SCAN_SHOP_CODES.includes(code)) return <ScanScreen />;
   if (['BARBER_SHOP', 'BARBER_SHOP_MEN', 'HAIR_SALON', 'NAIL_SHOP',
        'LASH_PMU_STUDIO', 'SPA_SHOP', 'MASSAGE_SHOP', 'BEAUTY_CLINIC',

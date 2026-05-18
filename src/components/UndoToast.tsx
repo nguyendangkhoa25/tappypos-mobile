@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useToastStore, type ToastType } from '../store/toastStore';
+import { useTypography } from '../hooks/useTypography';
 
 const DURATION = 3000;
 
@@ -17,6 +18,7 @@ const TYPE_CONFIG: Record<ToastType, { bg: string; icon: React.ComponentProps<ty
 export function UndoToast() {
   const { visible, message, type, onUndo, hide } = useToastStore();
   const { t } = useTranslation();
+  const typo = useTypography();
   const insets = useSafeAreaInsets();
 
   const opacity    = useRef(new Animated.Value(0)).current;
@@ -74,7 +76,8 @@ export function UndoToast() {
         style={{ marginRight: 10, flexShrink: 0 }}
       />
       <Text
-        style={{ color: '#fff', fontSize: 14, fontWeight: '500', flex: 1, lineHeight: 20 }}
+        className={`${typo.caption} text-white flex-1`}
+        style={{ fontWeight: '500', lineHeight: 20 }}
         numberOfLines={2}
       >
         {message}
@@ -85,7 +88,7 @@ export function UndoToast() {
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           style={{ marginLeft: 12 }}
         >
-          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14, opacity: 0.85 }}>
+          <Text className={`${typo.caption} font-bold text-white`} style={{ opacity: 0.85 }}>
             {t('common.undo')}
           </Text>
         </TouchableOpacity>

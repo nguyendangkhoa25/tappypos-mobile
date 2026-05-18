@@ -1,0 +1,28 @@
+appId: com.knp.tappypos
+name: "MKUP 17 Staff performance + queue view (ORDER_VIEW_ALL feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-staffPerformance"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+- tapOn: "›"
+    optional: true
+- tapOn: "‹"
+    optional: true
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-queueView"
+- assertNotVisible: "500"
+
+- assertVisible: "Hàng chờ"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

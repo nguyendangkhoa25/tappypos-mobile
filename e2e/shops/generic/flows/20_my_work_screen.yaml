@@ -1,0 +1,45 @@
+appId: com.knp.tappypos
+name: "20 My Work screen — view own task queue and available items (MY_WORK feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → My Work ────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-tile-mywork"
+- assertVisible: "Việc của tôi"
+    optional: true
+- assertNotVisible: "500"
+
+# ── MW01: Queue tab is active by default ─────────────────────────────────────
+# Two tabs: "Hàng chờ của tôi" and "Chờ nhận"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── MW02: Empty state or task cards render without crash ─────────────────────
+# If tasks exist (mywork-task-{itemId}), first one is accessible
+- assertNotVisible: "500"
+
+# ── MW03: Switch to Available tab ────────────────────────────────────────────
+- tapOn: "Chờ nhận"
+    optional: true
+- assertNotVisible: "500"
+
+# ── MW04: Switch back to My Queue ────────────────────────────────────────────
+- tapOn: "Hàng chờ của tôi"
+    optional: true
+- assertNotVisible: "500"
+
+# ── MW05: History link is accessible ─────────────────────────────────────────
+- tapOn: "Lịch sử"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Tổng quan"

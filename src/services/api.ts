@@ -26,7 +26,13 @@ api.interceptors.request.use(async (config) => {
     if (token && !config.headers.Authorization && !isAuthEndpoint) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    if (tenantId && !config.headers['X-Tenant-ID']) config.headers['X-Tenant-ID'] = tenantId;
+    // Never send X-Tenant-ID on login or register — backend resolves tenant from username globally
+    // (findByUsernameGlobal), and register creates a brand-new tenant that doesn't exist yet.
+    // Sending a stale stored tenant_id causes TENANT_NOT_FOUND on both flows.
+    const isNoTenantEndpoint = /^\/auth\/(login(\/force)?|register)$/.test(config.url ?? '');
+    if (tenantId && !config.headers['X-Tenant-ID'] && !isNoTenantEndpoint) {
+      config.headers['X-Tenant-ID'] = tenantId;
+    }
   } catch {
     // Keychain unavailable (e.g. missing entitlement in dev build) — proceed without auth headers
   }
@@ -87,6 +93,7 @@ api.interceptors.response.use(
 
           // Backend change required: accept { refreshToken } in request body when no cookie.
           // See MOBILE_SPEC.md §4 and backend AuthController.refreshToken().
+          const storedTenantId = await SecureStore.getItemAsync('tenant_id');
           const { data } = await axios.post<ApiResponse<AuthData>>(
             `${BASE_URL}/auth/refresh`,
             { refreshToken },
@@ -95,6 +102,7 @@ api.interceptors.response.use(
               headers: {
                 'Content-Type': 'application/json',
                 'Accept-Language': i18n.language ?? 'vi',
+                ...(storedTenantId ? { 'X-Tenant-ID': storedTenantId } : {}),
               },
             },
           );
@@ -169,15 +177,20 @@ export const authApi = {
       token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
     ),
 
-  refresh: (refreshToken: string, username?: string) =>
-    axios.post<ApiResponse<AuthData>>(
+  refresh: async (refreshToken: string, username?: string) => {
+    const storedTenantId = await SecureStore.getItemAsync('tenant_id');
+    return axios.post<ApiResponse<AuthData>>(
       `${BASE_URL}/auth/refresh`,
       { refreshToken },
       {
         params: username ? { username } : undefined,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(storedTenantId ? { 'X-Tenant-ID': storedTenantId } : {}),
+        },
       },
-    ),
+    );
+  },
 
   forceLogin: (username: string, password: string) =>
     api.post<ApiResponse<AuthData>>('/auth/login/force', {
@@ -210,13 +223,63 @@ export type EmployeeData = {
   commissionRate: number | null;
 };
 
+export type EmployeeProfile = {
+  id: number;
+  fullName: string;
+  nickName: string | null;
+  phone: string | null;
+  email: string | null;
+  position: string | null;
+  hireDate: string | null;
+  baseWage: number | null;
+  commissionRate: number | null;
+  notes: string | null;
+  userId: number | null;
+  idCardNumber: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  permanentAddress: string | null;
+  idCardIssuedDate: string | null;
+  idCardIssuedPlace: string | null;
+};
+
+export type CreateEmployeePayload = {
+  fullName: string;
+  nickName?: string;
+  phone?: string;
+  email?: string;
+  position?: string;
+  hireDate?: string;
+  baseWage?: number;
+  commissionRate?: number;
+  notes?: string;
+  userId?: number;
+  idCardNumber?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  permanentAddress?: string;
+  idCardIssuedDate?: string;
+  idCardIssuedPlace?: string;
+};
+
+export type UpdateEmployeePayload = Partial<CreateEmployeePayload>;
+
 export const employeeApi = {
   listActive: () => api.get<ApiResponse<EmployeeData[]>>('/employees/active'),
+
+  getByUserId: (userId: string | number) =>
+    api.get<EmployeeProfile>(`/employees/by-user/${userId}`),
+
+  create: (data: CreateEmployeePayload) =>
+    api.post<EmployeeProfile>('/employees', data),
+
+  update: (id: number, data: UpdateEmployeePayload) =>
+    api.put<EmployeeProfile>(`/employees/${id}`, data),
 };
 
 // ── Dashboard API ─────────────────────────────────────────────────────────────
 
-export type KpiPreset = 'today' | 'yesterday' | 'week' | 'month';
+export type KpiPreset = 'today' | 'yesterday' | 'week' | 'lastMonth' | 'month' | 'year' | 'lastYear' | 'custom';
 
 export type KpiData = {
   totalRevenue: number;
@@ -434,7 +497,7 @@ export const cartApi = {
 
 // ── Order API ─────────────────────────────────────────────────────────────────
 
-export type OrderStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export type OrderSummary = {
   id: string;
@@ -531,9 +594,21 @@ export const orderApi = {
 
   delete: (id: string) => api.delete<ApiResponse<null>>(`/orders/${id}`),
 
-  topProducts: (params: { limit?: number; days?: number }) =>
-    api.get<ApiResponse<{ productId: string; name: string; price: number; orderCount: number }[]>>(
+  topProducts: (params: { limit?: number; from?: string; to?: string; days?: number }) =>
+    api.get<ApiResponse<{ name: string; orderCount: number; revenue: number }[]>>(
       '/orders/top-products',
+      { params },
+    ),
+
+  topCustomers: (params: { limit?: number; from: string; to: string }) =>
+    api.get<ApiResponse<{ name: string; orderCount: number; totalSpend: number; customerId: string }[]>>(
+      '/orders/top-customers',
+      { params },
+    ),
+
+  topEmployees: (params: { limit?: number; from: string; to: string }) =>
+    api.get<ApiResponse<{ name: string; orderCount: number; revenue: number }[]>>(
+      '/orders/top-employees',
       { params },
     ),
 
@@ -546,8 +621,23 @@ export const orderApi = {
       cancelledCount: number;
     }>>('/orders/summary', { params }),
 
-  chart: (params: { from: string; to: string; granularity: 'hour' | 'day' | 'month' }) =>
+  chart: (params: { from: string; to: string; granularity: 'hour' | 'day' | 'week' | 'month' | 'year' }) =>
     api.get<ApiResponse<{ label: string; value: number }[]>>('/orders/chart', { params }),
+
+  filteredList: (params: { from?: string; to?: string; status?: string; paymentMethod?: string; page?: number; size?: number }) =>
+    api.get<ApiResponse<{ content: OrderSummary[]; totalPages: number; totalElements: number }>>('/orders/list', { params: { size: 20, ...params } }),
+
+  staffSummary: (params: { createdBy: string; from: string; to: string }) =>
+    api.get<ApiResponse<{
+      totalRevenue: number; orderCount: number; avgOrderValue: number;
+      completedCount: number; cancelledCount: number;
+    }>>('/orders/by-staff/summary', { params }),
+
+  staffChart: (params: { createdBy: string; from: string; to: string; granularity: 'hour' | 'day' | 'week' | 'month' | 'year' }) =>
+    api.get<ApiResponse<{ label: string; value: number }[]>>('/orders/by-staff/chart', { params }),
+
+  staffOrders: (params: { createdBy: string; status?: string; from?: string; to?: string; page?: number; size?: number }) =>
+    api.get<ApiResponse<{ content: OrderSummary[]; totalPages: number; totalElements: number }>>('/orders/by-staff', { params: { size: 10, ...params } }),
 
   workItems: (params?: { page?: number; size?: number }) =>
     api.get<ApiResponse<{ content: WorkItemDTO[]; totalPages: number }>>('/orders/work-items', { params: { size: 20, ...params } }),
@@ -618,6 +708,8 @@ export type ProductTemplate = {
   price: number;
   unit: string;
   dynamicPrice: boolean;
+  durationMinutes: number;
+  categoryName: string | null;
 };
 
 export type ExpenseSuggestion = {
@@ -655,6 +747,11 @@ export const tenantApi = {
     products: { templateId: string; name: string; price: number; unit: string; dynamicPrice: boolean }[];
     expenses: { name: string; monthlyAmount: number; category?: string; expenseType?: string; paymentDate?: number; note?: string }[];
     tables?: { tableNumber: string; capacity: number; location?: string }[];
+    hasPawnFeature?: boolean;
+    pawnTypes?: string[];
+    pawnInterestRate?: string;
+    pawnCalcMode?: string;
+    pawnDueDate?: string;
     refreshInBody?: boolean;
   }) =>
     api.post<ApiResponse<{ accessToken: string; refreshToken?: string; tenantId: string; setupComplete: boolean }>>('/tenants/self-provision', payload),
@@ -678,11 +775,15 @@ export const authExtApi = {
 
 export type SubscriptionData = {
   plan: string;
+  planDisplayName: string;
   status: 'ACTIVE' | 'EXPIRED' | 'SUSPENDED';
   startedAt: string;
   expiresAt: string;
-  maxUsers: number;
+  maxUsers: number | null;
   currentUsers: number;
+  maxOrdersPerMonth: number | null;
+  currentMonthOrders: number;
+  pricePerMonth: number;
   features: string[];
 };
 
@@ -759,7 +860,7 @@ export const expenseApi = {
       netVsRevenue: number;
     }>>('/expenses/summary', { params }),
 
-  chart: (params: { from: string; to: string; granularity: 'hour' | 'day' | 'month' }) =>
+  chart: (params: { from: string; to: string; granularity: 'hour' | 'day' | 'week' | 'month' | 'year' }) =>
     api.get<ApiResponse<{ label: string; value: number }[]>>('/expenses/chart', { params }),
 
   getDefaults: () => api.get<ApiResponse<DefaultExpense[]>>('/expenses/defaults'),
@@ -845,6 +946,18 @@ export const customerApi = {
 
   recent: (limit = 5) =>
     api.get<ApiResponse<CustomerData[]>>('/customers/recent', { params: { limit } }),
+
+  orderSummary: (id: string, from: string, to: string) =>
+    api.get<ApiResponse<{ totalRevenue: number; orderCount: number; completedCount: number; avgOrderValue: number }>>(
+      `/customers/${id}/orders/summary`,
+      { params: { from, to } },
+    ),
+
+  orderChart: (id: string, from: string, to: string, granularity: 'day' | 'week' | 'month' | 'year') =>
+    api.get<ApiResponse<{ label: string; value: number }[]>>(
+      `/customers/${id}/orders/chart`,
+      { params: { from, to, granularity } },
+    ),
 };
 
 // ── Shop config API ───────────────────────────────────────────────────────────
@@ -864,6 +977,7 @@ export type ShopInfo = {
   shopName: string;
   address: string | null;
   phone: string | null;
+  description: string | null;
   logoUrl: string | null;
   shopTypeCode: string | null;
   posMode: string | null;
@@ -872,13 +986,24 @@ export type ShopInfo = {
   cashDenominations: string | null;
 };
 
+export type PosConfig = {
+  posMode: string | null;
+  autoPrint: boolean;
+  vatEnabled: boolean;
+  cashDenominations: string | null;
+  quickPhrases: string[];
+};
+
 export const shopConfigApi = {
   getInfo: () => api.get<ApiResponse<ShopInfo>>('/shop-config'),
 
-  updateInfo: (data: Partial<Pick<ShopInfo, 'shopName' | 'address' | 'phone' | 'posMode' | 'defaultTaxRate' | 'taxAutoApply' | 'cashDenominations'>>) =>
-    api.put<ApiResponse<ShopInfo>>('/shop-info', data),
+  updateInfo: (data: { shopName?: string; address?: string; phone?: string; description?: string }) =>
+    api.put<ApiResponse<ShopInfo>>('/shop-config', data),
 
-  getPosSettings: () => api.get<ApiResponse<ShopInfo>>('/shop-info'),
+  getPosConfig: () => api.get<ApiResponse<PosConfig>>('/shop-config/pos-config'),
+
+  updatePosConfig: (data: Partial<PosConfig>) =>
+    api.put<ApiResponse<PosConfig>>('/shop-config/pos-config', data),
 
   getBanks: () => api.get<ApiResponse<BankAccount[]>>('/bank-accounts'),
 
@@ -983,8 +1108,8 @@ export type NotificationData = {
   id: string;
   type: string;
   title: string;
-  body: string;
-  read: boolean;
+  message: string;
+  isRead: boolean;
   createdAt: string;
   linkTo?: string;
 };
@@ -1098,11 +1223,17 @@ export const utilitiesApi = {
 
 // ── Shop user (staff) API ─────────────────────────────────────────────────────
 
+export type ShopUserRole = {
+  id: number;
+  name: string;
+  description: string | null;
+};
+
 export type ShopUser = {
   id: string;
   username: string;
   fullName: string | null;
-  roles: string[];
+  roles: ShopUserRole[];
   active: boolean;
   accountNonLocked: boolean;
   createdAt: string;
@@ -1156,9 +1287,10 @@ export type FeedbackData = {
 
 export const feedbackApi = {
   submit: (data: { category: string; content: string }) =>
-    api.post<ApiResponse<FeedbackData>>('/feedback', data),
+    api.post<FeedbackData>('/feedback', data),
 
-  getMy: () => api.get<ApiResponse<FeedbackData[]>>('/feedback/my'),
+  getMy: (page = 0, size = 50) =>
+    api.get<{ content: FeedbackData[]; totalElements: number }>('/feedback/my', { params: { page, size } }),
 };
 
 // ── Print template API ────────────────────────────────────────────────────────
@@ -1191,9 +1323,34 @@ export const printTemplateApi = {
 
 // ── Loyalty API ───────────────────────────────────────────────────────────────
 
+export type SaveLoyaltyProgramRequest = {
+  pointsPerAmount: number;
+  amountPerPoints: number;
+  redemptionPointsPerDiscount: number;
+  redemptionDiscountAmount: number;
+  minRedemptionPoints: number;
+  isActive: boolean;
+};
+
+export type SaveLoyaltyTierRequest = {
+  name: string;
+  minSpend: number;
+  pointsMultiplier: number;
+  color: string;
+  description?: string;
+  sortOrder: number;
+};
+
 export const loyaltyApi = {
   getProgram: () => api.get<ApiResponse<LoyaltyProgramDTO>>('/loyalty/program'),
+  saveProgram: (data: SaveLoyaltyProgramRequest) =>
+    api.put<ApiResponse<LoyaltyProgramDTO>>('/loyalty/program', data),
   getTiers: () => api.get<ApiResponse<LoyaltyTierDTO[]>>('/loyalty/tiers'),
+  createTier: (data: SaveLoyaltyTierRequest) =>
+    api.post<ApiResponse<LoyaltyTierDTO>>('/loyalty/tiers', data),
+  updateTier: (id: number, data: SaveLoyaltyTierRequest) =>
+    api.put<ApiResponse<LoyaltyTierDTO>>(`/loyalty/tiers/${id}`, data),
+  deleteTier: (id: number) => api.delete(`/loyalty/tiers/${id}`),
   getCustomerSummary: (customerId: string) =>
     api.get<ApiResponse<CustomerLoyaltySummaryDTO>>(`/loyalty/customers/${customerId}/summary`),
   getTransactions: (customerId: string, page = 0) =>
@@ -1300,6 +1457,190 @@ export const userApi = {
     api.put<ApiResponse<null>>('/profiles/lang', { username, lang }),
 
   deleteAccount: () => api.delete<ApiResponse<null>>('/users/me'),
+};
+
+// ── Pawn API ──────────────────────────────────────────────────────────────────
+
+export type PawnStatus = 'PAWNED' | 'REDEEMED' | 'FORFEITED' | 'CANCELLED';
+export type PawnCategory = 'GENERAL' | 'ELECTRONICS' | 'VEHICLE' | 'WATCH' | 'REAL_ESTATE';
+export type PawnInterestMode = 'DAILY_30' | 'DAILY_25' | 'MONTHLY' | 'BIWEEKLY';
+
+export type PawnElectronicsDetail = {
+  brand?: string; model?: string; serialNumber?: string; storageCapacity?: string;
+  color?: string; conditionGrade?: string; accessoriesIncluded?: string;
+  warrantyStatus?: string; purchaseYear?: number;
+};
+export type PawnVehicleDetail = {
+  brand?: string; model?: string; engineCc?: number; yearOfManufacture?: number;
+  licensePlate?: string; chassisNumber?: string; engineNumber?: string;
+  conditionGrade?: string; color?: string;
+};
+export type PawnWatchDetail = {
+  brand?: string; model?: string; serialNumber?: string; conditionGrade?: string;
+  movement?: string; caseSize?: number; caseMaterial?: string;
+};
+export type PawnRealEstateDetail = {
+  address?: string; area?: number; propertyType?: string; legalStatus?: string;
+  certificateNumber?: string;
+};
+export type PawnGeneralDetail = {
+  description?: string; conditionGrade?: string; brand?: string; model?: string;
+};
+
+export type ReqMoneyResponse = {
+  pawnId: number; requestId: number; requestDate: string;
+  requestAmount: number; interestAmount: number; heldDays: number;
+};
+
+export type PawnAudit = {
+  actionId: number; actionType: string; actionTime: string;
+  pawnStatus: PawnStatus; pawnAmount: number; interestRate: number;
+  totalAmount?: number; interestAmount?: number; canceledReason?: string;
+  forfeitedReason?: string; forfeitedAmount?: number; forfeitedDate?: string;
+  redeemDate?: string; createdBy: string; createdAt: string;
+};
+
+export type PawnData = {
+  pawnId: number;
+  customerId?: number;
+  customerName?: string;
+  phone?: string;
+  itemName: string;
+  itemBrand?: string;
+  itemType?: string;
+  itemDescription?: string;
+  itemValue?: number;
+  itemWeight?: number;
+  gemWeight?: number;
+  pawnDate: string;
+  pawnDueDate: string;
+  pawnAmount: number;
+  interestRate: number;
+  interestCalcMode?: PawnInterestMode;
+  heldDays: number;
+  interestAmount?: number;
+  mainInterestAmount?: number;
+  totalAmount?: number;
+  pawnStatus: PawnStatus;
+  canceledReason?: string;
+  forfeitedReason?: string;
+  forfeitedDate?: string;
+  forfeitedAmount?: number;
+  redeemDate?: string;
+  visible?: boolean;
+  pawnCategory?: PawnCategory;
+  electronicsDetail?: PawnElectronicsDetail;
+  vehicleDetail?: PawnVehicleDetail;
+  watchDetail?: PawnWatchDetail;
+  realEstateDetail?: PawnRealEstateDetail;
+  generalDetail?: PawnGeneralDetail;
+  reqMoneys?: ReqMoneyResponse[];
+  audits?: PawnAudit[];
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type PawnKPIs = {
+  totalPawnedCount: number;
+  totalPawnedAmount: number;
+  dueTodayCount: number;
+  dueTodayAmount: number;
+  overdueCount: number;
+  overdueAmount: number;
+  newPawnsCount: number;
+  newPawnsAmount: number;
+  completedPawnCount: number;
+  completedPawnAmount: number;
+  forfeitedPawnCount: number;
+  forfeitedPawnAmount: number;
+  newRequestMoneyCount: number;
+  newRequestMoneyAmount: number;
+  interestPawnAmount: number;
+};
+
+export type PawnSetting = {
+  interestRate: number;
+  interestType: number; // 30=DAILY_30, 25=DAILY_25, 1=MONTHLY, 15=BIWEEKLY
+  dueDate: number;
+  /** Comma-separated accepted pawn item type codes, e.g. "GOLD,ELECTRONICS,WATCH" */
+  acceptedTypes?: string;
+};
+
+export type PawnSearchRequest = {
+  pawnStatuses?: PawnStatus[];
+  searchWord?: string;
+  customerId?: number;
+  pawnCategory?: PawnCategory;
+};
+
+export type PawnSearchResponse = {
+  content: PawnData[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  summary: { totalCount: number; totalWeight: number; totalAmount: number };
+};
+
+export type CreatePawnPayload = {
+  customerId?: number;
+  customerName?: string;
+  visitingGuest?: boolean;
+  itemName: string;
+  itemBrand?: string;
+  itemType?: string;
+  itemDescription?: string;
+  itemWeight?: number;
+  gemWeight?: number;
+  itemValue?: number;
+  pawnDate: string;
+  pawnDueDate: string;
+  pawnAmount: number;
+  interestRate: number;
+  interestCalcMode?: PawnInterestMode;
+  pawnCategory?: PawnCategory;
+  electronicsDetail?: PawnElectronicsDetail;
+  vehicleDetail?: PawnVehicleDetail;
+  watchDetail?: PawnWatchDetail;
+  realEstateDetail?: PawnRealEstateDetail;
+  generalDetail?: PawnGeneralDetail;
+};
+
+export const pawnApi = {
+  search: (req: PawnSearchRequest, page = 0, size = 50) =>
+    api.post<ApiResponse<PawnSearchResponse>>(
+      '/pawns/find',
+      req,
+      { params: { page, size, sort: 'pawnDueDate,asc' } },
+    ),
+  getById: (id: number) => api.get<ApiResponse<PawnData>>(`/pawns/${id}`),
+  create: (data: CreatePawnPayload) => api.post<ApiResponse<PawnData>>('/pawns', data),
+  update: (id: number, data: Partial<CreatePawnPayload>) =>
+    api.put<ApiResponse<PawnData>>(`/pawns/${id}`, data),
+  cancel: (id: number, reason: string) =>
+    api.patch<ApiResponse<PawnData>>(`/pawns/${id}/cancel`, reason, {
+      headers: { 'Content-Type': 'text/plain' },
+    }),
+  redeem: (id: number, redeemDate: string, interestCalcMode?: PawnInterestMode) =>
+    api.post<ApiResponse<PawnData>>(`/pawns/${id}/redeem`, { redeemDate, interestCalcMode }),
+  forfeit: (id: number, data: {
+    forfeitedDate: string; forfeitedAmount: number;
+    forfeitedReason?: string; totalAmount?: number; interestAmount?: number;
+  }) => api.post<ApiResponse<PawnData>>(`/pawns/${id}/forfeit`, data),
+  extend: (id: number, data: Partial<CreatePawnPayload>) =>
+    api.put<ApiResponse<PawnData>>(`/pawns/${id}/extend`, data),
+  requestMoney: (id: number, requestDate: string, requestAmount: number) =>
+    api.post<ApiResponse<ReqMoneyResponse>>(`/pawns/${id}/request-money`, { requestDate, requestAmount }),
+  getKPIs: () =>
+    api.post<ApiResponse<PawnKPIs>>('/pawns/kpi-section', {}),
+  export: (req: PawnSearchRequest) =>
+    api.post('/pawns/export', req, { responseType: 'blob' }),
+  setVisible: (id: number, visible: boolean) =>
+    api.patch<ApiResponse<number>>(`/pawns/${id}/visible`, { visible }),
+  getSettings: () => api.get<ApiResponse<PawnSetting>>('/pawns/settings'),
+  saveSettings: (data: PawnSetting) =>
+    api.post<ApiResponse<PawnSetting>>('/pawns/settings', data),
 };
 
 // ── Table API ─────────────────────────────────────────────────────────────────
