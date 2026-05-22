@@ -2140,6 +2140,7 @@
     "hint": "Staff account management",
     "formHint": "✏️ Enter the name and phone number to create an account — a temporary password is generated automatically.\nTap Save and note the login details before sharing them with the staff member.",
     "editHint": "✏️ Update the staff member's name or change their role.\nUse Reset Password if the staff member has forgotten their password.",
+    "cannotEditSelf": "🔒 You cannot edit your own profile here.",
     "filterAll": "All",
     "filterActive": "Active",
     "filterInactive": "Locked",

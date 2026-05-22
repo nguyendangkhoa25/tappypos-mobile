@@ -2140,6 +2140,7 @@
     "hint": "Quản lý tài khoản nhân viên",
     "formHint": "✏️ Điền họ tên và số điện thoại để tạo tài khoản — mật khẩu tạm được tạo tự động.\nNhấn Lưu và ghi lại thông tin đăng nhập trước khi chia sẻ cho nhân viên.",
     "editHint": "✏️ Cập nhật họ tên hoặc thay đổi vai trò của nhân viên.\nDùng nút Đặt lại mật khẩu nếu nhân viên quên mật khẩu.",
+    "cannotEditSelf": "🔒 Bạn không thể tự chỉnh sửa hồ sơ của mình tại đây.",
     "filterAll": "Tất cả",
     "filterActive": "Hoạt động",
     "filterInactive": "Đã khoá",

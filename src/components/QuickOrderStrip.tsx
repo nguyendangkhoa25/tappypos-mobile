@@ -379,7 +379,9 @@ export function QuickOrderStrip({ onOrderCreated }: Props) {
   // Resolve the displayed products
   const displayProducts: PinnedProduct[] = pinned && pinned.length > 0
     ? pinned
-    : topSellers.map((p) => ({ id: p.productId, name: p.name, price: p.price }));
+    : topSellers
+        .filter((p): p is typeof p & { productId: string } => !!p.productId)
+        .map((p) => ({ id: p.productId, name: p.name, price: 0 }));
 
   if (pinned === null || displayProducts.length === 0) return null;
 

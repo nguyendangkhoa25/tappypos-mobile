@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { extractFeatures, extractTenantId, extractShopType } from '../utils/jwt';
+import { extractFeatures, extractTenantId, extractShopType, extractUserId } from '../utils/jwt';
 import { registerForceLogout } from '../services/authSession';
 import { queryClient } from '../lib/queryClient';
 
@@ -13,6 +13,7 @@ type AuthState = {
   tenantId: string | null;
   features: string[];
   shopTypeCode: string | null;
+  currentUserId: string | null;
   deviceSwitchedMessage: string | null;
   setupComplete: boolean;
 
@@ -33,6 +34,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   tenantId: null,
   features: [],
   shopTypeCode: null,
+  currentUserId: null,
   deviceSwitchedMessage: null,
   setupComplete: false,
 
@@ -46,6 +48,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const jwtTenantId = extractTenantId(accessToken);
     const features = extractFeatures(accessToken);
     const shopTypeCode = extractShopType(accessToken);
+    const currentUserId = extractUserId(accessToken);
 
     if (shopTypeCode) tasks.push(SecureStore.setItemAsync('shop_type', shopTypeCode));
 
@@ -69,6 +72,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       tenantId,
       features,
       shopTypeCode,
+      currentUserId,
       ...(setupComplete !== undefined ? { setupComplete } : {}),
     });
   },
@@ -108,7 +112,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       SecureStore.deleteItemAsync('tenant_id'),
     ]);
     queryClient.clear();
-    set({ isAuthenticated: false, features: [], tenantId: null, shopTypeCode: null });
+    set({ isAuthenticated: false, features: [], tenantId: null, shopTypeCode: null, currentUserId: null });
   },
 
   clearDeviceSwitchedMessage: () => set({ deviceSwitchedMessage: null }),
@@ -147,6 +151,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     const hasPinOnDevice = storedPhone !== null && pinEnabled === 'true';
     const features = effectiveAccessToken ? extractFeatures(effectiveAccessToken) : [];
+    const currentUserId = effectiveAccessToken ? extractUserId(effectiveAccessToken) : null;
     // Existing installs have no setup_complete key yet — default true so they aren't
     // incorrectly routed to the onboarding wizard on their first app update.
     const setupComplete = setupCompleteStr !== null ? setupCompleteStr === 'true' : true;
@@ -180,6 +185,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       tenantId: tenantId ?? null,
       features,
       shopTypeCode: shopTypeCode ?? null,
+      currentUserId,
       setupComplete,
     });
   },

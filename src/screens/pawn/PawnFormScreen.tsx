@@ -316,7 +316,7 @@ export function PawnFormScreen() {
 
         {/* Section: Item */}
         <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
-          <SectionHeader icon="package-variant-closed-outline" title={t('pawn.form.itemSection')} />
+          <SectionHeader icon="package-variant-closed" title={t('pawn.form.itemSection')} />
 
           <FormField label={`${t('pawn.form.itemName')} *`}>
             <TextInput

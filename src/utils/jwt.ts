@@ -26,6 +26,10 @@ export function extractFeatures(token: string): string[] {
   return decodeJwt(token)?.features ?? [];
 }
 
+export function extractUserId(token: string): string | null {
+  return decodeJwt(token)?.sub ?? null;
+}
+
 export function extractShopType(token: string): string | null {
   return decodeJwt(token)?.shopType ?? null;
 }

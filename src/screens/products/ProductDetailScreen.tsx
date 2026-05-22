@@ -111,7 +111,7 @@ export function ProductDetailScreen({ navigation, route }: ProductsScreenProps<'
         {isService ? (
           <View className="flex-row flex-wrap" style={{ gap: 8 }}>
             <View className="bg-violet-400/60 rounded-xl px-3 py-1.5 flex-row items-center" style={{ gap: 5 }}>
-              <MaterialCommunityIcons name="bell-service-outline" size={14} color="white" />
+              <MaterialCommunityIcons name="bell-outline" size={14} color="white" />
               <Text className={`${typo.label} text-white`}>{t('products.service')}</Text>
             </View>
             {!!product.durationMinutes && (

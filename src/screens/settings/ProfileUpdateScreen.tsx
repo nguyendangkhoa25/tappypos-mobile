@@ -16,10 +16,9 @@ import { useUserStore } from '../../store/userStore';
 import { useToastStore } from '../../store/toastStore';
 import { userApi } from '../../services/api';
 import { useTypography } from '../../hooks/useTypography';
-import type { SettingsScreenProps } from '../../types/navigation';
 import * as SecureStore from 'expo-secure-store';
 
-export function ProfileUpdateScreen({ navigation }: SettingsScreenProps<'ProfileUpdate'>) {
+export function ProfileUpdateScreen({ navigation }: { navigation: { goBack: () => void } }) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const typo = useTypography();

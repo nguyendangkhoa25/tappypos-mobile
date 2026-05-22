@@ -2061,7 +2061,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
       {(productsLoading || (productsFetching && allServices.length === 0)) && page === 0 ? (
         <View className="flex-row flex-wrap p-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <View key={i} style={{ width: `${(100 / numColumns).toFixed(2)}%` }} className="p-1.5">
+            <View key={i} style={{ width: `${parseFloat((100 / numColumns).toFixed(2))}%` }} className="p-1.5">
               <Skeleton height={110} borderRadius={16} />
             </View>
           ))}

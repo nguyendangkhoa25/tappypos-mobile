@@ -198,6 +198,7 @@ export function StaffFormScreen({ route, navigation }: Props) {
   const rawTenantId = useAuthStore((s) => s.tenantId);
   const tenantSuffix = rawTenantId ? (rawTenantId.match(/(\d+)$/) ?? [])[1] ?? '' : '';
   const features = useAuthStore((s) => s.features);
+  const currentUserId = useAuthStore((s) => s.currentUserId);
   const canViewAllOrders = features.includes('ORDER_VIEW_ALL');
 
   // ── Account fields
@@ -537,6 +538,7 @@ export function StaffFormScreen({ route, navigation }: Props) {
     ]);
   };
 
+  const isSelf = isEdit && !!currentUserId && existingUser?.id === currentUserId;
   const isSaving = createMutation.isPending || updateMutation.isPending;
   const isCurrentUserActive = existingUser ? existingUser.active && existingUser.accountNonLocked : true;
 
@@ -565,14 +567,16 @@ export function StaffFormScreen({ route, navigation }: Props) {
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`} numberOfLines={1}>
             {isEdit ? t('staff.edit') : t('staff.add')}
           </Text>
-          <TouchableOpacity onPress={isEdit ? () => updateMutation.mutate() : handleCreate} disabled={isSaving} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            {isSaving ? <ActivityIndicator size="small" color="#4f46e5" /> : (
-              <Text className={`${typo.labelBold} text-indigo-600 dark:text-indigo-400`}>{t('common.save')}</Text>
-            )}
-          </TouchableOpacity>
+          {!isSelf && (
+            <TouchableOpacity onPress={isEdit ? () => updateMutation.mutate() : handleCreate} disabled={isSaving} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              {isSaving ? <ActivityIndicator size="small" color="#4f46e5" /> : (
+                <Text className={`${typo.labelBold} text-indigo-600 dark:text-indigo-400`}>{t('common.save')}</Text>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
         <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>
-          {isEdit ? t('staff.editHint') : t('staff.formHint')}
+          {isSelf ? t('staff.cannotEditSelf') : isEdit ? t('staff.editHint') : t('staff.formHint')}
         </Text>
       </View>
 
@@ -608,7 +612,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
                   onChangeText={setFullName}
                   placeholder={t('staff.fullNamePlaceholder')}
                   placeholderTextColor="#9ca3af"
-                  className={`${typo.inputSize} text-gray-900 dark:text-white`}
+                  editable={!isSelf}
+                  className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
                 />
               </View>
 
@@ -620,7 +625,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
                   onChangeText={setNickName}
                   placeholder={t('staff.nickNamePlaceholder')}
                   placeholderTextColor="#9ca3af"
-                  className={`${typo.inputSize} text-gray-900 dark:text-white`}
+                  editable={!isSelf}
+                  className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
                 />
               </View>
 
@@ -719,8 +725,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
                     return (
                       <TouchableOpacity
                         key={role}
-                        onPress={() => setSelectedRole(role)}
-                        activeOpacity={0.7}
+                        onPress={() => !isSelf && setSelectedRole(role)}
+                        activeOpacity={isSelf ? 1 : 0.7}
                         className="flex-row items-center py-3 px-3 rounded-xl border"
                         style={{
                           borderColor: isSelected ? color : '#e5e7eb',
@@ -767,7 +773,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
                 placeholder={t('staff.phonePlaceholder')}
                 placeholderTextColor="#9ca3af"
                 keyboardType="phone-pad"
-                className={`${typo.inputSize} text-gray-900 dark:text-white`}
+                editable={!isSelf}
+                className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
               />
             </View>
             <View>
@@ -779,7 +786,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
                 placeholderTextColor="#9ca3af"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                className={`${typo.inputSize} text-gray-900 dark:text-white`}
+                editable={!isSelf}
+                className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
               />
             </View>
           </CollapseSection>
@@ -793,12 +801,14 @@ export function StaffFormScreen({ route, navigation }: Props) {
           >
             <View>
               <FieldLabel label={t('staff.hireDate')} />
-              <DatePickerInput
-                value={hireDate}
-                onChange={setHireDate}
-                placeholder={t('staff.hireDatePlaceholder')}
-                maximumDate={new Date()}
-              />
+              <View pointerEvents={isSelf ? 'none' : 'auto'} style={isSelf ? { opacity: 0.6 } : undefined}>
+                <DatePickerInput
+                  value={hireDate}
+                  onChange={setHireDate}
+                  placeholder={t('staff.hireDatePlaceholder')}
+                  maximumDate={new Date()}
+                />
+              </View>
             </View>
             <View>
               <FieldLabel label={t('staff.baseWage')} />
@@ -808,7 +818,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
                 placeholder={t('staff.baseWagePlaceholder')}
                 placeholderTextColor="#9ca3af"
                 keyboardType="numeric"
-                className={`${typo.inputSize} text-gray-900 dark:text-white`}
+                editable={!isSelf}
+                className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
               />
             </View>
             <View>
@@ -819,7 +830,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
                 placeholder={t('staff.commissionRatePlaceholder')}
                 placeholderTextColor="#9ca3af"
                 keyboardType="decimal-pad"
-                className={`${typo.inputSize} text-gray-900 dark:text-white`}
+                editable={!isSelf}
+                className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
               />
             </View>
           </CollapseSection>
@@ -833,12 +845,14 @@ export function StaffFormScreen({ route, navigation }: Props) {
           >
             <View>
               <FieldLabel label={t('staff.dateOfBirth')} />
-              <DatePickerInput
-                value={dateOfBirth}
-                onChange={setDateOfBirth}
-                placeholder={t('staff.hireDatePlaceholder')}
-                maximumDate={new Date()}
-              />
+              <View pointerEvents={isSelf ? 'none' : 'auto'} style={isSelf ? { opacity: 0.6 } : undefined}>
+                <DatePickerInput
+                  value={dateOfBirth}
+                  onChange={setDateOfBirth}
+                  placeholder={t('staff.hireDatePlaceholder')}
+                  maximumDate={new Date()}
+                />
+              </View>
             </View>
             <View>
               <FieldLabel label={t('staff.gender')} />
@@ -846,7 +860,7 @@ export function StaffFormScreen({ route, navigation }: Props) {
                 {GENDERS.map((g) => (
                   <TouchableOpacity
                     key={g.key}
-                    onPress={() => setGender((prev) => (prev === g.key ? '' : g.key))}
+                    onPress={() => !isSelf && setGender((prev) => (prev === g.key ? '' : g.key))}
                     className={`px-4 py-1.5 rounded-full border ${
                       gender === g.key
                         ? 'bg-indigo-600 border-indigo-600'
@@ -871,7 +885,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
                 placeholderTextColor="#9ca3af"
                 multiline
                 numberOfLines={2}
-                className={`${typo.inputSize} text-gray-900 dark:text-white`}
+                editable={!isSelf}
+                className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
                 style={{ textAlignVertical: 'top' }}
               />
             </View>
@@ -892,17 +907,20 @@ export function StaffFormScreen({ route, navigation }: Props) {
                 placeholder={t('staff.idCardNumberPlaceholder')}
                 placeholderTextColor="#9ca3af"
                 keyboardType="numeric"
-                className={`${typo.inputSize} text-gray-900 dark:text-white`}
+                editable={!isSelf}
+                className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
               />
             </View>
             <View>
               <FieldLabel label={t('staff.idCardIssuedDate')} />
-              <DatePickerInput
-                value={idCardIssuedDate}
-                onChange={setIdCardIssuedDate}
-                placeholder={t('staff.hireDatePlaceholder')}
-                maximumDate={new Date()}
-              />
+              <View pointerEvents={isSelf ? 'none' : 'auto'} style={isSelf ? { opacity: 0.6 } : undefined}>
+                <DatePickerInput
+                  value={idCardIssuedDate}
+                  onChange={setIdCardIssuedDate}
+                  placeholder={t('staff.hireDatePlaceholder')}
+                  maximumDate={new Date()}
+                />
+              </View>
             </View>
             <View>
               <FieldLabel label={t('staff.idCardIssuedPlace')} />
@@ -911,7 +929,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
                 onChangeText={setIdCardIssuedPlace}
                 placeholder={t('staff.idCardIssuedPlacePlaceholder')}
                 placeholderTextColor="#9ca3af"
-                className={`${typo.inputSize} text-gray-900 dark:text-white`}
+                editable={!isSelf}
+                className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
               />
             </View>
           </CollapseSection>
@@ -930,7 +949,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
               placeholderTextColor="#9ca3af"
               multiline
               numberOfLines={4}
-              className={`${typo.inputSize} text-gray-900 dark:text-white`}
+              editable={!isSelf}
+              className={`${typo.inputSize} text-gray-900 dark:text-white${isSelf ? ' opacity-60' : ''}`}
               style={{ textAlignVertical: 'top', minHeight: 80 }}
             />
           </CollapseSection>
@@ -1043,7 +1063,7 @@ export function StaffFormScreen({ route, navigation }: Props) {
           )}
 
           {/* ── Edit-only actions ── */}
-          {isEdit && existingUser && (
+          {isEdit && existingUser && !isSelf && (
             <View className="gap-2">
               <TouchableOpacity
                 onPress={handleResetPassword}

@@ -936,6 +936,7 @@ export type CustomerData = {
   totalSpend: number;
   points: number;
   createdAt: string;
+  walkIn?: boolean;
 };
 
 export type CustomerFormPayload = {
@@ -986,7 +987,7 @@ export const customerApi = {
       { params: { from, to } },
     ),
 
-  orderChart: (id: string, from: string, to: string, granularity: 'day' | 'week' | 'month' | 'year') =>
+  orderChart: (id: string, from: string, to: string, granularity: 'hour' | 'day' | 'week' | 'month' | 'year') =>
     api.get<ApiResponse<{ label: string; value: number }[]>>(
       `/customers/${id}/orders/chart`,
       { params: { from, to, granularity } },

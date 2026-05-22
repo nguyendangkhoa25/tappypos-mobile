@@ -293,7 +293,7 @@ export function AppNavigator() {
           component={HomeNavigator}
           options={{
             title: t('home.title'),
-            tabBarButton: (props) => <Pressable {...props} testID="tab-home" />,
+            tabBarButton: (props) => <Pressable {...(props as any)} testID="tab-home" />,
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="home-outline" color={color} size={size} />
             ),
@@ -309,12 +309,12 @@ export function AppNavigator() {
           listeners={({ navigation }) => ({
             tabPress: (e) => {
               e.preventDefault();
-              navigation.navigate('Sell', { screen: 'POSMain' });
+              (navigation as any).navigate('Sell', { screen: 'POSMain' });
             },
           })}
           options={{
             title: t('selling.title'),
-            tabBarButton: (props) => <Pressable {...props} testID="tab-sell" />,
+            tabBarButton: (props) => <Pressable {...(props as any)} testID="tab-sell" />,
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="cash-register" color={color} size={size} />
             ),
@@ -328,7 +328,7 @@ export function AppNavigator() {
         component={ExpenseNavigator}
         options={{
           title: t('expenses.title'),
-          tabBarButton: (props) => <Pressable {...props} testID="tab-expenses" />,
+          tabBarButton: (props) => <Pressable {...(props as any)} testID="tab-expenses" />,
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="wallet-outline" color={color} size={size} />
           ),
@@ -342,7 +342,7 @@ export function AppNavigator() {
           component={ReportNavigator}
           options={{
             title: t('report.title'),
-            tabBarButton: (props) => <Pressable {...props} testID="tab-report" />,
+            tabBarButton: (props) => <Pressable {...(props as any)} testID="tab-report" />,
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="chart-areaspline" color={color} size={size} />
             ),
@@ -357,12 +357,12 @@ export function AppNavigator() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
-            navigation.navigate('More', { screen: 'MoreMain' });
+            (navigation as any).navigate('More', { screen: 'MoreMain' });
           },
         })}
         options={{
           title: t('more.title'),
-          tabBarButton: (props) => <Pressable {...props} testID="tab-more" />,
+          tabBarButton: (props) => <Pressable {...(props as any)} testID="tab-more" />,
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="dots-horizontal" color={color} size={size} />
           ),
