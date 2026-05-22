@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   FlatList,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
@@ -236,7 +235,7 @@ export function AppointmentListScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
           data={groups}
           keyExtractor={(g) => g.hour}
-          refreshControl={<RefreshControl refreshing={isManualRefreshing} onRefresh={handleRefresh} />}
+          refreshControl={<RefreshControl refreshing={isManualRefreshing} onRefresh={handleRefresh} tintColor="#059669" />}
           contentContainerStyle={{ paddingBottom: insets.bottom + 80, paddingTop: 8 }}
           renderItem={({ item: group, index: gIdx }) => (
             <View>

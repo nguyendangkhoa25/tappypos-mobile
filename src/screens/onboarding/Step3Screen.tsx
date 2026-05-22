@@ -35,6 +35,7 @@ export const CATEGORY_EMOJI: Record<string, string> = {
 };
 
 type Suggestion = { name: string; nameEn?: string; emoji: string; category?: string };
+type SectionItem = Suggestion & { isCustomExpense: boolean };
 
 // ── Expense edit / add sheet ──────────────────────────────────────────────────
 
@@ -48,12 +49,14 @@ type SheetValues = {
   note: string;
   category: string;
   isCustom: boolean;
+  isSelected: boolean;
 };
 
 function ExpenseEditSheet({
   values,
   onClose,
   onSave,
+  onDelete,
 }: {
   values: SheetValues | null;
   onClose: () => void;
@@ -65,6 +68,7 @@ function ExpenseEditSheet({
     note: string;
     category: string;
   }) => void;
+  onDelete?: () => void;
 }) {
   const { t } = useTranslation();
   const typo = useTypography();
@@ -74,6 +78,8 @@ function ExpenseEditSheet({
   const [rawAmount, setRawAmount] = useState('');
   const [expenseType, setExpenseType] = useState<'FIXED' | 'VARIABLE'>('FIXED');
   const [paymentDay, setPaymentDay] = useState<number | undefined>(undefined);
+  const [showDayPicker, setShowDayPicker] = useState(false);
+  const [category, setCategory] = useState('OTHER');
   const [note, setNote] = useState('');
 
   useEffect(() => {
@@ -82,6 +88,8 @@ function ExpenseEditSheet({
       setRawAmount(values.rawAmount);
       setExpenseType(values.expenseType);
       setPaymentDay(values.paymentDay);
+      setShowDayPicker(false);
+      setCategory(values.category ?? 'OTHER');
       setNote(values.note);
     }
   }, [values]);
@@ -95,11 +103,12 @@ function ExpenseEditSheet({
       expenseType,
       paymentDate: paymentDay,
       note: note.trim(),
-      category: values?.category ?? 'OTHER',
+      category,
     });
   };
 
   const isAdd = values?.isCustom && !values.name;
+  const canDelete = values?.isSelected && !isAdd && onDelete;
 
   return (
     <Modal visible={!!values} transparent animationType="slide" onRequestClose={onClose}>
@@ -121,9 +130,7 @@ function ExpenseEditSheet({
           {/* Header */}
           <View className="flex-row items-center justify-between px-5 pt-3 pb-3 border-b border-gray-100 dark:border-gray-800">
             <View className="flex-row items-center gap-2">
-              {values?.category ? (
-                <Text style={{ fontSize: 20 }}>{CATEGORY_EMOJI[values.category] ?? '💰'}</Text>
-              ) : null}
+              <Text style={{ fontSize: 20 }}>{CATEGORY_EMOJI[category] ?? '💰'}</Text>
               <Text className={`${typo.section} text-gray-900 dark:text-white`}>
                 {isAdd ? t('onboarding.step3.addExpense') : t('onboarding.step3.editExpense')}
               </Text>
@@ -139,8 +146,8 @@ function ExpenseEditSheet({
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingBottom: 8 }}
           >
-            {/* Name (editable for custom, read-only for suggestions) */}
-            {values?.isCustom ? (
+            {/* Name — editable only when adding new custom expense */}
+            {isAdd ? (
               <View className="mb-4">
                 <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>
                   {t('onboarding.step3.nameLabel')}
@@ -151,7 +158,7 @@ function ExpenseEditSheet({
                   onClear={() => setName('')}
                   placeholder={t('onboarding.step3.namePlaceholder')}
                   autoCapitalize="sentences"
-                  autoFocus={isAdd}
+                  autoFocus
                 />
               </View>
             ) : (
@@ -165,17 +172,133 @@ function ExpenseEditSheet({
               </View>
             )}
 
-            {/* Amount */}
+            {/* Category picker — shown for custom expenses only */}
+            {values?.isCustom && (
+              <View className="mb-4">
+                <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>
+                  {t('onboarding.step3.categoryLabel')}
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={{ gap: 6 }}
+                >
+                  {Object.entries(CATEGORY_EMOJI).map(([cat, emoji]) => {
+                    const active = category === cat;
+                    return (
+                      <TouchableOpacity
+                        key={cat}
+                        onPress={() => setCategory(cat)}
+                        activeOpacity={0.7}
+                        className={`flex-row items-center gap-1 px-2.5 py-1.5 rounded-xl border ${
+                          active
+                            ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700'
+                            : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+                        }`}
+                      >
+                        <Text style={{ fontSize: 15 }}>{emoji}</Text>
+                        <Text
+                          className={`${typo.caption} font-medium ${
+                            active ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'
+                          }`}
+                        >
+                          {t(`onboarding.step3.category.${cat}`, { defaultValue: cat })}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Amount + payment day */}
             <View className="mb-4">
-              <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>
-                {t('onboarding.step3.amountLabel')}
-              </Text>
-              <MoneyInput
-                rawValue={rawAmount}
-                onChangeRaw={setRawAmount}
-                placeholder={t('onboarding.step3.amountPlaceholder')}
-                autoFocus={!isAdd && !values?.isCustom}
-              />
+              {/* Label row — shows selected date chip when a day is picked */}
+              <View className="flex-row items-center justify-between mb-1.5">
+                <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400`}>
+                  {t('onboarding.step3.amountLabel')}
+                </Text>
+                {paymentDay ? (
+                  <TouchableOpacity
+                    onPress={() => { setPaymentDay(undefined); setShowDayPicker(false); }}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    className="flex-row items-center gap-1"
+                  >
+                    <MaterialCommunityIcons name="calendar-check" size={13} color="#4f46e5" />
+                    <Text className={`${typo.caption} text-indigo-500 font-semibold`}>
+                      {t('onboarding.step3.paymentDaySelected', { day: paymentDay })}
+                    </Text>
+                    <MaterialCommunityIcons name="close-circle" size={13} color="#a5b4fc" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+
+              {/* Input row — MoneyInput + calendar button */}
+              <View className="flex-row items-center gap-2">
+                <View className="flex-1">
+                  <MoneyInput
+                    rawValue={rawAmount}
+                    onChangeRaw={setRawAmount}
+                    placeholder={t('onboarding.step3.amountPlaceholder')}
+                    autoFocus={!isAdd && !values?.isCustom}
+                  />
+                </View>
+                <TouchableOpacity
+                  onPress={() => setShowDayPicker((v) => !v)}
+                  activeOpacity={0.7}
+                  className={`items-center justify-center rounded-xl border px-3 py-3 ${
+                    showDayPicker || paymentDay
+                      ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700'
+                      : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  {paymentDay ? (
+                    <Text
+                      className="font-bold text-indigo-600 dark:text-indigo-400"
+                      style={{ fontSize: 16, lineHeight: 21, minWidth: 20, textAlign: 'center' }}
+                    >
+                      {paymentDay}
+                    </Text>
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="calendar-outline"
+                      size={21}
+                      color={showDayPicker ? '#4f46e5' : '#9ca3af'}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Day grid — collapses after selection */}
+              {showDayPicker && (
+                <View className="mt-2 flex-row flex-wrap gap-1.5">
+                  {DAY_NUMBERS.map((day) => {
+                    const active = paymentDay === day;
+                    return (
+                      <TouchableOpacity
+                        key={day}
+                        onPress={() => {
+                          setPaymentDay(active ? undefined : day);
+                          setShowDayPicker(false);
+                        }}
+                        className={`rounded-lg items-center justify-center ${
+                          active ? 'bg-indigo-600' : 'bg-gray-100 dark:bg-gray-700'
+                        }`}
+                        style={{ width: 36, height: 36 }}
+                      >
+                        <Text
+                          className={`${typo.caption} font-semibold ${
+                            active ? 'text-white' : 'text-gray-600 dark:text-gray-300'
+                          }`}
+                        >
+                          {day}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
             </View>
 
             {/* Expense type */}
@@ -215,49 +338,6 @@ function ExpenseEditSheet({
               </View>
             </View>
 
-            {/* Payment day */}
-            <View className="mb-4">
-              <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>
-                {t('onboarding.step3.paymentDayLabel')}
-              </Text>
-              <View className="flex-row flex-wrap gap-1.5">
-                {DAY_NUMBERS.map((day) => {
-                  const active = paymentDay === day;
-                  return (
-                    <TouchableOpacity
-                      key={day}
-                      onPress={() => setPaymentDay(active ? undefined : day)}
-                      className={`rounded-lg items-center justify-center ${
-                        active
-                          ? 'bg-indigo-600'
-                          : 'bg-gray-100 dark:bg-gray-700'
-                      }`}
-                      style={{ width: 36, height: 36 }}
-                    >
-                      <Text
-                        className={`${typo.caption} font-semibold ${
-                          active ? 'text-white' : 'text-gray-600 dark:text-gray-300'
-                        }`}
-                      >
-                        {day}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-              {paymentDay && (
-                <TouchableOpacity
-                  onPress={() => setPaymentDay(undefined)}
-                  hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-                  className="mt-1.5 self-start"
-                >
-                  <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
-                    {t('onboarding.step3.clearDay')}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
             {/* Note */}
             <View className="mb-2">
               <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>
@@ -272,6 +352,19 @@ function ExpenseEditSheet({
               />
             </View>
           </ScrollView>
+
+          {/* Remove expense link (only for already-selected expenses) */}
+          {canDelete && (
+            <TouchableOpacity
+              onPress={onDelete}
+              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+              className="items-center py-1.5 mb-1"
+            >
+              <Text className={`${typo.caption} text-red-400 dark:text-red-500`}>
+                {t('onboarding.step3.removeExpense')}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {/* Action buttons */}
           <View className="flex-row gap-3 px-5 pt-3 border-t border-gray-100 dark:border-gray-800">
@@ -312,90 +405,76 @@ function ExpenseRow({
   expense,
   suggestion,
   isSelected,
-  onToggle,
-  onEdit,
+  onTap,
 }: {
   expense: OnboardingExpense | null;
-  suggestion: Suggestion;
+  suggestion: SectionItem;
   isSelected: boolean;
-  onToggle: () => void;
-  onEdit: () => void;
+  onTap: () => void;
 }) {
   const typo = useTypography();
   const { t } = useTranslation();
   const emoji = suggestion.emoji || CATEGORY_EMOJI[suggestion.category ?? ''] || '💰';
 
   return (
-    <View className="flex-row items-center px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-50 dark:border-gray-700">
-      {/* Left: checkbox + info (tap to toggle) */}
-      <TouchableOpacity
-        onPress={onToggle}
-        activeOpacity={0.7}
-        className="flex-1 flex-row items-center min-w-0"
-      >
-        <MaterialCommunityIcons
-          name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-          size={22}
-          color={isSelected ? '#4f46e5' : '#d1d5db'}
-          style={{ marginRight: 12 }}
-        />
-        <Text style={{ fontSize: 18 }}>{emoji}</Text>
-        <View className="flex-1 ml-2 min-w-0">
-          <Text
-            className={`${typo.caption} font-medium ${
-              isSelected ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600'
-            }`}
-            numberOfLines={1}
-          >
-            {suggestion.name}
-          </Text>
-          {isSelected && (
-            <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1.5">
-              {expense?.monthlyAmount && expense.monthlyAmount > 0 ? (
-                <Text className={`${typo.caption} text-indigo-600 dark:text-indigo-400 font-medium`}>
-                  {formatVnd(expense.monthlyAmount)}
-                </Text>
-              ) : (
-                <Text className={`${typo.caption} text-gray-300 dark:text-gray-600`}>
-                  {t('onboarding.step3.noPriceHint')}
-                </Text>
-              )}
-              {expense?.expenseType && (
-                <Text
-                  className={`${typo.caption} font-medium ${
-                    expense.expenseType === 'FIXED'
-                      ? 'text-blue-500 dark:text-blue-400'
-                      : 'text-orange-500 dark:text-orange-400'
-                  }`}
-                >
-                  · {t(`onboarding.step3.type.${expense.expenseType}`)}
-                </Text>
-              )}
-              {expense?.paymentDate && (
-                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
-                  · {t('onboarding.step3.paymentDateChip', { day: expense.paymentDate })}
-                </Text>
-              )}
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-
-      {/* Right: edit button (only when selected) */}
-      {isSelected && (
-        <TouchableOpacity
-          onPress={onEdit}
-          activeOpacity={0.7}
-          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-          className="flex-row items-center gap-1 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 px-2.5 py-1.5 rounded-xl ml-2 shrink-0"
+    <TouchableOpacity
+      onPress={onTap}
+      activeOpacity={0.7}
+      className="flex-row items-center px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-50 dark:border-gray-700"
+    >
+      <MaterialCommunityIcons
+        name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+        size={22}
+        color={isSelected ? '#4f46e5' : '#d1d5db'}
+        style={{ marginRight: 12 }}
+      />
+      <Text style={{ fontSize: 18 }}>{emoji}</Text>
+      <View className="flex-1 ml-2 min-w-0">
+        <Text
+          className={`${typo.caption} font-medium ${
+            isSelected ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600'
+          }`}
+          numberOfLines={1}
         >
-          <MaterialCommunityIcons name="pencil-outline" size={13} color="#4f46e5" />
-          <Text className={`${typo.caption} text-primary font-semibold`} style={{ fontSize: 11 }}>
-            {t('onboarding.common.edit')}
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
+          {suggestion.name}
+        </Text>
+        {isSelected && (
+          <View className="flex-row items-center flex-wrap mt-0.5 gap-x-1.5">
+            {expense?.monthlyAmount && expense.monthlyAmount > 0 ? (
+              <Text className={`${typo.caption} text-indigo-600 dark:text-indigo-400 font-medium`}>
+                {formatVnd(expense.monthlyAmount)}
+              </Text>
+            ) : (
+              <Text className={`${typo.caption} text-gray-300 dark:text-gray-600`}>
+                {t('onboarding.step3.noPriceHint')}
+              </Text>
+            )}
+            {expense?.expenseType && (
+              <Text
+                className={`${typo.caption} font-medium ${
+                  expense.expenseType === 'FIXED'
+                    ? 'text-blue-500 dark:text-blue-400'
+                    : 'text-orange-500 dark:text-orange-400'
+                }`}
+              >
+                · {t(`onboarding.step3.type.${expense.expenseType}`)}
+              </Text>
+            )}
+            {expense?.paymentDate && (
+              <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
+                · {t('onboarding.step3.paymentDateChip', { day: expense.paymentDate })}
+              </Text>
+            )}
+          </View>
+        )}
+      </View>
+      <MaterialCommunityIcons
+        name="chevron-right"
+        size={16}
+        color={isSelected ? '#6366f1' : '#d1d5db'}
+        style={{ marginLeft: 4 }}
+      />
+    </TouchableOpacity>
   );
 }
 
@@ -446,12 +525,32 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
     return map;
   }, [step3.expenses]);
 
+  const suggestionNames = useMemo(
+    () => new Set(suggestions.map((s) => s.name)),
+    [suggestions],
+  );
+
+  const customExpenses = useMemo(
+    () => step3.expenses.filter((e) => !suggestionNames.has(e.name)),
+    [step3.expenses, suggestionNames],
+  );
+
   const sections = useMemo(() => {
-    const map = new Map<string, Suggestion[]>();
+    const map = new Map<string, SectionItem[]>();
     for (const sg of suggestions) {
       const key = sg.category ?? 'OTHER';
       if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(sg);
+      map.get(key)!.push({ ...sg, isCustomExpense: false });
+    }
+    for (const exp of customExpenses) {
+      const key = exp.category ?? 'OTHER';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push({
+        name: exp.name,
+        emoji: CATEGORY_EMOJI[exp.category ?? 'OTHER'] ?? '💰',
+        category: exp.category,
+        isCustomExpense: true,
+      });
     }
     return Array.from(map.entries()).map(([categoryKey, allData]) => ({
       categoryKey,
@@ -459,7 +558,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
       allData,
       data: collapsedSections.has(categoryKey) ? [] : allData,
     }));
-  }, [suggestions, collapsedSections, t]);
+  }, [suggestions, customExpenses, collapsedSections, t]);
 
   const allSelected = suggestions.length > 0 && selectedNames.size === suggestions.length;
 
@@ -475,15 +574,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
 
   const handleDeselectAll = () => setStep3({ expenses: [], initialized: true });
 
-  const handleToggle = (sg: Suggestion) => {
-    if (selectedNames.has(sg.name)) {
-      removeExpense(sg.name);
-    } else {
-      addExpense({ name: sg.name, monthlyAmount: 0, category: sg.category ?? 'OTHER', expenseType: 'FIXED' });
-    }
-  };
-
-  const openEditSheet = (sg: Suggestion) => {
+  const handleRowTap = (sg: SectionItem) => {
     const expense = expenseByName.get(sg.name);
     setSheet({
       name: sg.name,
@@ -491,8 +582,9 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
       expenseType: expense?.expenseType ?? 'FIXED',
       paymentDay: expense?.paymentDate,
       note: expense?.note ?? '',
-      category: sg.category ?? 'OTHER',
-      isCustom: false,
+      category: expense?.category ?? sg.category ?? 'OTHER',
+      isCustom: sg.isCustomExpense,
+      isSelected: selectedNames.has(sg.name),
     });
   };
 
@@ -505,6 +597,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
       note: '',
       category: 'OTHER',
       isCustom: true,
+      isSelected: false,
     });
   };
 
@@ -526,7 +619,6 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
         category: data.category,
       });
     } else {
-      // Custom add — ensure not duplicate
       if (!selectedNames.has(data.name)) {
         addExpense({
           name: data.name,
@@ -539,6 +631,13 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
       }
     }
     setSheet(null);
+  };
+
+  const handleSheetDelete = () => {
+    if (sheet) {
+      removeExpense(sheet.name);
+      setSheet(null);
+    }
   };
 
   const handleContinue = () => {
@@ -561,9 +660,9 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
         <View className="gap-1 mt-1">
           {(
             [
-              { icon: 'check-all' as const,        key: 'onboarding.step3.hint1' },
-              { icon: 'pencil-outline' as const,    key: 'onboarding.step3.hint2edit' },
-              { icon: 'plus-circle-outline' as const, key: 'onboarding.step3.hint3add' },
+              { icon: 'gesture-tap' as const,         key: 'onboarding.step3.hint1' },
+              { icon: 'pencil-outline' as const,       key: 'onboarding.step3.hint2edit' },
+              { icon: 'plus-circle-outline' as const,  key: 'onboarding.step3.hint3add' },
             ]
           ).map(({ icon, key }) => (
             <View key={key} className="flex-row items-center gap-2">
@@ -666,8 +765,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
                 suggestion={sg}
                 expense={expense}
                 isSelected={isSelected}
-                onToggle={() => handleToggle(sg)}
-                onEdit={() => openEditSheet(sg)}
+                onTap={() => handleRowTap(sg)}
               />
             );
           }}
@@ -710,6 +808,7 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
         values={sheet}
         onClose={() => setSheet(null)}
         onSave={handleSheetSave}
+        onDelete={sheet?.isSelected ? handleSheetDelete : undefined}
       />
     </KeyboardAvoidingView>
   );

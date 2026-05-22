@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TappyPOS Mobile — Mockups</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; min-height: 100vh; }
+
+    .hero {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: #fff;
+      padding: 56px 40px 48px;
+      text-align: center;
+    }
+    .hero .logo {
+      width: 64px; height: 64px; background: rgba(255,255,255,0.2);
+      border-radius: 18px; display: inline-flex; align-items: center;
+      justify-content: center; font-size: 32px; margin-bottom: 20px;
+    }
+    .hero h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    .hero p { font-size: 16px; opacity: 0.8; max-width: 480px; margin: 0 auto; }
+    .hero .badges { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+    .hero .badge {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 500;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+    .section-title {
+      font-size: 11px; font-weight: 700; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: .08em; margin: 32px 0 16px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 8px; }
+
+    .card {
+      background: #fff; border-radius: 20px; padding: 24px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.05);
+      text-decoration: none; color: inherit; display: block;
+      transition: transform .15s ease, box-shadow .15s ease;
+      border: 1.5px solid transparent;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(79,70,229,0.15);
+      border-color: #c7d2fe;
+    }
+    .card .icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 14px;
+    }
+    .card h3 { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 4px; }
+    .card p { font-size: 12px; color: #6b7280; line-height: 1.5; }
+    .card .screens { font-size: 11px; color: #9ca3af; margin-top: 10px; font-weight: 600; }
+    .card .tag {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 6px; margin-top: 8px;
+    }
+
+    /* Color variants */
+    .indigo .icon { background: #eef2ff; }
+    .green  .icon { background: #f0fdf4; }
+    .amber  .icon { background: #fffbeb; }
+    .red    .icon { background: #fef2f2; }
+    .purple .icon { background: #f5f3ff; }
+    .blue   .icon { background: #eff6ff; }
+    .pink   .icon { background: #fdf2f8; }
+    .teal   .icon { background: #f0fdfa; }
+    .gray   .icon { background: #f9fafb; }
+
+    .indigo .tag { background: #eef2ff; color: #4f46e5; }
+    .green  .tag { background: #f0fdf4; color: #16a34a; }
+    .amber  .tag { background: #fffbeb; color: #d97706; }
+
+    .shop-types {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+    }
+    .shop-chip {
+      background: #fff; border: 1.5px solid #e5e7eb; border-radius: 20px;
+      padding: 6px 14px; font-size: 13px; font-weight: 500; color: #374151;
+      cursor: default;
+    }
+    .shop-chip.primary { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+
+    .note {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;
+      padding: 12px 16px; font-size: 13px; color: #92400e; margin-bottom: 24px;
+    }
+
+    footer {
+      text-align: center; padding: 32px; font-size: 12px; color: #9ca3af;
+      border-top: 1px solid #e5e7eb; margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo">✂️</div>
+  <h1>TappyPOS Mobile — Mockups</h1>
+  <p>High-fidelity screen mockups for all modules, covering 6 service shop types</p>
+  <div class="badges">
+    <span class="badge">✂️ Barber Shop</span>
+    <span class="badge">💆 Spa</span>
+    <span class="badge">💅 Nail Salon</span>
+    <span class="badge">💇 Hair Salon</span>
+    <span class="badge">💄 Makeup Studio</span>
+    <span class="badge">👁️ Lash &amp; PMU</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="note">
+    💡 Mỗi file HTML là một module độc lập. Mở file để xem tất cả màn hình trong module đó. File <strong>mockup-selling.html</strong> có tab chuyển đổi giữa 6 loại cửa hàng.
+  </div>
+
+  <div class="section-title">🔑 Xác thực & Onboarding</div>
+  <div class="grid">
+    <a class="card indigo" href="mockup-auth.html">
+      <div class="icon">🔐</div>
+      <h3>Auth &amp; Onboarding</h3>
+      <p>Đăng nhập, đăng ký, mã PIN, thiết lập cửa hàng lần đầu</p>
+      <div class="screens">8 màn hình</div>
+      <span class="tag">mockup-auth.html</span>
+    </a>
+  </div>
+
+  <div class="section-title">🛍️ Bán Hàng / POS</div>
+  <div class="grid">
+    <a class="card purple" href="mockup-selling.html">
+      <div class="icon">🛍️</div>
+      <h3>Bán Hàng — POS</h3>
+      <p>Lưới dịch vụ, giỏ hàng, thanh toán, đơn đang làm, biên nhận</p>
+      <div class="screens">8 màn hình · 6 loại cửa hàng</div>
+      <span class="tag">mockup-selling.html</span>
+    </a>
+  </div>
+
+  <div class="section-title">📋 Quản lý Đơn hàng & Lịch hẹn</div>
+  <div class="grid">
+    <a class="card indigo" href="mockup-orders.html">
+      <div class="icon">📋</div>
+      <h3>Đơn Hàng</h3>
+      <p>Danh sách đơn, chi tiết đơn, biên nhận, VietQR, thành công</p>
+      <div class="screens">5 màn hình</div>
+      <span class="tag">mockup-orders.html</span>
+    </a>
+    <a class="card blue" href="mockup-appointments.html">
+      <div class="icon">📅</div>
+      <h3>Lịch Hẹn</h3>
+      <p>Xem theo ngày/tuần, đặt lịch, chi tiết và xác nhận</p>
+      <div class="screens">3 màn hình</div>
+      <span class="tag">mockup-appointments.html</span>
+    </a>
+  </div>
+
+  <div class="section-title">👥 Khách hàng & Nhân viên</div>
+  <div class="grid">
+    <a class="card green" href="mockup-customers.html">
+      <div class="icon">👥</div>
+      <h3>Khách Hàng</h3>
+      <p>Danh sách, hồ sơ, tích điểm, lịch sử đơn hàng</p>
+      <div class="screens">4 màn hình</div>
+      <span class="tag">mockup-customers.html</span>
+    </a>
+    <a class="card amber" href="mockup-staff.html">
+      <div class="icon">👨‍💼</div>
+      <h3>Nhân Viên</h3>
+      <p>Danh sách, hàng chờ phân công, hiệu suất, thêm mới</p>
+      <div class="screens">4 màn hình</div>
+      <span class="tag">mockup-staff.html</span>
+    </a>
+  </div>
+
+  <div class="section-title">💰 Tài chính & Báo Cáo</div>
+  <div class="grid">
+    <a class="card red" href="mockup-expenses.html">
+      <div class="icon">💸</div>
+      <h3>Chi Phí</h3>
+      <p>Theo dõi theo tháng, sao chép mặc định có lựa chọn, thiết lập</p>
+      <div class="screens">5 màn hình</div>
+      <span class="tag">mockup-expenses.html</span>
+    </a>
+    <a class="card green" href="mockup-reports.html">
+      <div class="icon">📊</div>
+      <h3>Báo Cáo &amp; Dashboard</h3>
+      <p>Doanh thu, chi phí, biểu đồ, trang chủ tổng quan</p>
+      <div class="screens">3 màn hình</div>
+      <span class="tag">mockup-reports.html</span>
+    </a>
+  </div>
+
+  <div class="section-title">📦 Sản phẩm & Tồn kho</div>
+  <div class="grid">
+    <a class="card teal" href="mockup-products.html">
+      <div class="icon">📦</div>
+      <h3>Sản phẩm &amp; Tồn Kho</h3>
+      <p>Dịch vụ, sản phẩm, danh mục, tồn kho theo lô</p>
+      <div class="screens">5 màn hình</div>
+      <span class="tag">mockup-products.html</span>
+    </a>
+  </div>
+
+  <div class="section-title">⚙️ Cài đặt</div>
+  <div class="grid">
+    <a class="card gray" href="mockup-settings.html">
+      <div class="icon">⚙️</div>
+      <h3>Cài Đặt</h3>
+      <p>Thông tin cửa hàng, ngân hàng, mẫu in, tích điểm, bảo mật, tài khoản</p>
+      <div class="screens">8 màn hình</div>
+      <span class="tag">mockup-settings.html</span>
+    </a>
+  </div>
+
+</div>
+
+<footer>
+  TappyPOS Mobile Mockups · Expo SDK 54 · React Native + NativeWind v4 · 2026
+</footer>
+
+</body>
+</html>

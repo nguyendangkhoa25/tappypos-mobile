@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Staff Module</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background: #f1f5f9;
+  padding: 32px;
+  color: #1e293b;
+}
+h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+.subtitle { color: #64748b; font-size: 14px; margin-bottom: 40px; }
+h2 {
+  font-size: 13px; font-weight: 700; color: #334155;
+  margin: 52px 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+  text-transform: uppercase; letter-spacing: 0.07em;
+}
+
+/* Layout */
+.phone-row { display: flex; flex-wrap: wrap; gap: 40px; margin-bottom: 8px; }
+.phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.phone-label {
+  font-size: 11px; font-weight: 700; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: #e2e8f0; padding: 4px 16px; border-radius: 20px;
+}
+.phone {
+  width: 375px; height: 812px;
+  background: #f9fafb;
+  border-radius: 48px;
+  border: 10px solid #1e293b;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15);
+  flex-shrink: 0;
+}
+.notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 130px; height: 34px;
+  background: #1e293b;
+  border-radius: 0 0 22px 22px;
+  z-index: 100;
+}
+.status-bar {
+  height: 44px; flex-shrink: 0;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 20px 6px;
+  position: relative; z-index: 10; background: white;
+}
+.s-time { font-size: 15px; font-weight: 700; color: #111827; }
+.s-icons { font-size: 12px; color: #374151; display: flex; gap: 5px; align-items: center; }
+
+/* Bottom tab bar */
+.tab-bar {
+  height: 82px; flex-shrink: 0;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  display: flex; align-items: flex-start; padding-top: 10px;
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.tab-icon { font-size: 20px; line-height: 1; }
+.tab-lbl { font-size: 10px; font-weight: 600; color: #9ca3af; }
+.tab-item.active .tab-lbl { color: #4f46e5; font-weight: 700; }
+
+/* Shared header */
+.page-header {
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 10px 16px 12px;
+  flex-shrink: 0;
+}
+.header-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.header-title { font-size: 18px; font-weight: 800; color: #111827; flex: 1; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #eef2ff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #4f46e5; flex-shrink: 0;
+}
+.back-btn { font-size: 24px; color: #4f46e5; font-weight: 300; flex-shrink: 0; }
+
+/* Filter chips */
+.chips-row { display: flex; gap: 7px; overflow: hidden; flex-wrap: nowrap; }
+.chip {
+  padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  white-space: nowrap; flex-shrink: 0;
+  border: 1.5px solid #e5e7eb; color: #6b7280; background: white;
+}
+.chip.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+.chip.amber { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+.chip.purple { background: #ede9fe; border-color: #7c3aed; color: #5b21b6; }
+.chip.green { background: #dcfce7; border-color: #22c55e; color: #166534; }
+.chip.blue { background: #dbeafe; border-color: #3b82f6; color: #1e40af; }
+.chip.gray { border-color: #e5e7eb; color: #9ca3af; }
+
+/* ============================================================
+   SCREEN 1 — Staff List
+   ============================================================ */
+.staff-scroll { flex: 1; overflow: hidden; padding: 12px 16px 0; }
+.staff-card {
+  background: white; border-radius: 16px;
+  border: 1px solid #f1f5f9;
+  padding: 12px 14px; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 12px;
+}
+.staff-avatar {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800;
+  flex-shrink: 0;
+}
+.av-amber { background: #fef3c7; color: #92400e; }
+.av-purple { background: #ede9fe; color: #5b21b6; }
+.av-green { background: #dcfce7; color: #166534; }
+.av-blue { background: #dbeafe; color: #1e40af; }
+.av-gray { background: #f3f4f6; color: #9ca3af; }
+
+.staff-info { flex: 1; min-width: 0; }
+.staff-name { font-size: 14px; font-weight: 700; color: #111827; }
+.staff-phone { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.role-badge {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 6px;
+  display: inline-block; margin-top: 4px;
+}
+.rb-amber { background: #fef3c7; color: #92400e; }
+.rb-purple { background: #ede9fe; color: #5b21b6; }
+.rb-green { background: #dcfce7; color: #166534; }
+.rb-blue { background: #dbeafe; color: #1e40af; }
+
+.status-col { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.status-dot {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+}
+.dot-green { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+.dot-gray { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; }
+.status-dot.active { color: #15803d; }
+.status-dot.inactive { color: #9ca3af; }
+
+.fab {
+  position: absolute; right: 20px; bottom: 90px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #4f46e5;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; color: white; font-weight: 300;
+  box-shadow: 0 6px 16px rgba(79,70,229,0.45);
+}
+
+/* ============================================================
+   SCREEN 2 — Staff Form
+   ============================================================ */
+.form-header {
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.form-title { font-size: 16px; font-weight: 700; color: #111827; flex: 1; }
+.save-btn-header {
+  background: #4f46e5; color: white;
+  font-size: 13px; font-weight: 700;
+  padding: 6px 16px; border-radius: 10px;
+}
+
+.form-scroll { flex: 1; overflow: hidden; padding: 16px; }
+.form-section-title { font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; margin-top: 16px; }
+.form-field { margin-bottom: 13px; }
+.field-label { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 5px; display: flex; align-items: center; gap: 3px; }
+.required-star { color: #ef4444; }
+.field-input {
+  background: white; border: 1.5px solid #e5e7eb;
+  border-radius: 12px; padding: 11px 14px;
+  font-size: 14px; color: #111827; width: 100%;
+}
+.field-input.placeholder-style { color: #9ca3af; }
+.field-input.focused { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+.field-input.has-eye { padding-right: 40px; }
+
+.role-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.role-chip {
+  padding: 8px 14px; border-radius: 12px;
+  font-size: 12px; font-weight: 600;
+  border: 1.5px solid #e5e7eb; color: #6b7280; background: white;
+}
+.role-chip.selected { background: #eef2ff; border-color: #4f46e5; color: #4f46e5; }
+
+.save-btn {
+  background: #4f46e5; color: white;
+  font-size: 15px; font-weight: 700;
+  padding: 15px; border-radius: 14px;
+  text-align: center; margin: 4px 16px 16px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   SCREEN 3 — Staff Queue
+   ============================================================ */
+.queue-header {
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 10px 16px 12px;
+  flex-shrink: 0;
+}
+.queue-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.queue-title { font-size: 18px; font-weight: 800; color: #111827; flex: 1; }
+.queue-date { font-size: 12px; color: #6b7280; font-weight: 600; }
+
+.summary-chips { display: flex; gap: 8px; }
+.summary-chip {
+  flex: 1; padding: 8px 6px;
+  border-radius: 12px; text-align: center;
+}
+.sc-serving { background: #eef2ff; }
+.sc-waiting { background: #fef3c7; }
+.sc-done { background: #dcfce7; }
+.sc-num { font-size: 18px; font-weight: 800; }
+.sc-serving .sc-num { color: #4f46e5; }
+.sc-waiting .sc-num { color: #d97706; }
+.sc-done .sc-num { color: #16a34a; }
+.sc-lbl { font-size: 10px; font-weight: 600; }
+.sc-serving .sc-lbl { color: #4f46e5; }
+.sc-waiting .sc-lbl { color: #d97706; }
+.sc-done .sc-lbl { color: #16a34a; }
+
+.queue-body { flex: 1; overflow: hidden; padding: 12px 16px 0; }
+.queue-scroll-inner { display: flex; gap: 10px; overflow: hidden; }
+
+.staff-col {
+  width: 140px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.staff-col-header {
+  background: white; border-radius: 14px;
+  border: 1px solid #f1f5f9;
+  padding: 10px 10px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.col-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
+}
+.col-name { font-size: 12px; font-weight: 700; color: #111827; }
+.col-status-dot {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 10px; color: #6b7280;
+}
+
+.queue-item {
+  background: white; border-radius: 12px;
+  border: 1px solid #f1f5f9;
+  padding: 10px 10px;
+}
+.queue-item.serving { border-color: #c7d2fe; background: #eef2ff; }
+.queue-item.waiting { border-color: #fde68a; background: #fffbeb; }
+.queue-item.empty { border-style: dashed; background: #fafafa; }
+
+.qi-cust { font-size: 12px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+.qi-service { font-size: 11px; color: #6b7280; margin-bottom: 6px; }
+.qi-time {
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  display: inline-block;
+}
+.qi-time.serving { background: #4f46e5; color: white; }
+.qi-time.waiting { background: #fef3c7; color: #92400e; }
+.qi-empty-text { font-size: 11px; color: #9ca3af; text-align: center; padding: 8px 0; }
+
+/* ============================================================
+   SCREEN 4 — Staff Performance
+   ============================================================ */
+.perf-header {
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.perf-title { font-size: 15px; font-weight: 700; color: #111827; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.perf-period {
+  background: white; padding: 10px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex; gap: 8px; flex-shrink: 0;
+}
+.period-chip {
+  padding: 7px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  border: 1.5px solid #e5e7eb; color: #6b7280; background: white;
+}
+.period-chip.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+.perf-scroll { flex: 1; overflow: hidden; padding: 14px 16px 0; }
+
+.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.metric-card {
+  background: white; border-radius: 16px;
+  border: 1px solid #f1f5f9;
+  padding: 14px 14px;
+}
+.metric-icon { font-size: 20px; margin-bottom: 6px; }
+.metric-val { font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 2px; }
+.metric-val.indigo { color: #4f46e5; }
+.metric-val.green { color: #22c55e; }
+.metric-val.amber { color: #f59e0b; }
+.metric-val.star { color: #f59e0b; }
+.metric-lbl { font-size: 11px; color: #9ca3af; font-weight: 600; }
+
+/* Simple CSS bar chart */
+.chart-card {
+  background: white; border-radius: 16px;
+  border: 1px solid #f1f5f9;
+  padding: 14px; margin-bottom: 16px;
+}
+.chart-title { font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 12px; }
+.chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 60px; }
+.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bar {
+  width: 100%; border-radius: 4px 4px 0 0;
+  background: #c7d2fe;
+  transition: height 0.3s;
+}
+.bar.today { background: #4f46e5; }
+.bar-day { font-size: 9px; color: #9ca3af; font-weight: 600; }
+.bar-val { font-size: 9px; color: #6b7280; font-weight: 700; }
+
+/* Top services table */
+.services-card {
+  background: white; border-radius: 16px;
+  border: 1px solid #f1f5f9;
+  padding: 14px; margin-bottom: 16px;
+}
+.services-title { font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 10px; }
+.service-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid #f9fafb;
+}
+.service-row:last-child { border-bottom: none; }
+.service-rank {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #eef2ff; color: #4f46e5;
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.service-rank.gold { background: #fef3c7; color: #92400e; }
+.service-name { flex: 1; font-size: 13px; color: #374151; font-weight: 600; }
+.service-count { font-size: 12px; font-weight: 700; color: #4f46e5; }
+
+/* Bar fill helpers */
+.bar-h-full { height: 52px; }
+.bar-h-90 { height: 47px; }
+.bar-h-70 { height: 37px; }
+.bar-h-60 { height: 32px; }
+.bar-h-80 { height: 42px; }
+.bar-h-50 { height: 26px; }
+.bar-h-40 { height: 21px; }
+</style>
+</head>
+<body>
+
+<h1>TappyPOS Mobile — Nhân viên</h1>
+<p class="subtitle">4 màn hình: Danh sách · Thêm/Sửa · Hàng chờ · Hiệu suất</p>
+
+<h2>Screen 1 — Danh sách nhân viên</h2>
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Staff List</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>▲▲▲</span><span style="font-size:11px;">WiFi</span><span>🔋</span></div>
+      </div>
+
+      <!-- Header -->
+      <div class="page-header">
+        <div class="header-row">
+          <div class="header-title">Nhân viên</div>
+          <div class="icon-btn">＋</div>
+        </div>
+
+        <!-- Status filter -->
+        <div class="chips-row" style="margin-bottom:8px;">
+          <div class="chip active">Tất cả</div>
+          <div class="chip">Hoạt động</div>
+          <div class="chip">Nghỉ việc</div>
+        </div>
+
+        <!-- Role filter -->
+        <div class="chips-row">
+          <div class="chip amber">Kỹ thuật viên</div>
+          <div class="chip purple">Quản lý</div>
+          <div class="chip green">Lễ tân</div>
+          <div class="chip blue">Phục vụ</div>
+        </div>
+      </div>
+
+      <!-- Staff cards -->
+      <div class="staff-scroll">
+
+        <div class="staff-card">
+          <div class="staff-avatar av-amber">TU</div>
+          <div class="staff-info">
+            <div class="staff-name">Tuấn</div>
+            <div class="role-badge rb-amber">Kỹ thuật viên</div>
+            <div class="staff-phone">0912 345 678</div>
+          </div>
+          <div class="status-col">
+            <div class="status-dot active"><div class="dot-green"></div>Hoạt động</div>
+          </div>
+        </div>
+
+        <div class="staff-card">
+          <div class="staff-avatar av-amber">MI</div>
+          <div class="staff-info">
+            <div class="staff-name">Minh</div>
+            <div class="role-badge rb-amber">Kỹ thuật viên</div>
+            <div class="staff-phone">0987 654 321</div>
+          </div>
+          <div class="status-col">
+            <div class="status-dot active"><div class="dot-green"></div>Hoạt động</div>
+          </div>
+        </div>
+
+        <div class="staff-card">
+          <div class="staff-avatar av-purple">HU</div>
+          <div class="staff-info">
+            <div class="staff-name">Hùng</div>
+            <div class="role-badge rb-purple">Quản lý</div>
+            <div class="staff-phone">0911 222 333</div>
+          </div>
+          <div class="status-col">
+            <div class="status-dot active"><div class="dot-green"></div>Hoạt động</div>
+          </div>
+        </div>
+
+        <div class="staff-card">
+          <div class="staff-avatar av-green">LA</div>
+          <div class="staff-info">
+            <div class="staff-name">Lan</div>
+            <div class="role-badge rb-green">Lễ tân</div>
+            <div class="staff-phone">0944 556 677</div>
+          </div>
+          <div class="status-col">
+            <div class="status-dot active"><div class="dot-green"></div>Hoạt động</div>
+          </div>
+        </div>
+
+        <div class="staff-card" style="opacity:0.7;">
+          <div class="staff-avatar av-gray">HO</div>
+          <div class="staff-info">
+            <div class="staff-name" style="color:#9ca3af;">Hoa</div>
+            <div class="role-badge" style="background:#f3f4f6;color:#9ca3af;">Phục vụ</div>
+            <div class="staff-phone">0933 221 100</div>
+          </div>
+          <div class="status-col">
+            <div class="status-dot inactive"><div class="dot-gray"></div>Nghỉ việc</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FAB -->
+      <div class="fab">＋</div>
+
+      <!-- Bottom Nav -->
+      <div class="tab-bar">
+        <div class="tab-item"><div class="tab-icon">🏠</div><div class="tab-lbl">Trang chủ</div></div>
+        <div class="tab-item"><div class="tab-icon">🛍️</div><div class="tab-lbl">Bán Hàng</div></div>
+        <div class="tab-item"><div class="tab-icon">📊</div><div class="tab-lbl">Báo Cáo</div></div>
+        <div class="tab-item active"><div class="tab-icon">☰</div><div class="tab-lbl" style="color:#4f46e5;">Thêm</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end phone-row -->
+
+<h2>Screen 2 — Thêm / Sửa nhân viên</h2>
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Staff Form</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>▲▲▲</span><span style="font-size:11px;">WiFi</span><span>🔋</span></div>
+      </div>
+
+      <!-- Form Header -->
+      <div class="form-header">
+        <div class="back-btn">‹</div>
+        <div class="form-title">Thêm nhân viên</div>
+        <div class="save-btn-header">Lưu</div>
+      </div>
+
+      <!-- Form Body -->
+      <div class="form-scroll">
+        <div class="form-section-title" style="margin-top:0;">Thông tin cơ bản</div>
+
+        <div class="form-field">
+          <div class="field-label">Họ tên <span class="required-star">*</span></div>
+          <div class="field-input focused">Nguyễn Văn Tuấn</div>
+        </div>
+
+        <div class="form-field">
+          <div class="field-label">Số điện thoại <span class="required-star">*</span></div>
+          <div class="field-input placeholder-style">Nhập số điện thoại</div>
+        </div>
+
+        <div class="form-section-title">Tài khoản đăng nhập</div>
+
+        <div class="form-field">
+          <div class="field-label">Tên đăng nhập (Username)</div>
+          <div class="field-input placeholder-style">Nhập username</div>
+        </div>
+
+        <div class="form-field">
+          <div class="field-label">Mật khẩu</div>
+          <div class="field-input placeholder-style" style="letter-spacing:0.1em;">••••••••</div>
+        </div>
+
+        <div class="form-section-title">Vai trò</div>
+        <div class="role-grid">
+          <div class="role-chip selected">Quản lý</div>
+          <div class="role-chip">Thu ngân</div>
+          <div class="role-chip selected">Lễ tân</div>
+          <div class="role-chip">Kỹ thuật viên</div>
+          <div class="role-chip">Phục vụ</div>
+          <div class="role-chip">Kế toán</div>
+          <div class="role-chip">Kho</div>
+          <div class="role-chip">Vệ sinh</div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="save-btn">Lưu nhân viên</div>
+
+      <!-- Bottom Nav -->
+      <div class="tab-bar">
+        <div class="tab-item"><div class="tab-icon">🏠</div><div class="tab-lbl">Trang chủ</div></div>
+        <div class="tab-item"><div class="tab-icon">🛍️</div><div class="tab-lbl">Bán Hàng</div></div>
+        <div class="tab-item"><div class="tab-icon">📊</div><div class="tab-lbl">Báo Cáo</div></div>
+        <div class="tab-item active"><div class="tab-icon">☰</div><div class="tab-lbl" style="color:#4f46e5;">Thêm</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end phone-row -->
+
+<h2>Screen 3 — Hàng chờ nhân viên</h2>
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Queue Board</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>▲▲▲</span><span style="font-size:11px;">WiFi</span><span>🔋</span></div>
+      </div>
+
+      <!-- Queue Header -->
+      <div class="queue-header">
+        <div class="queue-header-row">
+          <div class="queue-title">Hàng chờ</div>
+          <div class="queue-date">📅 21/05/2026</div>
+        </div>
+        <div class="summary-chips">
+          <div class="summary-chip sc-serving">
+            <div class="sc-num">2</div>
+            <div class="sc-lbl">Đang phục vụ</div>
+          </div>
+          <div class="summary-chip sc-waiting">
+            <div class="sc-num">1</div>
+            <div class="sc-lbl">Đang chờ</div>
+          </div>
+          <div class="summary-chip sc-done">
+            <div class="sc-num">8</div>
+            <div class="sc-lbl">Hoàn thành</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Queue Kanban -->
+      <div class="queue-body">
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;font-weight:600;">Cuộn ngang để xem tất cả nhân viên →</div>
+        <div class="queue-scroll-inner">
+
+          <!-- Tuấn column -->
+          <div class="staff-col">
+            <div class="staff-col-header">
+              <div class="col-avatar av-amber">TU</div>
+              <div class="col-name">Tuấn</div>
+              <div class="col-status-dot"><div class="dot-green"></div>Bận</div>
+            </div>
+            <div class="queue-item serving">
+              <div class="qi-cust">Nguyễn Văn A</div>
+              <div class="qi-service">Cắt tóc nam</div>
+              <div class="qi-time serving">⏱ 15 phút</div>
+            </div>
+            <div class="queue-item waiting">
+              <div class="qi-cust">Trần Thị B</div>
+              <div class="qi-service">Gội đầu</div>
+              <div class="qi-time waiting">⏳ Chờ</div>
+            </div>
+          </div>
+
+          <!-- Minh column -->
+          <div class="staff-col">
+            <div class="staff-col-header">
+              <div class="col-avatar av-amber">MI</div>
+              <div class="col-name">Minh</div>
+              <div class="col-status-dot"><div class="dot-green"></div>Rảnh</div>
+            </div>
+            <div class="queue-item empty">
+              <div class="qi-empty-text">Không có khách</div>
+            </div>
+          </div>
+
+          <!-- Hùng column -->
+          <div class="staff-col">
+            <div class="staff-col-header">
+              <div class="col-avatar av-purple">HU</div>
+              <div class="col-name">Hùng</div>
+              <div class="col-status-dot"><div class="dot-green"></div>Bận</div>
+            </div>
+            <div class="queue-item serving">
+              <div class="qi-cust">Lê Văn C</div>
+              <div class="qi-service">Nhuộm tóc</div>
+              <div class="qi-time serving">⏱ 45 phút</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="tab-bar">
+        <div class="tab-item"><div class="tab-icon">🏠</div><div class="tab-lbl">Trang chủ</div></div>
+        <div class="tab-item"><div class="tab-icon">🛍️</div><div class="tab-lbl">Bán Hàng</div></div>
+        <div class="tab-item"><div class="tab-icon">📊</div><div class="tab-lbl">Báo Cáo</div></div>
+        <div class="tab-item active"><div class="tab-icon">☰</div><div class="tab-lbl" style="color:#4f46e5;">Thêm</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end phone-row -->
+
+<h2>Screen 4 — Hiệu suất nhân viên</h2>
+<div class="phone-row">
+
+  <div class="phone-wrap">
+    <div class="phone-label">Performance</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <span class="s-time">9:41</span>
+        <div class="s-icons"><span>▲▲▲</span><span style="font-size:11px;">WiFi</span><span>🔋</span></div>
+      </div>
+
+      <!-- Perf Header -->
+      <div class="perf-header">
+        <div class="back-btn">‹</div>
+        <div class="perf-title">Hiệu suất — Tuấn</div>
+      </div>
+
+      <!-- Period Selector -->
+      <div class="perf-period">
+        <div class="period-chip active">Hôm nay</div>
+        <div class="period-chip">Tuần này</div>
+        <div class="period-chip">Tháng này</div>
+      </div>
+
+      <!-- Performance Content -->
+      <div class="perf-scroll">
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon">🛍️</div>
+            <div class="metric-val">8</div>
+            <div class="metric-lbl">Số đơn hàng</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">💰</div>
+            <div class="metric-val indigo" style="font-size:14px;">1.200.000₫</div>
+            <div class="metric-lbl">Doanh thu</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">🎁</div>
+            <div class="metric-val green">50.000₫</div>
+            <div class="metric-lbl">Tip nhận được</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">⭐</div>
+            <div class="metric-val star">4.8 ★</div>
+            <div class="metric-lbl">Đánh giá TB</div>
+          </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="chart-card">
+          <div class="chart-title">Số đơn theo ngày (7 ngày)</div>
+          <div class="chart-bars">
+            <div class="bar-wrap">
+              <div class="bar-val">5</div>
+              <div class="bar bar-h-50"></div>
+              <div class="bar-day">T2</div>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar-val">9</div>
+              <div class="bar bar-h-90"></div>
+              <div class="bar-day">T3</div>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar-val">7</div>
+              <div class="bar bar-h-70"></div>
+              <div class="bar-day">T4</div>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar-val">6</div>
+              <div class="bar bar-h-60"></div>
+              <div class="bar-day">T5</div>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar-val">8</div>
+              <div class="bar bar-h-80"></div>
+              <div class="bar-day">T6</div>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar-val">10</div>
+              <div class="bar bar-h-full"></div>
+              <div class="bar-day">T7</div>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar-val">8</div>
+              <div class="bar bar-h-80 today"></div>
+              <div class="bar-day" style="color:#4f46e5;font-weight:700;">CN</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Services Table -->
+        <div class="services-card">
+          <div class="services-title">Dịch vụ thực hiện nhiều nhất</div>
+          <div class="service-row">
+            <div class="service-rank gold">1</div>
+            <div class="service-name">Cắt tóc nam</div>
+            <div class="service-count">5 lần</div>
+          </div>
+          <div class="service-row">
+            <div class="service-rank">2</div>
+            <div class="service-name">Gội đầu</div>
+            <div class="service-count">3 lần</div>
+          </div>
+          <div class="service-row">
+            <div class="service-rank">3</div>
+            <div class="service-name">Massage đầu</div>
+            <div class="service-count">2 lần</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="tab-bar">
+        <div class="tab-item"><div class="tab-icon">🏠</div><div class="tab-lbl">Trang chủ</div></div>
+        <div class="tab-item"><div class="tab-icon">🛍️</div><div class="tab-lbl">Bán Hàng</div></div>
+        <div class="tab-item"><div class="tab-icon">📊</div><div class="tab-lbl">Báo Cáo</div></div>
+        <div class="tab-item active"><div class="tab-icon">☰</div><div class="tab-lbl" style="color:#4f46e5;">Thêm</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end phone-row -->
+
+</body>
+</html>

@@ -5,6 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -220,8 +221,7 @@ export function NotificationScreen() {
           renderItem={renderItem}
           ListHeaderComponent={renderMarkAllHeader}
           contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 16 }}
-          refreshing={isManualRefreshing}
-          onRefresh={onRefresh}
+          refreshControl={<RefreshControl refreshing={isManualRefreshing} onRefresh={onRefresh} tintColor="#059669" />}
         />
       )}
     </View>

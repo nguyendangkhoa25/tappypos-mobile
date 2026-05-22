@@ -404,11 +404,13 @@ export type CartResponse = {
 export type CheckoutRequest = {
   paymentMethod: 'CASH' | 'BANK_TRANSFER' | 'CARD';
   amountPaid?: number;
+  tip?: number;
   customerId?: string;
   notes?: string;
   loyaltyPointsToRedeem?: number;
   tableId?: number | null;
   tableLabel?: string | null;
+  createAsInProgress?: boolean;
 };
 
 export type LoyaltyProgramDTO = {
@@ -508,20 +510,27 @@ export type OrderSummary = {
   createdByName: string | null;
   createdAt: string;
   itemCount: number;
+  items?: { productName: string; quantity: number }[];
 };
 
 export type OrderItemDetail = {
+  id?: number;
+  productId?: number;
   productName: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
   unit: string;
+  assignedEmployeeId?: number | null;
+  assignedEmployeeName?: string | null;
 };
 
-export type OrderDetail = OrderSummary & {
+export type OrderDetail = Omit<OrderSummary, 'items'> & {
   items: OrderItemDetail[];
   subtotal: number;
   discount: number;
+  tipAmount: number | null;
+  customerId: number | null;
   paymentMethod: string | null;
   note: string | null;
   amountPaid: number | null;
@@ -595,7 +604,7 @@ export const orderApi = {
   delete: (id: string) => api.delete<ApiResponse<null>>(`/orders/${id}`),
 
   topProducts: (params: { limit?: number; from?: string; to?: string; days?: number }) =>
-    api.get<ApiResponse<{ name: string; orderCount: number; revenue: number }[]>>(
+    api.get<ApiResponse<{ name: string; orderCount: number; revenue: number; productId?: string }[]>>(
       '/orders/top-products',
       { params },
     ),
@@ -607,7 +616,7 @@ export const orderApi = {
     ),
 
   topEmployees: (params: { limit?: number; from: string; to: string }) =>
-    api.get<ApiResponse<{ name: string; orderCount: number; revenue: number }[]>>(
+    api.get<ApiResponse<{ name: string; orderCount: number; revenue: number; userId?: string }[]>>(
       '/orders/top-employees',
       { params },
     ),
@@ -671,6 +680,27 @@ export const orderApi = {
 
   workItemTrend: (params?: { filterType?: string; day?: number; month?: number; year?: number }) =>
     api.get<ApiResponse<{ label: string; count: number; revenue: number }[]>>('/orders/work-items/trend', { params }),
+
+  addItem: (orderId: string, req: { productId: string; quantity: number; employeeId?: string }) =>
+    api.post<ApiResponse<OrderItemDetail>>(`/orders/${orderId}/items`, req),
+
+  removeItem: (orderId: string, itemId: number) =>
+    api.delete<ApiResponse<null>>(`/orders/${orderId}/items/${itemId}`),
+
+  updateItemQuantity: (orderId: string, itemId: number, quantity: number) =>
+    api.patch<ApiResponse<OrderItemDetail>>(`/orders/${orderId}/items/${itemId}/quantity`, { quantity }),
+
+  updateItemEmployee: (orderId: string, itemId: number, employeeId: string | null) =>
+    api.patch<ApiResponse<OrderItemDetail>>(`/orders/${orderId}/items/${itemId}/employee`, { employeeId: employeeId ? Number(employeeId) : null }),
+
+  updateMeta: (orderId: string, req: { tip?: number; customerId?: string | null; clearCustomer?: boolean; paymentMethod?: string }) =>
+    api.patch<ApiResponse<OrderDetail>>(`/orders/${orderId}/meta`, req),
+
+  payAndComplete: (orderId: string, req: { paymentMethod: string; amountPaid?: number }) =>
+    api.put<ApiResponse<OrderDetail>>(`/orders/${orderId}/pay-and-complete`, req),
+
+  getReceipt: (id: string) =>
+    api.get<string>(`/orders/${id}/receipt`, { responseType: 'text' }),
 };
 
 // ── App version API ───────────────────────────────────────────────────────────
@@ -826,9 +856,12 @@ export type ExpenseRequest = {
 
 export type DefaultExpense = {
   id: string;
-  name: string;
-  monthlyAmount: number;
-  paymentDate: number | null;
+  description: string;
+  amount: number;
+  category: string;
+  categoryDisplayName: string;
+  paymentDay: number | null;
+  displayOrder: number;
 };
 
 export const expenseApi = {
@@ -865,16 +898,16 @@ export const expenseApi = {
 
   getDefaults: () => api.get<ApiResponse<DefaultExpense[]>>('/expenses/defaults'),
 
-  createDefault: (data: Omit<DefaultExpense, 'id'>) =>
+  createDefault: (data: { description: string; amount: number; paymentDay?: number | null }) =>
     api.post<ApiResponse<DefaultExpense>>('/expenses/defaults', data),
 
-  updateDefault: (id: string, data: Partial<Omit<DefaultExpense, 'id'>>) =>
+  updateDefault: (id: string, data: { description?: string; amount?: number; paymentDay?: number | null }) =>
     api.put<ApiResponse<DefaultExpense>>(`/expenses/defaults/${id}`, data),
 
   deleteDefault: (id: string) => api.delete<ApiResponse<null>>(`/expenses/defaults/${id}`),
 
-  cloneDefaults: (month: string) =>
-    api.post<ApiResponse<ExpenseData[]>>('/expenses/clone-defaults', { month }),
+  cloneDefaults: (month: string, ids?: string[]) =>
+    api.post<ApiResponse<ExpenseData[]>>('/expenses/clone-defaults', { month, ids: ids ?? null }),
 };
 
 // ── Customer API ──────────────────────────────────────────────────────────────

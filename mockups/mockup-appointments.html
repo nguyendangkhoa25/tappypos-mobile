@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Lịch hẹn</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; display: flex; background: #f1f5f9; color: #1e293b; }
+
+/* ─── Sidebar ─── */
+.sidebar {
+  width: 220px; min-height: 100vh;
+  background: #1e293b;
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; flex-shrink: 0;
+  padding: 20px 0 40px;
+  scrollbar-width: thin; scrollbar-color: #334155 transparent;
+}
+.sidebar-brand { padding: 0 16px 6px; }
+.sidebar-brand-title { font-size: 13px; font-weight: 800; color: #f1f5f9; letter-spacing: 0.02em; }
+.sidebar-brand-sub { font-size: 10px; color: #475569; margin-top: 1px; }
+.sidebar-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 10px 0 8px; }
+.nav-section-label {
+  font-size: 9px; font-weight: 700; color: #475569;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 8px 16px 3px;
+}
+.nav-link {
+  display: block; font-size: 12px; color: #94a3b8;
+  padding: 6px 16px; text-decoration: none;
+  line-height: 1.35; cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nav-link:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+.nav-link.active { color: #a5b4fc; font-weight: 600; background: rgba(99,102,241,0.18); border-left: 2px solid #818cf8; padding-left: 14px; }
+
+/* ─── Main ─── */
+.main { flex: 1; padding: 40px 48px; overflow-x: auto; min-width: 0; }
+.page-title { font-size: 26px; font-weight: 800; color: #111827; margin-bottom: 4px; }
+.page-sub { font-size: 14px; color: #64748b; margin-bottom: 40px; }
+
+/* ─── Screen wrapper ─── */
+.screen-block { display: none; }
+.screen-block.visible { display: block; }
+.screen-block-title {
+  font-size: 13px; font-weight: 700; color: #334155;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* ─── Phone frame ─── */
+.phone-row { display: flex; flex-wrap: wrap; gap: 36px; align-items: flex-start; }
+.phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.phone-label {
+  font-size: 11px; font-weight: 700; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+}
+.phone {
+  width: 390px; height: 844px;
+  background: #f9fafb;
+  border-radius: 48px;
+  border: 10px solid #1e293b;
+  overflow: hidden; position: relative;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.12);
+  flex-shrink: 0;
+}
+.notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 130px; height: 34px;
+  background: #1e293b;
+  border-radius: 0 0 22px 22px;
+  z-index: 100;
+}
+.status-bar {
+  height: 44px; flex-shrink: 0;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 22px 6px;
+  position: relative; z-index: 10;
+}
+.s-time { font-size: 15px; font-weight: 700; }
+.s-icons { font-size: 12px; display: flex; gap: 4px; align-items: center; }
+.status-bar.white { background: white; }
+.status-bar.white .s-time { color: #111827; }
+.status-bar.white .s-icons { color: #374151; }
+.status-bar.indigo { background: #4f46e5; }
+.status-bar.indigo .s-time { color: white; }
+.status-bar.indigo .s-icons { color: rgba(255,255,255,0.8); }
+
+/* ─── Bottom Nav Bar ─── */
+.bottom-nav {
+  height: 60px; flex-shrink: 0;
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  display: flex; align-items: stretch;
+  padding-bottom: 4px;
+}
+.bn-tab {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+}
+.bn-icon { font-size: 20px; }
+.bn-label { font-size: 10px; font-weight: 600; color: #9ca3af; }
+.bn-tab.active .bn-label { color: #4f46e5; }
+.bn-active-dot { width: 4px; height: 4px; border-radius: 2px; background: #4f46e5; }
+
+/* ─── Scroll body ─── */
+.scroll-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; }
+.scrollable::-webkit-scrollbar { display: none; }
+
+/* ─── Shared ─── */
+.badge {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.badge-green { background: #dcfce7; color: #15803d; }
+.badge-amber { background: #fef3c7; color: #92400e; }
+.badge-gray { background: #f3f4f6; color: #6b7280; }
+.badge-red-outline { background: transparent; color: #ef4444; border: 1.5px solid #ef4444; }
+.badge-indigo { background: #eef2ff; color: #4f46e5; }
+
+.section-lbl {
+  font-size: 10px; font-weight: 700; color: #9ca3af;
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+}
+.info-card {
+  background: white; border-radius: 14px; padding: 12px 14px;
+  border: 1px solid #f1f5f9;
+}
+
+/* ════════════════════════════════
+   SCREEN 1 — Appointment List
+════════════════════════════════ */
+.apt-header {
+  background: white; border-bottom: 1px solid #f3f4f6;
+  padding: 10px 18px 12px; flex-shrink: 0;
+}
+.apt-header-top {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.apt-title { font-size: 17px; font-weight: 700; color: #111827; }
+.apt-add-btn {
+  width: 34px; height: 34px; border-radius: 17px;
+  background: #4f46e5; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: white; font-weight: 300; cursor: pointer;
+}
+
+/* Date strip */
+.date-strip {
+  display: flex; overflow: hidden; gap: 6px;
+  padding: 10px 16px; background: white; border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+.date-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 7px 10px; border-radius: 12px; flex-shrink: 0; cursor: pointer;
+}
+.date-cell.selected { background: #4f46e5; }
+.date-day { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
+.date-num { font-size: 16px; font-weight: 800; color: #374151; }
+.date-cell.selected .date-day { color: rgba(255,255,255,0.7); }
+.date-cell.selected .date-num { color: white; }
+.date-today-dot { width: 4px; height: 4px; border-radius: 2px; background: #4f46e5; margin-top: 1px; }
+.date-cell.selected .date-today-dot { background: rgba(255,255,255,0.7); }
+
+/* Time slot groups */
+.slots-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 14px; }
+
+.slot-group { }
+.slot-time-label {
+  font-size: 12px; font-weight: 700; color: #9ca3af;
+  margin-bottom: 6px; padding-left: 2px;
+}
+
+.appt-card {
+  border-radius: 14px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px; position: relative;
+}
+.appt-card.confirmed { background: #eef2ff; border: 1.5px solid #c7d2fe; }
+.appt-card.confirmed-light { background: #f5f7ff; border: 1.5px solid #dde1fb; }
+.appt-card.pending-amber { background: #fffbeb; border: 1.5px solid #fde68a; }
+
+.appt-left-bar {
+  width: 3px; height: 100%; position: absolute; left: 0; top: 0;
+  border-radius: 14px 0 0 14px;
+}
+.bar-indigo { background: #4f46e5; }
+.bar-amber { background: #f59e0b; }
+
+.appt-info { flex: 1; min-width: 0; }
+.appt-customer-name { font-size: 14px; font-weight: 700; color: #111827; }
+.appt-services { font-size: 12px; color: #6b7280; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.appt-staff { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+.appt-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+
+.empty-slot {
+  border: 1.5px dashed #e5e7eb; border-radius: 14px;
+  padding: 14px; text-align: center;
+  font-size: 12px; color: #d1d5db;
+}
+
+/* FAB */
+.fab {
+  position: absolute; right: 22px; bottom: 76px;
+  width: 52px; height: 52px; border-radius: 26px;
+  background: #4f46e5; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 300; color: white;
+  box-shadow: 0 4px 16px rgba(79,70,229,0.45);
+  cursor: pointer; z-index: 20;
+}
+
+/* ════════════════════════════════
+   SCREEN 2 — Appointment Form
+════════════════════════════════ */
+.form-header {
+  background: white; border-bottom: 1px solid #f3f4f6;
+  padding: 12px 18px 14px; flex-shrink: 0;
+}
+.form-header-top { display: flex; align-items: center; justify-content: space-between; }
+.form-title { font-size: 17px; font-weight: 700; color: #111827; }
+.form-close {
+  width: 30px; height: 30px; border-radius: 15px;
+  background: #f3f4f6; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #6b7280; cursor: pointer;
+}
+
+.form-body { flex: 1; overflow: hidden; }
+.form-scroll { padding: 16px 16px; display: flex; flex-direction: column; gap: 14px; }
+
+.field-group { }
+.field-label { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; }
+.field-input {
+  border: 1.5px solid #e5e7eb; border-radius: 12px;
+  padding: 11px 14px; font-size: 14px; color: #111827;
+  background: white; width: 100%; position: relative;
+}
+.field-input.placeholder-style { color: #9ca3af; }
+.field-input-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.field-input-icon { font-size: 16px; color: #9ca3af; flex-shrink: 0; }
+
+/* Search suggestion */
+.search-suggestion-wrap { position: relative; }
+.search-suggestion {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30;
+  background: white; border: 1.5px solid #e0e7ff; border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+.suggestion-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  cursor: pointer;
+}
+.suggestion-item:not(:last-child) { border-bottom: 1px solid #f9fafb; }
+.suggestion-avatar {
+  width: 32px; height: 32px; border-radius: 16px;
+  background: #eef2ff; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #4f46e5; flex-shrink: 0;
+}
+.suggestion-name { font-size: 13px; font-weight: 600; color: #111827; }
+.suggestion-phone { font-size: 11px; color: #9ca3af; }
+
+/* Service chips */
+.service-chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.service-chip {
+  padding: 6px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid #e5e7eb; background: white; color: #6b7280;
+}
+.service-chip.selected { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; }
+
+/* Dropdown row */
+.dropdown-field {
+  border: 1.5px solid #e5e7eb; border-radius: 12px;
+  padding: 11px 14px; font-size: 14px; color: #111827;
+  background: white; display: flex; align-items: center; justify-content: space-between;
+}
+.dropdown-val { font-size: 14px; color: #111827; font-weight: 500; }
+.dropdown-arrow { font-size: 14px; color: #9ca3af; }
+
+/* Date/time row */
+.date-time-row { display: flex; gap: 10px; }
+.date-time-row .field-group { flex: 1; }
+
+/* Textarea */
+.textarea-field {
+  border: 1.5px solid #e5e7eb; border-radius: 12px;
+  padding: 10px 14px; font-size: 13px; color: #9ca3af;
+  background: white; min-height: 68px; line-height: 1.5;
+}
+
+.save-btn {
+  background: #4f46e5; border-radius: 14px; padding: 15px;
+  text-align: center; color: white; font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer;
+}
+.form-footer {
+  background: white; border-top: 1px solid #f1f5f9; padding: 12px 16px 20px; flex-shrink: 0;
+}
+
+/* ════════════════════════════════
+   SCREEN 3 — Appointment Detail
+════════════════════════════════ */
+.detail-header {
+  background: white; border-bottom: 1px solid #f3f4f6;
+  padding: 10px 18px 14px; flex-shrink: 0;
+}
+.detail-header-top {
+  display: flex; align-items: center; margin-bottom: 4px;
+}
+.detail-back { font-size: 22px; color: #4f46e5; margin-right: 8px; cursor: pointer; }
+.detail-title { font-size: 17px; font-weight: 700; color: #111827; flex: 1; }
+.detail-edit { font-size: 16px; color: #4f46e5; cursor: pointer; }
+
+.status-banner {
+  border-radius: 10px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+}
+.status-banner.green { background: #dcfce7; border: 1px solid #bbf7d0; }
+.status-banner-icon { font-size: 16px; }
+.status-banner-text { font-size: 13px; font-weight: 700; color: #15803d; }
+
+/* Customer card */
+.cust-card-row { display: flex; align-items: center; gap: 10px; }
+.avatar-circle {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #eef2ff; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: #4f46e5; flex-shrink: 0;
+}
+.avatar-circle.sm { width: 32px; height: 32px; font-size: 13px; }
+.avatar-circle.green { background: #dcfce7; color: #15803d; }
+.cust-name-lbl { font-size: 14px; font-weight: 700; color: #111827; }
+.cust-phone-lbl { font-size: 12px; color: #6b7280; }
+.loyalty-pts { font-size: 11px; color: #f59e0b; font-weight: 600; }
+
+/* Info row in card */
+.info-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid #f9fafb; }
+.info-row:last-child { border-bottom: none; }
+.info-lbl { font-size: 12px; color: #9ca3af; flex-shrink: 0; margin-right: 12px; }
+.info-val { font-size: 13px; font-weight: 500; color: #1f2937; text-align: right; flex: 1; }
+
+/* Services list */
+.services-list { display: flex; flex-direction: column; gap: 4px; }
+.service-item { display: flex; align-items: center; gap: 6px; }
+.service-dot { width: 6px; height: 6px; border-radius: 3px; background: #4f46e5; flex-shrink: 0; }
+.service-name { font-size: 13px; font-weight: 500; color: #1f2937; }
+
+/* Timeline */
+.timeline { padding: 10px 2px; }
+.tl-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 0; }
+.tl-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 16px; }
+.tl-dot { width: 10px; height: 10px; border-radius: 5px; flex-shrink: 0; margin-top: 3px; }
+.tl-dot.filled { background: #4f46e5; }
+.tl-dot.empty { background: #e5e7eb; border: 2px solid #d1d5db; }
+.tl-line { width: 2px; flex: 1; background: #e5e7eb; min-height: 28px; }
+.tl-line.filled { background: #c7d2fe; }
+.tl-content { flex: 1; padding-bottom: 20px; }
+.tl-event { font-size: 13px; font-weight: 600; color: #111827; }
+.tl-time { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+.tl-event.pending { color: #9ca3af; }
+
+/* Action buttons row -->  */
+.detail-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+.action-btn {
+  border-radius: 14px; padding: 13px;
+  text-align: center; font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer;
+}
+.action-btn.primary { background: #4f46e5; color: white; }
+.action-btn.green { background: #22c55e; color: white; }
+.action-btn.red-outline { background: transparent; border: 1.5px solid #ef4444; color: #ef4444; }
+
+.action-footer {
+  background: white; border-top: 1px solid #f1f5f9;
+  padding: 10px 16px 18px; flex-shrink: 0;
+}
+
+/* Detail body scroll */
+.detail-body { flex: 1; overflow: hidden; }
+.detail-scroll { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+</style>
+</head>
+<body>
+
+<!-- ─── Sidebar ─── -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-title">TappyPOS</div>
+    <div class="sidebar-brand-sub">Lịch hẹn · 3 screens</div>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="nav-section-label">Lịch Hẹn</div>
+  <a class="nav-link active" data-screen="a1" onclick="showScreen('a1',this)">1 · Danh sách lịch hẹn</a>
+  <a class="nav-link" data-screen="a2" onclick="showScreen('a2',this)">2 · Thêm lịch hẹn (Form)</a>
+  <a class="nav-link" data-screen="a3" onclick="showScreen('a3',this)">3 · Chi tiết lịch hẹn</a>
+</div>
+
+<!-- ─── Main ─── -->
+<div class="main">
+  <div class="page-title">TappyPOS – Lịch Hẹn</div>
+  <div class="page-sub">Appointment management screens · Click a screen in the sidebar to view</div>
+
+  <!-- ═══════════════════════════════════
+       SCREEN 1 — Appointment List
+  ════════════════════════════════════ -->
+  <div id="a1" class="screen-block visible">
+    <div class="screen-block-title">Screen 1 — Danh sách lịch hẹn</div>
+    <div class="phone-row">
+      <div class="phone-wrap">
+        <div class="phone-label">Appointment List</div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="status-bar white">
+            <span class="s-time">9:41</span>
+            <div class="s-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+          </div>
+
+          <!-- Header -->
+          <div class="apt-header">
+            <div class="apt-header-top">
+              <span class="apt-title">Lịch hẹn</span>
+              <div class="apt-add-btn">+</div>
+            </div>
+          </div>
+
+          <!-- Date strip -->
+          <div class="date-strip">
+            <div class="date-cell">
+              <span class="date-day">T2</span>
+              <span class="date-num">19</span>
+            </div>
+            <div class="date-cell">
+              <span class="date-day">T3</span>
+              <span class="date-num">20</span>
+            </div>
+            <div class="date-cell selected">
+              <span class="date-day">T4</span>
+              <span class="date-num">21</span>
+              <div class="date-today-dot"></div>
+            </div>
+            <div class="date-cell">
+              <span class="date-day">T5</span>
+              <span class="date-num">22</span>
+            </div>
+            <div class="date-cell">
+              <span class="date-day">T6</span>
+              <span class="date-num">23</span>
+            </div>
+            <div class="date-cell">
+              <span class="date-day">T7</span>
+              <span class="date-num">24</span>
+            </div>
+            <div class="date-cell">
+              <span class="date-day">CN</span>
+              <span class="date-num">25</span>
+            </div>
+          </div>
+
+          <!-- Slots body -->
+          <div class="scroll-body">
+            <div class="scrollable">
+              <div class="slots-body">
+
+                <!-- 09:00 -->
+                <div class="slot-group">
+                  <div class="slot-time-label">09:00</div>
+                  <div class="appt-card confirmed" style="padding-left:18px;">
+                    <div class="appt-left-bar bar-indigo"></div>
+                    <div class="appt-info">
+                      <div class="appt-customer-name">Nguyễn Văn A</div>
+                      <div class="appt-services">Cắt tóc nam · 45 phút</div>
+                      <div class="appt-staff">👤 Tuấn</div>
+                    </div>
+                    <div class="appt-right">
+                      <div class="badge badge-green">Đã xác nhận</div>
+                      <div style="font-size:11px;color:#9ca3af;margin-top:4px;">80.000 ₫</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 10:30 -->
+                <div class="slot-group">
+                  <div class="slot-time-label">10:30</div>
+                  <div class="appt-card confirmed-light" style="padding-left:18px;">
+                    <div class="appt-left-bar bar-indigo"></div>
+                    <div class="appt-info">
+                      <div class="appt-customer-name">Trần Thị B</div>
+                      <div class="appt-services">Gội đầu · 20 phút</div>
+                      <div class="appt-staff">👤 Minh</div>
+                    </div>
+                    <div class="appt-right">
+                      <div class="badge badge-green">Đã xác nhận</div>
+                      <div style="font-size:11px;color:#9ca3af;margin-top:4px;">40.000 ₫</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 14:00 – empty -->
+                <div class="slot-group">
+                  <div class="slot-time-label">14:00</div>
+                  <div class="empty-slot">Chưa có lịch hẹn</div>
+                </div>
+
+                <!-- 15:00 – PENDING -->
+                <div class="slot-group">
+                  <div class="slot-time-label">15:00</div>
+                  <div class="appt-card pending-amber" style="padding-left:18px;">
+                    <div class="appt-left-bar bar-amber"></div>
+                    <div class="appt-info">
+                      <div class="appt-customer-name">Lê Văn C</div>
+                      <div class="appt-services">Nhuộm tóc · 90 phút</div>
+                      <div class="appt-staff">👤 Hùng</div>
+                    </div>
+                    <div class="appt-right">
+                      <div class="badge badge-amber">Chờ xác nhận</div>
+                      <div style="font-size:11px;color:#9ca3af;margin-top:4px;">250.000 ₫</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="height:4px;"></div>
+              </div>
+            </div>
+
+            <!-- FAB -->
+            <div class="fab">+</div>
+
+            <!-- Bottom nav -->
+            <div class="bottom-nav">
+              <div class="bn-tab">
+                <span class="bn-icon">🏠</span>
+                <span class="bn-label">Trang chủ</span>
+              </div>
+              <div class="bn-tab active">
+                <span class="bn-icon">🛍️</span>
+                <span class="bn-label" style="color:#4f46e5;">Bán Hàng</span>
+                <div class="bn-active-dot"></div>
+              </div>
+              <div class="bn-tab">
+                <span class="bn-icon">📊</span>
+                <span class="bn-label">Báo Cáo</span>
+              </div>
+              <div class="bn-tab">
+                <span class="bn-icon">☰</span>
+                <span class="bn-label">Thêm</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- .phone -->
+      </div>
+    </div>
+  </div><!-- #a1 -->
+
+  <!-- ═══════════════════════════════════
+       SCREEN 2 — Appointment Form
+  ════════════════════════════════════ -->
+  <div id="a2" class="screen-block">
+    <div class="screen-block-title">Screen 2 — Thêm lịch hẹn</div>
+    <div class="phone-row">
+      <div class="phone-wrap">
+        <div class="phone-label">Add Appointment</div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="status-bar white">
+            <span class="s-time">9:41</span>
+            <div class="s-icons"><span>●●●</span><span>🔋</span></div>
+          </div>
+
+          <!-- Form header -->
+          <div class="form-header">
+            <div class="form-header-top">
+              <span class="form-title">Thêm lịch hẹn</span>
+              <div class="form-close">×</div>
+            </div>
+          </div>
+
+          <!-- Form body -->
+          <div class="form-body">
+            <div class="scrollable">
+              <div class="form-scroll">
+
+                <!-- Customer field with suggestion -->
+                <div class="field-group">
+                  <div class="field-label">Khách hàng</div>
+                  <div class="search-suggestion-wrap">
+                    <div class="field-input" style="border-color:#4f46e5;">
+                      <div class="field-input-row">
+                        <span>Nguyễn Văn A</span>
+                        <span class="field-input-icon">🔍</span>
+                      </div>
+                    </div>
+                    <div class="search-suggestion">
+                      <div class="suggestion-item">
+                        <div class="suggestion-avatar">A</div>
+                        <div>
+                          <div class="suggestion-name">Nguyễn Văn A</div>
+                          <div class="suggestion-phone">0912 345 678 · ★ 240 điểm</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Service multi-select -->
+                <div class="field-group" style="margin-top:8px;">
+                  <div class="field-label">Dịch vụ</div>
+                  <div class="service-chips-wrap">
+                    <div class="service-chip selected">✓ Cắt tóc</div>
+                    <div class="service-chip selected">✓ Gội đầu</div>
+                    <div class="service-chip">Cạo râu</div>
+                    <div class="service-chip">Nhuộm tóc</div>
+                    <div class="service-chip">Massage đầu</div>
+                    <div class="service-chip">Duỗi tóc</div>
+                  </div>
+                </div>
+
+                <!-- Staff dropdown -->
+                <div class="field-group">
+                  <div class="field-label">Nhân viên</div>
+                  <div class="dropdown-field">
+                    <span class="dropdown-val">Tuấn</span>
+                    <span class="dropdown-arrow">▾</span>
+                  </div>
+                </div>
+
+                <!-- Date + Time -->
+                <div class="date-time-row">
+                  <div class="field-group">
+                    <div class="field-label">Ngày</div>
+                    <div class="dropdown-field">
+                      <span class="dropdown-val" style="font-size:13px;">21/05/2026</span>
+                      <span class="dropdown-arrow">📅</span>
+                    </div>
+                  </div>
+                  <div class="field-group">
+                    <div class="field-label">Giờ</div>
+                    <div class="dropdown-field">
+                      <span class="dropdown-val">09:00</span>
+                      <span class="dropdown-arrow">▾</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Note textarea -->
+                <div class="field-group">
+                  <div class="field-label">Ghi chú</div>
+                  <div class="textarea-field">Khách đặt trước, yêu cầu Tuấn phục vụ</div>
+                </div>
+
+                <div style="height:8px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer save button -->
+          <div class="form-footer">
+            <div class="save-btn">📅 Lưu lịch hẹn</div>
+          </div>
+
+        </div><!-- .phone -->
+      </div>
+    </div>
+  </div><!-- #a2 -->
+
+  <!-- ═══════════════════════════════════
+       SCREEN 3 — Appointment Detail
+  ════════════════════════════════════ -->
+  <div id="a3" class="screen-block">
+    <div class="screen-block-title">Screen 3 — Chi tiết lịch hẹn</div>
+    <div class="phone-row">
+      <div class="phone-wrap">
+        <div class="phone-label">Appointment Detail</div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="status-bar white">
+            <span class="s-time">9:41</span>
+            <div class="s-icons"><span>●●●</span><span>🔋</span></div>
+          </div>
+
+          <!-- Header -->
+          <div class="detail-header">
+            <div class="detail-header-top">
+              <span class="detail-back">‹</span>
+              <span class="detail-title">Chi tiết lịch hẹn</span>
+              <span class="detail-edit">✏️</span>
+            </div>
+          </div>
+
+          <!-- Detail body -->
+          <div class="detail-body">
+            <div class="scrollable">
+              <div class="detail-scroll">
+
+                <!-- Status banner -->
+                <div class="status-banner green">
+                  <span class="status-banner-icon">✅</span>
+                  <span class="status-banner-text">Đã xác nhận</span>
+                </div>
+
+                <!-- Customer card -->
+                <div class="info-card">
+                  <div class="section-lbl">Khách hàng</div>
+                  <div class="cust-card-row">
+                    <div class="avatar-circle">A</div>
+                    <div style="flex:1;">
+                      <div class="cust-name-lbl">Nguyễn Văn A</div>
+                      <div class="cust-phone-lbl">0912 345 678</div>
+                    </div>
+                    <div class="loyalty-pts">★ 240 điểm</div>
+                  </div>
+                </div>
+
+                <!-- Appointment info card -->
+                <div class="info-card">
+                  <div class="section-lbl">Thông tin lịch hẹn</div>
+                  <div class="info-row">
+                    <span class="info-lbl">Ngày</span>
+                    <span class="info-val">Thứ Tư, 21/05/2026</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-lbl">Giờ</span>
+                    <span class="info-val">09:00 — 09:45</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-lbl">Dịch vụ</span>
+                    <div class="services-list" style="text-align:right;">
+                      <div class="service-item" style="justify-content:flex-end;">
+                        <span class="service-name">Cắt tóc nam</span>
+                        <div class="service-dot" style="margin-left:6px;"></div>
+                      </div>
+                      <div class="service-item" style="justify-content:flex-end;margin-top:3px;">
+                        <span class="service-name">Gội đầu</span>
+                        <div class="service-dot" style="margin-left:6px;"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-lbl">Nhân viên</span>
+                    <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;">
+                      <div class="avatar-circle sm green">T</div>
+                      <span class="info-val" style="flex:none;">Tuấn</span>
+                    </div>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-lbl">Ghi chú</span>
+                    <span class="info-val" style="color:#6b7280;font-weight:400;">Khách đặt trước, yêu cầu Tuấn</span>
+                  </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="info-card">
+                  <div class="section-lbl">Lịch sử</div>
+                  <div class="timeline">
+
+                    <div class="tl-row">
+                      <div class="tl-col">
+                        <div class="tl-dot filled"></div>
+                        <div class="tl-line filled"></div>
+                      </div>
+                      <div class="tl-content">
+                        <div class="tl-event">Đặt lịch</div>
+                        <div class="tl-time">20/05/2026 · 09:00</div>
+                      </div>
+                    </div>
+
+                    <div class="tl-row">
+                      <div class="tl-col">
+                        <div class="tl-dot filled"></div>
+                        <div class="tl-line"></div>
+                      </div>
+                      <div class="tl-content">
+                        <div class="tl-event">Xác nhận</div>
+                        <div class="tl-time">20/05/2026 · 09:15</div>
+                      </div>
+                    </div>
+
+                    <div class="tl-row">
+                      <div class="tl-col">
+                        <div class="tl-dot empty"></div>
+                      </div>
+                      <div class="tl-content">
+                        <div class="tl-event pending">Hoàn thành</div>
+                        <div class="tl-time" style="color:#d1d5db;">Chưa hoàn thành</div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div style="height:8px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action footer -->
+          <div class="action-footer">
+            <div class="detail-actions">
+              <div style="display:flex;gap:8px;">
+                <div class="action-btn green" style="flex:1;">
+                  ✓ Xác nhận
+                </div>
+                <div class="action-btn red-outline" style="flex:1;">
+                  ✕ Hủy lịch
+                </div>
+              </div>
+              <div class="action-btn primary">
+                🛍️ Tạo đơn hàng
+              </div>
+            </div>
+          </div>
+
+        </div><!-- .phone -->
+      </div>
+    </div>
+  </div><!-- #a3 -->
+
+</div><!-- .main -->
+
+<script>
+function showScreen(id, link) {
+  document.querySelectorAll('.screen-block').forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('visible');
+  link.classList.add('active');
+}
+</script>
+</body>
+</html>

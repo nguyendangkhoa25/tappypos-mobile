@@ -14,16 +14,13 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { customerApi, type CustomerData } from '../../services/api';
 import { PAGE_SIZE } from '../../utils/constants';
+import { formatVnd } from '../../utils/format';
 import { useTypography } from '../../hooks/useTypography';
 import { ErrorState } from '../../components/ErrorState';
 import { ScreenSkeleton } from '../../components/ScreenSkeleton';
 import type { HomeScreenProps } from '../../types/navigation';
 
 type Props = HomeScreenProps<'CustomerList'>;
-
-function fmtVnd(n: number) {
-  return n.toLocaleString('vi-VN') + ' ₫';
-}
 
 function CustomerCard({
   item,
@@ -74,7 +71,7 @@ function CustomerCard({
         {item.totalSpend > 0 && (
           <View className="flex-row items-center flex-1 justify-end">
             <Text className={`${typo.captionBold} text-indigo-600`}>
-              {fmtVnd(item.totalSpend)}
+              {formatVnd(item.totalSpend)}
             </Text>
           </View>
         )}
@@ -199,7 +196,7 @@ export function CustomerListScreen({ navigation }: Props) {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: bottom + 80 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#4f46e5" />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#059669" />
           }
           renderItem={({ item, index }) => (
             <CustomerCard

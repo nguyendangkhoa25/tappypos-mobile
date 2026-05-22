@@ -21,6 +21,8 @@ import { useAlertStore } from '../../store/alertStore';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { formatVnd, formatDate } from '../../utils/format';
+import { MoneyInput } from '../../components/MoneyInput';
+import { DatePickerInput } from '../../components/DatePickerInput';
 import { Skeleton } from '../../components/Skeleton';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -58,8 +60,6 @@ const AUDIT_CONFIG: Record<string, AuditCfg> = {
 };
 const AUDIT_FALLBACK: AuditCfg = { labelKey: '', icon: 'information-outline', color: '#6b7280', bgColor: '#f3f4f6' };
 
-function vnd(n: number) { return n.toLocaleString('vi-VN') + ' ₫'; }
-
 function calcExpectedInterest(pawn: PawnData): number {
   const days = Math.max(0, Math.floor(
     (new Date(pawn.pawnDueDate).getTime() - new Date(pawn.pawnDate).getTime()) / 86_400_000,
@@ -89,7 +89,7 @@ function buildPawnContractHtml(pawn: PawnData, shop: ShopInfo | null | undefined
 
   const disbursementsHtml = (pawn.reqMoneys?.length ?? 0) > 0
     ? `<tr><td colspan="2" class="section-title">Giải ngân thêm</td></tr>
-       ${pawn.reqMoneys!.map((r) => `<tr><td class="lbl">· ${fmtDate(r.requestDate)}</td><td class="val">${vnd(r.requestAmount)}</td></tr>`).join('')}`
+       ${pawn.reqMoneys!.map((r) => `<tr><td class="lbl">· ${fmtDate(r.requestDate)}</td><td class="val">${formatVnd(r.requestAmount)}</td></tr>`).join('')}`
     : '';
 
   const detailRows = (() => {
@@ -174,14 +174,14 @@ function buildPawnContractHtml(pawn: PawnData, shop: ShopInfo | null | undefined
     ${pawn.itemBrand ? row('Thương hiệu', pawn.itemBrand) : ''}
     ${detailRows}
     ${pawn.itemWeight ? row('Trọng lượng', `${pawn.itemWeight} g`) : ''}
-    ${pawn.itemValue ? row('Giá trị ước tính', vnd(pawn.itemValue)) : ''}
+    ${pawn.itemValue ? row('Giá trị ước tính', formatVnd(pawn.itemValue)) : ''}
     ${pawn.itemDescription ? row('Mô tả', pawn.itemDescription) : ''}
   </table>
 
   <div class="terms-box">
     <table>
       <tr><td colspan="2" style="font-weight:bold;font-size:13px;padding-bottom:8px">III. Điều khoản hợp đồng</td></tr>
-      ${row('Số tiền cầm', vnd(pawn.pawnAmount))}
+      ${row('Số tiền cầm', formatVnd(pawn.pawnAmount))}
       ${row('Lãi suất', `${pawn.interestRate}%/tháng`)}
       ${row('Cách tính lãi', CALC_MODE_VI[pawn.interestCalcMode ?? 'MONTHLY'] ?? pawn.interestCalcMode ?? '')}
       ${row('Ngày cầm', fmtDate(pawn.pawnDate))}
@@ -189,9 +189,9 @@ function buildPawnContractHtml(pawn: PawnData, shop: ShopInfo | null | undefined
       ${disbursementsHtml}
       <tr><td colspan="2" class="highlight" style="display:table-cell"></td></tr>
       <tr class="highlight"><td class="lbl" style="font-size:13px;font-weight:bold;color:#000">Lãi dự kiến (đúng hạn)</td>
-        <td class="val" style="font-size:15px">${vnd(expectedInterest)}</td></tr>
+        <td class="val" style="font-size:15px">${formatVnd(expectedInterest)}</td></tr>
       <tr class="highlight"><td class="lbl" style="font-size:13px;font-weight:bold;color:#000">Tổng cần chuộc (đúng hạn)</td>
-        <td class="val" style="font-size:16px;color:#1a1aff">${vnd(pawn.pawnAmount + expectedInterest)}</td></tr>
+        <td class="val" style="font-size:16px;color:#1a1aff">${formatVnd(pawn.pawnAmount + expectedInterest)}</td></tr>
     </table>
   </div>
 
@@ -475,7 +475,7 @@ function ForfeitModal({ pawn, onClose }: { pawn: PawnData; onClose: () => void }
     onError: showError,
   });
 
-  const saleAmount = parseFloat(amount.replace(/\D/g, '')) || 0;
+  const saleAmount = parseInt(amount || '0', 10);
   const gainLoss = saleAmount - (pawn.pawnAmount + interest);
 
   return (
@@ -485,14 +485,9 @@ function ForfeitModal({ pawn, onClose }: { pawn: PawnData; onClose: () => void }
         <Text className={`${typo.section} text-gray-900 dark:text-white mb-4`}>{t('pawn.forfeit.title')}</Text>
 
         <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>{t('pawn.forfeit.forfeitAmount')}</Text>
-        <TextInput
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
-          placeholder="0"
-          placeholderTextColor="#9ca3af"
-          className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-3`}
-        />
+        <View className="mb-3">
+          <MoneyInput rawValue={amount} onChangeRaw={setAmount} placeholder="0" />
+        </View>
 
         {saleAmount > 0 && (
           <View className="flex-row justify-between mb-3 bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3">
@@ -557,15 +552,9 @@ function RequestMoneyModal({ pawn, onClose }: { pawn: PawnData; onClose: () => v
         <Text className={`${typo.section} text-gray-900 dark:text-white mb-4`}>{t('pawn.requestMoney.title')}</Text>
 
         <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>{t('pawn.requestMoney.amount')}</Text>
-        <TextInput
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
-          placeholder="0"
-          placeholderTextColor="#9ca3af"
-          autoFocus
-          className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4`}
-        />
+        <View className="mb-4">
+          <MoneyInput rawValue={amount} onChangeRaw={setAmount} placeholder="0" autoFocus />
+        </View>
 
         <TouchableOpacity
           onPress={() => mutation.mutate()}
@@ -640,14 +629,9 @@ function ExtendModal({ pawn, onClose }: { pawn: PawnData; onClose: () => void })
 
         {/* New due date */}
         <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>{t('pawn.extend.newDueDate')}</Text>
-        <TextInput
-          value={newDueDate}
-          onChangeText={setNewDueDate}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor="#9ca3af"
-          keyboardType="numeric"
-          className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-2`}
-        />
+        <View className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 bg-gray-50 dark:bg-gray-700 mb-2">
+          <DatePickerInput value={newDueDate} onChange={setNewDueDate} minimumDate={new Date()} />
+        </View>
         {/* Quick-add pills */}
         <View className="flex-row gap-2 mb-4">
           {[30, 60, 90].map((n) => (
@@ -931,21 +915,9 @@ export function PawnDetailScreen() {
               <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mr-2 shrink-0`}>
                 {t('pawn.detail.calcToDate')}
               </Text>
-              <TextInput
-                value={calcDate}
-                onChangeText={setCalcDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9ca3af"
-                keyboardType="numeric"
-                className={`flex-1 ${typo.inputSize} text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-gray-50 dark:bg-gray-700`}
-              />
-              <TouchableOpacity
-                onPress={() => setCalcDate(new Date().toISOString().slice(0, 10))}
-                className="ml-2 px-2 py-1.5 bg-primary/10 rounded-lg"
-                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-              >
-                <Text className={`${typo.captionBold} text-primary`}>{t('pawn.detail.today')}</Text>
-              </TouchableOpacity>
+              <View className="flex-1 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-gray-50 dark:bg-gray-700">
+                <DatePickerInput value={calcDate} onChange={setCalcDate} />
+              </View>
             </View>
 
             {/* Summary chips */}

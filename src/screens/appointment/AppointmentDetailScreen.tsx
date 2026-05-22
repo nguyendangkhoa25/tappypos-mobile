@@ -18,6 +18,11 @@ import type { MoreScreenProps } from '../../types/navigation';
 
 type Props = MoreScreenProps<'AppointmentDetail'>;
 
+type ApiErr = { response?: { data?: { error?: string } } };
+function apiMsg(e: unknown): string | undefined {
+  return (e as ApiErr)?.response?.data?.error;
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function formatTime(timeStr: string) { return timeStr.slice(0, 5); }
@@ -44,7 +49,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
     <View className="flex-row items-start gap-3 py-2.5 border-b border-gray-50 dark:border-gray-700 last:border-0">
       <MaterialCommunityIcons name={icon as any} size={16} color="#9ca3af" style={{ marginTop: 1 }} />
       <View className="flex-1">
-        <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wide`}>{label}</Text>
+        <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide`}>{label}</Text>
         <Text className={`${typo.caption} text-gray-900 dark:text-white mt-0.5`}>{value}</Text>
       </View>
     </View>
@@ -78,7 +83,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
   const confirmMutation = useMutation({
     mutationFn: () => appointmentApi.confirm(appointmentId),
     onSuccess: () => { invalidate(); },
-    onError: (e: any) => showAlert(t('common.error'), e?.response?.data?.error ?? t('appt.errorConfirm')),
+    onError: (e: unknown) => showAlert(t('common.error'), apiMsg(e) ?? t('appt.errorConfirm')),
   });
 
   const checkInMutation = useMutation({
@@ -98,25 +103,25 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         },
       ]);
     },
-    onError: (e: any) => showAlert(t('common.error'), e?.response?.data?.error ?? t('appt.errorCheckIn')),
+    onError: (e: unknown) => showAlert(t('common.error'), apiMsg(e) ?? t('appt.errorCheckIn')),
   });
 
   const cancelMutation = useMutation({
     mutationFn: () => appointmentApi.cancel(appointmentId),
     onSuccess: () => { invalidate(); showAlert(t('appt.cancelSuccess'), ''); },
-    onError: (e: any) => showAlert(t('common.error'), e?.response?.data?.error ?? t('appt.errorCancel')),
+    onError: (e: unknown) => showAlert(t('common.error'), apiMsg(e) ?? t('appt.errorCancel')),
   });
 
   const noShowMutation = useMutation({
     mutationFn: () => appointmentApi.noShow(appointmentId),
     onSuccess: () => { invalidate(); showAlert(t('appt.noShowSuccess'), ''); },
-    onError: (e: any) => showAlert(t('common.error'), e?.response?.data?.error ?? t('appt.errorNoShow')),
+    onError: (e: unknown) => showAlert(t('common.error'), apiMsg(e) ?? t('appt.errorNoShow')),
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => appointmentApi.delete(appointmentId),
     onSuccess: () => { invalidate(); navigation.goBack(); },
-    onError: (e: any) => showAlert(t('common.error'), e?.response?.data?.error ?? t('appt.errorDelete')),
+    onError: (e: unknown) => showAlert(t('common.error'), apiMsg(e) ?? t('appt.errorDelete')),
   });
 
   function confirmCancel() {
@@ -150,7 +155,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
           <View className="flex-row items-center mb-0.5">
             <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
-              <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+              <MaterialCommunityIcons name="chevron-left" size={26} color="#059669" />
             </TouchableOpacity>
             <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('appt.detail')}</Text>
           </View>
@@ -186,7 +191,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
       <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
-            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#059669" />
           </TouchableOpacity>
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{appt.appointmentNumber}</Text>
           {canEdit ? (
@@ -194,7 +199,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
               onPress={() => navigation.navigate('AppointmentForm', { appointmentId: appt.id })}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <MaterialCommunityIcons name="pencil-outline" size={22} color="#4f46e5" />
+              <MaterialCommunityIcons name="pencil-outline" size={22} color="#059669" />
             </TouchableOpacity>
           ) : (
             <View style={{ width: 26 }} />
@@ -232,7 +237,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {/* Services */}
         {appt.services.length > 0 && (
           <View className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 border border-gray-100 dark:border-gray-700">
-            <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wide mb-2`}>{t('appt.servicesSection')}</Text>
+            <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2`}>{t('appt.servicesSection')}</Text>
             {appt.services.map((svc, idx) => (
               <View
                 key={svc.id ?? idx}
@@ -241,7 +246,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
                 <View className="flex-1 mr-2">
                   <Text className={`${typo.label} text-gray-900 dark:text-white`}>{svc.productName}</Text>
                   {svc.assignedEmployeeName ? (
-                    <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{svc.assignedEmployeeName}</Text>
+                    <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5`}>{svc.assignedEmployeeName}</Text>
                   ) : null}
                 </View>
                 {svc.unitPrice > 0 && (
@@ -251,7 +256,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
             ))}
             {totalPrice > 0 && (
               <View className="flex-row justify-between pt-2.5 mt-1 border-t border-gray-100 dark:border-gray-600">
-                <Text className={`${typo.label} text-gray-500`}>{t('appt.totalEstimate')}</Text>
+                <Text className={`${typo.label} text-gray-500 dark:text-gray-400`}>{t('appt.totalEstimate')}</Text>
                 <Text className={`${typo.labelBold} text-gray-900 dark:text-white`}>{formatVnd(totalPrice)}</Text>
               </View>
             )}
@@ -261,7 +266,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {/* Note */}
         {appt.note ? (
           <View className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 border border-gray-100 dark:border-gray-700">
-            <Text className={`${typo.captionBold} text-gray-400 uppercase tracking-wide mb-1`}>{t('appt.noteSection')}</Text>
+            <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1`}>{t('appt.noteSection')}</Text>
             <Text className={`${typo.caption} text-gray-700 dark:text-gray-300`}>{appt.note}</Text>
           </View>
         ) : null}
@@ -282,7 +287,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
               disabled={isMutating}
               className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 items-center"
             >
-              <Text className={`${typo.label} text-gray-500`}>{t('appt.noShow')}</Text>
+              <Text className={`${typo.label} text-gray-500 dark:text-gray-400`}>{t('appt.noShow')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -292,12 +297,12 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
           <TouchableOpacity
             onPress={() => confirmMutation.mutate()}
             disabled={isMutating}
-            className="py-3 rounded-xl border border-indigo-300 items-center"
+            className="py-3 rounded-xl border border-primary items-center"
           >
             {confirmMutation.isPending ? (
-              <ActivityIndicator color="#4f46e5" />
+              <ActivityIndicator color="#059669" />
             ) : (
-              <Text className={`${typo.label} text-indigo-600`}>{t('appt.confirm')}</Text>
+              <Text className={`${typo.label} text-primary`}>{t('appt.confirm')}</Text>
             )}
           </TouchableOpacity>
         )}
@@ -305,7 +310,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
         {/* Delete (always visible for non-checked-in) */}
         {appt.status !== 'CHECKED_IN' && (
           <TouchableOpacity onPress={confirmDelete} disabled={isMutating} className="items-center py-2">
-            <Text className={`${typo.caption} text-gray-400`}>{t('appt.delete')}</Text>
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{t('appt.delete')}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -320,7 +325,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
             testID="appt-checkin-btn"
             onPress={() => checkInMutation.mutate()}
             disabled={isMutating}
-            className="bg-indigo-600 rounded-2xl py-4 items-center"
+            className="bg-primary rounded-2xl py-4 items-center"
           >
             {checkInMutation.isPending ? (
               <ActivityIndicator color="white" />

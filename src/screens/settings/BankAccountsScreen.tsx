@@ -205,7 +205,7 @@ export function BankAccountsScreen({ navigation }: SettingsScreenProps<'BankAcco
                 <View key={f.key} className="mb-4">
                   <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{f.label}</Text>
                   <TextInput
-                    value={(form as any)[f.key] ?? ''}
+                    value={(form as Record<string, string>)[f.key] ?? ''}
                     onChangeText={(v) => setForm({ ...form, [f.key]: v || null })}
                     placeholder={f.placeholder}
                     placeholderTextColor="#9ca3af"

@@ -294,24 +294,6 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
       hint: t('more.hintLoyaltyConfig'),
       onPress: () => navigation.navigate('LoyaltyConfig'),
     } as ListItem] : []),
-    {
-      key: 'display',
-      icon: 'palette-outline',
-      iconBg: 'bg-pink-100 dark:bg-pink-900/30',
-      iconColor: '#ec4899',
-      label: t('settings.display'),
-      hint: t('settings.displaySettings.hint'),
-      onPress: () => navigation.navigate('Display'),
-    },
-    ...(has('NOTIFICATION') ? [{
-      key: 'notificationPreferences',
-      icon: 'bell-cog-outline',
-      iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
-      iconColor: '#ca8a04',
-      label: t('settings.notificationPreferences.title'),
-      hint: t('settings.notificationPreferences.hint'),
-      onPress: () => navigation.navigate('NotificationPreferences'),
-    } as ListItem] : []),
   ];
 
   return (
@@ -404,80 +386,63 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
         <SectionLabel label={t('settings.sectionSupport')} isCollapsed={collapsedSections.has('support')} onToggle={() => toggle('support')} />
         {!collapsedSections.has('support') && (
           <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
-            {has('FEEDBACK') && (
-              <ConfigRow
-                item={{
-                  key: 'feedback',
-                  icon: 'message-text-outline',
-                  iconBg: 'bg-sky-100 dark:bg-sky-900/30',
-                  iconColor: '#0284c7',
-                  label: t('settings.feedback.title'),
-                  hint: t('settings.feedback.hint'),
-                  onPress: () => navigation.navigate('Feedback'),
-                }}
-                isLast={false}
-              />
-            )}
             <ConfigRow
               item={{
-                key: 'hotline',
-                icon: 'phone-outline',
-                iconBg: 'bg-teal-100 dark:bg-teal-900/30',
-                iconColor: '#0f766e',
-                label: `${t('settings.hotline')}: ${SUPPORT.phone}`,
-                hint: t('more.hintHotline'),
-                onPress: () => openLink(`tel:${SUPPORT.phone}`),
-              }}
-              isLast={false}
-            />
-            <ConfigRow
-              item={{
-                key: 'email',
-                icon: 'email-outline',
-                iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-                iconColor: '#2563eb',
-                label: SUPPORT.email,
-                hint: t('more.hintEmail'),
-                onPress: () => openLink(`mailto:${SUPPORT.email}`),
-              }}
-              isLast={false}
-            />
-            <ConfigRow
-              item={{
-                key: 'zalo',
-                icon: 'chat-outline',
+                key: 'support',
+                icon: 'headset',
                 iconBg: 'bg-sky-100 dark:bg-sky-900/30',
-                iconColor: '#0ea5e9',
-                label: 'Zalo',
-                hint: t('more.hintZalo'),
-                onPress: () => openLink(SUPPORT.zaloOA),
+                iconColor: '#0284c7',
+                label: t('settings.sectionSupport'),
+                hint: t('more.hintSupport'),
+                onPress: () => navigation.navigate('Feedback'),
               }}
               isLast
             />
           </View>
         )}
 
-        <SectionLabel label={t('settings.title')} isCollapsed={collapsedSections.has('settings')} onToggle={() => toggle('settings')} />
+        <SectionLabel label={t('settings.sectionSettingsSecurity')} isCollapsed={collapsedSections.has('settings')} onToggle={() => toggle('settings')} />
         {!collapsedSections.has('settings') && (
-          <TouchableOpacity
-            testID="more-settings-entry"
-            onPress={() => navigation.navigate('Settings')}
-            activeOpacity={0.7}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex-row items-center gap-3 border border-gray-100 dark:border-gray-700"
-          >
-            <View className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-700 items-center justify-center">
-              <MaterialCommunityIcons name="cog-outline" size={24} color="#6b7280" />
-            </View>
-            <View className="flex-1">
-              <Text className={`${typo.labelBold} text-gray-800 dark:text-gray-100`}>
-                {t('settings.title')}
-              </Text>
-              <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5`}>
-                {t('more.settingsHint')}
-              </Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#9ca3af" />
-          </TouchableOpacity>
+          <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+            <ConfigRow
+              item={{
+                key: 'display',
+                icon: 'palette-outline',
+                iconBg: 'bg-pink-100 dark:bg-pink-900/30',
+                iconColor: '#ec4899',
+                label: t('settings.display'),
+                hint: t('settings.displaySettings.hint'),
+                onPress: () => navigation.navigate('Display'),
+              }}
+              isLast={false}
+            />
+            {has('NOTIFICATION') && (
+              <ConfigRow
+                item={{
+                  key: 'notificationPreferences',
+                  icon: 'bell-cog-outline',
+                  iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
+                  iconColor: '#ca8a04',
+                  label: t('settings.notificationPreferences.title'),
+                  hint: t('settings.notificationPreferences.hint'),
+                  onPress: () => navigation.navigate('NotificationPreferences'),
+                }}
+                isLast={false}
+              />
+            )}
+            <ConfigRow
+              item={{
+                key: 'settings',
+                icon: 'cog-outline',
+                iconBg: 'bg-gray-100 dark:bg-gray-700',
+                iconColor: '#6b7280',
+                label: t('settings.title'),
+                hint: t('more.settingsHint'),
+                onPress: () => navigation.navigate('Settings'),
+              }}
+              isLast
+            />
+          </View>
         )}
       </ScrollView>
     </View>

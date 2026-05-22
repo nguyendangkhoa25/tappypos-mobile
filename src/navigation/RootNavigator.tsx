@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useTypography } from '../hooks/useTypography';
+import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -69,22 +70,23 @@ function SplashScreen() {
 function ForceUpdateScreen() {
   const storeUrl = Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
   const typo = useTypography();
+  const { t } = useTranslation();
   return (
     <View className="flex-1 bg-primary items-center justify-center px-8">
       <View className="w-20 h-20 bg-white/20 rounded-3xl items-center justify-center mb-6">
         <Text className="text-4xl">🔄</Text>
       </View>
       <Text className={`text-white ${typo.heading} text-center mb-3`}>
-        Cần cập nhật ứng dụng
+        {t('update.forceTitle')}
       </Text>
       <Text className={`text-white/80 ${typo.caption} text-center mb-8 leading-5`}>
-        Phiên bản hiện tại không còn được hỗ trợ. Vui lòng cập nhật để tiếp tục sử dụng.
+        {t('update.forceMessage')}
       </Text>
       <TouchableOpacity
         className="bg-white rounded-2xl px-8 py-4"
         onPress={() => Linking.openURL(storeUrl)}
       >
-        <Text className={`text-primary ${typo.body}`}>Cập nhật ngay</Text>
+        <Text className={`text-primary ${typo.body}`}>{t('update.forceAction')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -95,13 +97,14 @@ function ForceUpdateScreen() {
 function SoftUpdateBanner({ onDismiss }: { onDismiss: () => void }) {
   const storeUrl = Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
   const typo = useTypography();
+  const { t } = useTranslation();
   return (
     <View className="absolute top-0 left-0 right-0 bg-amber-400 flex-row items-center px-4 py-3 gap-3" style={{ zIndex: 999 }}>
       <Text className={`flex-1 ${typo.label} text-amber-900`}>
-        Có phiên bản mới. Cập nhật để có trải nghiệm tốt hơn.
+        {t('update.softMessage')}
       </Text>
       <TouchableOpacity onPress={() => Linking.openURL(storeUrl)}>
-        <Text className={`${typo.labelBold} text-amber-900 underline`}>Cập nhật</Text>
+        <Text className={`${typo.labelBold} text-amber-900 underline`}>{t('update.softAction')}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
         <Text className={`text-amber-900 ${typo.body}`}>✕</Text>

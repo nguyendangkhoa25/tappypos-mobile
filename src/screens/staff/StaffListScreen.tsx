@@ -261,7 +261,7 @@ export function StaffListScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 16, paddingBottom: bottom + 96 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#4f46e5" />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#059669" />
           }
           renderItem={({ item, index }) => (
             <StaffRow

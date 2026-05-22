@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Báo Cáo & Dashboard Mockup</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background: #e8eaf6;
+  display: flex;
+  min-height: 100vh;
+  color: #111827;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: #1e1b4b;
+  padding: 32px 0 24px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 0 20px 28px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+.sidebar-logo span { color: #a5b4fc; }
+.sidebar-section {
+  padding: 6px 12px 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6366f1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  margin: 1px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #c7d2fe;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background 0.15s;
+  user-select: none;
+}
+.sidebar-item:hover { background: rgba(99,102,241,0.2); }
+.sidebar-item.active {
+  background: #4f46e5;
+  color: #fff;
+  font-weight: 700;
+}
+.sidebar-item .icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px 20px 0;
+  font-size: 11px;
+  color: #6366f1;
+}
+
+/* ── Main canvas ── */
+.canvas {
+  margin-left: 220px;
+  padding: 40px 48px;
+  flex: 1;
+  min-height: 100vh;
+}
+.canvas-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e1b4b;
+  margin-bottom: 4px;
+}
+.canvas-sub {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 32px;
+}
+
+/* ── Screen grid ── */
+.screen-section { margin-bottom: 56px; }
+.screen-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4338ca;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: #e0e7ff;
+  padding: 4px 14px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+.phones-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+/* ── Phone frame ── */
+.phone-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.phone-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.phone {
+  width: 390px;
+  height: 844px;
+  background: #f9fafb;
+  border-radius: 48px;
+  border: 10px solid #1c1c1e;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.05);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Status bar ── */
+.status-bar {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.status-bar .time { font-size: 15px; font-weight: 700; }
+.status-icons { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+
+/* ── Screen body ── */
+.screen-body {
+  flex: 1;
+  overflow-y: auto;
+  background: #f9fafb;
+  position: relative;
+  padding-bottom: 72px;
+}
+.screen-body::-webkit-scrollbar { display: none; }
+
+/* ── Bottom nav ── */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 72px;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  padding-bottom: 6px;
+  z-index: 20;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 0;
+  cursor: pointer;
+}
+.nav-icon { font-size: 21px; }
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+.nav-item.active .nav-label { color: #4f46e5; }
+.nav-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #4f46e5;
+  margin-top: -2px;
+}
+
+/* ── Report screen ── */
+.report-header {
+  background: #fff;
+  padding: 14px 20px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.report-header-title {
+  font-size: 21px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 12px;
+}
+.tab-row {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #e5e7eb;
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+.tab {
+  padding: 10px 20px 10px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #9ca3af;
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -2px;
+}
+.tab.active {
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
+}
+
+/* Period chips */
+.period-scroll {
+  padding: 12px 16px;
+  overflow-x: auto;
+  white-space: nowrap;
+  display: flex;
+  gap: 6px;
+}
+.period-scroll::-webkit-scrollbar { display: none; }
+.period-chip {
+  display: inline-flex;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.period-chip.active {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 16px 14px;
+}
+.stat-card {
+  border-radius: 14px;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-card.green { background: #dcfce7; }
+.stat-card.indigo { background: #e0e7ff; }
+.stat-card.blue { background: #dbeafe; }
+.stat-card.red { background: #fee2e2; }
+.stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  opacity: 0.75;
+}
+.stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+.stat-value.green { color: #15803d; }
+.stat-value.indigo { color: #3730a3; }
+.stat-value.blue { color: #1d4ed8; }
+.stat-value.red { color: #b91c1c; }
+.stat-sub {
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.stat-sub.green { color: #16a34a; }
+.stat-sub.red { color: #dc2626; }
+
+/* Bar chart */
+.chart-section {
+  margin: 0 16px 14px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 14px 16px 12px;
+}
+.chart-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+.bar-chart-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 64px;
+}
+.bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.bar {
+  width: 100%;
+  border-radius: 5px 5px 0 0;
+  min-height: 4px;
+}
+.bar.green-bar { background: linear-gradient(180deg,#4ade80 0%,#22c55e 100%); }
+.bar-day-label {
+  font-size: 10px;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+/* Orders list section */
+.section-header {
+  padding: 8px 16px 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-count {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+.order-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.order-item {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.order-info { flex: 1; min-width: 0; }
+.order-id {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4f46e5;
+  margin-bottom: 2px;
+}
+.order-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.order-services {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+.order-right { text-align: right; flex-shrink: 0; }
+.order-amount {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 4px;
+}
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #16a34a;
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
+.dot.amber { background: #f59e0b; }
+.dot.red { background: #ef4444; }
+
+/* Donut chart (CSS) */
+.donut-section {
+  margin: 0 16px 14px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+}
+.donut-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.donut {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: conic-gradient(
+    #4f46e5 0deg 306deg,
+    #f59e0b 306deg 374.4deg,
+    #e5e7eb 374.4deg 360deg
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.donut::after {
+  content: '';
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #fff;
+}
+.donut-center {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+.donut-legend { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #374151;
+  font-weight: 500;
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.legend-label { flex: 1; }
+.legend-value { font-weight: 700; color: #111827; }
+.legend-pct { font-size: 11px; color: #9ca3af; margin-left: 4px; }
+
+/* Expense summary for report */
+.exp-summary-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 14px;
+}
+.exp-sum-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.exp-sum-left {}
+.exp-sum-label { font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 2px; }
+.exp-sum-value { font-size: 17px; font-weight: 800; color: #111827; }
+.exp-sum-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.exp-sum-badge.blue { background: #dbeafe; color: #1d4ed8; }
+.exp-sum-badge.amber { background: #fef3c7; color: #92400e; }
+.exp-sum-badge.gray { background: #f3f4f6; color: #374151; }
+
+/* ── Dashboard / Home ── */
+.home-header {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  padding: 16px 20px 20px;
+}
+.home-greeting {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 2px;
+}
+.home-date {
+  font-size: 12.5px;
+  color: #c7d2fe;
+  font-weight: 500;
+}
+.home-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: -12px 16px 0;
+  position: relative;
+  z-index: 5;
+  margin-bottom: 14px;
+}
+.home-stat-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.home-stat-icon { font-size: 20px; margin-bottom: 4px; }
+.home-stat-label { font-size: 11px; color: #6b7280; font-weight: 600; }
+.home-stat-value { font-size: 17px; font-weight: 800; color: #111827; }
+.home-stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+.home-stat-badge.green { color: #16a34a; }
+.home-stat-badge.amber { color: #d97706; }
+.home-stat-badge.red { color: #dc2626; }
+
+/* Shortcut row */
+.shortcuts-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 16px;
+  overflow-x: auto;
+}
+.shortcuts-row::-webkit-scrollbar { display: none; }
+.shortcut-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.shortcut-icon-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+.shortcut-icon-wrap.indigo { background: #eef2ff; }
+.shortcut-icon-wrap.green { background: #dcfce7; }
+.shortcut-icon-wrap.amber { background: #fef3c7; }
+.shortcut-icon-wrap.blue { background: #dbeafe; }
+.shortcut-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #374151;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Active orders */
+.section-title {
+  padding: 4px 16px 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.see-all {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4f46e5;
+  cursor: pointer;
+}
+.active-order-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.active-order-card {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border-radius: 14px;
+  border: 1px solid #c7d2fe;
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.active-order-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.active-order-info { flex: 1; min-width: 0; }
+.active-order-name { font-size: 13.5px; font-weight: 800; color: #1e1b4b; margin-bottom: 2px; }
+.active-order-service { font-size: 12px; color: #4f46e5; font-weight: 600; margin-bottom: 3px; }
+.active-order-time { font-size: 11px; color: #6b7280; font-weight: 500; }
+.active-order-right { text-align: right; flex-shrink: 0; }
+.active-order-price { font-size: 14px; font-weight: 800; color: #3730a3; }
+.active-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #d97706;
+  margin-top: 2px;
+}
+.pulse-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Appointments */
+.appt-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.appt-item {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.appt-time-block {
+  text-align: center;
+  min-width: 42px;
+}
+.appt-time { font-size: 13px; font-weight: 800; color: #4f46e5; }
+.appt-ampm { font-size: 10px; color: #9ca3af; font-weight: 600; }
+.appt-divider {
+  width: 2px;
+  height: 36px;
+  border-radius: 2px;
+  background: #e5e7eb;
+  flex-shrink: 0;
+}
+.appt-info { flex: 1; min-width: 0; }
+.appt-name { font-size: 13.5px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+.appt-service { font-size: 12px; color: #6b7280; font-weight: 500; }
+.appt-status {
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.appt-status.confirmed { background: #dcfce7; color: #15803d; }
+.appt-status.pending { background: #fef3c7; color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">Tappy<span>POS</span></div>
+
+  <div class="sidebar-section">Màn hình</div>
+  <div class="sidebar-item" onclick="showSection('s3')" id="nav-s3">
+    <span class="icon">🏠</span> Màn 3: Dashboard
+  </div>
+  <div class="sidebar-item active" onclick="showSection('s1')" id="nav-s1">
+    <span class="icon">📊</span> Màn 1: Báo cáo Doanh thu
+  </div>
+  <div class="sidebar-item" onclick="showSection('s2')" id="nav-s2">
+    <span class="icon">💸</span> Màn 2: Báo cáo Chi phí
+  </div>
+
+  <div class="sidebar-footer">TappyPOS Mobile · Báo Cáo</div>
+</nav>
+
+<!-- ═══════════════════════════ CANVAS ═══════════════════════════ -->
+<main class="canvas">
+  <div class="canvas-title">Báo Cáo & Dashboard</div>
+  <div class="canvas-sub">3 màn hình — chọn từ sidebar để xem</div>
+
+  <!-- ─── SCREEN 1: Report — Revenue Tab ─── -->
+  <div class="screen-section" id="s1">
+    <div class="screen-section-label">Màn 1 — Báo Cáo · Tab Doanh thu (Tuần này)</div>
+    <div class="phones-row">
+      <div class="phone-wrap">
+        <div class="phone-label">390 × 844</div>
+        <div class="phone">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="status-icons">📶 🔋</div>
+          </div>
+
+          <!-- Report header + tabs -->
+          <div class="report-header">
+            <div class="report-header-title">Báo Cáo</div>
+            <div class="tab-row">
+              <div class="tab active">Doanh thu</div>
+              <div class="tab">Chi phí</div>
+            </div>
+          </div>
+
+          <div class="screen-body">
+            <!-- Period chips -->
+            <div class="period-scroll">
+              <div class="period-chip">Hôm nay</div>
+              <div class="period-chip">Hôm qua</div>
+              <div class="period-chip active">Tuần này</div>
+              <div class="period-chip">Tháng này</div>
+              <div class="period-chip">Tháng trước</div>
+              <div class="period-chip">Năm nay</div>
+              <div class="period-chip">Tùy chỉnh</div>
+            </div>
+
+            <!-- Stats grid -->
+            <div class="stats-grid">
+              <div class="stat-card green">
+                <div class="stat-label">Doanh thu</div>
+                <div class="stat-value green" style="font-size:15px">4.250.000₫</div>
+                <div class="stat-sub green">↑ +12% so tuần trước</div>
+              </div>
+              <div class="stat-card indigo">
+                <div class="stat-label">Số đơn</div>
+                <div class="stat-value indigo">28</div>
+                <div class="stat-sub" style="color:#6366f1">đơn hàng</div>
+              </div>
+              <div class="stat-card blue">
+                <div class="stat-label">Trung bình/đơn</div>
+                <div class="stat-value blue" style="font-size:14px">151.786₫</div>
+                <div class="stat-sub" style="color:#3b82f6">per order</div>
+              </div>
+              <div class="stat-card red">
+                <div class="stat-label">Đơn hủy</div>
+                <div class="stat-value red">1</div>
+                <div class="stat-sub red">đơn</div>
+              </div>
+            </div>
+
+            <!-- Bar chart 7 days -->
+            <div class="chart-section">
+              <div class="chart-section-title">Doanh thu 7 ngày qua</div>
+              <div class="bar-chart-wrap">
+                <div class="bar-group"><div class="bar green-bar" style="height:36px"></div><div class="bar-day-label">T2</div></div>
+                <div class="bar-group"><div class="bar green-bar" style="height:52px"></div><div class="bar-day-label">T3</div></div>
+                <div class="bar-group"><div class="bar green-bar" style="height:28px"></div><div class="bar-day-label">T4</div></div>
+                <div class="bar-group"><div class="bar green-bar" style="height:48px"></div><div class="bar-day-label">T5</div></div>
+                <div class="bar-group"><div class="bar green-bar" style="height:60px"></div><div class="bar-day-label">T6</div></div>
+                <div class="bar-group"><div class="bar green-bar" style="height:44px"></div><div class="bar-day-label">T7</div></div>
+                <div class="bar-group"><div class="bar green-bar" style="height:18px;opacity:0.5"></div><div class="bar-day-label">CN</div></div>
+              </div>
+            </div>
+
+            <!-- Orders list -->
+            <div class="section-header">
+              <span>Đơn hàng</span>
+              <span class="section-count">28 đơn</span>
+            </div>
+            <div class="order-list">
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id">#B2024001</div>
+                  <div class="order-name">Nguyễn Văn A</div>
+                  <div class="order-services">Cắt tóc, Gội đầu</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">130.000₫</div>
+                  <div class="status-dot"><div class="dot"></div> Hoàn thành</div>
+                </div>
+              </div>
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id">#B2024002</div>
+                  <div class="order-name">Trần Thị B</div>
+                  <div class="order-services">Uốn tóc, Nhuộm</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">450.000₫</div>
+                  <div class="status-dot"><div class="dot"></div> Hoàn thành</div>
+                </div>
+              </div>
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id">#B2024003</div>
+                  <div class="order-name">Lê Minh C</div>
+                  <div class="order-services">Cắt tóc nam</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">80.000₫</div>
+                  <div class="status-dot"><div class="dot amber"></div><span style="color:#d97706">Đang làm</span></div>
+                </div>
+              </div>
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id">#B2024004</div>
+                  <div class="order-name">Phạm Thu D</div>
+                  <div class="order-services">Nhuộm highlight, Duỗi</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">720.000₫</div>
+                  <div class="status-dot"><div class="dot"></div> Hoàn thành</div>
+                </div>
+              </div>
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id">#B2024005</div>
+                  <div class="order-name">Hoàng Văn E</div>
+                  <div class="order-services">Cắt + Sấy tạo kiểu</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">150.000₫</div>
+                  <div class="status-dot"><div class="dot red"></div><span style="color:#dc2626">Hủy</span></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Bottom nav -->
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Trang chủ</div></div>
+            <div class="nav-item"><div class="nav-icon">🛍️</div><div class="nav-label">Bán Hàng</div></div>
+            <div class="nav-item active">
+              <div class="nav-icon">📊</div>
+              <div class="nav-label" style="color:#4f46e5">Báo Cáo</div>
+              <div class="nav-dot"></div>
+            </div>
+            <div class="nav-item"><div class="nav-icon">☰</div><div class="nav-label">Thêm</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 2: Report — Expenses Tab ─── -->
+  <div class="screen-section" id="s2" style="display:none">
+    <div class="screen-section-label">Màn 2 — Báo Cáo · Tab Chi phí</div>
+    <div class="phones-row">
+      <div class="phone-wrap">
+        <div class="phone-label">390 × 844</div>
+        <div class="phone">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="status-icons">📶 🔋</div>
+          </div>
+
+          <div class="report-header">
+            <div class="report-header-title">Báo Cáo</div>
+            <div class="tab-row">
+              <div class="tab">Doanh thu</div>
+              <div class="tab active">Chi phí</div>
+            </div>
+          </div>
+
+          <div class="screen-body">
+            <!-- Period chips -->
+            <div class="period-scroll">
+              <div class="period-chip">Hôm nay</div>
+              <div class="period-chip">Hôm qua</div>
+              <div class="period-chip active">Tuần này</div>
+              <div class="period-chip">Tháng này</div>
+              <div class="period-chip">Tháng trước</div>
+              <div class="period-chip">Năm nay</div>
+              <div class="period-chip">Tùy chỉnh</div>
+            </div>
+
+            <!-- Summary cards -->
+            <div class="exp-summary-cards">
+              <div class="exp-sum-card">
+                <div class="exp-sum-left">
+                  <div class="exp-sum-label">Tổng chi phí</div>
+                  <div class="exp-sum-value">4.299.000₫</div>
+                </div>
+                <div class="exp-sum-badge gray">Tháng 05/2026</div>
+              </div>
+              <div class="exp-sum-card">
+                <div class="exp-sum-left">
+                  <div class="exp-sum-label">Chi phí cố định</div>
+                  <div class="exp-sum-value" style="color:#1d4ed8">3.500.000₫</div>
+                </div>
+                <div class="exp-sum-badge blue">81%</div>
+              </div>
+              <div class="exp-sum-card">
+                <div class="exp-sum-left">
+                  <div class="exp-sum-label">Chi phí phát sinh</div>
+                  <div class="exp-sum-value" style="color:#d97706">799.000₫</div>
+                </div>
+                <div class="exp-sum-badge amber">19%</div>
+              </div>
+            </div>
+
+            <!-- Donut chart -->
+            <div class="donut-section">
+              <div class="donut-title">Phân loại chi phí</div>
+              <div class="donut-wrap">
+                <div class="donut">
+                  <div class="donut-center">
+                    <div style="font-size:10px;color:#6b7280">Tổng</div>
+                    <div style="font-size:12px;font-weight:800;color:#111827">4,3tr</div>
+                  </div>
+                </div>
+                <div class="donut-legend">
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background:#4f46e5"></div>
+                    <div class="legend-label">Cố định</div>
+                    <div class="legend-value">3.500.000₫</div>
+                    <div class="legend-pct">81%</div>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background:#f59e0b"></div>
+                    <div class="legend-label">Phát sinh</div>
+                    <div class="legend-value">799.000₫</div>
+                    <div class="legend-pct">19%</div>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background:#e5e7eb"></div>
+                    <div class="legend-label">Còn lại</div>
+                    <div class="legend-value" style="color:#9ca3af">0₫</div>
+                    <div class="legend-pct" style="color:#d1d5db">0%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expense items (read-only view) -->
+            <div class="section-header">
+              <span>Danh sách chi phí</span>
+              <span class="section-count">8 khoản</span>
+            </div>
+            <div class="order-list" style="padding-bottom:0">
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id" style="color:#374151;font-size:11px">🏠 Mặt bằng · Cố định</div>
+                  <div class="order-name">Tiền thuê mặt bằng</div>
+                  <div class="order-services">01/05/2026</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">2.000.000₫</div>
+                </div>
+              </div>
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id" style="color:#374151;font-size:11px">⚡ Điện nước · Cố định</div>
+                  <div class="order-name">Tiền điện</div>
+                  <div class="order-services">05/05/2026</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">850.000₫</div>
+                </div>
+              </div>
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id" style="color:#374151;font-size:11px">💧 Điện nước · Cố định</div>
+                  <div class="order-name">Tiền nước</div>
+                  <div class="order-services">05/05/2026</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">200.000₫</div>
+                </div>
+              </div>
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id" style="color:#374151;font-size:11px">📡 Dịch vụ · Cố định</div>
+                  <div class="order-name">Internet</div>
+                  <div class="order-services">01/05/2026</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">450.000₫</div>
+                </div>
+              </div>
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id" style="color:#d97706;font-size:11px">🛒 Nguyên vật liệu · Phát sinh</div>
+                  <div class="order-name">Mua dầu gội</div>
+                  <div class="order-services">10/05/2026</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">300.000₫</div>
+                </div>
+              </div>
+
+              <div class="order-item">
+                <div class="order-info">
+                  <div class="order-id" style="color:#d97706;font-size:11px">📣 Marketing · Phát sinh</div>
+                  <div class="order-name">Quảng cáo Facebook</div>
+                  <div class="order-services">15/05/2026</div>
+                </div>
+                <div class="order-right">
+                  <div class="order-amount">200.000₫</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Bottom nav -->
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Trang chủ</div></div>
+            <div class="nav-item"><div class="nav-icon">🛍️</div><div class="nav-label">Bán Hàng</div></div>
+            <div class="nav-item active">
+              <div class="nav-icon">📊</div>
+              <div class="nav-label" style="color:#4f46e5">Báo Cáo</div>
+              <div class="nav-dot"></div>
+            </div>
+            <div class="nav-item"><div class="nav-icon">☰</div><div class="nav-label">Thêm</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 3: Dashboard / Home ─── -->
+  <div class="screen-section" id="s3" style="display:none">
+    <div class="screen-section-label">Màn 3 — Dashboard (Trang chủ)</div>
+    <div class="phones-row">
+      <div class="phone-wrap">
+        <div class="phone-label">390 × 844</div>
+        <div class="phone">
+          <div class="status-bar" style="background:transparent;position:absolute;top:0;left:0;right:0;z-index:10;color:#fff">
+            <span class="time" style="color:#fff">9:41</span>
+            <div class="status-icons" style="color:#c7d2fe">📶 🔋</div>
+          </div>
+
+          <div class="screen-body" style="padding-top:0">
+            <!-- Gradient header -->
+            <div class="home-header" style="padding-top:50px">
+              <div class="home-greeting">Xin chào, Tuấn! 👋</div>
+              <div class="home-date">Thứ Tư, 21/05/2026</div>
+              <!-- Notification bell -->
+              <div style="position:absolute;top:48px;right:20px;width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px">🔔</div>
+            </div>
+
+            <!-- Quick stats grid — overlaps header -->
+            <div class="home-stats-grid">
+              <div class="home-stat-card">
+                <div class="home-stat-icon">💰</div>
+                <div class="home-stat-label">Hôm nay</div>
+                <div class="home-stat-value" style="font-size:14px">850.000₫</div>
+                <div class="home-stat-badge green">↑ +8% hôm qua</div>
+              </div>
+              <div class="home-stat-card">
+                <div class="home-stat-icon">🛍️</div>
+                <div class="home-stat-label">Đơn hàng</div>
+                <div class="home-stat-value">6</div>
+                <div class="home-stat-badge" style="color:#4f46e5">đơn hôm nay</div>
+              </div>
+              <div class="home-stat-card">
+                <div class="home-stat-icon">✂️</div>
+                <div class="home-stat-label">Đang phục vụ</div>
+                <div class="home-stat-value">2</div>
+                <div class="home-stat-badge amber">● đang làm</div>
+              </div>
+              <div class="home-stat-card">
+                <div class="home-stat-icon">💸</div>
+                <div class="home-stat-label">Chi phí tháng</div>
+                <div class="home-stat-value" style="font-size:13px">4.299.000₫</div>
+                <div class="home-stat-badge red">tháng 05/2026</div>
+              </div>
+            </div>
+
+            <!-- Shortcut buttons -->
+            <div class="shortcuts-row">
+              <div class="shortcut-btn">
+                <div class="shortcut-icon-wrap indigo">🛍️</div>
+                <div class="shortcut-label">+ Đơn mới</div>
+              </div>
+              <div class="shortcut-btn">
+                <div class="shortcut-icon-wrap green">📅</div>
+                <div class="shortcut-label">Lịch hẹn</div>
+              </div>
+              <div class="shortcut-btn">
+                <div class="shortcut-icon-wrap amber">👥</div>
+                <div class="shortcut-label">Khách hàng</div>
+              </div>
+              <div class="shortcut-btn">
+                <div class="shortcut-icon-wrap blue">📊</div>
+                <div class="shortcut-label">Báo cáo</div>
+              </div>
+              <div class="shortcut-btn">
+                <div class="shortcut-icon-wrap" style="background:#fce7f3">💅</div>
+                <div class="shortcut-label">Dịch vụ</div>
+              </div>
+            </div>
+
+            <!-- Active orders -->
+            <div class="section-title">
+              <span>Đơn đang làm</span>
+              <span class="see-all">Xem tất cả</span>
+            </div>
+            <div class="active-order-list">
+
+              <div class="active-order-card">
+                <div class="active-order-num">A1</div>
+                <div class="active-order-info">
+                  <div class="active-order-name">Nguyễn Thị Lan</div>
+                  <div class="active-order-service">Nhuộm tóc + Sấy tạo kiểu</div>
+                  <div class="active-order-time">Bắt đầu 9:15 · còn ~30 phút</div>
+                </div>
+                <div class="active-order-right">
+                  <div class="active-order-price">350.000₫</div>
+                  <div class="active-status"><div class="pulse-dot"></div> Đang làm</div>
+                </div>
+              </div>
+
+              <div class="active-order-card">
+                <div class="active-order-num">A2</div>
+                <div class="active-order-info">
+                  <div class="active-order-name">Trần Văn Bình</div>
+                  <div class="active-order-service">Cắt tóc nam + Gội đầu</div>
+                  <div class="active-order-time">Bắt đầu 9:30 · còn ~10 phút</div>
+                </div>
+                <div class="active-order-right">
+                  <div class="active-order-price">130.000₫</div>
+                  <div class="active-status"><div class="pulse-dot"></div> Đang làm</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Appointments today -->
+            <div class="section-title">
+              <span>Lịch hẹn hôm nay</span>
+              <span class="see-all">Xem lịch</span>
+            </div>
+            <div class="appt-list">
+
+              <div class="appt-item">
+                <div class="appt-time-block">
+                  <div class="appt-time">10:30</div>
+                  <div class="appt-ampm">SA</div>
+                </div>
+                <div class="appt-divider"></div>
+                <div class="appt-info">
+                  <div class="appt-name">Lê Thị Hoa</div>
+                  <div class="appt-service">Uốn tóc · 90 phút · Linh</div>
+                </div>
+                <div class="appt-status confirmed">Đã xác nhận</div>
+              </div>
+
+              <div class="appt-item">
+                <div class="appt-time-block">
+                  <div class="appt-time">14:00</div>
+                  <div class="appt-ampm">CH</div>
+                </div>
+                <div class="appt-divider"></div>
+                <div class="appt-info">
+                  <div class="appt-name">Phạm Minh Tuấn</div>
+                  <div class="appt-service">Cắt + Nhuộm · 60 phút · Hùng</div>
+                </div>
+                <div class="appt-status pending">Chờ xác nhận</div>
+              </div>
+
+            </div>
+
+            <!-- Bottom spacing -->
+            <div style="height:12px"></div>
+          </div>
+
+          <!-- Bottom nav -->
+          <div class="bottom-nav">
+            <div class="nav-item active">
+              <div class="nav-icon">🏠</div>
+              <div class="nav-label" style="color:#4f46e5">Trang chủ</div>
+              <div class="nav-dot"></div>
+            </div>
+            <div class="nav-item"><div class="nav-icon">🛍️</div><div class="nav-label">Bán Hàng</div></div>
+            <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Báo Cáo</div></div>
+            <div class="nav-item"><div class="nav-icon">☰</div><div class="nav-label">Thêm</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const screens = ['s1','s2','s3'];
+
+function showSection(id) {
+  screens.forEach(s => {
+    document.getElementById(s).style.display = (s === id) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.sidebar-item').forEach((el, i) => {
+    // sidebar order: s3, s1, s2
+    const order = ['s3','s1','s2'];
+    el.classList.toggle('active', order[i] === id);
+  });
+}
+// Default: show screen 1 (Revenue Report)
+showSection('s1');
+</script>
+</body>
+</html>

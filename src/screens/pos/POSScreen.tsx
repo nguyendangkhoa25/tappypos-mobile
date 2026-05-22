@@ -9,7 +9,6 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   useWindowDimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,6 +25,7 @@ const SOLD_OUT_KEY = 'sold_out_log';
 type SoldOutEntry = { productId: string; name: string; markedAt: string };
 import { PAGE_SIZE } from '../../utils/constants';
 import { useCartStore } from '../../store/cartStore';
+import { useAlertStore } from '../../store/alertStore';
 import { formatVnd } from '../../utils/format';
 import { useTypography } from '../../hooks/useTypography';
 import { MoneyInput } from '../../components/MoneyInput';
@@ -49,6 +49,7 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
   const canLoadMore = useRef(false);
   const { items, addItem, updatePrice, tableId, tableLabel, setTable } = useCartStore();
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
+  const { show: showAlert } = useAlertStore();
 
   const [sheetProduct, setSheetProduct] = useState<ProductData | null>(null);
   const [sheetPrice, setSheetPrice] = useState('');
@@ -77,19 +78,19 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
       const stale = entries.filter((e) => new Date(e.markedAt).toDateString() !== today);
       setSoldOutIds(new Set(entries.map((e) => e.productId)));
       if (stale.length > 0) {
-        Alert.alert(
+        showAlert(
           t('pos.soldOutMorningTitle'),
           t('pos.soldOutMorningMsg', { count: stale.length }),
           [
             {
-              text: t('pos.soldOutRestoreAll'),
+              label: t('pos.soldOutRestoreAll'),
               onPress: () => {
                 const fresh = entries.filter((e) => new Date(e.markedAt).toDateString() === today);
                 AsyncStorage.setItem(SOLD_OUT_KEY, JSON.stringify(fresh));
                 setSoldOutIds(new Set(fresh.map((e) => e.productId)));
               },
             },
-            { text: t('pos.soldOutKeep'), style: 'cancel' },
+            { label: t('pos.soldOutKeep'), style: 'cancel' },
           ],
         );
       }
@@ -161,12 +162,12 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
   const handleLongPress = useCallback((product: ProductData) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const isSoldOut = soldOutIds.has(product.id);
-    Alert.alert(
+    showAlert(
       product.name,
       isSoldOut ? t('pos.soldOutCurrently') : t('pos.soldOutPrompt'),
       [
         {
-          text: isSoldOut ? t('pos.soldOutRestore') : t('pos.soldOutMark'),
+          label: isSoldOut ? t('pos.soldOutRestore') : t('pos.soldOutMark'),
           style: isSoldOut ? 'default' : 'destructive',
           onPress: async () => {
             const raw = await AsyncStorage.getItem(SOLD_OUT_KEY);
@@ -183,7 +184,7 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
             }
           },
         },
-        { text: t('common.cancel'), style: 'cancel' },
+        { label: t('common.cancel'), style: 'cancel' },
       ],
     );
   }, [soldOutIds, t]);

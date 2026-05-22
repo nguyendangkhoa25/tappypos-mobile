@@ -295,7 +295,7 @@ export function MyWorkScreen({ navigation }: MyWorkScreenProps<'MyWorkMain'>) {
           data={items as WorkItemDTO[]}
           keyExtractor={(item) => String(item.itemId)}
           contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 20 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />}
           ListEmptyComponent={
             <EmptyState
               icon={tab === 'queue' ? '📋' : '🙌'}

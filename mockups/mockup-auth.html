@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TappyPOS – Auth &amp; Onboarding Mockups</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --indigo-50: #eef2ff;
+      --indigo-100: #e0e7ff;
+      --indigo-200: #c7d2fe;
+      --indigo-500: #6366f1;
+      --indigo-600: #4f46e5;
+      --indigo-700: #4338ca;
+      --indigo-800: #3730a3;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: #f1f5f9;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(79,70,229,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.03) 0%, transparent 50%);
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      background: #fff;
+      border-right: 1px solid var(--gray-200);
+      padding: 0 0 20px;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-brand {
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-icon {
+      width: 32px; height: 32px;
+      background: var(--indigo-600);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; font-size: 14px;
+      flex-shrink: 0;
+    }
+    .brand-name { font-size: 13px; font-weight: 700; color: var(--gray-800); line-height: 1.2; }
+    .brand-sub { font-size: 10px; color: var(--gray-400); font-weight: 500; }
+    .sidebar h2 {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 16px 16px 6px;
+      margin: 0;
+    }
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      color: var(--gray-600);
+      text-decoration: none;
+      border-radius: 8px;
+      margin: 1px 8px;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      font-weight: 500;
+    }
+    .sidebar a .nav-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gray-300);
+      flex-shrink: 0;
+    }
+    .sidebar a.active, .sidebar a:hover {
+      background: var(--indigo-50);
+      color: var(--indigo-600);
+      font-weight: 600;
+    }
+    .sidebar a.active .nav-dot { background: var(--indigo-500); }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 12px 16px;
+      border-top: 1px solid var(--gray-100);
+      font-size: 11px;
+      color: var(--gray-400);
+      font-weight: 500;
+    }
+
+    /* ── Main canvas ── */
+    .main {
+      margin-left: 220px;
+      padding: 40px 40px 60px;
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      align-items: flex-start;
+    }
+
+    /* ── Screen wrapper ── */
+    .screen-wrapper { display: none; flex-direction: column; gap: 12px; }
+    .screen-wrapper.active { display: flex; }
+    .screen-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+    .screen-desc {
+      font-size: 13px;
+      color: var(--gray-500);
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    /* ── Phone frame ── */
+    .phone-frame {
+      width: 393px;
+      background: #fff;
+      border-radius: 50px;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.06),
+        0 4px 12px rgba(0,0,0,0.08),
+        0 20px 60px rgba(0,0,0,0.14),
+        inset 0 0 0 1px rgba(255,255,255,0.8);
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    /* iOS notch / dynamic island */
+    .dynamic-island {
+      position: absolute;
+      top: 12px; left: 50%;
+      transform: translateX(-50%);
+      width: 120px; height: 34px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 20;
+    }
+
+    /* Status bar */
+    .status-bar {
+      background: transparent;
+      padding: 16px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+      min-height: 52px;
+    }
+    .status-time { font-size: 15px; font-weight: 700; color: var(--gray-800); }
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+    .status-icons svg { color: var(--gray-700); }
+
+    /* Home indicator */
+    .home-indicator {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+    }
+    .home-bar {
+      width: 134px; height: 5px;
+      background: var(--gray-800);
+      border-radius: 3px;
+      opacity: 0.2;
+    }
+
+    /* Screen content */
+    .screen-content {
+      min-height: 750px;
+      overflow: hidden;
+    }
+
+    /* ── Shared UI primitives ── */
+    .btn {
+      width: 100%;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 14px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity .15s, transform .1s;
+      letter-spacing: -.01em;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-primary {
+      background: var(--indigo-600);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+    }
+    .btn-primary:hover { background: var(--indigo-700); }
+    .btn-white {
+      background: #fff;
+      color: var(--indigo-700);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--indigo-600);
+      border: 1.5px solid var(--indigo-200);
+    }
+    .btn-outline {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      backdrop-filter: blur(8px);
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+    .input-wrap { position: relative; }
+    .form-input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--gray-800);
+      background: var(--gray-50);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      -webkit-appearance: none;
+    }
+    .form-input:focus {
+      border-color: var(--indigo-500);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+    .form-input.has-icon { padding-left: 44px; }
+    .form-input.has-right { padding-right: 44px; }
+    .input-icon {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      display: flex; align-items: center;
+    }
+    .input-icon-right {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      cursor: pointer;
+      display: flex; align-items: center;
+    }
+    .input-placeholder { color: var(--gray-400); }
+
+    .link-text {
+      font-size: 14px;
+      color: var(--indigo-600);
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .text-muted { font-size: 13px; color: var(--gray-500); }
+    .text-center { text-align: center; }
+
+    /* ── SVG icons ── */
+    svg { display: inline-block; vertical-align: middle; }
+
+    /* ── SCREEN 1: Login ── */
+    #s-login .screen-content {
+      background: #fff;
+      padding: 0;
+    }
+    .login-body {
+      padding: 8px 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .login-top-bar {
+      display: flex;
+      justify-content: flex-end;
+      padding: 4px 0 12px;
+    }
+    .lang-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--gray-100);
+      border-radius: 20px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-600);
+      cursor: pointer;
+    }
+    .logo-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0 24px;
+      gap: 10px;
+    }
+    .app-logo-circle {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--indigo-500), var(--indigo-700));
+      border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 32px;
+      font-weight: 800;
+      box-shadow: 0 8px 24px rgba(79,70,229,0.3);
+      letter-spacing: -1px;
+    }
+    .app-logo-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.5px;
+    }
+    .app-logo-name span { color: var(--indigo-600); }
+    .welcome-msg {
+      font-size: 14px;
+      color: var(--gray-500);
+      text-align: center;
+      line-height: 1.5;
+      font-weight: 400;
+      margin: -4px 0 0;
+    }
+    .login-form { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+    .login-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .login-divider {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--gray-400); font-size: 12px; margin: 4px 0;
+    }
+    .login-divider::before, .login-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--gray-200);
+    }
+    .forgot-link { text-align: center; }
+    .register-cta {
+      text-align: center;
+      font-size: 13.5px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+    .version-text {
+      text-align: center;
+      font-size: 11px;
+      color: var(--gray-300);
+      padding: 16px 0 8px;
+      font-weight: 500;
+    }
+
+    /* ── SCREEN 2: Register ── */
+    #s-register .screen-content { background: #fff; }
+    .register-body { padding: 0 24px; }
+    .back-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0 20px;
+    }
+    .back-btn {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--gray-100);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--gray-700);
+      flex-shrink: 0;
+    }
+    .page-heading {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.5px;
+    }
+    .page-subheading { font-size: 13.5px; color: var(--gray-500); margin-top: 4px; line-height: 1.5; }
+    .register-form { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+    .password-strength {
+      display: flex; gap: 4px; margin-top: 6px;
+    }
+    .strength-bar {
+      flex: 1; height: 3px; border-radius: 2px;
+      background: var(--gray-200);
+    }
+    .strength-bar.filled { background: var(--green); }
+    .strength-bar.filled.medium { background: var(--amber); }
+
+    /* ── SCREEN 3: Shop ID ── */
+    #s-shopid .screen-content { background: #fff; }
+    .shopid-body { padding: 0 24px; }
+    .shopid-card {
+      background: var(--indigo-50);
+      border-radius: 20px;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0 24px;
+      border: 1.5px solid var(--indigo-100);
+    }
+    .qr-icon-wrap {
+      width: 80px; height: 80px;
+      background: #fff;
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(79,70,229,0.12);
+      color: var(--indigo-600);
+    }
+    .shopid-card-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--gray-900);
+      text-align: center;
+    }
+    .shopid-card-desc {
+      font-size: 13px;
+      color: var(--gray-500);
+      text-align: center;
+      line-height: 1.5;
+    }
+    .shopid-input-wrap { position: relative; }
+    .scan-btn {
+      position: absolute;
+      right: 10px; top: 50%;
+      transform: translateY(-50%);
+      background: var(--indigo-600);
+      border: none;
+      border-radius: 8px;
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; cursor: pointer;
+    }
+    .hint-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: #fffbeb;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 4px;
+    }
+    .hint-icon { color: var(--amber); flex-shrink: 0; margin-top: 1px; }
+    .hint-text { font-size: 12.5px; color: var(--gray-600); line-height: 1.5; }
+
+    /* ── SCREEN 4: PIN Login ── */
+    #s-pin .screen-content { background: #fff; }
+    .pin-body { padding: 0 24px; display: flex; flex-direction: column; align-items: center; }
+    .pin-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--indigo-100), var(--indigo-200));
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 12px;
+      font-size: 28px;
+    }
+    .pin-user-name { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+    .pin-user-shop { font-size: 13px; color: var(--gray-400); margin-top: 2px; }
+    .pin-dots {
+      display: flex; gap: 16px;
+      margin: 28px 0 32px;
+    }
+    .pin-dot {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--gray-300);
+      background: transparent;
+      transition: background .15s, border-color .15s;
+    }
+    .pin-dot.filled {
+      background: var(--indigo-600);
+      border-color: var(--indigo-600);
+    }
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 280px;
+    }
+    .num-key {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--gray-100);
+      border: none;
+      font-family: var(--font);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--gray-800);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      gap: 2px;
+      transition: background .1s, transform .1s;
+    }
+    .num-key:hover { background: var(--gray-200); }
+    .num-key:active { transform: scale(.93); background: var(--indigo-100); }
+    .num-key.empty { background: transparent; cursor: default; }
+    .num-key.destructive { background: transparent; }
+    .num-key.confirm { background: var(--indigo-600); color: #fff; }
+    .num-key-sub { font-size: 9px; font-weight: 600; color: var(--gray-400); letter-spacing: .05em; text-transform: uppercase; }
+    .pin-bio-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+    }
+    .bio-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      border-radius: 20px;
+      background: var(--gray-100);
+      border: none;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-600);
+      cursor: pointer;
+    }
+    .pin-switch-link { font-size: 13px; color: var(--indigo-600); font-weight: 600; cursor: pointer; margin-top: 8px; }
+
+    /* ── SCREEN 5: Onboarding Welcome ── */
+    #s-ob-welcome .screen-content {
+      background: linear-gradient(160deg, var(--indigo-600) 0%, #312e81 100%);
+      display: flex;
+      flex-direction: column;
+    }
+    .ob-welcome-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 32px 32px;
+      position: relative;
+    }
+    .ob-welcome-illustration {
+      width: 200px; height: 200px;
+      margin-bottom: 32px;
+      position: relative;
+    }
+    .ob-blob {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.08);
+      border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
+    }
+    .ob-blob-2 {
+      position: absolute;
+      inset: 16px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 40% 60% 30% 70% / 60% 40% 60% 40%;
+    }
+    .ob-icon-center {
+      position: absolute;
+      inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 72px;
+    }
+    .ob-welcome-title {
+      font-size: 34px;
+      font-weight: 800;
+      color: #fff;
+      text-align: center;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .ob-welcome-sub {
+      font-size: 15px;
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+    .progress-dots {
+      display: flex; gap: 8px; margin-bottom: 32px;
+    }
+    .prog-dot {
+      width: 8px; height: 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.3);
+      transition: all .2s;
+    }
+    .prog-dot.active {
+      width: 24px;
+      background: #fff;
+    }
+    .ob-deco-circle-1 {
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+    }
+    .ob-deco-circle-2 {
+      position: absolute;
+      bottom: 100px; left: -80px;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* White status bar for dark screens */
+    .status-bar.white .status-time { color: #fff; }
+
+    /* ── SCREEN 6: Onboarding Step 1 ── */
+    #s-ob-step1 .screen-content { background: #fff; }
+    .ob-step-body { padding: 0 24px 24px; }
+    .ob-progress-bar {
+      display: flex;
+      gap: 4px;
+      margin: 8px 0 24px;
+    }
+    .ob-step-seg {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--gray-200);
+    }
+    .ob-step-seg.done { background: var(--indigo-600); }
+    .ob-step-label {
+      font-size: 11.5px;
+      color: var(--indigo-600);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 6px;
+    }
+    .ob-step-form { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+    .ob-tip-card {
+      background: var(--indigo-50);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .ob-tip-icon { color: var(--indigo-600); flex-shrink: 0; margin-top: 1px; }
+    .ob-tip-text { font-size: 12.5px; color: var(--indigo-700); line-height: 1.5; }
+
+    /* ── SCREEN 7: Shop Type ── */
+    #s-ob-shoptype .screen-content { background: #fff; }
+    .shoptype-body { padding: 0 20px 24px; }
+    .shoptype-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 16px 0 20px;
+    }
+    .shoptype-card {
+      border: 1.5px solid var(--gray-200);
+      border-radius: 14px;
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      background: #fff;
+      transition: all .15s;
+    }
+    .shoptype-card:hover {
+      border-color: var(--indigo-300);
+      background: var(--indigo-50);
+    }
+    .shoptype-card.selected {
+      border-color: var(--indigo-500);
+      background: var(--indigo-50);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+    .shoptype-emoji { font-size: 28px; }
+    .shoptype-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-700);
+      text-align: center;
+      line-height: 1.3;
+    }
+    .shoptype-card.selected .shoptype-name { color: var(--indigo-700); }
+    .selected-check {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 18px; height: 18px;
+      background: var(--indigo-600);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .shoptype-card { position: relative; }
+
+    /* ── SCREEN 8: Onboarding Step 4 Expenses ── */
+    #s-ob-expenses .screen-content { background: #fff; }
+    .expenses-body { padding: 0 24px 24px; }
+    .expense-list { display: flex; flex-direction: column; gap: 0; margin: 16px 0 20px; }
+    .expense-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .expense-item:last-child { border-bottom: none; }
+    .expense-checkbox {
+      width: 22px; height: 22px;
+      border-radius: 7px;
+      border: 2px solid var(--gray-300);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .expense-checkbox.checked {
+      background: var(--indigo-600);
+      border-color: var(--indigo-600);
+    }
+    .expense-info { flex: 1; }
+    .expense-name { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+    .expense-desc { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+    .expense-amount { font-size: 14px; font-weight: 700; color: var(--gray-700); }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--gray-50);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+    .total-label { font-size: 13px; font-weight: 600; color: var(--gray-500); }
+    .total-amount { font-size: 16px; font-weight: 800; color: var(--indigo-600); }
+
+    /* Animations */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .screen-wrapper.active .phone-frame {
+      animation: fadeSlideUp .25s ease-out;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">T</div>
+    <div>
+      <div class="brand-name">TappyPOS</div>
+      <div class="brand-sub">Auth &amp; Onboarding</div>
+    </div>
+  </div>
+
+  <h2>Xác thực</h2>
+  <a href="#" class="active" onclick="show('s-login',this)">
+    <span class="nav-dot"></span>Đăng nhập
+  </a>
+  <a href="#" onclick="show('s-register',this)">
+    <span class="nav-dot"></span>Đăng ký
+  </a>
+  <a href="#" onclick="show('s-shopid',this)">
+    <span class="nav-dot"></span>Nhập mã cửa hàng
+  </a>
+  <a href="#" onclick="show('s-pin',this)">
+    <span class="nav-dot"></span>PIN Login
+  </a>
+
+  <h2>Onboarding</h2>
+  <a href="#" onclick="show('s-ob-welcome',this)">
+    <span class="nav-dot"></span>Chào mừng
+  </a>
+  <a href="#" onclick="show('s-ob-step1',this)">
+    <span class="nav-dot"></span>Bước 1 – Thông tin
+  </a>
+  <a href="#" onclick="show('s-ob-shoptype',this)">
+    <span class="nav-dot"></span>Loại cửa hàng
+  </a>
+  <a href="#" onclick="show('s-ob-expenses',this)">
+    <span class="nav-dot"></span>Chi phí mặc định
+  </a>
+
+  <div class="sidebar-footer">v2.4.1 · Mockup</div>
+</div>
+
+<!-- ── Main ── -->
+<div class="main">
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 1 · LOGIN
+  ════════════════════════════════════════ -->
+  <div class="screen-wrapper active" id="s-login">
+    <div class="screen-label">Màn hình đăng nhập</div>
+    <div class="screen-desc">Xác thực người dùng với Shop ID, số điện thoại và mật khẩu.</div>
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <!-- Signal -->
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor" opacity=".4"/>
+            <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor" opacity=".6"/>
+            <rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".8"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/>
+          </svg>
+          <!-- WiFi -->
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+            <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="currentColor"/>
+            <path d="M3.5 6.5C4.9 5.1 6.4 4.5 8 4.5s3.1.6 4.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M1 4C2.9 2.1 5.3 1 8 1s5.1 1.1 7 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".5"/>
+          </svg>
+          <!-- Battery -->
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="currentColor"/>
+            <path d="M22.5 4.5v3a1.5 1.5 0 0 0 0-3z" fill="currentColor" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="screen-content">
+        <div class="login-body">
+          <!-- Top bar: lang chip -->
+          <div class="login-top-bar">
+            <div class="lang-chip">
+              🇻🇳 Tiếng Việt
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Logo -->
+          <div class="logo-section">
+            <div class="app-logo-circle">T</div>
+            <div class="app-logo-name">Tappy<span>POS</span></div>
+            <div class="welcome-msg">Chào buổi sáng! Một ngày bán hàng<br>thuận lợi đang chờ bạn ☀️</div>
+          </div>
+
+          <!-- Form -->
+          <div class="login-form">
+            <div class="form-group">
+              <div class="form-label">Mã cửa hàng</div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="1" y="3" width="14" height="10" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M1 6h14" stroke="currentColor" stroke-width="1.5"/>
+                    <rect x="4" y="9" width="3" height="1.5" rx=".75" fill="currentColor"/>
+                    <rect x="9" y="9" width="3" height="1.5" rx=".75" fill="currentColor"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon has-right" type="text" value="banh-mi-58239" />
+                <div class="input-icon-right">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M2 8C3.5 4.5 8 2.5 14 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M2 8C3.5 11.5 8 13.5 14 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">Số điện thoại</div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 2h2.5l1 3-1.5 1a8 8 0 0 0 4 4l1-1.5 3 1V13a1 1 0 0 1-1 1 11 11 0 0 1-11-11 1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.3"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon" type="tel" value="0912 345 678" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">Mật khẩu</div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="3" y="7" width="10" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="8" cy="11" r="1.2" fill="currentColor"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon has-right" type="password" value="password" />
+                <div class="input-icon-right">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 8C4 4.5 8 2.5 14 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M2 8C4 11.5 8 13.5 14 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="login-actions" style="margin-top:20px;">
+            <button class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h10M9 5l4 3-4 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Đăng nhập
+            </button>
+
+            <div class="forgot-link">
+              <a class="link-text">Quên mật khẩu?</a>
+            </div>
+
+            <div class="login-divider">hoặc</div>
+
+            <div class="register-cta">
+              Chưa có tài khoản?
+              <a class="link-text"> Đăng ký ngay</a>
+            </div>
+          </div>
+
+          <div class="version-text">TappyPOS v2.4.1 · Powered by KNP</div>
+        </div>
+      </div>
+
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 2 · REGISTER
+  ════════════════════════════════════════ -->
+  <div class="screen-wrapper" id="s-register">
+    <div class="screen-label">Màn hình đăng ký</div>
+    <div class="screen-desc">Tạo tài khoản mới cho nhân viên hoặc chủ cửa hàng.</div>
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor" opacity=".4"/>
+            <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor" opacity=".6"/>
+            <rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".8"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/>
+          </svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+            <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="currentColor"/>
+            <path d="M3.5 6.5C4.9 5.1 6.4 4.5 8 4.5s3.1.6 4.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M1 4C2.9 2.1 5.3 1 8 1s5.1 1.1 7 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".5"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="currentColor"/>
+            <path d="M22.5 4.5v3a1.5 1.5 0 0 0 0-3z" fill="currentColor" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="screen-content" style="overflow-y:auto; max-height:750px;">
+        <div class="register-body">
+          <div class="back-header">
+            <div class="back-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M10 13L5 8l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="page-heading">Đăng ký</div>
+            </div>
+          </div>
+          <div class="page-subheading" style="margin-bottom:4px;">Tạo tài khoản để bắt đầu quản lý<br>cửa hàng của bạn trên TappyPOS.</div>
+
+          <div class="register-form">
+            <div class="form-group">
+              <div class="form-label">Họ và tên</div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon" type="text" value="Nguyễn Thị Lan" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">Số điện thoại</div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 2h2.5l1 3-1.5 1a8 8 0 0 0 4 4l1-1.5 3 1V13a1 1 0 0 1-1 1 11 11 0 0 1-11-11 1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.3"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon" type="tel" placeholder="0900 000 000" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">Mật khẩu</div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="3" y="7" width="10" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="8" cy="11" r="1.2" fill="currentColor"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon has-right" type="password" value="MyPass123" />
+                <div class="input-icon-right">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 8C4 4.5 8 2.5 14 8M2 8C4 11.5 8 13.5 14 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="password-strength">
+                <div class="strength-bar filled"></div>
+                <div class="strength-bar filled"></div>
+                <div class="strength-bar filled medium"></div>
+                <div class="strength-bar"></div>
+              </div>
+              <div style="font-size:11.5px;color:var(--amber);font-weight:600;">Trung bình – Nên thêm ký tự đặc biệt</div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">Xác nhận mật khẩu</div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="3" y="7" width="10" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="8" cy="11" r="1.2" fill="currentColor"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon" type="password" placeholder="Nhập lại mật khẩu" />
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:4px 0;">
+              <div style="width:20px;height:20px;border-radius:6px;background:var(--indigo-600);border:2px solid var(--indigo-600);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+                <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
+                  <path d="M1 4l3 3 6-6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div style="font-size:12.5px;color:var(--gray-500);line-height:1.5;">
+                Tôi đồng ý với
+                <span style="color:var(--indigo-600);font-weight:600;">Điều khoản sử dụng</span>
+                và <span style="color:var(--indigo-600);font-weight:600;">Chính sách bảo mật</span>
+                của TappyPOS.
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top:4px;">Đăng ký</button>
+
+            <div class="text-center" style="font-size:13.5px;color:var(--gray-500);padding-bottom:8px;">
+              Đã có tài khoản?
+              <a class="link-text"> Đăng nhập</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 3 · SHOP ID
+  ════════════════════════════════════════ -->
+  <div class="screen-wrapper" id="s-shopid">
+    <div class="screen-label">Nhập mã cửa hàng</div>
+    <div class="screen-desc">Màn hình nhập Shop ID khi đăng nhập lần đầu hoặc chuyển cửa hàng.</div>
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor" opacity=".4"/>
+            <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor" opacity=".6"/>
+            <rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".8"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/>
+          </svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+            <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="currentColor"/>
+            <path d="M3.5 6.5C4.9 5.1 6.4 4.5 8 4.5s3.1.6 4.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="currentColor"/>
+            <path d="M22.5 4.5v3a1.5 1.5 0 0 0 0-3z" fill="currentColor" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="screen-content" style="padding:0 0 20px;">
+        <div class="shopid-body">
+          <div class="back-header">
+            <div class="back-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M10 13L5 8l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="shopid-card">
+            <div class="qr-icon-wrap">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <rect x="4" y="4" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                <rect x="7" y="7" width="6" height="6" rx="1" fill="currentColor"/>
+                <rect x="24" y="4" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                <rect x="27" y="7" width="6" height="6" rx="1" fill="currentColor"/>
+                <rect x="4" y="24" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                <rect x="7" y="27" width="6" height="6" rx="1" fill="currentColor"/>
+                <rect x="24" y="24" width="4" height="4" rx="1" fill="currentColor"/>
+                <rect x="30" y="24" width="4" height="4" rx="1" fill="currentColor"/>
+                <rect x="24" y="30" width="4" height="4" rx="1" fill="currentColor"/>
+                <rect x="30" y="30" width="4" height="4" rx="1" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="shopid-card-title">Nhập mã cửa hàng</div>
+            <div class="shopid-card-desc">Mỗi cửa hàng có một mã riêng.<br>Bạn nhận mã này từ chủ cửa hàng.</div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:14px;">
+            <div class="form-label">Mã cửa hàng</div>
+            <div class="shopid-input-wrap">
+              <input
+                class="form-input"
+                type="text"
+                placeholder="VD: banh-mi-58239"
+                style="padding-right:54px; font-family:monospace; letter-spacing:.05em;"
+              />
+              <button class="scan-btn">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M1 5V3a2 2 0 0 1 2-2h2M1 11v2a2 2 0 0 0 2 2h2M11 1h2a2 2 0 0 1 2 2v2M11 15h2a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="4" y1="8" x2="12" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Recent shops -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Cửa hàng gần đây</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--gray-50);border-radius:12px;cursor:pointer;border:1px solid var(--gray-100);">
+                <div style="width:36px;height:36px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">🥖</div>
+                <div style="flex:1;">
+                  <div style="font-size:13.5px;font-weight:600;color:var(--gray-800);">Bánh Mì Hương Việt</div>
+                  <div style="font-size:11.5px;color:var(--gray-400);">banh-mi-58239</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M5 3l4 4-4 4" stroke="var(--gray-300)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--gray-50);border-radius:12px;cursor:pointer;border:1px solid var(--gray-100);">
+                <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--indigo-500),var(--indigo-700));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">💅</div>
+                <div style="flex:1;">
+                  <div style="font-size:13.5px;font-weight:600;color:var(--gray-800);">Nail Studio Thu Thảo</div>
+                  <div style="font-size:11.5px;color:var(--gray-400);">nail-92080</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M5 3l4 4-4 4" stroke="var(--gray-300)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="hint-row">
+            <div class="hint-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M7 6v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="7" cy="4" r=".8" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="hint-text">Mã cửa hàng được chủ shop cung cấp khi thêm nhân viên. Liên hệ quản lý của bạn nếu chưa có mã.</div>
+          </div>
+
+          <button class="btn btn-primary" style="margin-top:20px;">Tiếp tục</button>
+        </div>
+      </div>
+
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 4 · PIN LOGIN
+  ════════════════════════════════════════ -->
+  <div class="screen-wrapper" id="s-pin">
+    <div class="screen-label">PIN Login</div>
+    <div class="screen-desc">Đăng nhập nhanh bằng mã PIN 4 chữ số hoặc sinh trắc học.</div>
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor" opacity=".4"/>
+            <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor" opacity=".6"/>
+            <rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".8"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/>
+          </svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+            <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="currentColor"/>
+            <path d="M3.5 6.5C4.9 5.1 6.4 4.5 8 4.5s3.1.6 4.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M1 4C2.9 2.1 5.3 1 8 1s5.1 1.1 7 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".5"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="currentColor"/>
+            <path d="M22.5 4.5v3a1.5 1.5 0 0 0 0-3z" fill="currentColor" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="screen-content" style="padding:16px 0 0;">
+        <div class="pin-body">
+          <!-- Avatar -->
+          <div class="pin-avatar">👩</div>
+          <div class="pin-user-name">Nguyễn Thị Lan</div>
+          <div class="pin-user-shop">Nail Studio Thu Thảo · Nhân viên</div>
+
+          <!-- PIN dots -->
+          <div class="pin-dots">
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot"></div>
+          </div>
+
+          <!-- Numpad -->
+          <div class="numpad">
+            <!-- Row 1: 1 2 3 -->
+            <button class="num-key">
+              1
+              <span class="num-key-sub"></span>
+            </button>
+            <button class="num-key">
+              2
+              <span class="num-key-sub">ABC</span>
+            </button>
+            <button class="num-key">
+              3
+              <span class="num-key-sub">DEF</span>
+            </button>
+            <!-- Row 2: 4 5 6 -->
+            <button class="num-key">
+              4
+              <span class="num-key-sub">GHI</span>
+            </button>
+            <button class="num-key">
+              5
+              <span class="num-key-sub">JKL</span>
+            </button>
+            <button class="num-key">
+              6
+              <span class="num-key-sub">MNO</span>
+            </button>
+            <!-- Row 3: 7 8 9 -->
+            <button class="num-key">
+              7
+              <span class="num-key-sub">PQRS</span>
+            </button>
+            <button class="num-key">
+              8
+              <span class="num-key-sub">TUV</span>
+            </button>
+            <button class="num-key">
+              9
+              <span class="num-key-sub">WXYZ</span>
+            </button>
+            <!-- Row 4: backspace 0 confirm -->
+            <button class="num-key destructive">
+              <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
+                <path d="M8 1H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-7-7 7-7z" stroke="var(--gray-500)" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M12 5l5 6M17 5l-5 6" stroke="var(--gray-500)" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button class="num-key">0</button>
+            <button class="num-key confirm">
+              <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+                <path d="M2 7l5 5 11-10" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Biometric -->
+          <div class="pin-bio-row">
+            <button class="bio-btn">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2C5.6 2 2 5.6 2 10s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M10 6C7.8 6 6 7.8 6 10s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z" stroke="currentColor" stroke-width="1.5"/>
+                <circle cx="10" cy="10" r="1.5" fill="currentColor"/>
+              </svg>
+              Dùng Face ID / Touch ID
+            </button>
+            <div class="pin-switch-link">Đăng nhập bằng mật khẩu</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 5 · ONBOARDING WELCOME
+  ════════════════════════════════════════ -->
+  <div class="screen-wrapper" id="s-ob-welcome">
+    <div class="screen-label">Onboarding – Chào mừng</div>
+    <div class="screen-desc">Màn hình chào đầu tiên, full-screen gradient, trước khi thiết lập cửa hàng.</div>
+    <div class="phone-frame">
+      <div class="dynamic-island" style="background:rgba(0,0,0,0.5);"></div>
+      <div class="status-bar white">
+        <span class="status-time">9:41</span>
+        <div class="status-icons" style="color:#fff;">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0" y="8" width="3" height="4" rx="1" fill="white" opacity=".6"/>
+            <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="white" opacity=".8"/>
+            <rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="white"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="white"/>
+          </svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+            <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="white"/>
+            <path d="M3.5 6.5C4.9 5.1 6.4 4.5 8 4.5s3.1.6 4.5 2" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M1 4C2.9 2.1 5.3 1 8 1s5.1 1.1 7 3" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".7"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0" y="1" width="21" height="10" rx="3" stroke="white" stroke-width="1.2"/>
+            <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="white"/>
+            <path d="M22.5 4.5v3a1.5 1.5 0 0 0 0-3z" fill="white" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="screen-content" style="background:linear-gradient(160deg,#4f46e5 0%,#312e81 100%); display:flex; flex-direction:column; padding: 0 0 0;">
+        <div class="ob-welcome-body">
+          <div class="ob-deco-circle-1"></div>
+          <div class="ob-deco-circle-2"></div>
+
+          <!-- Illustration -->
+          <div class="ob-welcome-illustration">
+            <div class="ob-blob"></div>
+            <div class="ob-blob-2"></div>
+            <div class="ob-icon-center">🏪</div>
+          </div>
+
+          <div class="ob-welcome-title">Chào mừng<br>đến TappyPOS!</div>
+          <div class="ob-welcome-sub">
+            Hãy cùng thiết lập cửa hàng của bạn<br>
+            chỉ trong vài bước đơn giản.
+          </div>
+
+          <div class="progress-dots">
+            <div class="prog-dot active"></div>
+            <div class="prog-dot"></div>
+            <div class="prog-dot"></div>
+            <div class="prog-dot"></div>
+            <div class="prog-dot"></div>
+          </div>
+
+          <div style="width:100%;">
+            <button class="btn btn-white" style="margin-bottom:12px;">
+              Bắt đầu thiết lập
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h10M9 5l4 3-4 3" stroke="var(--indigo-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="btn btn-outline" style="font-weight:600;font-size:14px;">
+              Bỏ qua, thiết lập sau
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-indicator" style="background:transparent;">
+        <div class="home-bar" style="background:#fff;opacity:0.3;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 6 · ONBOARDING STEP 1
+  ════════════════════════════════════════ -->
+  <div class="screen-wrapper" id="s-ob-step1">
+    <div class="screen-label">Onboarding – Bước 1/5</div>
+    <div class="screen-desc">Nhập thông tin cơ bản của cửa hàng: tên, điện thoại, địa chỉ.</div>
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor" opacity=".4"/>
+            <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor" opacity=".6"/>
+            <rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".8"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="currentColor"/>
+            <path d="M22.5 4.5v3a1.5 1.5 0 0 0 0-3z" fill="currentColor" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="screen-content" style="overflow-y:auto; max-height:750px;">
+        <div class="ob-step-body">
+          <!-- Progress segments -->
+          <div class="ob-progress-bar">
+            <div class="ob-step-seg done"></div>
+            <div class="ob-step-seg"></div>
+            <div class="ob-step-seg"></div>
+            <div class="ob-step-seg"></div>
+            <div class="ob-step-seg"></div>
+          </div>
+
+          <div class="ob-step-label">Bước 1 / 5</div>
+          <div class="page-heading">Thông tin cửa hàng</div>
+          <div class="page-subheading">Những thông tin này sẽ hiển thị trên hóa đơn và biên nhận của bạn.</div>
+
+          <div class="ob-step-form">
+            <div class="form-group">
+              <div class="form-label">Tên cửa hàng <span style="color:var(--red)">*</span></div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 6l6-4 6 4v8H2V6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                    <rect x="6" y="10" width="4" height="4" rx="1" fill="currentColor"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon" type="text" value="Nail Studio Thu Thảo" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">Số điện thoại <span style="color:var(--red)">*</span></div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 2h2.5l1 3-1.5 1a8 8 0 0 0 4 4l1-1.5 3 1V13a1 1 0 0 1-1 1 11 11 0 0 1-11-11 1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.3"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon" type="tel" value="0933 456 789" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">Địa chỉ</div>
+              <div class="input-wrap">
+                <div class="input-icon" style="top:18px;transform:none;">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 1C5.2 1 3 3.2 3 6c0 3.3 5 9 5 9s5-5.7 5-9c0-2.8-2.2-5-5-5z" stroke="currentColor" stroke-width="1.5"/>
+                    <circle cx="8" cy="6" r="1.8" fill="currentColor"/>
+                  </svg>
+                </div>
+                <textarea
+                  class="form-input has-icon"
+                  rows="2"
+                  style="resize:none;padding-top:13px;padding-bottom:13px;line-height:1.5;"
+                >123 Nguyễn Thị Minh Khai, Phường 6, Q.3, TP.HCM</textarea>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">Website (không bắt buộc)</div>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M8 1.5C8 1.5 6 4 6 8s2 6.5 2 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M1.5 8h13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <input class="form-input has-icon" type="url" placeholder="https://..." />
+              </div>
+            </div>
+
+            <div class="ob-tip-card">
+              <div class="ob-tip-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 1l1.5 3.5 3.8.6-2.7 2.6.6 3.8L7 9.7l-3.2 1.8.6-3.8L1.7 5.1l3.8-.6z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="ob-tip-text">Bạn có thể chỉnh sửa thông tin này bất kỳ lúc nào trong <strong>Cài đặt → Thông tin cửa hàng</strong>.</div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="margin-top:20px;">
+            Tiếp theo
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M9 5l4 3-4 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 7 · ONBOARDING SHOP TYPE
+  ════════════════════════════════════════ -->
+  <div class="screen-wrapper" id="s-ob-shoptype">
+    <div class="screen-label">Onboarding – Loại cửa hàng</div>
+    <div class="screen-desc">Chọn loại cửa hàng để TappyPOS gợi ý dịch vụ và danh mục phù hợp.</div>
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor" opacity=".4"/>
+            <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor" opacity=".6"/>
+            <rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".8"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="currentColor"/>
+            <path d="M22.5 4.5v3a1.5 1.5 0 0 0 0-3z" fill="currentColor" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="screen-content" style="overflow-y:auto; max-height:750px;">
+        <div class="shoptype-body">
+          <!-- Progress -->
+          <div class="ob-progress-bar" style="margin-top:8px;">
+            <div class="ob-step-seg done"></div>
+            <div class="ob-step-seg done"></div>
+            <div class="ob-step-seg done"></div>
+            <div class="ob-step-seg"></div>
+            <div class="ob-step-seg"></div>
+          </div>
+
+          <div class="ob-step-label">Bước 3 / 5</div>
+          <div class="page-heading">Loại cửa hàng của bạn?</div>
+          <div class="page-subheading">Chúng tôi sẽ gợi ý danh mục dịch vụ và mẫu hóa đơn phù hợp nhất.</div>
+
+          <div class="shoptype-grid">
+            <!-- Barber -->
+            <div class="shoptype-card">
+              <div class="shoptype-emoji">✂️</div>
+              <div class="shoptype-name">Barber Shop</div>
+            </div>
+            <!-- Spa: selected -->
+            <div class="shoptype-card selected">
+              <div class="selected-check">
+                <svg width="10" height="7" viewBox="0 0 10 7" fill="none">
+                  <path d="M1 3.5l2.5 2.5L9 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="shoptype-emoji">💆</div>
+              <div class="shoptype-name">Spa</div>
+            </div>
+            <!-- Nail -->
+            <div class="shoptype-card">
+              <div class="shoptype-emoji">💅</div>
+              <div class="shoptype-name">Nail Salon</div>
+            </div>
+            <!-- Hair -->
+            <div class="shoptype-card">
+              <div class="shoptype-emoji">💇</div>
+              <div class="shoptype-name">Hair Salon</div>
+            </div>
+            <!-- Makeup -->
+            <div class="shoptype-card">
+              <div class="shoptype-emoji">💄</div>
+              <div class="shoptype-name">Makeup Studio</div>
+            </div>
+            <!-- Lash -->
+            <div class="shoptype-card">
+              <div class="shoptype-emoji">👁️</div>
+              <div class="shoptype-name">Lash &amp; PMU</div>
+            </div>
+            <!-- General retail -->
+            <div class="shoptype-card">
+              <div class="shoptype-emoji">🛒</div>
+              <div class="shoptype-name">Tạp hóa</div>
+            </div>
+            <!-- Retail -->
+            <div class="shoptype-card">
+              <div class="shoptype-emoji">🏪</div>
+              <div class="shoptype-name">Bán lẻ</div>
+            </div>
+          </div>
+
+          <div style="background:var(--indigo-50);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7" stroke="var(--indigo-600)" stroke-width="1.5"/>
+              <path d="M8 5v1.5M8 8v4" stroke="var(--indigo-600)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div style="font-size:12.5px;color:var(--indigo-700);font-weight:500;">Đã chọn: <strong>Spa</strong> – Danh mục gợi ý: Liệu trình da, Massage, Waxing, Triệt lông.</div>
+          </div>
+
+          <button class="btn btn-primary">
+            Tiếp theo
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M9 5l4 3-4 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 8 · ONBOARDING EXPENSES
+  ════════════════════════════════════════ -->
+  <div class="screen-wrapper" id="s-ob-expenses">
+    <div class="screen-label">Onboarding – Chi phí mặc định</div>
+    <div class="screen-desc">Bước 4/5 – Cài đặt các khoản chi phí hàng tháng để theo dõi lợi nhuận.</div>
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor" opacity=".4"/>
+            <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor" opacity=".6"/>
+            <rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".8"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0" y="1" width="21" height="10" rx="3" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="currentColor"/>
+            <path d="M22.5 4.5v3a1.5 1.5 0 0 0 0-3z" fill="currentColor" opacity=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="screen-content" style="overflow-y:auto; max-height:750px;">
+        <div class="expenses-body">
+          <!-- Progress -->
+          <div class="ob-progress-bar" style="margin-top:8px;">
+            <div class="ob-step-seg done"></div>
+            <div class="ob-step-seg done"></div>
+            <div class="ob-step-seg done"></div>
+            <div class="ob-step-seg done"></div>
+            <div class="ob-step-seg"></div>
+          </div>
+
+          <div class="ob-step-label">Bước 4 / 5</div>
+          <div class="page-heading">Chi phí hàng tháng</div>
+          <div class="page-subheading">Chọn các khoản chi phí cố định để TappyPOS tự động ghi vào báo cáo lợi nhuận của bạn.</div>
+
+          <div class="expense-list">
+            <!-- Item 1: checked -->
+            <div class="expense-item">
+              <div class="expense-checkbox checked">
+                <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+                  <path d="M1 4.5l3 3.5 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="expense-info">
+                <div class="expense-name">Tiền thuê mặt bằng</div>
+                <div class="expense-desc">Chi phí thuê cửa hàng hàng tháng</div>
+              </div>
+              <div class="expense-amount">2.000.000 ₫</div>
+            </div>
+
+            <!-- Item 2: checked -->
+            <div class="expense-item">
+              <div class="expense-checkbox checked">
+                <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+                  <path d="M1 4.5l3 3.5 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="expense-info">
+                <div class="expense-name">Tiền điện</div>
+                <div class="expense-desc">Điện sinh hoạt và máy móc</div>
+              </div>
+              <div class="expense-amount">800.000 ₫</div>
+            </div>
+
+            <!-- Item 3: unchecked -->
+            <div class="expense-item">
+              <div class="expense-checkbox">
+              </div>
+              <div class="expense-info">
+                <div class="expense-name">Tiền nước</div>
+                <div class="expense-desc">Nước sinh hoạt và phục vụ</div>
+              </div>
+              <div class="expense-amount" style="color:var(--gray-400);">200.000 ₫</div>
+            </div>
+
+            <!-- Item 4: checked -->
+            <div class="expense-item">
+              <div class="expense-checkbox checked">
+                <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+                  <path d="M1 4.5l3 3.5 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="expense-info">
+                <div class="expense-name">Internet &amp; điện thoại</div>
+                <div class="expense-desc">Đường truyền băng thông</div>
+              </div>
+              <div class="expense-amount">300.000 ₫</div>
+            </div>
+
+            <!-- Item 5: checked -->
+            <div class="expense-item">
+              <div class="expense-checkbox checked">
+                <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+                  <path d="M1 4.5l3 3.5 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="expense-info">
+                <div class="expense-name">Phần mềm TappyPOS</div>
+                <div class="expense-desc">Gói đăng ký hàng tháng</div>
+              </div>
+              <div class="expense-amount">199.000 ₫</div>
+            </div>
+
+            <!-- Item 6: unchecked -->
+            <div class="expense-item">
+              <div class="expense-checkbox"></div>
+              <div class="expense-info">
+                <div class="expense-name">Vệ sinh &amp; dọn dẹp</div>
+                <div class="expense-desc">Dịch vụ vệ sinh định kỳ</div>
+              </div>
+              <div class="expense-amount" style="color:var(--gray-400);">500.000 ₫</div>
+            </div>
+          </div>
+
+          <!-- Add custom expense -->
+          <button class="btn btn-ghost" style="margin-bottom:16px;font-size:14px;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            Thêm chi phí khác
+          </button>
+
+          <!-- Total -->
+          <div class="total-row">
+            <div>
+              <div class="total-label">Tổng chi phí hàng tháng</div>
+              <div style="font-size:11px;color:var(--gray-400);margin-top:2px;">4 khoản đã chọn</div>
+            </div>
+            <div class="total-amount">3.299.000 ₫</div>
+          </div>
+
+          <button class="btn btn-primary" style="margin-bottom:16px;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 8l4 4 8-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Hoàn thành thiết lập
+          </button>
+
+          <div class="text-center text-muted" style="padding-bottom:8px;">Bạn có thể thêm hoặc xóa chi phí trong<br><span style="color:var(--indigo-600);font-weight:600;">Báo cáo → Chi phí</span></div>
+        </div>
+      </div>
+
+      <div class="home-indicator"><div class="home-bar"></div></div>
+    </div>
+  </div>
+
+</div><!-- .main -->
+
+<script>
+  function show(id, link) {
+    // Hide all
+    document.querySelectorAll('.screen-wrapper').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    // Remove active from all links
+    document.querySelectorAll('.sidebar a').forEach(function(a) {
+      a.classList.remove('active');
+    });
+    // Show target
+    var target = document.getElementById(id);
+    if (target) target.classList.add('active');
+    // Mark link active
+    if (link) link.classList.add('active');
+    // Prevent default navigation
+    return false;
+  }
+
+  // Make numpad keys interactive
+  document.querySelectorAll('.num-key:not(.empty):not(.destructive):not(.confirm)').forEach(function(key) {
+    key.addEventListener('click', function() {
+      var dots = document.querySelectorAll('#s-pin .pin-dot');
+      var filled = document.querySelectorAll('#s-pin .pin-dot.filled').length;
+      if (filled < 4) {
+        dots[filled].classList.add('filled');
+      }
+    });
+  });
+
+  // Backspace key
+  var backKey = document.querySelector('#s-pin .num-key.destructive');
+  if (backKey) {
+    backKey.addEventListener('click', function() {
+      var dots = document.querySelectorAll('#s-pin .pin-dot.filled');
+      if (dots.length > 0) {
+        dots[dots.length - 1].classList.remove('filled');
+      }
+    });
+  }
+
+  // Shop type selection
+  document.querySelectorAll('.shoptype-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      document.querySelectorAll('.shoptype-card').forEach(function(c) {
+        c.classList.remove('selected');
+        var chk = c.querySelector('.selected-check');
+        if (chk) chk.remove();
+      });
+      card.classList.add('selected');
+      // Add check
+      var chk = document.createElement('div');
+      chk.className = 'selected-check';
+      chk.innerHTML = '<svg width="10" height="7" viewBox="0 0 10 7" fill="none"><path d="M1 3.5l2.5 2.5L9 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      card.insertBefore(chk, card.firstChild);
+      // Update info bar
+      var name = card.querySelector('.shoptype-name').textContent;
+      var infoBar = document.querySelector('#s-ob-shoptype .shoptype-body > div[style*="indigo-50"] strong');
+      if (infoBar) infoBar.textContent = name;
+    });
+  });
+
+  // Expense checkboxes
+  document.querySelectorAll('.expense-checkbox').forEach(function(box) {
+    box.addEventListener('click', function() {
+      var isChecked = box.classList.contains('checked');
+      if (isChecked) {
+        box.classList.remove('checked');
+        box.innerHTML = '';
+        var amount = box.closest('.expense-item').querySelector('.expense-amount');
+        if (amount) amount.style.color = 'var(--gray-400)';
+      } else {
+        box.classList.add('checked');
+        box.innerHTML = '<svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5l3 3.5 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        var amount = box.closest('.expense-item').querySelector('.expense-amount');
+        if (amount) amount.style.color = 'var(--gray-700)';
+      }
+      recalcTotal();
+    });
+  });
+
+  function recalcTotal() {
+    var amounts = [2000000, 800000, 200000, 300000, 199000, 500000];
+    var items = document.querySelectorAll('.expense-item');
+    var total = 0;
+    var count = 0;
+    items.forEach(function(item, i) {
+      if (item.querySelector('.expense-checkbox.checked')) {
+        total += amounts[i] || 0;
+        count++;
+      }
+    });
+    var totalEl = document.querySelector('.total-amount');
+    var countEl = document.querySelector('.total-row div div:nth-child(2)');
+    if (totalEl) {
+      totalEl.textContent = total.toLocaleString('vi-VN') + ' ₫';
+    }
+    if (countEl) {
+      countEl.textContent = count + ' khoản đã chọn';
+    }
+  }
+</script>
+
+</body>
+</html>

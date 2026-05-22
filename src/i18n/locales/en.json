@@ -28,6 +28,10 @@
     "cloneDefaultsMsg": "Copy default expenses to this month?",
     "cloneDefaultsBtn": "Copy",
     "cloneSuccess": "Default expenses copied",
+    "cloneSelectTitle": "Select expenses to copy",
+    "cloneSelectHint": "Choose which default expenses to apply to this month.",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
     "addSheet": {
       "title": "Add expense",
       "editTitle": "Edit expense",
@@ -82,14 +86,47 @@
     "thisMonth": "This month",
     "thisYear": "This year",
     "customRange": "Custom",
-    "totalRevenue": "Revenue",
-    "orderCount": "Orders",
+    "totalRevenue": "Total revenue",
+    "orderCount": "Order count",
     "avgOrderValue": "Avg. order",
+    "avgOrder": "Avg. / order",
     "completedCount": "Completed",
+    "completedOrders": "{{count}} completed orders",
     "totalExpenses": "Total expenses",
-    "fixedExpenses": "Fixed",
-    "variableExpenses": "Variable",
-    "netProfit": "Profit",
+    "fixedExpenses": "Fixed expenses",
+    "variableExpenses": "Variable expenses",
+    "netProfit": "Net profit {{amount}}",
+    "netLoss": "Net loss {{amount}}",
+    "morePeriods": "Other time ranges",
+    "customFrom": "From date",
+    "customTo": "To date",
+    "applyRange": "Apply this range",
+    "viewing": "Viewing",
+    "paymentCash": "Cash",
+    "paymentTransfer": "Transfer",
+    "paymentCard": "Card",
+    "statusCompleted": "Completed",
+    "statusCancelled": "Cancelled",
+    "statusPending": "Pending",
+    "statusInProgress": "In progress",
+    "expenseRent": "Rent",
+    "expenseElectricity": "Electricity",
+    "expenseWater": "Water",
+    "expenseSupplies": "Supplies",
+    "expenseSalary": "Salary bonus",
+    "expenseMarketing": "Marketing",
+    "expenseOther": "Other",
+    "period": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisMonth": "This month",
+      "thisWeek": "This week",
+      "lastMonth": "Last month",
+      "thisYear": "This year",
+      "lastYear": "Last year",
+      "custom": "Custom",
+      "more": "Custom"
+    },
     "empty": "No data yet",
     "emptyHint": "Data will appear when you have orders or expenses"
   },
@@ -107,7 +144,9 @@
     "tapToRead": "Tap to mark as read",
     "empty": "No notifications yet",
     "emptyHint": "Order and system notifications will appear here",
-    "emptyFilterHint": "No notifications in this category"
+    "emptyFilterHint": "No notifications in this category",
+    "orderReminderTitle": "⏰ Order #{{orderNumber}} pending",
+    "orderReminderBody": "Order has been pending for {{minutes}} minutes."
   },
   "inventory": {
     "title": "Inventory",
@@ -261,6 +300,7 @@
     "logoutConfirm": "Sign out",
     "logout": "Sign out",
     "sectionAccount": "Account",
+    "sectionSettingsSecurity": "Settings & Security",
     "sectionShop": "Shop",
     "sectionPreferences": "Display & Notifications",
     "sectionSupport": "Contact & Support",
@@ -549,6 +589,13 @@
   },
   "pinPad": {
     "bio": "Biometric"
+  },
+  "update": {
+    "forceTitle": "Update required",
+    "forceMessage": "This version is no longer supported. Please update to continue using the app.",
+    "forceAction": "Update now",
+    "softMessage": "A new version is available. Update for a better experience.",
+    "softAction": "Update"
   },
   "auth": {
     "login": {
@@ -857,6 +904,7 @@
     "completeButton": "Mark complete",
     "completing": "Updating...",
     "cancelButton": "Cancel order",
+    "completeSuccess": "Order completed!",
     "cancelConfirmTitle": "Cancel order?",
     "cancelConfirmMsg": "This order will be cancelled. This cannot be undone.",
     "cancelling": "Cancelling...",
@@ -871,6 +919,23 @@
     "paymentCash": "Cash",
     "paymentCard": "Card",
     "paymentBankTransfer": "Bank transfer",
+    "addService": "Add service",
+    "payAndComplete": "Collect & Complete",
+    "collectPayment": "Collect payment",
+    "removeItemTitle": "Remove service?",
+    "removeItemMsg": "Remove {{name}} from this order?",
+    "saveChanges": "Save changes",
+    "saving": "Saving...",
+    "saveSuccess": "Changes saved",
+    "editTip": "Tip",
+    "changeCustomer": "Change",
+    "selectCustomer": "Select customer",
+    "customerSearch": "Search customers...",
+    "walkInCustomer": "Walk-in (no customer)",
+    "assignTechnician": "Select technician",
+    "noTechnician": "Not assigned",
+    "clearTechnician": "Clear assignment",
+    "receipt": "Receipt",
     "periodDay": "Today",
     "periodWeek": "Week",
     "periodMonth": "Month",
@@ -985,7 +1050,8 @@
     "hintLoyaltyConfig": "Customer loyalty points configuration",
     "hintHotline": "Call for direct support",
     "hintEmail": "Send a support request by email",
-    "hintZalo": "Chat with support on Zalo"
+    "hintZalo": "Chat with support on Zalo",
+    "hintSupport": "Contact us and send your feedback"
   },
   "appt": {
     "title": "Appointments",
@@ -1404,6 +1470,18 @@
       "continueCount": "Continue ({{count}})",
       "edit": "Edit"
     },
+    "welcome": {
+      "title": "Welcome to\nTappyPOS 🎉",
+      "subtitle": "Complete 4 steps to set up your shop and get a personalised experience.",
+      "steps": {
+        "shopType": "Shop type",
+        "basicInfo": "Basic information",
+        "products": "Products & services",
+        "expenses": "Monthly expenses"
+      },
+      "timeEstimate": "⏱ About 3–5 minutes",
+      "cta": "Get started"
+    },
     "step1": {
       "title": "Basic Information",
       "subtitle": "🏪 Help us personalise the experience for you and your customers.",
@@ -1502,7 +1580,9 @@
       "durationLabel": "Duration (minutes)",
       "durationPlaceholder": "e.g. 30",
       "hint2edit": "Tap \"Edit\" on any product to update name, price or unit.",
-      "hint3add": "Tap \"+ Add product\" to create your own product."
+      "hint3add": "Tap \"+ Add product\" to create your own product.",
+      "categoryLabel": "Category",
+      "myProducts": "My Products"
     },
     "pawnFeature": {
       "title": "Does your shop accept pawn?",
@@ -1587,13 +1667,18 @@
       "editExpense": "Edit expense",
       "addExpense": "Add new expense",
       "nameLabel": "Expense name",
+      "categoryLabel": "Category",
       "noPriceHint": "Amount not set",
       "paymentDayLabel": "Monthly payment day",
       "clearDay": "Clear day",
       "noteLabel": "Note",
       "notePlaceholder": "Optional note...",
-      "hint2edit": "Tap \"Edit\" on any expense to set amount and payment day.",
-      "hint3add": "Tap \"+ Add expense\" to add your own expense."
+      "hint1": "Tap an expense to select it and set the amount.",
+      "hint2edit": "Tap a selected expense to update amount and payment day.",
+      "hint3add": "Tap \"+ Add expense\" to add your own expense.",
+      "paymentDayOptional": "Payment date (optional)",
+      "paymentDaySelected": "Day {{day}} of month",
+      "removeExpense": "Remove this expense",
     },
     "step4": {
       "title": "Review",
@@ -2166,6 +2251,9 @@
     "noteLabel": "Note",
     "notePlaceholder": "Note for this service (optional)",
     "addToOrder": "Add to Order",
+    "addToWhichOrder": "Add to which order?",
+    "newOrder": "New order",
+    "newOrderHint": "Start a new order with this service",
     "checkout": "Review Order",
     "checkoutTitle": "Review Order",
     "subtotal": "Subtotal",
@@ -2198,7 +2286,11 @@
     "pointsAvailable": "pts available",
     "pointsDiscount": "Points discount",
     "splitSession": "{{count}} techs",
-    "splitSessionHint": "Concurrent session"
+    "splitSessionHint": "Concurrent session",
+    "startService": "Start service (pay later)",
+    "addToOrderTitle": "Add service",
+    "activeOrderItems": "svc",
+    "activeOrdersLabel": "active orders"
   },
   "tableGrid": {
     "title": "Table Layout",
@@ -2230,6 +2322,7 @@
     "search": "Search by name, phone, item...",
     "empty": "No contracts yet",
     "emptyHint": "Tap + to create your first pawn contract",
+    "exportError": "Could not export the list. Please try again.",
     "kpi": {
       "active": "Active",
       "overdue": "Overdue",

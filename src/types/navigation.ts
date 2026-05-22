@@ -31,6 +31,7 @@ export type AuthScreenProps<T extends keyof AuthStackParamList> =
 // ── Onboarding stack ──────────────────────────────────────────────────────────
 
 export type OnboardingStackParamList = {
+  Welcome: undefined;
   ShopType: undefined;
   Step1: undefined;
   Step2: undefined;
@@ -73,7 +74,7 @@ export type HomeScreenProps<T extends keyof HomeStackParamList> =
 // ── Nested stacks inside app ──────────────────────────────────────────────────
 
 export type SellingStackParamList = {
-  POSMain: { checkInPayload?: CheckInPayload } | undefined;
+  POSMain: { checkInPayload?: CheckInPayload; existingOrderId?: string } | undefined;
   Cart: undefined;
   Checkout: undefined;
   OrderSuccess: { orderId: string; orderNumber: string; total: number; savedOffline?: boolean };
@@ -101,7 +102,6 @@ export type SettingsStackParamList = {
   DeleteAccount: undefined;
   NotificationPreferences: undefined;
   Feedback: undefined;
-  FeedbackHistory: undefined;
   Subscription: undefined;
   BankAccounts: undefined;
   LoyaltyConfig: undefined;
@@ -163,6 +163,9 @@ export type ExpensesStackParamList = {
 export type ReportStackParamList = {
   ReportMain: undefined;
 };
+
+export type ReportScreenProps<T extends keyof ReportStackParamList> =
+  NativeStackScreenProps<ReportStackParamList, T>;
 
 export type MyWorkStackParamList = {
   MyWorkMain: undefined;

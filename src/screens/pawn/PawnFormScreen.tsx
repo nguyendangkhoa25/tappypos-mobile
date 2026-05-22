@@ -17,6 +17,7 @@ import { useTypography } from '../../hooks/useTypography';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { DatePickerInput } from '../../components/DatePickerInput';
+import { MoneyInput } from '../../components/MoneyInput';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { SellingStackParamList } from '../../types/navigation';
@@ -367,13 +368,10 @@ export function PawnFormScreen() {
             </View>
             <View className="flex-1">
               <FormField label={t('pawn.form.itemValue')}>
-                <TextInput
-                  value={itemValue}
-                  onChangeText={setItemValue}
-                  keyboardType="numeric"
-                  placeholder="0 ₫"
-                  placeholderTextColor="#9ca3af"
-                  className={inputClass}
+                <MoneyInput
+                  rawValue={itemValue}
+                  onChangeRaw={setItemValue}
+                  placeholder="0"
                 />
               </FormField>
             </View>

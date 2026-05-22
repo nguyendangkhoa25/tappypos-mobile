@@ -155,7 +155,7 @@ export function MarketGoldPricesScreen({ navigation }: Props) {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 16, gap: 12 }}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#4f46e5" />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#059669" />}
         >
           {/* Column headers */}
           <View className="flex-row px-4 items-end">

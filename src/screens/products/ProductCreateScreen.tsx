@@ -19,6 +19,7 @@ import { productApi, categoryApi, type ProductTypeData, type CategoryData } from
 import { useAlertStore } from '../../store/alertStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { formatVnd } from '../../utils/format';
+import { MoneyInput } from '../../components/MoneyInput';
 import { isDynamicPriceType, getDefaultUnit } from '../../constants/productConstants';
 import { useTypography } from '../../hooks/useTypography';
 import type { ProductsScreenProps } from '../../types/navigation';
@@ -225,15 +226,11 @@ export function ProductCreateScreen({ navigation }: Props) {
             </View>
           ) : (
             <FormField label={t('products.price')}>
-              <StyledInput
-                value={form.price}
-                onChangeText={(v) => setForm((f) => ({ ...f, price: v.replace(/[^0-9]/g, '') }))}
+              <MoneyInput
+                rawValue={form.price}
+                onChangeRaw={(digits) => setForm((f) => ({ ...f, price: digits }))}
                 placeholder={t('products.pricePlaceholder')}
-                keyboardType="numeric"
               />
-              {form.price ? (
-                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-1 ml-1`}>= {formatVnd(Number(form.price))}</Text>
-              ) : null}
             </FormField>
           )}
 

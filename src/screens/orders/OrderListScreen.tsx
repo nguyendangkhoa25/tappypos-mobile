@@ -399,7 +399,7 @@ export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) 
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4f46e5" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />
           }
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.3}

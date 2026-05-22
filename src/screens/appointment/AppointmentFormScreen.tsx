@@ -31,6 +31,11 @@ import type { MoreScreenProps } from '../../types/navigation';
 
 type Props = MoreScreenProps<'AppointmentForm'>;
 
+type ApiErr = { response?: { data?: { error?: string } } };
+function apiMsg(e: unknown): string | undefined {
+  return (e as ApiErr)?.response?.data?.error;
+}
+
 function toDateStr(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -344,7 +349,7 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
       invalidate();
       showAlert(t('appt.saveSuccess'), '', [{ label: 'OK', onPress: () => navigation.goBack() }]);
     },
-    onError: (e: any) => showAlert(t('common.error'), e?.response?.data?.error ?? t('appt.saveFailed')),
+    onError: (e: unknown) => showAlert(t('common.error'), apiMsg(e) ?? t('appt.saveFailed')),
   });
 
   const updateMutation = useMutation({
@@ -363,7 +368,7 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
       invalidate();
       showAlert(t('appt.saveSuccess'), '', [{ label: 'OK', onPress: () => navigation.goBack() }]);
     },
-    onError: (e: any) => showAlert(t('common.error'), e?.response?.data?.error ?? t('appt.saveFailed')),
+    onError: (e: unknown) => showAlert(t('common.error'), apiMsg(e) ?? t('appt.saveFailed')),
   });
 
   const isSaving = createMutation.isPending || updateMutation.isPending;

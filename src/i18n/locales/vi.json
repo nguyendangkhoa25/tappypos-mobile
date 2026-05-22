@@ -28,6 +28,10 @@
     "cloneDefaultsMsg": "Sao chép chi phí mặc định vào tháng này không?",
     "cloneDefaultsBtn": "Sao chép",
     "cloneSuccess": "Đã sao chép chi phí mặc định",
+    "cloneSelectTitle": "Chọn chi phí cần sao chép",
+    "cloneSelectHint": "Chọn các chi phí mặc định muốn áp dụng cho tháng này.",
+    "selectAll": "Chọn tất cả",
+    "deselectAll": "Bỏ chọn tất cả",
     "addSheet": {
       "title": "Thêm chi phí",
       "editTitle": "Sửa chi phí",
@@ -82,14 +86,47 @@
     "thisMonth": "Tháng này",
     "thisYear": "Năm này",
     "customRange": "Tuỳ chọn",
-    "totalRevenue": "Doanh thu",
-    "orderCount": "Số đơn",
+    "totalRevenue": "Tổng doanh thu",
+    "orderCount": "Số đơn hàng",
     "avgOrderValue": "Trung bình/đơn",
+    "avgOrder": "Bình quân / đơn",
     "completedCount": "Hoàn thành",
-    "totalExpenses": "Tổng chi",
-    "fixedExpenses": "Cố định",
-    "variableExpenses": "Phát sinh",
-    "netProfit": "Lợi nhuận",
+    "completedOrders": "{{count}} đơn hàng đã hoàn thành",
+    "totalExpenses": "Tổng chi phí",
+    "fixedExpenses": "Chi phí cố định",
+    "variableExpenses": "Chi phí biến động",
+    "netProfit": "Lãi ròng {{amount}}",
+    "netLoss": "Lỗ {{amount}}",
+    "morePeriods": "Khoảng thời gian khác",
+    "customFrom": "Từ ngày",
+    "customTo": "Đến ngày",
+    "applyRange": "Áp dụng khoảng này",
+    "viewing": "Đang xem",
+    "paymentCash": "Tiền mặt",
+    "paymentTransfer": "Chuyển khoản",
+    "paymentCard": "Thẻ",
+    "statusCompleted": "Hoàn thành",
+    "statusCancelled": "Đã huỷ",
+    "statusPending": "Chờ xử lý",
+    "statusInProgress": "Đang xử lý",
+    "expenseRent": "Thuê mặt bằng",
+    "expenseElectricity": "Tiền điện",
+    "expenseWater": "Tiền nước",
+    "expenseSupplies": "Vật tư",
+    "expenseSalary": "Lương thưởng",
+    "expenseMarketing": "Marketing",
+    "expenseOther": "Khác",
+    "period": {
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua",
+      "thisMonth": "Tháng này",
+      "thisWeek": "Tuần này",
+      "lastMonth": "Tháng trước",
+      "thisYear": "Năm này",
+      "lastYear": "Năm ngoái",
+      "custom": "Tùy chỉnh",
+      "more": "Tùy chỉnh"
+    },
     "empty": "Chưa có dữ liệu",
     "emptyHint": "Dữ liệu sẽ xuất hiện khi có đơn hàng hoặc chi phí"
   },
@@ -107,7 +144,9 @@
     "tapToRead": "Nhấn để đánh dấu đã đọc",
     "empty": "Chưa có thông báo nào",
     "emptyHint": "Các thông báo về đơn hàng và hệ thống sẽ xuất hiện ở đây",
-    "emptyFilterHint": "Không có thông báo nào trong mục này"
+    "emptyFilterHint": "Không có thông báo nào trong mục này",
+    "orderReminderTitle": "⏰ Đơn hàng #{{orderNumber}} chờ xử lý",
+    "orderReminderBody": "Đơn hàng đã chờ {{minutes}} phút. Vui lòng xử lý sớm."
   },
   "inventory": {
     "title": "Tồn kho",
@@ -261,6 +300,7 @@
     "logoutConfirm": "Đăng xuất",
     "logout": "Đăng xuất",
     "sectionAccount": "Tài khoản",
+    "sectionSettingsSecurity": "Cài đặt & Bảo mật",
     "sectionShop": "Cửa hàng",
     "sectionPreferences": "Hiển thị & Thông báo",
     "sectionSupport": "Liên hệ & Hỗ trợ",
@@ -549,6 +589,13 @@
   },
   "pinPad": {
     "bio": "Sinh trắc học"
+  },
+  "update": {
+    "forceTitle": "Cần cập nhật ứng dụng",
+    "forceMessage": "Phiên bản hiện tại không còn được hỗ trợ. Vui lòng cập nhật để tiếp tục sử dụng.",
+    "forceAction": "Cập nhật ngay",
+    "softMessage": "Có phiên bản mới. Cập nhật để có trải nghiệm tốt hơn.",
+    "softAction": "Cập nhật"
   },
   "auth": {
     "login": {
@@ -857,6 +904,7 @@
     "completeButton": "Hoàn thành",
     "completing": "Đang cập nhật...",
     "cancelButton": "Hủy đơn",
+    "completeSuccess": "Đơn hàng đã hoàn thành!",
     "cancelConfirmTitle": "Hủy đơn hàng?",
     "cancelConfirmMsg": "Đơn hàng này sẽ bị hủy. Hành động không thể hoàn tác.",
     "cancelling": "Đang hủy...",
@@ -871,6 +919,23 @@
     "paymentCash": "Tiền mặt",
     "paymentCard": "Thẻ",
     "paymentBankTransfer": "Chuyển khoản",
+    "addService": "Thêm dịch vụ",
+    "payAndComplete": "Thu tiền & Hoàn tất",
+    "collectPayment": "Thu tiền",
+    "removeItemTitle": "Xóa dịch vụ?",
+    "removeItemMsg": "Bạn muốn xóa {{name}} khỏi đơn hàng?",
+    "saveChanges": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "saveSuccess": "Đã lưu thay đổi",
+    "editTip": "Tiền tip",
+    "changeCustomer": "Thay đổi",
+    "selectCustomer": "Chọn khách hàng",
+    "customerSearch": "Tìm khách hàng...",
+    "walkInCustomer": "Khách lẻ (không chọn)",
+    "assignTechnician": "Chọn kỹ thuật viên",
+    "noTechnician": "Chưa phân công",
+    "clearTechnician": "Bỏ phân công",
+    "receipt": "Biên nhận",
     "periodDay": "Hôm nay",
     "periodWeek": "Tuần",
     "periodMonth": "Tháng",
@@ -985,7 +1050,8 @@
     "hintLoyaltyConfig": "Cấu hình điểm tích lũy khách hàng",
     "hintHotline": "Gọi hỗ trợ trực tiếp",
     "hintEmail": "Gửi yêu cầu qua email",
-    "hintZalo": "Nhắn tin hỗ trợ qua Zalo"
+    "hintZalo": "Nhắn tin hỗ trợ qua Zalo",
+    "hintSupport": "Liên hệ và gửi phản hồi cho chúng tôi"
   },
   "appt": {
     "title": "Lịch hẹn",
@@ -1404,6 +1470,18 @@
       "continueCount": "Tiếp tục ({{count}})",
       "edit": "Sửa"
     },
+    "welcome": {
+      "title": "Chào mừng đến với\nTappyPOS 🎉",
+      "subtitle": "Hoàn tất 4 bước để bắt đầu quản lý cửa hàng và nhận trải nghiệm cá nhân hóa.",
+      "steps": {
+        "shopType": "Loại cửa hàng",
+        "basicInfo": "Thông tin cơ bản",
+        "products": "Sản phẩm & dịch vụ",
+        "expenses": "Chi phí hàng tháng"
+      },
+      "timeEstimate": "⏱ Khoảng 3–5 phút",
+      "cta": "Bắt đầu"
+    },
     "step1": {
       "title": "Thông tin cơ bản",
       "subtitle": "🏪 Giúp chúng tôi cá nhân hóa trải nghiệm cho bạn và khách hàng.",
@@ -1502,7 +1580,9 @@
       "durationLabel": "Thời gian (phút)",
       "durationPlaceholder": "VD: 30",
       "hint2edit": "Nhấn nút \"Sửa\" trên mỗi sản phẩm để chỉnh tên, giá và đơn vị.",
-      "hint3add": "Bấm \"+ Thêm sản phẩm\" để tạo sản phẩm riêng của bạn."
+      "hint3add": "Bấm \"+ Thêm sản phẩm\" để tạo sản phẩm riêng của bạn.",
+      "categoryLabel": "Danh mục",
+      "myProducts": "Sản phẩm của tôi"
     },
     "pawnFeature": {
       "title": "Tiệm có nhận cầm đồ không?",
@@ -1587,13 +1667,18 @@
       "editExpense": "Chỉnh sửa chi phí",
       "addExpense": "Thêm chi phí mới",
       "nameLabel": "Tên chi phí",
+      "categoryLabel": "Danh mục",
       "noPriceHint": "Chưa nhập số tiền",
       "paymentDayLabel": "Ngày thanh toán hàng tháng",
       "clearDay": "Xoá ngày",
       "noteLabel": "Ghi chú",
       "notePlaceholder": "Ghi chú thêm (tuỳ chọn)...",
-      "hint2edit": "Nhấn nút \"Sửa\" để nhập số tiền và ngày thanh toán.",
-      "hint3add": "Nhấn \"+ Thêm chi phí\" để thêm chi phí riêng của bạn."
+      "hint1": "Nhấn vào chi phí để chọn và nhập số tiền.",
+      "hint2edit": "Nhấn chi phí đã chọn để chỉnh số tiền và ngày thanh toán.",
+      "hint3add": "Nhấn \"+ Thêm chi phí\" để thêm chi phí riêng của bạn.",
+      "paymentDayOptional": "Ngày thanh toán (tuỳ chọn)",
+      "paymentDaySelected": "Ngày {{day}} hàng tháng",
+      "removeExpense": "Bỏ chọn chi phí này",
     },
     "step4": {
       "title": "Xem lại thông tin",
@@ -2166,8 +2251,11 @@
     "noteLabel": "Ghi chú",
     "notePlaceholder": "Ghi chú cho dịch vụ này (tuỳ chọn)",
     "addToOrder": "Thêm vào đơn",
-    "checkout": "Xem đơn hàng",
-    "checkoutTitle": "Xem đơn hàng",
+    "addToWhichOrder": "Thêm vào đơn nào?",
+    "newOrder": "Đơn hàng mới",
+    "newOrderHint": "Tạo đơn mới với dịch vụ này",
+    "checkout": "Xem giỏ hàng",
+    "checkoutTitle": "Xem giỏ hàng",
     "subtotal": "Tạm tính",
     "tipLabel": "Tip (tuỳ chọn)",
     "tip": "Tip",
@@ -2198,7 +2286,11 @@
     "pointsAvailable": "điểm",
     "pointsDiscount": "Giảm từ điểm",
     "splitSession": "{{count}} KTV",
-    "splitSessionHint": "Phục vụ đồng thời"
+    "splitSessionHint": "Phục vụ đồng thời",
+    "startService": "Bắt đầu phục vụ (trả sau)",
+    "addToOrderTitle": "Thêm dịch vụ",
+    "activeOrderItems": "dv",
+    "activeOrdersLabel": "đơn đang chạy"
   },
   "tableGrid": {
     "title": "Sơ đồ bàn",
@@ -2230,6 +2322,7 @@
     "search": "Tìm kiếm theo tên, SĐT, tài sản...",
     "empty": "Chưa có hợp đồng nào",
     "emptyHint": "Nhấn + để tạo hợp đồng cầm đồ đầu tiên",
+    "exportError": "Không thể xuất danh sách. Vui lòng thử lại.",
     "kpi": {
       "active": "Đang cầm",
       "overdue": "Quá hạn",

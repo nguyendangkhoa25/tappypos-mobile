@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo, useEffect } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -362,13 +362,11 @@ export function DashboardScreen({ navigation }: Props) {
 
   const unreadCount   = useNotificationBadge();
   const { nickname, fullName, shopName } = useUserStore();
-  const { isHidden: globalHidden } = usePrivacyStore();
-  const [tempHidden, setTempHidden] = useState(globalHidden);
-  useEffect(() => { setTempHidden(globalHidden); }, [globalHidden]);
+  const { isHidden, toggle: togglePrivacy } = usePrivacyStore();
   const has = useFeatureCheck();
 
   const displayName = nickname || fullName;
-  const mask = (n: number) => (tempHidden ? '••••' : formatVnd(n));
+  const mask = (n: number) => (isHidden ? '••••' : formatVnd(n));
 
   const todayISO = new Date().toISOString().slice(0, 10);
   const dateRange = useMemo(() => {
@@ -512,7 +510,8 @@ export function DashboardScreen({ navigation }: Props) {
   const topProductsTitle = isServiceShop ? '🔥 Dịch vụ phổ biến'
     : isFbShop ? '🔥 Món bán chạy'
     : '🔥 Sản phẩm bán chạy';
-  const topProductsSub = (count: number) => isServiceShop ? `${count} lượt` : `${count} đơn`;
+  const topProductsSub = (count: number) =>
+    isServiceShop ? `${count} lượt · Dịch vụ` : isFbShop ? `${count} đơn · Món ăn` : `${count} đơn · Sản phẩm`;
 
   const trendPct = useMemo<number | null>(() => {
     if (preset !== 'today' || !kpiData || !yesterdayKpi) return null;
@@ -593,7 +592,7 @@ export function DashboardScreen({ navigation }: Props) {
           <RefreshControl
             refreshing={isManualRefreshing}
             onRefresh={onRefresh}
-            tintColor="#4f46e5"
+            tintColor="#059669"
           />
         }
         showsVerticalScrollIndicator={false}
@@ -655,8 +654,8 @@ export function DashboardScreen({ navigation }: Props) {
               <Text className={`${typo.heading} text-white`}>{mask(revenue)}</Text>
             )}
             <TrendBadge pct={trendPct} loading={trendLoading && preset === 'today'} />
-            <TouchableOpacity onPress={() => setTempHidden(h => !h)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name={tempHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
+            <TouchableOpacity onPress={togglePrivacy} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name={isHidden ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
             </TouchableOpacity>
           </View>
           {preset === 'today' && trendPct !== null && (
@@ -682,7 +681,7 @@ export function DashboardScreen({ navigation }: Props) {
               value={expenses}
               color="#fca5a5"
               loading={expenseLoading}
-              isHidden={tempHidden}
+              isHidden={isHidden}
             />
             <View className="w-px bg-white/20 mx-1" />
             <StatPill
@@ -690,7 +689,7 @@ export function DashboardScreen({ navigation }: Props) {
               value={profit}
               color={profit >= 0 ? '#6ee7b7' : '#fca5a5'}
               loading={kpiLoading || expenseLoading}
-              isHidden={tempHidden}
+              isHidden={isHidden}
             />
           </View>
         </View>
@@ -843,7 +842,8 @@ export function DashboardScreen({ navigation }: Props) {
                   sub={topProductsSub(p.orderCount)}
                   value={p.revenue}
                   loading={false}
-                  isHidden={tempHidden}
+                  isHidden={isHidden}
+                  onPress={p.productId ? () => navigation.getParent()?.navigate('More', { screen: 'Products', params: { screen: 'ProductDetail', params: { productId: p.productId } } } as any) : undefined}
                 />
               ))
             )}
@@ -870,7 +870,7 @@ export function DashboardScreen({ navigation }: Props) {
                   sub={`${c.orderCount} đơn · Khách thân thiết`}
                   value={c.totalSpend}
                   loading={false}
-                  isHidden={tempHidden}
+                  isHidden={isHidden}
                   onPress={c.customerId ? () => navigation.navigate('CustomerDetail', { customerId: c.customerId }) : undefined}
                 />
               ))
@@ -895,10 +895,11 @@ export function DashboardScreen({ navigation }: Props) {
                   key={e.name + i}
                   rank={i + 1}
                   name={e.name}
-                  sub={`${e.orderCount} đơn`}
+                  sub={`${e.orderCount} đơn · Nhân viên`}
                   value={e.revenue}
                   loading={false}
-                  isHidden={tempHidden}
+                  isHidden={isHidden}
+                  onPress={e.userId ? () => navigation.getParent()?.navigate('More', { screen: 'StaffForm', params: { userId: e.userId } } as any) : undefined}
                 />
               ))
             )}

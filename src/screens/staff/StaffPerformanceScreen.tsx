@@ -409,7 +409,7 @@ export function StaffPerformanceScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 16, paddingBottom: bottom + 24, flexGrow: 1 }}
           refreshControl={
-            <RefreshControl refreshing={isManualRefreshing} onRefresh={onRefresh} tintColor="#4f46e5" />
+            <RefreshControl refreshing={isManualRefreshing} onRefresh={onRefresh} tintColor="#059669" />
           }
           ListHeaderComponent={DateNav}
           stickyHeaderIndices={[0]}

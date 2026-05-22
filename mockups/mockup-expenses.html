@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Chi phí (Expenses) Mockup</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background: #e8eaf6;
+  display: flex;
+  min-height: 100vh;
+  color: #111827;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: #1e1b4b;
+  padding: 32px 0 24px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 0 20px 28px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+.sidebar-logo span { color: #a5b4fc; }
+.sidebar-section {
+  padding: 6px 12px 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6366f1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  margin: 1px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #c7d2fe;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background 0.15s;
+  user-select: none;
+}
+.sidebar-item:hover { background: rgba(99,102,241,0.2); }
+.sidebar-item.active {
+  background: #4f46e5;
+  color: #fff;
+  font-weight: 700;
+}
+.sidebar-item .icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px 20px 0;
+  font-size: 11px;
+  color: #6366f1;
+}
+
+/* ── Main canvas ── */
+.canvas {
+  margin-left: 220px;
+  padding: 40px 48px;
+  flex: 1;
+  min-height: 100vh;
+}
+.canvas-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e1b4b;
+  margin-bottom: 4px;
+}
+.canvas-sub {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 32px;
+}
+
+/* ── Screen grid ── */
+.screen-section { margin-bottom: 56px; }
+.screen-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 4px 14px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+.phones-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+/* ── Phone frame ── */
+.phone-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.phone-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.phone {
+  width: 390px;
+  height: 844px;
+  background: #f9fafb;
+  border-radius: 48px;
+  border: 10px solid #1c1c1e;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.05);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Status bar ── */
+.status-bar {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.status-bar .time { font-size: 15px; font-weight: 700; }
+.status-icons { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+
+/* ── Screen content ── */
+.screen-body {
+  flex: 1;
+  overflow-y: auto;
+  background: #f9fafb;
+  position: relative;
+}
+.screen-body::-webkit-scrollbar { display: none; }
+
+/* ── Expenses screen styles ── */
+.exp-header {
+  background: #fff;
+  padding: 12px 20px 14px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.exp-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.exp-header-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #111827;
+}
+.exp-header-actions {
+  display: flex;
+  gap: 8px;
+}
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+}
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.month-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #eef2ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #4f46e5;
+  cursor: pointer;
+  font-weight: 700;
+}
+.month-nav-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Summary boxes */
+.summary-row {
+  display: flex;
+  gap: 8px;
+  padding: 14px 16px;
+}
+.summary-box {
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+.summary-box .label {
+  font-size: 10px;
+  color: #6b7280;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.summary-box .value {
+  font-size: 13px;
+  font-weight: 800;
+  color: #111827;
+}
+.summary-box .value.green { color: #16a34a; }
+.summary-box .value.amber { color: #d97706; }
+.summary-box .value.blue { color: #2563eb; }
+
+/* Hint bar */
+.hint-bar {
+  margin: 0 16px 12px;
+  background: #eef2ff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #4338ca;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 32px 32px;
+  gap: 12px;
+  text-align: center;
+}
+.empty-icon {
+  font-size: 52px;
+  margin-bottom: 4px;
+  opacity: 0.6;
+}
+.empty-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+}
+.empty-sub {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+.btn-clone {
+  padding: 12px 24px;
+  border: 2px solid #4f46e5;
+  border-radius: 12px;
+  background: transparent;
+  color: #4f46e5;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Chart */
+.chart-area {
+  margin: 0 16px 12px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 14px 16px 10px;
+}
+.chart-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 56px;
+}
+.chart-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.chart-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+  min-height: 4px;
+}
+.chart-day {
+  font-size: 9px;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+/* Filter chips */
+.filter-chips {
+  display: flex;
+  gap: 6px;
+  padding: 0 16px 12px;
+  overflow-x: auto;
+}
+.filter-chips::-webkit-scrollbar { display: none; }
+.chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  color: #6b7280;
+}
+.chip.active {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+
+/* Expense list */
+.expense-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 88px;
+}
+.expense-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.expense-left { flex: 1; min-width: 0; }
+.expense-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.expense-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #374151;
+}
+.date-text {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+.type-pill {
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.type-pill.fixed {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.type-pill.variable {
+  background: #fef3c7;
+  color: #92400e;
+}
+.expense-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.expense-amount {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+  text-align: right;
+}
+.delete-btn {
+  color: #ef4444;
+  font-size: 17px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+/* FAB */
+.fab {
+  position: absolute;
+  bottom: 76px;
+  right: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(79,70,229,0.4);
+  cursor: pointer;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* Bottom nav */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 72px;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  padding-bottom: 6px;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 0;
+  cursor: pointer;
+}
+.nav-icon { font-size: 21px; }
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+.nav-item.active .nav-label { color: #4f46e5; }
+.nav-item.active .nav-icon { filter: none; }
+
+/* ── Modal overlay for Clone Sheet ── */
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  z-index: 50;
+}
+.bottom-sheet {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 0 0 32px;
+  max-height: 85%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.sheet-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111827;
+}
+.sheet-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #6b7280;
+  cursor: pointer;
+  font-weight: 700;
+}
+.sheet-hint {
+  padding: 10px 20px;
+  font-size: 12.5px;
+  color: #6b7280;
+  border-bottom: 1px solid #f3f4f6;
+}
+.sheet-select-all {
+  padding: 10px 20px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4f46e5;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sheet-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px;
+}
+.sheet-list::-webkit-scrollbar { display: none; }
+.sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f9fafb;
+}
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.checkbox.checked {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+.sheet-item-info { flex: 1; min-width: 0; }
+.sheet-item-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2px;
+}
+.sheet-item-sub {
+  font-size: 11.5px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sheet-item-amount {
+  font-size: 13px;
+  font-weight: 800;
+  color: #111827;
+  flex-shrink: 0;
+}
+.sheet-footer {
+  padding: 16px 20px 0;
+}
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  background: #4f46e5;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+}
+.btn-primary:hover { background: #4338ca; }
+
+/* ── Add Expense Sheet ── */
+.sheet-hints-row {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.hint-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+.hint-row .hint-icon { font-size: 14px; }
+.form-fields {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+.form-fields::-webkit-scrollbar { display: none; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.form-input {
+  padding: 11px 14px;
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+}
+.form-input.money {
+  font-size: 20px;
+  font-weight: 800;
+  color: #4f46e5;
+  text-align: right;
+}
+.form-input.placeholder-style { color: #9ca3af; }
+.cat-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  background: #eef2ff;
+  border: 1.5px solid #c7d2fe;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.cat-chip-inner {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: #3730a3;
+}
+.cat-chevron { color: #6366f1; font-size: 12px; }
+
+/* ── Default Expenses Screen ── */
+.back-header {
+  background: #fff;
+  padding: 12px 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.back-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: #374151;
+  cursor: pointer;
+  font-weight: 700;
+}
+.back-header-title {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 800;
+  color: #111827;
+}
+.add-btn-header {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 300;
+  line-height: 1;
+}
+.info-box {
+  margin: 14px 16px;
+  background: #eef2ff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.info-box-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.info-box-text {
+  font-size: 12.5px;
+  color: #3730a3;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.default-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.default-item {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.default-item-info { flex: 1; min-width: 0; }
+.default-item-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+.default-item-sub {
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.default-item-actions {
+  display: flex;
+  gap: 6px;
+}
+.action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+}
+.action-btn.edit { background: #eef2ff; color: #4f46e5; }
+.action-btn.del { background: #fef2f2; color: #ef4444; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">Tappy<span>POS</span></div>
+
+  <div class="sidebar-section">Màn hình</div>
+  <div class="sidebar-item" onclick="showSection('s1')">
+    <span class="icon">📋</span> Màn 1: Tháng trống
+  </div>
+  <div class="sidebar-item active" onclick="showSection('s2')" id="nav-s2">
+    <span class="icon">📊</span> Màn 2: Có dữ liệu
+  </div>
+  <div class="sidebar-item" onclick="showSection('s3')" id="nav-s3">
+    <span class="icon">📑</span> Màn 3: Sheet sao chép
+  </div>
+  <div class="sidebar-item" onclick="showSection('s4')" id="nav-s4">
+    <span class="icon">➕</span> Màn 4: Thêm chi phí
+  </div>
+  <div class="sidebar-item" onclick="showSection('s5')" id="nav-s5">
+    <span class="icon">⚙️</span> Màn 5: Chi phí mặc định
+  </div>
+
+  <div class="sidebar-footer">TappyPOS Mobile · Chi phí</div>
+</nav>
+
+<!-- ═══════════════════════════ CANVAS ═══════════════════════════ -->
+<main class="canvas">
+  <div class="canvas-title">Chi phí (Expenses)</div>
+  <div class="canvas-sub">5 màn hình — chọn từ sidebar để xem</div>
+
+  <!-- ─── SECTION 1: Empty month ─── -->
+  <div class="screen-section" id="s1" style="display:none">
+    <div class="screen-section-label">Màn 1 — Tháng trống (clone button visible)</div>
+    <div class="phones-row">
+      <div class="phone-wrap">
+        <div class="phone-label">390 × 844</div>
+        <div class="phone">
+          <!-- Status bar -->
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="status-icons">📶 🔋</div>
+          </div>
+          <!-- Header -->
+          <div class="exp-header">
+            <div class="exp-header-row">
+              <div class="exp-header-title">Chi phí</div>
+              <div class="exp-header-actions">
+                <div class="icon-btn">⚙️</div>
+              </div>
+            </div>
+            <div class="month-nav">
+              <div class="month-nav-btn">‹</div>
+              <div class="month-nav-label">04/2026</div>
+              <div class="month-nav-btn">›</div>
+            </div>
+          </div>
+          <div class="screen-body">
+            <!-- Hint -->
+            <div style="padding:14px 16px 0">
+              <div class="hint-bar">
+                <span>💡</span>
+                <span>Theo dõi chi phí hàng tháng của cửa hàng</span>
+              </div>
+            </div>
+            <!-- Summary -->
+            <div class="summary-row">
+              <div class="summary-box">
+                <div class="label">Tổng</div>
+                <div class="value">0 ₫</div>
+              </div>
+              <div class="summary-box">
+                <div class="label">Cố định</div>
+                <div class="value">0 ₫</div>
+              </div>
+              <div class="summary-box">
+                <div class="label">Phát sinh</div>
+                <div class="value">0 ₫</div>
+              </div>
+            </div>
+            <!-- Empty state -->
+            <div class="empty-state">
+              <div class="empty-icon">🧾</div>
+              <div class="empty-title">Chưa có chi phí tháng này</div>
+              <div class="empty-sub">Thêm chi phí mới hoặc sao chép chi phí mặc định đã cài đặt</div>
+              <button class="btn-clone">
+                <span>📋</span> Sao chép chi phí mặc định
+              </button>
+            </div>
+          </div>
+          <!-- FAB -->
+          <div class="fab">+</div>
+          <!-- Bottom nav -->
+          <div class="bottom-nav">
+            <div class="nav-item">
+              <div class="nav-icon">🏠</div>
+              <div class="nav-label">Trang chủ</div>
+            </div>
+            <div class="nav-item">
+              <div class="nav-icon">🛍️</div>
+              <div class="nav-label">Bán Hàng</div>
+            </div>
+            <div class="nav-item">
+              <div class="nav-icon">📊</div>
+              <div class="nav-label">Báo Cáo</div>
+            </div>
+            <div class="nav-item active">
+              <div class="nav-icon">☰</div>
+              <div class="nav-label" style="color:#4f46e5">Thêm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 2: With data ─── -->
+  <div class="screen-section" id="s2">
+    <div class="screen-section-label">Màn 2 — Có dữ liệu (danh sách đầy đủ)</div>
+    <div class="phones-row">
+      <div class="phone-wrap">
+        <div class="phone-label">390 × 844</div>
+        <div class="phone">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="status-icons">📶 🔋</div>
+          </div>
+          <div class="exp-header">
+            <div class="exp-header-row">
+              <div class="exp-header-title">Chi phí</div>
+              <div class="exp-header-actions">
+                <div class="icon-btn">⚙️</div>
+              </div>
+            </div>
+            <div class="month-nav">
+              <div class="month-nav-btn">‹</div>
+              <div class="month-nav-label">05/2026</div>
+              <div class="month-nav-btn">›</div>
+            </div>
+          </div>
+          <div class="screen-body">
+            <!-- Summary -->
+            <div class="summary-row">
+              <div class="summary-box">
+                <div class="label">Tổng</div>
+                <div class="value" style="font-size:11px;color:#111827">4.299.000₫</div>
+              </div>
+              <div class="summary-box">
+                <div class="label">Cố định</div>
+                <div class="value blue" style="font-size:11px">3.500.000₫</div>
+              </div>
+              <div class="summary-box">
+                <div class="label">Phát sinh</div>
+                <div class="value amber" style="font-size:11px">799.000₫</div>
+              </div>
+            </div>
+
+            <!-- Line chart -->
+            <div class="chart-area">
+              <div class="chart-title">Chi phí theo ngày</div>
+              <div class="chart-bars">
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:44px"></div><div class="chart-day">1</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:6px;opacity:0.3"></div><div class="chart-day">3</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:34px"></div><div class="chart-day">5</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:6px;opacity:0.3"></div><div class="chart-day">7</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:20px"></div><div class="chart-day">10</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:6px;opacity:0.3"></div><div class="chart-day">12</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:16px"></div><div class="chart-day">15</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:6px;opacity:0.3"></div><div class="chart-day">17</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:20px"></div><div class="chart-day">18</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:6px;opacity:0.3"></div><div class="chart-day">20</div></div>
+                <div class="chart-bar-wrap"><div class="chart-bar" style="height:6px;opacity:0.3"></div><div class="chart-day">22</div></div>
+              </div>
+            </div>
+
+            <!-- Filter chips -->
+            <div class="filter-chips">
+              <div class="chip active">Tất cả ★</div>
+              <div class="chip">Cố định</div>
+              <div class="chip">Phát sinh</div>
+            </div>
+
+            <!-- Expense list -->
+            <div class="expense-list">
+
+              <div class="expense-card">
+                <div class="expense-left">
+                  <div class="expense-name">Tiền thuê mặt bằng</div>
+                  <div class="expense-meta">
+                    <div class="cat-badge">🏠 Mặt bằng</div>
+                    <div class="date-text">01/05</div>
+                    <div class="type-pill fixed">Cố định</div>
+                  </div>
+                </div>
+                <div class="expense-right">
+                  <div class="expense-amount">2.000.000₫</div>
+                  <div class="delete-btn">🗑</div>
+                </div>
+              </div>
+
+              <div class="expense-card">
+                <div class="expense-left">
+                  <div class="expense-name">Tiền điện</div>
+                  <div class="expense-meta">
+                    <div class="cat-badge">⚡ Điện nước</div>
+                    <div class="date-text">05/05</div>
+                    <div class="type-pill fixed">Cố định</div>
+                  </div>
+                </div>
+                <div class="expense-right">
+                  <div class="expense-amount">850.000₫</div>
+                  <div class="delete-btn">🗑</div>
+                </div>
+              </div>
+
+              <div class="expense-card">
+                <div class="expense-left">
+                  <div class="expense-name">Tiền nước</div>
+                  <div class="expense-meta">
+                    <div class="cat-badge">💧 Điện nước</div>
+                    <div class="date-text">05/05</div>
+                    <div class="type-pill fixed">Cố định</div>
+                  </div>
+                </div>
+                <div class="expense-right">
+                  <div class="expense-amount">200.000₫</div>
+                  <div class="delete-btn">🗑</div>
+                </div>
+              </div>
+
+              <div class="expense-card">
+                <div class="expense-left">
+                  <div class="expense-name">Internet</div>
+                  <div class="expense-meta">
+                    <div class="cat-badge">📡 Dịch vụ</div>
+                    <div class="date-text">01/05</div>
+                    <div class="type-pill fixed">Cố định</div>
+                  </div>
+                </div>
+                <div class="expense-right">
+                  <div class="expense-amount">450.000₫</div>
+                  <div class="delete-btn">🗑</div>
+                </div>
+              </div>
+
+              <div class="expense-card">
+                <div class="expense-left">
+                  <div class="expense-name">Phần mềm TappyPOS</div>
+                  <div class="expense-meta">
+                    <div class="cat-badge">💻 Dịch vụ</div>
+                    <div class="date-text">01/05</div>
+                    <div class="type-pill fixed">Cố định</div>
+                  </div>
+                </div>
+                <div class="expense-right">
+                  <div class="expense-amount">199.000₫</div>
+                  <div class="delete-btn">🗑</div>
+                </div>
+              </div>
+
+              <div class="expense-card">
+                <div class="expense-left">
+                  <div class="expense-name">Mua dầu gội</div>
+                  <div class="expense-meta">
+                    <div class="cat-badge">🛒 Nguyên vật liệu</div>
+                    <div class="date-text">10/05</div>
+                    <div class="type-pill variable">Phát sinh</div>
+                  </div>
+                </div>
+                <div class="expense-right">
+                  <div class="expense-amount">300.000₫</div>
+                  <div class="delete-btn">🗑</div>
+                </div>
+              </div>
+
+              <div class="expense-card">
+                <div class="expense-left">
+                  <div class="expense-name">Chi phí quảng cáo Facebook</div>
+                  <div class="expense-meta">
+                    <div class="cat-badge">📣 Marketing</div>
+                    <div class="date-text">15/05</div>
+                    <div class="type-pill variable">Phát sinh</div>
+                  </div>
+                </div>
+                <div class="expense-right">
+                  <div class="expense-amount">200.000₫</div>
+                  <div class="delete-btn">🗑</div>
+                </div>
+              </div>
+
+              <div class="expense-card">
+                <div class="expense-left">
+                  <div class="expense-name">Thay bóng đèn</div>
+                  <div class="expense-meta">
+                    <div class="cat-badge">🔧 Bảo trì</div>
+                    <div class="date-text">18/05</div>
+                    <div class="type-pill variable">Phát sinh</div>
+                  </div>
+                </div>
+                <div class="expense-right">
+                  <div class="expense-amount">300.000₫</div>
+                  <div class="delete-btn" style="color:#ef4444">🗑</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <!-- FAB -->
+          <div class="fab">+</div>
+          <!-- Bottom nav -->
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Trang chủ</div></div>
+            <div class="nav-item"><div class="nav-icon">🛍️</div><div class="nav-label">Bán Hàng</div></div>
+            <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Báo Cáo</div></div>
+            <div class="nav-item active"><div class="nav-icon">☰</div><div class="nav-label" style="color:#4f46e5">Thêm</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 3: Clone selection sheet ─── -->
+  <div class="screen-section" id="s3" style="display:none">
+    <div class="screen-section-label">Màn 3 — Sheet chọn sao chép chi phí mặc định</div>
+    <div class="phones-row">
+      <div class="phone-wrap">
+        <div class="phone-label">390 × 844</div>
+        <div class="phone">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="status-icons">📶 🔋</div>
+          </div>
+          <!-- Background (same as screen 2 blurred) -->
+          <div class="exp-header">
+            <div class="exp-header-row">
+              <div class="exp-header-title">Chi phí</div>
+              <div class="exp-header-actions"><div class="icon-btn">⚙️</div></div>
+            </div>
+            <div class="month-nav">
+              <div class="month-nav-btn">‹</div>
+              <div class="month-nav-label">05/2026</div>
+              <div class="month-nav-btn">›</div>
+            </div>
+          </div>
+          <div class="screen-body" style="filter:blur(2px);pointer-events:none">
+            <div class="summary-row">
+              <div class="summary-box"><div class="label">Tổng</div><div class="value" style="font-size:11px">4.299.000₫</div></div>
+              <div class="summary-box"><div class="label">Cố định</div><div class="value blue" style="font-size:11px">3.500.000₫</div></div>
+              <div class="summary-box"><div class="label">Phát sinh</div><div class="value amber" style="font-size:11px">799.000₫</div></div>
+            </div>
+            <div class="expense-list" style="opacity:0.5">
+              <div class="expense-card">
+                <div class="expense-left"><div class="expense-name">Tiền thuê mặt bằng</div></div>
+                <div class="expense-right"><div class="expense-amount">2.000.000₫</div></div>
+              </div>
+              <div class="expense-card">
+                <div class="expense-left"><div class="expense-name">Tiền điện</div></div>
+                <div class="expense-right"><div class="expense-amount">850.000₫</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- Modal overlay -->
+          <div class="modal-overlay">
+            <div class="bottom-sheet">
+              <div class="sheet-handle"></div>
+              <div class="sheet-header">
+                <div class="sheet-title">Chọn chi phí cần sao chép</div>
+                <div class="sheet-close">✕</div>
+              </div>
+              <div class="sheet-hint">Chọn các chi phí mặc định muốn áp dụng cho tháng 05/2026.</div>
+              <div class="sheet-select-all">
+                <span>✓</span> Chọn tất cả
+              </div>
+              <div class="sheet-list">
+
+                <div class="sheet-item">
+                  <div class="checkbox checked">✓</div>
+                  <div class="sheet-item-info">
+                    <div class="sheet-item-name">Tiền thuê mặt bằng</div>
+                    <div class="sheet-item-sub"><span>🏠 Mặt bằng</span><span>·</span><span>ngày 1</span></div>
+                  </div>
+                  <div class="sheet-item-amount">2.000.000₫</div>
+                </div>
+
+                <div class="sheet-item">
+                  <div class="checkbox checked">✓</div>
+                  <div class="sheet-item-info">
+                    <div class="sheet-item-name">Tiền điện</div>
+                    <div class="sheet-item-sub"><span>⚡ Điện nước</span><span>·</span><span>ngày 5</span></div>
+                  </div>
+                  <div class="sheet-item-amount">800.000₫</div>
+                </div>
+
+                <div class="sheet-item">
+                  <div class="checkbox checked">✓</div>
+                  <div class="sheet-item-info">
+                    <div class="sheet-item-name">Tiền nước</div>
+                    <div class="sheet-item-sub"><span>💧 Điện nước</span><span>·</span><span>ngày 5</span></div>
+                  </div>
+                  <div class="sheet-item-amount">200.000₫</div>
+                </div>
+
+                <div class="sheet-item">
+                  <div class="checkbox checked">✓</div>
+                  <div class="sheet-item-info">
+                    <div class="sheet-item-name">Internet</div>
+                    <div class="sheet-item-sub"><span>📡 Dịch vụ</span><span>·</span><span>ngày 1</span></div>
+                  </div>
+                  <div class="sheet-item-amount">300.000₫</div>
+                </div>
+
+                <div class="sheet-item">
+                  <div class="checkbox"></div>
+                  <div class="sheet-item-info">
+                    <div class="sheet-item-name" style="color:#9ca3af">Phần mềm TappyPOS</div>
+                    <div class="sheet-item-sub"><span>💻 Dịch vụ</span><span>·</span><span>ngày 1</span></div>
+                  </div>
+                  <div class="sheet-item-amount" style="color:#9ca3af">199.000₫</div>
+                </div>
+
+              </div>
+              <div class="sheet-footer">
+                <button class="btn-primary">Sao chép (4)</button>
+              </div>
+            </div>
+          </div>
+          <!-- Bottom nav (under overlay) -->
+          <div class="bottom-nav" style="z-index:10">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Trang chủ</div></div>
+            <div class="nav-item"><div class="nav-icon">🛍️</div><div class="nav-label">Bán Hàng</div></div>
+            <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Báo Cáo</div></div>
+            <div class="nav-item active"><div class="nav-icon">☰</div><div class="nav-label" style="color:#4f46e5">Thêm</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 4: Add Expense Sheet ─── -->
+  <div class="screen-section" id="s4" style="display:none">
+    <div class="screen-section-label">Màn 4 — Thêm chi phí (bottom sheet)</div>
+    <div class="phones-row">
+      <div class="phone-wrap">
+        <div class="phone-label">390 × 844</div>
+        <div class="phone">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="status-icons">📶 🔋</div>
+          </div>
+          <!-- Background -->
+          <div class="exp-header">
+            <div class="exp-header-row">
+              <div class="exp-header-title">Chi phí</div>
+              <div class="exp-header-actions"><div class="icon-btn">⚙️</div></div>
+            </div>
+            <div class="month-nav">
+              <div class="month-nav-btn">‹</div>
+              <div class="month-nav-label">05/2026</div>
+              <div class="month-nav-btn">›</div>
+            </div>
+          </div>
+          <div class="screen-body" style="filter:blur(2px);pointer-events:none;opacity:0.7">
+            <div class="summary-row">
+              <div class="summary-box"><div class="label">Tổng</div><div class="value" style="font-size:11px">4.299.000₫</div></div>
+              <div class="summary-box"><div class="label">Cố định</div><div class="value blue" style="font-size:11px">3.500.000₫</div></div>
+              <div class="summary-box"><div class="label">Phát sinh</div><div class="value amber" style="font-size:11px">799.000₫</div></div>
+            </div>
+          </div>
+          <!-- Add Expense Modal -->
+          <div class="modal-overlay" style="background:rgba(0,0,0,0.45)">
+            <div class="bottom-sheet" style="max-height:92%">
+              <div class="sheet-handle"></div>
+              <div class="sheet-header">
+                <div class="sheet-title">Thêm chi phí</div>
+                <div class="sheet-close">✕</div>
+              </div>
+              <!-- Hints -->
+              <div class="sheet-hints-row">
+                <div class="hint-row"><span class="hint-icon">📌</span><span>Đặt tên rõ ràng để dễ theo dõi sau này</span></div>
+                <div class="hint-row"><span class="hint-icon">📂</span><span>Chọn danh mục giúp báo cáo chính xác hơn</span></div>
+                <div class="hint-row"><span class="hint-icon">📅</span><span>Ngày phát sinh sẽ hiển thị trên biểu đồ</span></div>
+              </div>
+              <!-- Form -->
+              <div class="form-fields">
+                <div class="form-group">
+                  <div class="form-label">Tên chi phí</div>
+                  <div class="form-input" style="color:#9ca3af">Ví dụ: Tiền điện tháng 5…</div>
+                </div>
+                <div class="form-group">
+                  <div class="form-label">Số tiền</div>
+                  <div class="form-input money">0 ₫</div>
+                </div>
+                <div class="form-group">
+                  <div class="form-label">Danh mục</div>
+                  <div class="cat-select">
+                    <span style="font-size:18px">🛒</span>
+                    <div class="cat-chip-inner">Nguyên vật liệu</div>
+                    <span class="cat-chevron">▾</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="form-label">Loại chi phí</div>
+                  <div style="display:flex;gap:8px">
+                    <div style="flex:1;padding:11px 14px;background:#eef2ff;border:2px solid #4f46e5;border-radius:10px;text-align:center;font-size:13px;font-weight:700;color:#3730a3">Cố định</div>
+                    <div style="flex:1;padding:11px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;text-align:center;font-size:13px;font-weight:600;color:#6b7280">Phát sinh</div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="form-label">Ngày</div>
+                  <div class="form-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <span>21/05/2026</span>
+                    <span style="color:#9ca3af">📅</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sheet-footer">
+                <button class="btn-primary">Lưu chi phí</button>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav" style="z-index:10">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Trang chủ</div></div>
+            <div class="nav-item"><div class="nav-icon">🛍️</div><div class="nav-label">Bán Hàng</div></div>
+            <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Báo Cáo</div></div>
+            <div class="nav-item active"><div class="nav-icon">☰</div><div class="nav-label" style="color:#4f46e5">Thêm</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 5: Default Expenses Settings ─── -->
+  <div class="screen-section" id="s5" style="display:none">
+    <div class="screen-section-label">Màn 5 — Chi phí mặc định (Settings)</div>
+    <div class="phones-row">
+      <div class="phone-wrap">
+        <div class="phone-label">390 × 844</div>
+        <div class="phone">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="status-icons">📶 🔋</div>
+          </div>
+          <!-- Back header -->
+          <div class="back-header">
+            <div class="back-btn">‹</div>
+            <div class="back-header-title">Chi phí mặc định</div>
+            <div class="add-btn-header">+</div>
+          </div>
+          <div class="screen-body">
+            <!-- Info box -->
+            <div class="info-box">
+              <div class="info-box-icon">💡</div>
+              <div class="info-box-text">Đây là chi phí sẽ được sao chép vào đầu mỗi tháng. Bạn có thể thêm, sửa hoặc xoá bất kỳ lúc nào.</div>
+            </div>
+
+            <!-- Default expense list -->
+            <div class="default-list">
+
+              <div class="default-item">
+                <div style="font-size:22px;flex-shrink:0">🏠</div>
+                <div class="default-item-info">
+                  <div class="default-item-name">Tiền thuê mặt bằng</div>
+                  <div class="default-item-sub">
+                    <div class="cat-badge" style="background:#f0fdf4;color:#166534">Mặt bằng</div>
+                    <span>2.000.000₫/tháng</span>
+                    <span>·</span>
+                    <span>ngày 1</span>
+                  </div>
+                </div>
+                <div class="default-item-actions">
+                  <div class="action-btn edit">✏️</div>
+                  <div class="action-btn del">🗑</div>
+                </div>
+              </div>
+
+              <div class="default-item">
+                <div style="font-size:22px;flex-shrink:0">⚡</div>
+                <div class="default-item-info">
+                  <div class="default-item-name">Tiền điện</div>
+                  <div class="default-item-sub">
+                    <div class="cat-badge" style="background:#fffbeb;color:#92400e">Điện nước</div>
+                    <span>800.000₫/tháng</span>
+                    <span>·</span>
+                    <span>ngày 5</span>
+                  </div>
+                </div>
+                <div class="default-item-actions">
+                  <div class="action-btn edit">✏️</div>
+                  <div class="action-btn del">🗑</div>
+                </div>
+              </div>
+
+              <div class="default-item">
+                <div style="font-size:22px;flex-shrink:0">💧</div>
+                <div class="default-item-info">
+                  <div class="default-item-name">Tiền nước</div>
+                  <div class="default-item-sub">
+                    <div class="cat-badge" style="background:#eff6ff;color:#1e40af">Điện nước</div>
+                    <span>200.000₫/tháng</span>
+                    <span>·</span>
+                    <span>ngày 5</span>
+                  </div>
+                </div>
+                <div class="default-item-actions">
+                  <div class="action-btn edit">✏️</div>
+                  <div class="action-btn del">🗑</div>
+                </div>
+              </div>
+
+              <div class="default-item">
+                <div style="font-size:22px;flex-shrink:0">📡</div>
+                <div class="default-item-info">
+                  <div class="default-item-name">Internet</div>
+                  <div class="default-item-sub">
+                    <div class="cat-badge" style="background:#f5f3ff;color:#5b21b6">Dịch vụ</div>
+                    <span>300.000₫/tháng</span>
+                    <span>·</span>
+                    <span>ngày 1</span>
+                  </div>
+                </div>
+                <div class="default-item-actions">
+                  <div class="action-btn edit">✏️</div>
+                  <div class="action-btn del">🗑</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Empty state hint at bottom -->
+            <div style="padding:28px 24px;text-align:center">
+              <div style="font-size:12px;color:#9ca3af;line-height:1.6">
+                Nhấn <strong style="color:#4f46e5">+</strong> ở góc trên để thêm chi phí mặc định mới.<br>
+                Mỗi đầu tháng, bạn có thể sao chép danh sách này vào tháng hiện tại.
+              </div>
+            </div>
+
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div><div class="nav-label">Trang chủ</div></div>
+            <div class="nav-item"><div class="nav-icon">🛍️</div><div class="nav-label">Bán Hàng</div></div>
+            <div class="nav-item"><div class="nav-icon">📊</div><div class="nav-label">Báo Cáo</div></div>
+            <div class="nav-item active"><div class="nav-icon">☰</div><div class="nav-label" style="color:#4f46e5">Thêm</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const screens = ['s1','s2','s3','s4','s5'];
+
+function showSection(id) {
+  screens.forEach(s => {
+    document.getElementById(s).style.display = (s === id) ? 'block' : 'none';
+  });
+  // Update sidebar active states
+  document.querySelectorAll('.sidebar-item').forEach((el, i) => {
+    el.classList.toggle('active', i === screens.indexOf(id));
+  });
+}
+// Show screen 2 by default
+showSection('s2');
+</script>
+</body>
+</html>

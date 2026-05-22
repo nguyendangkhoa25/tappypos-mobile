@@ -27,6 +27,7 @@ const EMOJI_OPTIONS = ['🍽️', '☕', '🍜', '🍕', '🧃', '🍰', '💄',
 
 type FormState = { emoji: string; name: string };
 const EMPTY_FORM: FormState = { emoji: '📦', name: '' };
+type CategoryWithCount = CategoryData & { productCount?: number };
 
 export function CategoryListScreen() {
   const navigation = useNavigation();
@@ -90,7 +91,7 @@ export function CategoryListScreen() {
   };
 
   const handleDelete = (cat: CategoryData) => {
-    const productCount = (cat as any).productCount ?? 0;
+    const productCount = (cat as CategoryWithCount).productCount ?? 0;
     if (productCount > 0) {
       showAlert(t('categories.deleteTitle'), t('categories.deleteHasProducts', { count: productCount }), [
         { label: t('common.close'), style: 'cancel' },
@@ -156,7 +157,7 @@ export function CategoryListScreen() {
               <View className="flex-1">
                 <Text className={`${typo.labelBold} text-gray-900 dark:text-white`}>{item.name}</Text>
                 <Text className={`${typo.caption} text-gray-400 mt-0.5`}>
-                  {t('categories.productsCount', { count: (item as any).productCount ?? 0 })}
+                  {t('categories.productsCount', { count: (item as CategoryWithCount).productCount ?? 0 })}
                 </Text>
               </View>
               <TouchableOpacity onPress={() => openEdit(item)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">

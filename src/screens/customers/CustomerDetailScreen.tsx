@@ -8,6 +8,7 @@ import { customerApi, orderApi, loyaltyApi, pawnApi, type CustomerData, type Ord
 import { useFeatureCheck } from '../../hooks/useFeature';
 import { useAlertStore } from '../../store/alertStore';
 import { useToastStore } from '../../store/toastStore';
+import { usePrivacyStore } from '../../store/privacyStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { formatVnd, formatDate } from '../../utils/format';
 import { useTypography } from '../../hooks/useTypography';
@@ -101,6 +102,7 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
   const period = getPeriod(periodKey);
   const { show: showAlert } = useAlertStore();
   const { show: showToast } = useToastStore();
+  const isHidden = usePrivacyStore((s) => s.isHidden);
   const showErrorAlert = useErrorAlert();
 
   const { data: customer, isLoading, isError, refetch } = useQuery({
@@ -267,7 +269,7 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
             <View className="w-px bg-white/20" />
             <View className="flex-1 items-center">
               <Text className={`${typo.labelBold} text-white`} numberOfLines={1}>
-                {formatVnd(customer.totalSpend)}
+                {isHidden ? '••••••' : formatVnd(customer.totalSpend)}
               </Text>
               <Text className={`${typo.caption} text-indigo-200`}>{t('customers.totalSpend')}</Text>
             </View>
@@ -365,7 +367,7 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
                 <View className="flex-row justify-between mb-1">
                   <Text className={`${typo.caption} text-gray-400`}>{t('loyalty.nextTier')}: {loyaltySummary.nextTier.name}</Text>
                   <Text className={`${typo.caption} font-medium text-gray-500`}>
-                    {t('loyalty.remaining')}: {formatVnd(loyaltySummary.amountToNextTier)}
+                    {t('loyalty.remaining')}: {isHidden ? '••••••' : formatVnd(loyaltySummary.amountToNextTier)}
                   </Text>
                 </View>
                 <View className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -408,7 +410,7 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
                 </Text>
                 {item.unitPrice > 0 && (
                   <Text className={`${typo.label} text-emerald-600`}>
-                    {formatVnd(item.unitPrice)}
+                    {isHidden ? '••••••' : formatVnd(item.unitPrice)}
                   </Text>
                 )}
               </View>
@@ -416,7 +418,7 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
             {lastOrderDetail.total > 0 && (
               <View className="flex-row justify-between pt-2 mt-1 border-t border-gray-100">
                 <Text className={`${typo.caption} text-gray-400`}>{t('customers.lastVisitTotal')}</Text>
-                <Text className={`${typo.labelBold} text-gray-800`}>{formatVnd(lastOrderDetail.total)}</Text>
+                <Text className={`${typo.labelBold} text-gray-800`}>{isHidden ? '••••••' : formatVnd(lastOrderDetail.total)}</Text>
               </View>
             )}
           </View>
@@ -440,7 +442,7 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
                     <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{formatDate(p.pawnDate)} → {formatDate(p.pawnDueDate)}</Text>
                   </View>
                   <View className="items-end">
-                    <Text className={`${typo.labelBold} text-primary`}>{formatVnd(p.pawnAmount)}</Text>
+                    <Text className={`${typo.labelBold} text-primary`}>{isHidden ? '••••••' : formatVnd(p.pawnAmount)}</Text>
                     <Text className={`${typo.captionBold} mt-0.5 ${isOverdue ? 'text-red-500' : p.pawnStatus === 'PAWNED' ? 'text-blue-500' : 'text-gray-400'}`}>
                       {t(`pawn.status.${p.pawnStatus}`)}
                     </Text>
@@ -476,7 +478,7 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
           {orderSummary ? (
             <View className="flex-row gap-2 mb-3">
               <View className="flex-1 bg-indigo-50 rounded-xl p-2.5 items-center">
-                <Text className={`${typo.labelBold} text-primary`} numberOfLines={1}>{formatVnd(orderSummary.totalRevenue)}</Text>
+                <Text className={`${typo.labelBold} text-primary`} numberOfLines={1}>{isHidden ? '••••••' : formatVnd(orderSummary.totalRevenue)}</Text>
                 <Text className={`${typo.captionBold} text-gray-500 mt-0.5`}>{t('customers.totalRevenue')}</Text>
               </View>
               <View className="flex-1 bg-gray-50 rounded-xl p-2.5 items-center">
@@ -484,7 +486,7 @@ export function CustomerDetailScreen({ navigation, route }: Props) {
                 <Text className={`${typo.captionBold} text-gray-500 mt-0.5`}>{t('customers.completedOrders')}</Text>
               </View>
               <View className="flex-1 bg-emerald-50 rounded-xl p-2.5 items-center">
-                <Text className={`${typo.labelBold} text-emerald-600`} numberOfLines={1}>{formatVnd(orderSummary.avgOrderValue)}</Text>
+                <Text className={`${typo.labelBold} text-emerald-600`} numberOfLines={1}>{isHidden ? '••••••' : formatVnd(orderSummary.avgOrderValue)}</Text>
                 <Text className={`${typo.captionBold} text-gray-500 mt-0.5`}>{t('customers.avgOrder')}</Text>
               </View>
             </View>

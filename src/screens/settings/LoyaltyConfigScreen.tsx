@@ -25,6 +25,7 @@ import {
   type SaveLoyaltyProgramRequest,
   type SaveLoyaltyTierRequest,
 } from '../../services/api';
+import { formatVnd } from '../../utils/format';
 import { useTypography } from '../../hooks/useTypography';
 import type { SettingsScreenProps } from '../../types/navigation';
 
@@ -497,7 +498,7 @@ function TierCard({
             <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5`}>{tier.description}</Text>
           ) : null}
           <View className="flex-row flex-wrap gap-x-4 gap-y-1 mt-2">
-            <StatChip label="Min. spend" value={`${tier.minSpend.toLocaleString('vi-VN')} ₫`} />
+            <StatChip label="Min. spend" value={formatVnd(tier.minSpend)} />
             <StatChip label="Multiplier" value={`×${tier.pointsMultiplier}`} />
           </View>
         </View>

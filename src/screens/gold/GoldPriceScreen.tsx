@@ -20,6 +20,7 @@ import { goldPriceApi, type GoldPrice } from '../../services/api';
 import { useTypography } from '../../hooks/useTypography';
 import { formatVnd, formatDate } from '../../utils/format';
 import { BarChart } from '../../components/BarChart';
+import { MoneyInput } from '../../components/MoneyInput';
 import { DatePickerInput } from '../../components/DatePickerInput';
 import type { GoldPriceScreenProps } from '../../types/navigation';
 
@@ -200,28 +201,25 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
             </View>
 
             <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('gold.updateBuy')}</Text>
-            <TextInput
-              value={form.buyPrice}
-              onChangeText={(v) => setForm({ ...form, buyPrice: v.replace(/\D/g, '') })}
-              placeholder="0"
-              placeholderTextColor="#9ca3af"
-              keyboardType="numeric"
-              className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-4`}
-            />
+            <View className="mb-4">
+              <MoneyInput
+                rawValue={form.buyPrice}
+                onChangeRaw={(digits) => setForm({ ...form, buyPrice: digits })}
+                placeholder="0"
+              />
+            </View>
 
             <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('gold.updateSell')}</Text>
-            <TextInput
-              value={form.sellPrice}
-              onChangeText={(v) => setForm({ ...form, sellPrice: v.replace(/\D/g, '') })}
+            <MoneyInput
+              rawValue={form.sellPrice}
+              onChangeRaw={(digits) => setForm({ ...form, sellPrice: digits })}
               placeholder="0"
-              placeholderTextColor="#9ca3af"
-              keyboardType="numeric"
-              className={`border rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 mb-1 ${sellLtBuy ? 'border-amber-400' : 'border-gray-200 dark:border-gray-600'}`}
             />
-            {sellLtBuy && (
-              <Text className={`${typo.caption} text-amber-500 mb-3`}>{t('gold.warnSellLtBuy')}</Text>
+            {sellLtBuy ? (
+              <Text className={`${typo.caption} text-amber-500 mt-1 mb-3`}>{t('gold.warnSellLtBuy')}</Text>
+            ) : (
+              <View className="mb-3" />
             )}
-            {!sellLtBuy && <View className="mb-3" />}
 
             <TextInput
               value={form.note}

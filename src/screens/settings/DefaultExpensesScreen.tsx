@@ -18,11 +18,12 @@ import { useAlertStore } from '../../store/alertStore';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { expenseApi, type DefaultExpense } from '../../services/api';
+import { formatVnd } from '../../utils/format';
 import { useTypography } from '../../hooks/useTypography';
 import type { SettingsScreenProps } from '../../types/navigation';
 
-type FormState = { name: string; monthlyAmount: string; paymentDate: string };
-const EMPTY_FORM: FormState = { name: '', monthlyAmount: '', paymentDate: '' };
+type FormState = { description: string; amount: string; paymentDay: string };
+const EMPTY_FORM: FormState = { description: '', amount: '', paymentDay: '' };
 
 export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'DefaultExpenses'>) {
   const insets = useSafeAreaInsets();
@@ -46,9 +47,9 @@ export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'Defau
   const addMutation = useMutation({
     mutationFn: () =>
       expenseApi.createDefault({
-        name: form.name,
-        monthlyAmount: Number(form.monthlyAmount.replace(/\D/g, '')) || 0,
-        paymentDate: form.paymentDate ? Number(form.paymentDate) : null,
+        description: form.description,
+        amount: Number(form.amount.replace(/\D/g, '')) || 0,
+        paymentDay: form.paymentDay ? Number(form.paymentDay) : null,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['defaultExpenses'] });
@@ -61,9 +62,9 @@ export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'Defau
   const updateMutation = useMutation({
     mutationFn: () =>
       expenseApi.updateDefault(editing!.id, {
-        name: form.name,
-        monthlyAmount: Number(form.monthlyAmount.replace(/\D/g, '')) || 0,
-        paymentDate: form.paymentDate ? Number(form.paymentDate) : null,
+        description: form.description,
+        amount: Number(form.amount.replace(/\D/g, '')) || 0,
+        paymentDay: form.paymentDay ? Number(form.paymentDay) : null,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['defaultExpenses'] });
@@ -91,9 +92,9 @@ export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'Defau
   const openEdit = (item: DefaultExpense) => {
     setEditing(item);
     setForm({
-      name: item.name,
-      monthlyAmount: item.monthlyAmount.toString(),
-      paymentDate: item.paymentDate?.toString() ?? '',
+      description: item.description,
+      amount: item.amount.toString(),
+      paymentDay: item.paymentDay?.toString() ?? '',
     });
     setModalVisible(true);
   };
@@ -106,15 +107,13 @@ export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'Defau
   };
 
   const handleSave = () => {
-    if (!form.name) return;
+    if (!form.description) return;
     if (editing) updateMutation.mutate();
     else addMutation.mutate();
   };
 
   const isPending = addMutation.isPending || updateMutation.isPending;
 
-  const formatAmount = (v: number) =>
-    v.toLocaleString('vi-VN') + ' ₫';
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
@@ -161,10 +160,10 @@ export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'Defau
             items.map((item) => (
               <View key={item.id} className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 flex-row items-center">
                 <View className="flex-1">
-                  <Text className={`${typo.caption} font-medium text-gray-900 dark:text-white`}>{item.name}</Text>
-                  <Text className={`${typo.label} text-indigo-600 mt-0.5`}>{formatAmount(item.monthlyAmount)}</Text>
-                  {item.paymentDate ? (
-                    <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{t('settings.defaultExpenses.paymentDateHint', { day: item.paymentDate })}</Text>
+                  <Text className={`${typo.caption} font-medium text-gray-900 dark:text-white`}>{item.description}</Text>
+                  <Text className={`${typo.label} text-indigo-600 mt-0.5`}>{formatVnd(item.amount)}</Text>
+                  {item.paymentDay ? (
+                    <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{t('settings.defaultExpenses.paymentDateHint', { day: item.paymentDay })}</Text>
                   ) : null}
                 </View>
                 <View className="flex-row gap-3 ml-2">
@@ -190,9 +189,9 @@ export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'Defau
                 <MaterialCommunityIcons name="close" size={22} color="#6b7280" />
               </TouchableOpacity>
               <Text className={`${typo.section} text-gray-900 dark:text-white flex-1`}>{t('settings.defaultExpenses.formTitle')}</Text>
-              <TouchableOpacity onPress={handleSave} disabled={isPending || !form.name} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <TouchableOpacity onPress={handleSave} disabled={isPending || !form.description} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 {isPending ? <ActivityIndicator size="small" color="#4f46e5" /> : (
-                  <Text className={`${typo.labelBold} ${!form.name ? 'text-gray-300 dark:text-gray-600' : 'text-indigo-600 dark:text-indigo-400'}`}>
+                  <Text className={`${typo.labelBold} ${!form.description ? 'text-gray-300 dark:text-gray-600' : 'text-indigo-600 dark:text-indigo-400'}`}>
                     {t('common.save')}
                   </Text>
                 )}
@@ -202,8 +201,8 @@ export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'Defau
               <View>
                 <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('settings.defaultExpenses.nameLabel')}</Text>
                 <TextInput
-                  value={form.name}
-                  onChangeText={(v) => setForm({ ...form, name: v })}
+                  value={form.description}
+                  onChangeText={(v) => setForm({ ...form, description: v })}
                   placeholder={t('settings.defaultExpenses.namePlaceholder')}
                   placeholderTextColor="#9ca3af"
                   className={`border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700`}
@@ -212,8 +211,8 @@ export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'Defau
               <View>
                 <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('settings.defaultExpenses.amountLabel')}</Text>
                 <TextInput
-                  value={form.monthlyAmount}
-                  onChangeText={(v) => setForm({ ...form, monthlyAmount: v.replace(/\D/g, '') })}
+                  value={form.amount}
+                  onChangeText={(v) => setForm({ ...form, amount: v.replace(/\D/g, '') })}
                   placeholder={t('settings.defaultExpenses.amountPlaceholder')}
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"
@@ -223,8 +222,8 @@ export function DefaultExpensesScreen({ navigation }: SettingsScreenProps<'Defau
               <View>
                 <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('settings.defaultExpenses.paymentDateLabel')}</Text>
                 <TextInput
-                  value={form.paymentDate}
-                  onChangeText={(v) => setForm({ ...form, paymentDate: v.replace(/\D/g, '') })}
+                  value={form.paymentDay}
+                  onChangeText={(v) => setForm({ ...form, paymentDay: v.replace(/\D/g, '') })}
                   placeholder={t('settings.defaultExpenses.paymentDatePlaceholder')}
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"

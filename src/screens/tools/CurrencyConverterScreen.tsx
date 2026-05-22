@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLocales } from 'expo-localization';
 import { utilitiesApi } from '../../services/api';
+import { formatDecimal } from '../../utils/format';
 import { useTypography } from '../../hooks/useTypography';
 import { Skeleton } from '../../components/Skeleton';
 import type { ToolsScreenProps } from '../../types/navigation';
@@ -31,9 +32,6 @@ function getDefaultCurrency(): string {
   return REGION_DEFAULT[region] ?? 'USD';
 }
 
-function fmtVnd(n: number) {
-  return n.toLocaleString('en-US');
-}
 
 export function CurrencyConverterScreen({ navigation }: Props) {
   const { t } = useTranslation();
@@ -92,24 +90,24 @@ export function CurrencyConverterScreen({ navigation }: Props) {
     if (useCustom) {
       if (!customRate) return null;
       const value = direction === 'toVnd'
-        ? fmtVnd(Math.round(inputNum * customRate))
-        : (inputNum / customRate).toFixed(4);
+        ? formatDecimal(Math.round(inputNum * customRate))
+        : formatDecimal(inputNum / customRate, 4);
       return { mode: 'custom', value, rate: customRate };
     }
     if (!selected) return null;
     if (direction === 'toVnd') {
       return {
         mode: 'live',
-        buy:      selected.buyRate      ? fmtVnd(Math.round(inputNum * selected.buyRate))      : '—',
-        transfer: selected.transferRate ? fmtVnd(Math.round(inputNum * selected.transferRate)) : '—',
-        sell:     selected.sellRate     ? fmtVnd(Math.round(inputNum * selected.sellRate))     : '—',
+        buy:      selected.buyRate      ? formatDecimal(Math.round(inputNum * selected.buyRate))      : '—',
+        transfer: selected.transferRate ? formatDecimal(Math.round(inputNum * selected.transferRate)) : '—',
+        sell:     selected.sellRate     ? formatDecimal(Math.round(inputNum * selected.sellRate))     : '—',
       };
     }
     return {
       mode: 'live',
-      buy:      selected.buyRate      ? (inputNum / selected.buyRate).toFixed(4)      : '—',
-      transfer: selected.transferRate ? (inputNum / selected.transferRate).toFixed(4) : '—',
-      sell:     selected.sellRate     ? (inputNum / selected.sellRate).toFixed(4)     : '—',
+      buy:      selected.buyRate      ? formatDecimal(inputNum / selected.buyRate, 4)      : '—',
+      transfer: selected.transferRate ? formatDecimal(inputNum / selected.transferRate, 4) : '—',
+      sell:     selected.sellRate     ? formatDecimal(inputNum / selected.sellRate, 4)     : '—',
     };
   }
 
@@ -236,7 +234,7 @@ export function CurrencyConverterScreen({ navigation }: Props) {
                       <View key={label} className="flex-1 bg-gray-50 rounded-xl px-3 py-2.5">
                         <Text className={`${typo.caption} text-gray-400 mb-1`}>{label}</Text>
                         <Text className={`${typo.label} text-gray-800`}>
-                          {rate ? fmtVnd(Number(rate)) : '—'}
+                          {rate ? formatDecimal(Number(rate)) : '—'}
                         </Text>
                       </View>
                     ))}
@@ -257,7 +255,7 @@ export function CurrencyConverterScreen({ navigation }: Props) {
                     />
                     {customRate > 0 && (
                       <Text className={`${typo.caption} text-primary mt-1.5`}>
-                        1 {selectedCode} = {fmtVnd(customRate)} VND
+                        1 {selectedCode} = {formatDecimal(customRate)} VND
                       </Text>
                     )}
                   </View>
@@ -342,7 +340,7 @@ function RateRow({ label, rate, result }: { label: string; rate: number | null |
     <View className="flex-row justify-between items-center mb-2">
       <Text className={`${typo.caption} text-gray-600`}>
         {label}
-        {rate ? <Text className={`${typo.caption} text-gray-400`}> ({fmtVnd(Number(rate))})</Text> : null}
+        {rate ? <Text className={`${typo.caption} text-gray-400`}> ({formatDecimal(Number(rate))})</Text> : null}
       </Text>
       <Text className={`${typo.labelBold} text-primary`}>{result}</Text>
     </View>

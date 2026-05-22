@@ -114,7 +114,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearDeviceSwitchedMessage: () => set({ deviceSwitchedMessage: null }),
 
   hydrateFromStorage: async () => {
-    const [accessToken, storedPhone, pinEnabled, biometricEnabled, tenantId, setupCompleteStr, shopTypeCode] = await Promise.all([
+    const [accessToken, storedPhone, pinEnabled, biometricEnabled, tenantId, setupCompleteStr, shopTypeCode, refreshToken] = await Promise.all([
       SecureStore.getItemAsync('access_token'),
       SecureStore.getItemAsync('phone'),
       SecureStore.getItemAsync('pin_enabled'),
@@ -122,10 +122,31 @@ export const useAuthStore = create<AuthState>((set) => ({
       SecureStore.getItemAsync('tenant_id'),
       SecureStore.getItemAsync('setup_complete'),
       SecureStore.getItemAsync('shop_type'),
+      SecureStore.getItemAsync('refresh_token'),
     ]);
 
+    // Silent refresh: if access_token is missing but refresh_token exists, the
+    // previous session ended with forceLogout deleting the access_token (e.g. the
+    // refresh cycle completed mid-flight before force-close). Try to recover the
+    // session now so the user isn't kicked to Login unnecessarily.
+    let effectiveAccessToken = accessToken;
+    if (!accessToken && refreshToken) {
+      try {
+        const { authApi } = await import('../services/api');
+        const res = await authApi.refresh(refreshToken, storedPhone ?? undefined);
+        const { accessToken: newAccess, refreshToken: newRefresh } = res.data.data;
+        await Promise.all([
+          SecureStore.setItemAsync('access_token', newAccess),
+          ...(newRefresh ? [SecureStore.setItemAsync('refresh_token', newRefresh)] : []),
+        ]);
+        effectiveAccessToken = newAccess;
+      } catch {
+        // Refresh token also expired or server unreachable — user must log in again.
+      }
+    }
+
     const hasPinOnDevice = storedPhone !== null && pinEnabled === 'true';
-    const features = accessToken ? extractFeatures(accessToken) : [];
+    const features = effectiveAccessToken ? extractFeatures(effectiveAccessToken) : [];
     // Existing installs have no setup_complete key yet — default true so they aren't
     // incorrectly routed to the onboarding wizard on their first app update.
     const setupComplete = setupCompleteStr !== null ? setupCompleteStr === 'true' : true;
@@ -134,8 +155,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     // the user was still within the lock timeout. Without this check, PIN users are
     // always shown PinLoginScreen on every cold start, even if they closed the app
     // 1 second ago — because hydrateFromStorage can't know about the in-session lock.
-    let isAuthenticated = !hasPinOnDevice && !!accessToken;
-    if (hasPinOnDevice && accessToken) {
+    let isAuthenticated = !hasPinOnDevice && !!effectiveAccessToken;
+    if (hasPinOnDevice && effectiveAccessToken) {
       try {
         const [bgTimestampStr, timeoutStr] = await Promise.all([
           AsyncStorage.getItem('backgroundTimestamp'),

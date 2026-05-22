@@ -37,8 +37,8 @@ const SCALES: Record<FontScale, Typography> = {
     heading: 'text-2xl font-black',       // 24px
     section: 'text-lg font-bold',         // 18px
     body: 'text-base font-bold',          // 16px
-    label: 'text-sm font-semibold',       // 14px
-    labelBold: 'text-sm font-bold',       // 14px
+    label: 'text-base font-semibold',     // 16px
+    labelBold: 'text-base font-bold',     // 16px
     caption: 'text-sm',                   // 14px
     captionBold: 'text-sm font-bold',     // 14px
     inputSize: 'text-base',               // 16px

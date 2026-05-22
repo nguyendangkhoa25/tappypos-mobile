@@ -13,8 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQuery, keepPreviousData } from '@tanstack/react-query';
 import { orderApi, expenseApi } from '../../services/api';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { ReportStackParamList } from '../../types/navigation';
+import type { ReportScreenProps } from '../../types/navigation';
 import { formatVnd } from '../../utils/format';
 import { TrendChart } from '../../components/TrendChart';
 import { Skeleton } from '../../components/Skeleton';
@@ -22,6 +21,7 @@ import type { ChartGranularity } from '../../components/BarChart';
 import { DatePickerInput } from '../../components/DatePickerInput';
 import type { OrderSummary, ExpenseData } from '../../services/api';
 import { useTypography } from '../../hooks/useTypography';
+import { usePrivacyStore } from '../../store/privacyStore';
 
 type Tab = 'revenue' | 'expenses';
 type Period = 'today' | 'yesterday' | 'thisWeek' | 'lastMonth' | 'thisMonth' | 'thisYear' | 'lastYear' | 'custom';
@@ -74,26 +74,16 @@ function getDateRange(period: Exclude<Period, 'custom'>): { from: string; to: st
 
 // ── Period constants ──────────────────────────────────────────────────────────
 
-const REPORT_FIXED_PERIODS: { key: Period; label: string }[] = [
-  { key: 'today',     label: 'Hôm nay' },
-  { key: 'yesterday', label: 'Hôm qua' },
-  { key: 'thisMonth', label: 'Tháng này' },
+const REPORT_FIXED_PERIOD_KEYS: Period[] = ['today', 'yesterday', 'thisMonth'];
+
+const REPORT_MORE_OPTION_KEYS: { key: Period; icon: string }[] = [
+  { key: 'thisWeek',  icon: '📅' },
+  { key: 'lastMonth', icon: '📆' },
+  { key: 'thisYear',  icon: '📈' },
+  { key: 'lastYear',  icon: '📉' },
 ];
 
-const REPORT_MORE_OPTIONS: { key: Period; label: string }[] = [
-  { key: 'thisWeek',  label: '📅 Tuần này' },
-  { key: 'lastMonth', label: '📆 Tháng trước' },
-  { key: 'thisYear',  label: '📈 Năm này' },
-  { key: 'lastYear',  label: '📉 Năm ngoái' },
-];
-
-const REPORT_MORE_LABEL: Partial<Record<Period, string>> = {
-  thisWeek:  'Tuần này',
-  lastMonth: 'Tháng trước',
-  thisYear:  'Năm này',
-  lastYear:  'Năm ngoái',
-  custom:    'Tùy chỉnh',
-};
+const REPORT_MORE_PERIOD_KEYS: (Period | 'custom')[] = ['thisWeek', 'lastMonth', 'thisYear', 'lastYear', 'custom'];
 
 // ── More periods sheet ────────────────────────────────────────────────────────
 
@@ -110,13 +100,14 @@ function ReportMoreSheet({
   onSelect: (p: Period) => void;
 }) {
   const typo = useTypography();
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={{ flex: 1, justifyContent: 'flex-end' }}>
         <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
         <View className="bg-white dark:bg-gray-900 rounded-t-3xl px-5 pt-5 pb-10">
           <View className="flex-row items-center justify-between mb-5">
-            <Text className={`${typo.section} text-gray-900 dark:text-white`}>Khoảng thời gian khác</Text>
+            <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('report.morePeriods')}</Text>
             <TouchableOpacity
               onPress={onClose}
               className="w-8 h-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700"
@@ -125,7 +116,7 @@ function ReportMoreSheet({
             </TouchableOpacity>
           </View>
 
-          {REPORT_MORE_OPTIONS.map(({ key, label }) => {
+          {REPORT_MORE_OPTION_KEYS.map(({ key, icon }) => {
             const active = period === key;
             return (
               <TouchableOpacity
@@ -136,7 +127,7 @@ function ReportMoreSheet({
                 }`}
               >
                 <Text className={`${typo.label} ${active ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
-                  {label}
+                  {icon} {t(`report.period.${key}`)}
                 </Text>
                 {active && <Ionicons name="checkmark" size={16} color="white" />}
               </TouchableOpacity>
@@ -145,14 +136,14 @@ function ReportMoreSheet({
 
           <View className="mt-4">
             <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3`}>
-              Tùy chỉnh
+              {t('report.period.custom')}
             </Text>
             <View className="flex-row gap-3 mb-3">
               <View className="flex-1 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 bg-gray-50 dark:bg-gray-800">
-                <DatePickerInput value={customFrom} onChange={onCustomFrom} placeholder="Từ ngày" maximumDate={new Date()} />
+                <DatePickerInput value={customFrom} onChange={onCustomFrom} placeholder={t('report.customFrom')} maximumDate={new Date()} />
               </View>
               <View className="flex-1 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 bg-gray-50 dark:bg-gray-800">
-                <DatePickerInput value={customTo} onChange={onCustomTo} placeholder="Đến ngày" maximumDate={new Date()} />
+                <DatePickerInput value={customTo} onChange={onCustomTo} placeholder={t('report.customTo')} maximumDate={new Date()} />
               </View>
             </View>
             {customFrom.length === 10 && customTo.length === 10 && (
@@ -160,7 +151,7 @@ function ReportMoreSheet({
                 onPress={() => onSelect('custom')}
                 className="bg-indigo-600 rounded-2xl py-3.5 items-center"
               >
-                <Text className={`${typo.labelBold} text-white`}>Áp dụng khoảng này</Text>
+                <Text className={`${typo.labelBold} text-white`}>{t('report.applyRange')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -173,35 +164,35 @@ function ReportMoreSheet({
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PAYMENT_METHODS = [
-  { key: undefined,          label: 'Tất cả' },
-  { key: 'CASH',             label: 'Tiền mặt' },
-  { key: 'BANK_TRANSFER',    label: 'Chuyển khoản' },
-  { key: 'CARD',             label: 'Thẻ' },
+  { key: undefined,          labelKey: 'common.all' },
+  { key: 'CASH',             labelKey: 'report.paymentCash' },
+  { key: 'BANK_TRANSFER',    labelKey: 'report.paymentTransfer' },
+  { key: 'CARD',             labelKey: 'report.paymentCard' },
 ] as const;
 
 const ORDER_STATUSES = [
-  { key: undefined,   label: 'Tất cả' },
-  { key: 'COMPLETED', label: 'Hoàn thành' },
-  { key: 'CANCELLED', label: 'Đã huỷ' },
-  { key: 'PENDING',   label: 'Chờ xử lý' },
+  { key: undefined,   labelKey: 'common.all' },
+  { key: 'COMPLETED', labelKey: 'report.statusCompleted' },
+  { key: 'CANCELLED', labelKey: 'report.statusCancelled' },
+  { key: 'PENDING',   labelKey: 'report.statusPending' },
 ] as const;
 
 const EXPENSE_CATEGORIES = [
-  { key: undefined,      label: 'Tất cả' },
-  { key: 'RENT',         label: 'Thuê mặt bằng' },
-  { key: 'ELECTRICITY',  label: 'Tiền điện' },
-  { key: 'WATER',        label: 'Tiền nước' },
-  { key: 'SUPPLIES',     label: 'Vật tư' },
-  { key: 'SALARY_EXTRA', label: 'Lương thưởng' },
-  { key: 'MARKETING',    label: 'Marketing' },
-  { key: 'OTHER',        label: 'Khác' },
+  { key: undefined,      labelKey: 'common.all' },
+  { key: 'RENT',         labelKey: 'report.expenseRent' },
+  { key: 'ELECTRICITY',  labelKey: 'report.expenseElectricity' },
+  { key: 'WATER',        labelKey: 'report.expenseWater' },
+  { key: 'SUPPLIES',     labelKey: 'report.expenseSupplies' },
+  { key: 'SALARY_EXTRA', labelKey: 'report.expenseSalary' },
+  { key: 'MARKETING',    labelKey: 'report.expenseMarketing' },
+  { key: 'OTHER',        labelKey: 'report.expenseOther' },
 ] as const;
 
-const ORDER_STATUS_STYLE: Record<string, { label: string; bg: string; text: string }> = {
-  COMPLETED:   { label: 'Hoàn thành',  bg: 'bg-emerald-50',  text: 'text-emerald-700' },
-  CANCELLED:   { label: 'Đã huỷ',      bg: 'bg-red-50',      text: 'text-red-600' },
-  PENDING:     { label: 'Chờ xử lý',   bg: 'bg-amber-50',    text: 'text-amber-700' },
-  IN_PROGRESS: { label: 'Đang xử lý',  bg: 'bg-blue-50',     text: 'text-blue-700' },
+const ORDER_STATUS_STYLE: Record<string, { labelKey: string; bg: string; text: string }> = {
+  COMPLETED:   { labelKey: 'report.statusCompleted', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+  CANCELLED:   { labelKey: 'report.statusCancelled', bg: 'bg-red-50',     text: 'text-red-600' },
+  PENDING:     { labelKey: 'report.statusPending',   bg: 'bg-amber-50',   text: 'text-amber-700' },
+  IN_PROGRESS: { labelKey: 'report.statusInProgress',bg: 'bg-blue-50',    text: 'text-blue-700' },
 };
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -209,11 +200,12 @@ const ORDER_STATUS_STYLE: Record<string, { label: string; bg: string; text: stri
 function FilterChips<T extends string | undefined>({
   options, value, onChange,
 }: {
-  options: readonly { key: T; label: string }[];
+  options: readonly { key: T; labelKey: string }[];
   value: T;
   onChange: (v: T) => void;
 }) {
   const typo = useTypography();
+  const { t } = useTranslation();
   return (
     <ScrollView
       horizontal
@@ -238,7 +230,7 @@ function FilterChips<T extends string | undefined>({
                 active ? 'text-white' : 'text-gray-600 dark:text-gray-400'
               }`}
             >
-              {o.label}
+              {t(o.labelKey)}
             </Text>
           </TouchableOpacity>
         );
@@ -249,8 +241,10 @@ function FilterChips<T extends string | undefined>({
 
 const OrderRow = memo(function OrderRow({ order, onPress }: { order: OrderSummary; onPress: () => void }) {
   const typo = useTypography();
+  const isHidden = usePrivacyStore((s) => s.isHidden);
+  const { t } = useTranslation();
   const cfg = ORDER_STATUS_STYLE[order.status] ?? {
-    label: order.status,
+    labelKey: order.status,
     bg: 'bg-gray-100',
     text: 'text-gray-600',
   };
@@ -263,16 +257,16 @@ const OrderRow = memo(function OrderRow({ order, onPress }: { order: OrderSummar
           </Text>
           <View className={`${cfg.bg} dark:opacity-90 px-2 py-0.5 rounded-full`}>
             <Text className={`${cfg.text} font-semibold`} style={{ fontSize: 10 }}>
-              {cfg.label}
+              {t(cfg.labelKey)}
             </Text>
           </View>
         </View>
         <Text className={`${typo.body} text-gray-900 dark:text-white`}>
-          {formatVnd(order.total)}
+          {isHidden ? '••••••' : formatVnd(order.total)}
         </Text>
       </View>
       <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
-        {order.customerName ?? 'Khách lẻ'}
+        {order.customerName ?? t('pos.walkIn')}
       </Text>
     </TouchableOpacity>
   );
@@ -280,6 +274,7 @@ const OrderRow = memo(function OrderRow({ order, onPress }: { order: OrderSummar
 
 const ExpenseRow = memo(function ExpenseRow({ expense }: { expense: ExpenseData }) {
   const typo = useTypography();
+  const isHidden = usePrivacyStore((s) => s.isHidden);
   return (
     <View className="bg-white dark:bg-gray-800 rounded-2xl mx-4 mb-2 px-4 py-3.5">
       <View className="flex-row items-start justify-between gap-3 mb-1">
@@ -290,7 +285,7 @@ const ExpenseRow = memo(function ExpenseRow({ expense }: { expense: ExpenseData 
           {expense.description ?? expense.categoryDisplayName}
         </Text>
         <Text className={`${typo.body} text-rose-500`}>
-          −{formatVnd(expense.amount)}
+          {isHidden ? '••••••' : `−${formatVnd(expense.amount)}`}
         </Text>
       </View>
       <View className="flex-row items-center gap-1.5">
@@ -310,10 +305,11 @@ const ExpenseRow = memo(function ExpenseRow({ expense }: { expense: ExpenseData 
 
 // ── Main screen ────────────────────────────────────────────────────────────────
 
-export function ReportScreen({ navigation }: NativeStackScreenProps<ReportStackParamList, 'ReportMain'>) {
+export function ReportScreen({ navigation }: ReportScreenProps<'ReportMain'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const typo = useTypography();
+  const isHidden = usePrivacyStore((s) => s.isHidden);
 
   const [tab, setTab]               = useState<Tab>('revenue');
   const [period, setPeriod]         = useState<Period>('thisMonth');
@@ -349,7 +345,7 @@ export function ReportScreen({ navigation }: NativeStackScreenProps<ReportStackP
     [period, range.from, range.to],
   );
 
-  const moreActive = REPORT_MORE_LABEL[period] !== undefined;
+  const moreActive = (REPORT_MORE_PERIOD_KEYS as string[]).includes(period);
 
   // ── Queries — both tabs always enabled so switching is instant ───────────────
 
@@ -467,20 +463,20 @@ export function ReportScreen({ navigation }: NativeStackScreenProps<ReportStackP
           {/* ── Primary KPI card ─────────────────────────────────────────── */}
           <View className={`${primaryColor} mx-4 mt-4 rounded-3xl px-6 pt-5 pb-6`}>
             <Text className={`${typo.captionBold} tracking-widest uppercase text-white/70 mb-2`}>
-              {isRevenue ? 'Tổng doanh thu' : 'Tổng chi phí'}
+              {isRevenue ? t('report.totalRevenue') : t('report.totalExpenses')}
             </Text>
             <Text className="text-white font-black" style={{ fontSize: typo.displaySize, lineHeight: typo.displayLineHeight }}>
-              {formatVnd(isRevenue ? (revSummary?.totalRevenue ?? 0) : (expSummary?.total ?? 0))}
+              {isHidden ? '••••••' : formatVnd(isRevenue ? (revSummary?.totalRevenue ?? 0) : (expSummary?.total ?? 0))}
             </Text>
             {isRevenue && revSummary ? (
               <Text className={`text-white/70 ${typo.label} mt-2`}>
-                {revSummary.orderCount} đơn hàng đã hoàn thành
+                {t('report.completedOrders', { count: revSummary.orderCount })}
               </Text>
             ) : !isRevenue && expSummary ? (
               <Text className={`text-white/70 ${typo.label} mt-2`}>
-                {expSummary.netVsRevenue >= 0
-                  ? `Lãi ròng ${formatVnd(expSummary.netVsRevenue)}`
-                  : `Lỗ ${formatVnd(Math.abs(expSummary.netVsRevenue))}`}
+                {isHidden ? '••••••' : (expSummary.netVsRevenue >= 0
+                  ? t('report.netProfit', { amount: formatVnd(expSummary.netVsRevenue) })
+                  : t('report.netLoss', { amount: formatVnd(Math.abs(expSummary.netVsRevenue)) }))}
               </Text>
             ) : null}
           </View>
@@ -492,30 +488,30 @@ export function ReportScreen({ navigation }: NativeStackScreenProps<ReportStackP
                 <Text className={`${typo.heading} text-gray-900 dark:text-white mb-1`}>
                   {revSummary.orderCount}
                 </Text>
-                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>Số đơn hàng</Text>
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{t('report.orderCount')}</Text>
               </View>
               <View className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-4">
                 <Text className={`${typo.heading} text-emerald-600 dark:text-emerald-400 mb-1`} numberOfLines={1} adjustsFontSizeToFit>
-                  {revSummary.orderCount > 0
+                  {isHidden ? '••••••' : (revSummary.orderCount > 0
                     ? formatVnd(Math.round(revSummary.totalRevenue / revSummary.orderCount))
-                    : '—'}
+                    : '—')}
                 </Text>
-                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>Bình quân / đơn</Text>
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{t('report.avgOrder')}</Text>
               </View>
             </View>
           ) : !isRevenue && expSummary ? (
             <View className="flex-row gap-3 mx-4 mt-3">
               <View className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-4">
                 <Text className={`${typo.heading} text-blue-600 dark:text-blue-400 mb-1`} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatVnd(expSummary.fixed)}
+                  {isHidden ? '••••••' : formatVnd(expSummary.fixed)}
                 </Text>
-                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>Chi phí cố định</Text>
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{t('report.fixedExpenses')}</Text>
               </View>
               <View className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-4">
                 <Text className={`${typo.heading} text-amber-500 dark:text-amber-400 mb-1`} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatVnd(expSummary.variable)}
+                  {isHidden ? '••••••' : formatVnd(expSummary.variable)}
                 </Text>
-                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>Chi phí biến động</Text>
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{t('report.variableExpenses')}</Text>
               </View>
             </View>
           ) : null}
@@ -655,8 +651,7 @@ export function ReportScreen({ navigation }: NativeStackScreenProps<ReportStackP
 
         {/* Period selector — 4 equal tabs */}
         <View className="flex-row mx-4 mb-2 bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 shadow-sm">
-          {([...REPORT_FIXED_PERIODS, { key: 'more' as const, label: 'Tùy chỉnh' }]).map(({ key, label }, i) => {
-            const isMore = key === 'more';
+          {([...REPORT_FIXED_PERIOD_KEYS.map((k) => ({ key: k, isMore: false })), { key: 'more' as const, isMore: true }]).map(({ key, isMore }, i) => {
             const active = isMore ? moreActive : period === key;
             return (
               <View key={key} className="flex-1 flex-row">
@@ -670,7 +665,7 @@ export function ReportScreen({ navigation }: NativeStackScreenProps<ReportStackP
                     className={`${typo.label} ${active ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}
                     numberOfLines={1}
                   >
-                    {label}
+                    {t(`report.period.${key}`)}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -682,11 +677,11 @@ export function ReportScreen({ navigation }: NativeStackScreenProps<ReportStackP
         {moreActive ? (
           <View className="mx-4 mb-3 flex-row items-center bg-indigo-50 dark:bg-indigo-950 rounded-xl px-3 py-2 gap-2">
             <Ionicons name="time-outline" size={14} color="#6366f1" />
-            <Text className={`${typo.caption} text-indigo-400 dark:text-indigo-500`}>Đang xem:</Text>
+            <Text className={`${typo.caption} text-indigo-400 dark:text-indigo-500`}>{t('report.viewing')}:</Text>
             <Text className={`flex-1 ${typo.captionBold} text-indigo-600 dark:text-indigo-300`}>
               {period === 'custom'
                 ? `${customFrom} → ${customTo}`
-                : REPORT_MORE_LABEL[period]}
+                : t(`report.period.${period}`)}
             </Text>
             <TouchableOpacity
               onPress={() => handlePeriodChange('thisMonth')}

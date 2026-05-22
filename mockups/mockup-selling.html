@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Bán hàng (Service Shops)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  background: #f1f5f9;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  padding: 28px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.sidebar-brand {
+  font-size: 18px; font-weight: 800; color: #4f46e5;
+  padding: 0 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.sidebar-brand span { color: #111827; }
+.sidebar-section {
+  font-size: 10px; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 20px 20px 8px;
+}
+.sidebar a {
+  display: block;
+  padding: 9px 20px;
+  font-size: 13px; font-weight: 500; color: #475569;
+  text-decoration: none;
+  border-radius: 0;
+  transition: all 0.15s;
+}
+.sidebar a:hover { background: #f8fafc; color: #4f46e5; }
+.sidebar a.active { background: #eef2ff; color: #4f46e5; font-weight: 700; border-right: 3px solid #4f46e5; }
+
+/* ── Main Content ────────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  padding: 36px 40px;
+  overflow-x: auto;
+}
+.page-title { font-size: 26px; font-weight: 800; color: #111827; margin-bottom: 4px; }
+.page-sub { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+
+/* ── Shop-type Switcher ──────────────────────────────────────────── */
+.shop-switcher {
+  display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap;
+}
+.shop-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  background: white; border: 2px solid #e2e8f0; color: #64748b;
+  cursor: pointer; transition: all 0.15s;
+}
+.shop-btn:hover { border-color: #4f46e5; color: #4f46e5; }
+.shop-btn.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+.shop-btn .emoji { font-size: 16px; }
+
+/* ── Screen sections ─────────────────────────────────────────────── */
+.section-title {
+  font-size: 13px; font-weight: 700; color: #334155;
+  margin: 48px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.section-title:first-of-type { margin-top: 0; }
+
+.phone-row { display: flex; flex-wrap: wrap; gap: 36px; margin-bottom: 8px; }
+.phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.phone-label {
+  font-size: 11px; font-weight: 700; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+}
+
+/* ── Phone Frame ─────────────────────────────────────────────────── */
+.phone {
+  width: 390px;
+  height: 844px;
+  background: #f9fafb;
+  border-radius: 48px;
+  border: 10px solid #1e293b;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.12);
+  flex-shrink: 0;
+}
+
+.notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 130px; height: 34px;
+  background: #1e293b;
+  border-radius: 0 0 22px 22px;
+  z-index: 100;
+}
+
+.status-bar {
+  height: 44px; flex-shrink: 0;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 22px 6px;
+  position: relative; z-index: 10;
+  background: white;
+}
+.s-time { font-size: 15px; font-weight: 700; color: #111827; }
+.s-icons { font-size: 12px; color: #374151; display: flex; gap: 4px; align-items: center; }
+
+/* ── Shared App Shell ─────────────────────────────────────────────── */
+.screen-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f9fafb;
+}
+
+/* Header */
+.app-header {
+  background: white;
+  border-bottom: 1px solid #f3f4f6;
+  padding: 10px 16px 8px;
+  flex-shrink: 0;
+}
+.header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.screen-title { font-size: 20px; font-weight: 800; color: #111827; }
+.hdr-actions { display: flex; gap: 8px; align-items: center; }
+.icon-btn {
+  width: 36px; height: 36px;
+  background: #f3f4f6; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.icon-btn.indigo { background: #eef2ff; }
+.icon-btn.primary { background: #4f46e5; }
+.cart-wrap { position: relative; }
+.cart-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: #ef4444; color: white;
+  font-size: 9px; font-weight: 800;
+  width: 17px; height: 17px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Category tabs */
+.cat-tabs {
+  display: flex; gap: 4px; overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0 4px;
+}
+.cat-tab {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  background: #f3f4f6; color: #6b7280;
+}
+.cat-tab.active {
+  background: #4f46e5; color: white;
+}
+
+/* Scrollable list area */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  scrollbar-width: none;
+}
+
+/* Staff quick-pick banner */
+.staff-banner {
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 12px; color: #92400e;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Service cards grid */
+.service-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.service-card {
+  background: white;
+  border-radius: 14px;
+  padding: 14px 12px;
+  border: 1.5px solid transparent;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  cursor: pointer;
+}
+.service-card.selected {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+.svc-name {
+  font-size: 13px; font-weight: 600; color: #111827;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.svc-duration {
+  font-size: 11px; color: #6b7280; margin-bottom: 8px;
+}
+.svc-price {
+  font-size: 14px; font-weight: 700; color: #4f46e5;
+}
+.svc-add {
+  float: right;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #4f46e5; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+  margin-top: -4px;
+}
+.svc-add.added { background: #22c55e; }
+
+/* Quick Phrase chips */
+.quick-section { margin-bottom: 14px; }
+.quick-label { font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 6px; }
+.quick-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.quick-chip {
+  padding: 5px 12px; border-radius: 20px;
+  background: #eef2ff; color: #4f46e5;
+  font-size: 12px; font-weight: 600; border: 1.5px solid #e0e7ff;
+}
+
+/* ── Cart Screen ─────────────────────────────────────────────────── */
+.cart-item-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: white; border-radius: 12px;
+  padding: 12px; margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.ci-info { flex: 1; min-width: 0; }
+.ci-name { font-size: 13px; font-weight: 600; color: #111827; margin-bottom: 2px; }
+.ci-qty { font-size: 12px; color: #6b7280; }
+.ci-price { font-size: 14px; font-weight: 700; color: #4f46e5; white-space: nowrap; }
+.ci-del {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: #fef2f2; color: #ef4444;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+/* Staff assignment */
+.staff-assign-section {
+  background: white; border-radius: 14px;
+  padding: 14px; margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.staff-assign-title { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 10px; }
+.staff-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.staff-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  background: #f3f4f6; color: #374151;
+  border: 1.5px solid transparent;
+}
+.staff-chip.selected {
+  background: #eef2ff; color: #4f46e5; border-color: #c7d2fe;
+}
+.staff-avatar {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  color: white;
+}
+
+/* Order notes */
+.note-box {
+  background: white; border-radius: 14px;
+  padding: 12px; margin-bottom: 12px;
+  border: 1.5px solid #f3f4f6;
+}
+.note-label { font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px; }
+.note-text { font-size: 13px; color: #374151; }
+.note-placeholder { font-size: 13px; color: #9ca3af; font-style: italic; }
+
+/* Summary card */
+.summary-card {
+  background: white; border-radius: 14px;
+  padding: 14px; margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.summary-row:last-child { margin-bottom: 0; }
+.summary-label { color: #6b7280; }
+.summary-value { font-weight: 600; color: #374151; }
+.summary-divider { height: 1px; background: #f3f4f6; margin: 10px 0; }
+.summary-total-label { font-size: 15px; font-weight: 700; color: #111827; }
+.summary-total-value { font-size: 18px; font-weight: 800; color: #4f46e5; }
+
+/* ── Checkout Screen ─────────────────────────────────────────────── */
+.checkout-header {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  padding: 16px 16px 24px;
+}
+.checkout-header-title { font-size: 18px; font-weight: 800; color: white; margin-bottom: 2px; }
+.checkout-header-sub { font-size: 12px; color: #c7d2fe; }
+.checkout-amount-badge {
+  margin-top: 12px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.checkout-amount-label { font-size: 13px; color: #c7d2fe; }
+.checkout-amount-value { font-size: 24px; font-weight: 800; color: white; }
+
+.payment-method-section { margin-bottom: 14px; }
+.pm-label { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pm-card {
+  background: white; border-radius: 12px;
+  padding: 12px; border: 2px solid #e5e7eb;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  cursor: pointer;
+}
+.pm-card.selected { border-color: #4f46e5; background: #eef2ff; }
+.pm-icon { font-size: 22px; }
+.pm-name { font-size: 12px; font-weight: 600; color: #374151; }
+.pm-card.selected .pm-name { color: #4f46e5; }
+
+.cash-input-section {
+  background: white; border-radius: 14px;
+  padding: 14px; margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.cash-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cash-label { font-size: 13px; color: #6b7280; }
+.cash-value { font-size: 16px; font-weight: 700; color: #111827; }
+.cash-change { font-size: 15px; font-weight: 700; color: #22c55e; }
+.denom-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.denom-chip {
+  padding: 5px 10px; border-radius: 8px;
+  background: #f3f4f6; color: #374151;
+  font-size: 11px; font-weight: 600;
+}
+.denom-chip.active { background: #4f46e5; color: white; }
+
+/* ── Bottom Bar ──────────────────────────────────────────────────── */
+.bottom-bar {
+  background: white;
+  border-top: 1px solid #f3f4f6;
+  padding: 12px 16px;
+  flex-shrink: 0;
+}
+.checkout-btn {
+  width: 100%;
+  background: #4f46e5; color: white;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 15px; font-weight: 700;
+}
+.checkout-btn .btn-total { font-size: 17px; font-weight: 800; }
+
+.confirm-btn {
+  width: 100%;
+  background: #22c55e; color: white;
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  font-size: 16px; font-weight: 800;
+}
+
+/* ── Success Screen ──────────────────────────────────────────────── */
+.success-center {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+.success-ring {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: #dcfce7; display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin-bottom: 16px;
+}
+.success-title { font-size: 20px; font-weight: 800; color: #111827; margin-bottom: 6px; }
+.success-sub { font-size: 14px; color: #6b7280; margin-bottom: 24px; }
+.success-receipt {
+  background: white; border-radius: 16px;
+  padding: 16px; width: 100%;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  text-align: left;
+}
+.receipt-row {
+  display: flex; justify-content: space-between;
+  font-size: 13px; margin-bottom: 8px;
+  color: #374151;
+}
+.receipt-row.total { font-weight: 800; font-size: 15px; color: #111827; border-top: 1px solid #f3f4f6; padding-top: 10px; margin-top: 4px; }
+.success-actions { display: flex; gap: 10px; width: 100%; }
+.success-btn {
+  flex: 1; padding: 13px;
+  border-radius: 12px; font-size: 14px; font-weight: 700;
+  text-align: center;
+}
+.success-btn.outline { background: white; color: #4f46e5; border: 2px solid #4f46e5; }
+.success-btn.filled { background: #4f46e5; color: white; }
+
+/* ── Bottom Nav ──────────────────────────────────────────────────── */
+.bottom-nav {
+  display: flex; background: white;
+  border-top: 1px solid #f3f4f6;
+  padding: 8px 0 16px;
+  flex-shrink: 0;
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 600; color: #9ca3af;
+}
+.nav-item.active { color: #4f46e5; }
+.nav-icon { font-size: 20px; }
+
+/* empty state */
+.empty-cart {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 24px; text-align: center;
+}
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 700; color: #374151; margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: #6b7280; }
+
+/* customer row */
+.customer-row {
+  display: flex; align-items: center; gap: 10px;
+  background: white; border-radius: 12px;
+  padding: 10px 12px; margin-bottom: 10px;
+  border: 1.5px solid #e5e7eb;
+}
+.customer-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #eef2ff; color: #4f46e5;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0;
+}
+.customer-name { font-size: 13px; font-weight: 700; color: #111827; }
+.customer-phone { font-size: 12px; color: #6b7280; }
+.customer-add-btn {
+  margin-left: auto;
+  padding: 5px 12px; border-radius: 20px;
+  background: #eef2ff; color: #4f46e5;
+  font-size: 12px; font-weight: 600;
+}
+
+/* ── Section label on left side scroll ─────────────────────────── */
+.list-section-label {
+  font-size: 11px; font-weight: 700; color: #6b7280;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin: 10px 0 6px;
+}
+</style>
+</head>
+<body>
+
+<!-- ──────────────────────────────────────────────────────────────── -->
+<!-- SIDEBAR                                                          -->
+<!-- ──────────────────────────────────────────────────────────────── -->
+<div class="sidebar">
+  <div class="sidebar-brand">Tappy<span>POS</span></div>
+
+  <div class="sidebar-section">Bán hàng</div>
+  <a href="#s1" class="active">Màn hình bán hàng</a>
+  <a href="#s2">Giỏ hàng (có dịch vụ)</a>
+  <a href="#s3">Chọn nhân viên</a>
+  <a href="#s4">Thanh toán</a>
+  <a href="#s5">Hoàn tất đơn</a>
+
+  <div class="sidebar-section">Trạng thái</div>
+  <a href="#s6">Giỏ hàng trống</a>
+  <a href="#s7">Tìm khách hàng</a>
+</div>
+
+<!-- ──────────────────────────────────────────────────────────────── -->
+<!-- MAIN                                                             -->
+<!-- ──────────────────────────────────────────────────────────────── -->
+<div class="main">
+  <div class="page-title">Bán hàng — Service Shops</div>
+  <div class="page-sub">6 loại tiệm dịch vụ · Nhấn tab để đổi dữ liệu từng loại tiệm</div>
+
+  <!-- Shop Type Switcher -->
+  <div class="shop-switcher" id="shopSwitcher">
+    <button class="shop-btn active" onclick="switchShop('barber',this)"><span class="emoji">🧔</span> Barber</button>
+    <button class="shop-btn" onclick="switchShop('spa',this)"><span class="emoji">💆</span> Spa</button>
+    <button class="shop-btn" onclick="switchShop('nail',this)"><span class="emoji">💅</span> Nail</button>
+    <button class="shop-btn" onclick="switchShop('hair',this)"><span class="emoji">💇</span> Hair Salon</button>
+    <button class="shop-btn" onclick="switchShop('makeup',this)"><span class="emoji">💄</span> Makeup</button>
+    <button class="shop-btn" onclick="switchShop('lash',this)"><span class="emoji">👁️</span> Lash/PMU</button>
+  </div>
+
+  <!-- ── SCREEN 1: POS / Bán hàng ─────────────────────────────── -->
+  <div class="section-title" id="s1">1 · Màn hình bán hàng</div>
+  <div class="phone-row">
+    <div class="phone-wrap">
+      <div class="phone-label" id="label-s1">Barber Shop</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span class="s-time">9:41</span>
+          <span class="s-icons">●●●● 🔋</span>
+        </div>
+        <div class="screen-body">
+          <div class="app-header">
+            <div class="header-row">
+              <div class="screen-title">Bán hàng</div>
+              <div class="hdr-actions">
+                <div class="icon-btn indigo">🔍</div>
+                <div class="icon-btn indigo">⚡</div>
+                <div class="icon-btn primary cart-wrap">
+                  🛒
+                  <div class="cart-badge" id="badge-s1">2</div>
+                </div>
+              </div>
+            </div>
+            <div class="cat-tabs" id="cats-s1">
+              <div class="cat-tab active" id="cat0-s1">Tất cả</div>
+              <div class="cat-tab" id="cat1-s1">Cắt &amp; Tỉa</div>
+              <div class="cat-tab" id="cat2-s1">Chăm sóc</div>
+              <div class="cat-tab" id="cat3-s1">Nhuộm màu</div>
+            </div>
+          </div>
+          <div class="scroll-area">
+            <div class="quick-section" id="quick-s1">
+              <div class="quick-label">💬 Ghi chú nhanh</div>
+              <div class="quick-chips">
+                <div class="quick-chip" id="qc0-s1">Cắt ngắn</div>
+                <div class="quick-chip" id="qc1-s1">Cạo râu</div>
+                <div class="quick-chip" id="qc2-s1">Gội đầu</div>
+                <div class="quick-chip" id="qc3-s1">Massage</div>
+              </div>
+            </div>
+            <div class="service-grid" id="grid-s1">
+              <!-- rendered by JS -->
+            </div>
+          </div>
+          <div class="bottom-bar">
+            <div class="checkout-btn">
+              <span>Xem giỏ hàng (<span id="cart-count-s1">2</span>)</span>
+              <span class="btn-total" id="cart-total-s1">280.000 ₫</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 2: Cart ───────────────────────────────────────── -->
+  <div class="section-title" id="s2">2 · Giỏ hàng — dịch vụ đã chọn</div>
+  <div class="phone-row">
+    <div class="phone-wrap">
+      <div class="phone-label" id="label-s2">Barber Shop</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span class="s-time">9:43</span>
+          <span class="s-icons">●●●● 🔋</span>
+        </div>
+        <div class="screen-body">
+          <div class="app-header">
+            <div class="header-row">
+              <div style="font-size:20px;color:#6b7280;">←</div>
+              <div class="screen-title">Giỏ hàng</div>
+              <div class="icon-btn" style="background:#fef2f2;color:#ef4444;font-size:13px;font-weight:700;">Xoá</div>
+            </div>
+          </div>
+          <div class="scroll-area">
+            <!-- customer picker -->
+            <div class="customer-row">
+              <div class="customer-avatar">👤</div>
+              <div>
+                <div class="customer-name" id="s2-customer-name">Chọn khách hàng</div>
+                <div class="customer-phone">Không bắt buộc</div>
+              </div>
+              <div class="customer-add-btn">+ Chọn</div>
+            </div>
+
+            <div class="list-section-label">Dịch vụ đã chọn</div>
+            <div id="cart-items-s2">
+              <!-- rendered by JS -->
+            </div>
+
+            <!-- Notes -->
+            <div class="note-box">
+              <div class="note-label">📝 Ghi chú đơn hàng</div>
+              <div class="note-placeholder" id="note-s2">Nhập ghi chú...</div>
+            </div>
+
+            <!-- Summary -->
+            <div class="summary-card">
+              <div class="summary-row">
+                <span class="summary-label">Tạm tính</span>
+                <span class="summary-value" id="subtotal-s2">280.000 ₫</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Giảm giá</span>
+                <span class="summary-value" style="color:#22c55e;">- 0 ₫</span>
+              </div>
+              <div class="summary-divider"></div>
+              <div class="summary-row">
+                <span class="summary-total-label">Tổng cộng</span>
+                <span class="summary-total-value" id="total-s2">280.000 ₫</span>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-bar">
+            <div class="checkout-btn">
+              <span>Tiếp tục thanh toán</span>
+              <span class="btn-total" id="cart-total2-s2">280.000 ₫</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 3: Staff Assignment ──────────────────────────── -->
+  <div class="section-title" id="s3">3 · Chọn nhân viên thực hiện</div>
+  <div class="phone-row">
+    <div class="phone-wrap">
+      <div class="phone-label" id="label-s3">Barber Shop</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span class="s-time">9:44</span>
+          <span class="s-icons">●●●● 🔋</span>
+        </div>
+        <div class="screen-body">
+          <div class="app-header">
+            <div class="header-row">
+              <div style="font-size:20px;color:#6b7280;">←</div>
+              <div class="screen-title">Phân công NV</div>
+              <div style="width:36px;"></div>
+            </div>
+          </div>
+          <div class="scroll-area">
+            <div class="staff-banner">
+              <span>💡</span>
+              <span>Chọn nhân viên cho từng dịch vụ hoặc để trống nếu chưa phân công</span>
+            </div>
+
+            <!-- per-service staff assignment -->
+            <div id="staff-assign-s3">
+              <!-- rendered by JS -->
+            </div>
+
+            <!-- global staff pick -->
+            <div class="staff-assign-section">
+              <div class="staff-assign-title">📋 Áp dụng cho tất cả dịch vụ</div>
+              <div class="staff-chips" id="global-staff-s3">
+                <!-- rendered by JS -->
+              </div>
+            </div>
+          </div>
+          <div class="bottom-bar">
+            <div class="checkout-btn">
+              <span>Thanh toán</span>
+              <span class="btn-total" id="s3-total">280.000 ₫</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 4: Checkout ──────────────────────────────────── -->
+  <div class="section-title" id="s4">4 · Thanh toán</div>
+  <div class="phone-row">
+    <div class="phone-wrap">
+      <div class="phone-label" id="label-s4">Barber Shop</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="status-bar" style="background:transparent;">
+          <span class="s-time" style="color:white;">9:45</span>
+          <span class="s-icons" style="color:rgba(255,255,255,0.8);">●●●● 🔋</span>
+        </div>
+        <div class="screen-body">
+          <div class="checkout-header" style="padding-top:0;">
+            <div class="checkout-header-title">Thanh toán</div>
+            <div class="checkout-header-sub" id="s4-items-desc">2 dịch vụ · <span id="s4-shop-name">Barber Shop</span></div>
+            <div class="checkout-amount-badge">
+              <span class="checkout-amount-label">Tổng cộng</span>
+              <span class="checkout-amount-value" id="s4-total">280.000 ₫</span>
+            </div>
+          </div>
+          <div class="scroll-area">
+            <div class="payment-method-section">
+              <div class="pm-label">Hình thức thanh toán</div>
+              <div class="pm-grid">
+                <div class="pm-card selected">
+                  <div class="pm-icon">💵</div>
+                  <div class="pm-name">Tiền mặt</div>
+                </div>
+                <div class="pm-card">
+                  <div class="pm-icon">📱</div>
+                  <div class="pm-name">Chuyển khoản</div>
+                </div>
+                <div class="pm-card">
+                  <div class="pm-icon">💳</div>
+                  <div class="pm-name">Thẻ</div>
+                </div>
+                <div class="pm-card">
+                  <div class="pm-icon">🔗</div>
+                  <div class="pm-name">Kết hợp</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cash-input-section">
+              <div class="cash-row">
+                <span class="cash-label">Khách đưa</span>
+                <span class="cash-value" id="s4-tendered">300.000 ₫</span>
+              </div>
+              <div class="cash-row" style="margin-bottom:12px;">
+                <span class="cash-label">Tiền thối</span>
+                <span class="cash-change" id="s4-change">20.000 ₫</span>
+              </div>
+              <div class="denom-row">
+                <div class="denom-chip">10k</div>
+                <div class="denom-chip">20k</div>
+                <div class="denom-chip">50k</div>
+                <div class="denom-chip active">100k</div>
+                <div class="denom-chip">200k</div>
+                <div class="denom-chip">500k</div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-bar">
+            <div class="confirm-btn">✓ Xác nhận thanh toán</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 5: Success ──────────────────────────────────── -->
+  <div class="section-title" id="s5">5 · Hoàn tất đơn hàng</div>
+  <div class="phone-row">
+    <div class="phone-wrap">
+      <div class="phone-label" id="label-s5">Barber Shop</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span class="s-time">9:46</span>
+          <span class="s-icons">●●●● 🔋</span>
+        </div>
+        <div class="screen-body">
+          <div class="success-center">
+            <div class="success-ring">✓</div>
+            <div class="success-title">Thanh toán thành công!</div>
+            <div class="success-sub" id="s5-sub">Đơn hàng #DH-2847 đã hoàn tất</div>
+            <div class="success-receipt">
+              <div id="s5-receipt-items">
+                <!-- rendered by JS -->
+              </div>
+              <div class="receipt-row total">
+                <span>Tổng cộng</span>
+                <span id="s5-total">280.000 ₫</span>
+              </div>
+              <div class="receipt-row" style="margin-top:6px;">
+                <span style="color:#6b7280;">Tiền mặt</span>
+                <span>300.000 ₫</span>
+              </div>
+              <div class="receipt-row">
+                <span style="color:#6b7280;">Tiền thối</span>
+                <span style="color:#22c55e;">20.000 ₫</span>
+              </div>
+            </div>
+            <div class="success-actions">
+              <div class="success-btn outline">🖨️ In hoá đơn</div>
+              <div class="success-btn filled">+ Đơn mới</div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><span class="nav-icon">🏪</span><span>Bán hàng</span></div>
+            <div class="nav-item"><span class="nav-icon">📋</span><span>Đơn hàng</span></div>
+            <div class="nav-item active"><span class="nav-icon">✓</span><span>Hoàn tất</span></div>
+            <div class="nav-item"><span class="nav-icon">⚙️</span><span>Thêm</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 6: Empty Cart ──────────────────────────────── -->
+  <div class="section-title" id="s6">6 · Giỏ hàng trống</div>
+  <div class="phone-row">
+    <div class="phone-wrap">
+      <div class="phone-label">Mọi loại tiệm</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span class="s-time">9:41</span>
+          <span class="s-icons">●●●● 🔋</span>
+        </div>
+        <div class="screen-body">
+          <div class="app-header">
+            <div class="header-row">
+              <div style="font-size:20px;color:#6b7280;">←</div>
+              <div class="screen-title">Giỏ hàng</div>
+              <div style="width:36px;"></div>
+            </div>
+          </div>
+          <div class="empty-cart">
+            <div class="empty-icon">🛒</div>
+            <div class="empty-title">Chưa có dịch vụ nào</div>
+            <div class="empty-sub">Quay lại màn hình bán hàng và chọn dịch vụ cho khách</div>
+          </div>
+          <div class="bottom-bar">
+            <div class="checkout-btn" style="background:#9ca3af;justify-content:center;">
+              <span>Giỏ hàng trống</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 7: Customer Search ─────────────────────────── -->
+  <div class="section-title" id="s7">7 · Tìm khách hàng</div>
+  <div class="phone-row">
+    <div class="phone-wrap">
+      <div class="phone-label" id="label-s7">Barber Shop</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span class="s-time">9:43</span>
+          <span class="s-icons">●●●● 🔋</span>
+        </div>
+        <div class="screen-body">
+          <div class="app-header">
+            <div class="header-row">
+              <div style="font-size:20px;color:#6b7280;">←</div>
+              <div class="screen-title">Chọn khách</div>
+              <div style="width:36px;"></div>
+            </div>
+            <div style="background:#f3f4f6;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <span>🔍</span>
+              <span style="color:#9ca3af;font-size:14px;">Tìm tên, số điện thoại...</span>
+            </div>
+          </div>
+          <div class="scroll-area">
+            <div class="list-section-label">Khách quen gần đây</div>
+
+            <div class="customer-row">
+              <div class="customer-avatar" style="background:#fef3c7;color:#d97706;">NH</div>
+              <div>
+                <div class="customer-name" id="s7-c1-name">Nguyễn Hoàng</div>
+                <div class="customer-phone" id="s7-c1-phone">0912 345 678 · Lần cuối: hôm qua</div>
+              </div>
+              <div class="customer-add-btn">Chọn</div>
+            </div>
+
+            <div class="customer-row">
+              <div class="customer-avatar" style="background:#dcfce7;color:#16a34a;">TM</div>
+              <div>
+                <div class="customer-name" id="s7-c2-name">Trần Minh</div>
+                <div class="customer-phone" id="s7-c2-phone">0987 654 321 · ⭐ Thành viên vàng</div>
+              </div>
+              <div class="customer-add-btn">Chọn</div>
+            </div>
+
+            <div class="customer-row">
+              <div class="customer-avatar" style="background:#ede9fe;color:#7c3aed;">PL</div>
+              <div>
+                <div class="customer-name" id="s7-c3-name">Phạm Lan</div>
+                <div class="customer-phone" id="s7-c3-phone">0903 111 222 · Lần cuối: 3 ngày trước</div>
+              </div>
+              <div class="customer-add-btn">Chọn</div>
+            </div>
+
+            <div style="text-align:center;margin-top:20px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:20px;background:#eef2ff;color:#4f46e5;font-size:13px;font-weight:700;">
+                + Thêm khách hàng mới
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── Shop data ──────────────────────────────────────────────────────
+const SHOPS = {
+  barber: {
+    label: 'Barber Shop',
+    emoji: '🧔',
+    categories: ['Tất cả', 'Cắt & Tỉa', 'Chăm sóc', 'Nhuộm màu'],
+    quickPhrases: ['Cắt ngắn', 'Cạo râu', 'Gội đầu', 'Massage đầu'],
+    staff: [
+      { name: 'Tuấn', color: '#4f46e5' },
+      { name: 'Minh', color: '#0891b2' },
+      { name: 'Hùng', color: '#d97706' },
+    ],
+    services: [
+      { name: 'Cắt tóc nam', price: 80000, duration: '30 phút', selected: true },
+      { name: 'Cạo râu', price: 50000, duration: '15 phút', selected: false },
+      { name: 'Gội đầu', price: 40000, duration: '20 phút', selected: true },
+      { name: 'Massage đầu', price: 60000, duration: '20 phút', selected: false },
+      { name: 'Nhuộm tóc', price: 200000, duration: '90 phút', selected: false },
+      { name: 'Hấp dầu', price: 100000, duration: '45 phút', selected: false },
+    ],
+    customers: [
+      { initials: 'NH', name: 'Nguyễn Hoàng', bg: '#fef3c7', color: '#d97706', phone: '0912 345 678 · Lần cuối: hôm qua' },
+      { initials: 'TM', name: 'Trần Minh',    bg: '#dcfce7', color: '#16a34a', phone: '0987 654 321 · ⭐ Thành viên vàng' },
+      { initials: 'PL', name: 'Phạm Lan',     bg: '#ede9fe', color: '#7c3aed', phone: '0903 111 222 · Lần cuối: 3 ngày trước' },
+    ],
+  },
+  spa: {
+    label: 'Spa',
+    emoji: '💆',
+    categories: ['Tất cả', 'Massage', 'Chăm sóc da', 'Liệu trình'],
+    quickPhrases: ['Massage body', 'Chăm sóc da', 'Đắp mặt nạ', 'Liệu trình'],
+    staff: [
+      { name: 'Lan', color: '#db2777' },
+      { name: 'Mai', color: '#7c3aed' },
+      { name: 'Hoa', color: '#0891b2' },
+    ],
+    services: [
+      { name: 'Massage body', price: 300000, duration: '60 phút', selected: true },
+      { name: 'Chăm sóc da mặt', price: 250000, duration: '60 phút', selected: true },
+      { name: 'Tắm trắng', price: 400000, duration: '90 phút', selected: false },
+      { name: 'Đắp mặt nạ', price: 150000, duration: '30 phút', selected: false },
+      { name: 'Gội đầu dưỡng sinh', price: 120000, duration: '30 phút', selected: false },
+      { name: 'Massage đá nóng', price: 350000, duration: '75 phút', selected: false },
+    ],
+    customers: [
+      { initials: 'LH', name: 'Lê Hương',  bg: '#fce7f3', color: '#be185d', phone: '0911 222 333 · ⭐ Thành viên bạch kim' },
+      { initials: 'NQ', name: 'Nguyễn Quỳnh', bg: '#ede9fe', color: '#7c3aed', phone: '0922 333 444 · Lần cuối: hôm qua' },
+      { initials: 'BT', name: 'Bùi Thảo',  bg: '#dcfce7', color: '#16a34a', phone: '0933 444 555 · Lần cuối: 5 ngày trước' },
+    ],
+  },
+  nail: {
+    label: 'Nail Salon',
+    emoji: '💅',
+    categories: ['Tất cả', 'Móng tay', 'Móng chân', 'Điều trị'],
+    quickPhrases: ['Sơn gel', 'Đắp bột', 'Vẽ nghệ thuật', 'Tẩy gel cũ'],
+    staff: [
+      { name: 'Ngọc', color: '#db2777' },
+      { name: 'Hằng', color: '#7c3aed' },
+      { name: 'Thảo', color: '#059669' },
+    ],
+    services: [
+      { name: 'Sơn gel', price: 120000, duration: '45 phút', selected: true },
+      { name: 'Đắp bột acrylic', price: 200000, duration: '60 phút', selected: true },
+      { name: 'Vẽ nghệ thuật', price: 150000, duration: '30 phút', selected: false },
+      { name: 'Tẩy gel cũ', price: 80000, duration: '20 phút', selected: false },
+      { name: 'Chăm sóc móng chân', price: 100000, duration: '30 phút', selected: false },
+      { name: 'Sơn thường', price: 60000, duration: '20 phút', selected: false },
+    ],
+    customers: [
+      { initials: 'MT', name: 'Minh Thư',   bg: '#fce7f3', color: '#be185d', phone: '0912 111 999 · Lần cuối: hôm qua' },
+      { initials: 'HK', name: 'Hoàng Kim',  bg: '#fef3c7', color: '#d97706', phone: '0923 222 111 · ⭐ Thành viên vàng' },
+      { initials: 'TL', name: 'Thu Linh',   bg: '#ede9fe', color: '#7c3aed', phone: '0934 333 222 · Lần cuối: 2 ngày' },
+    ],
+  },
+  hair: {
+    label: 'Hair Salon',
+    emoji: '💇',
+    categories: ['Tất cả', 'Uốn & Nhuộm', 'Cắt & Tạo kiểu', 'Dưỡng tóc'],
+    quickPhrases: ['Uốn', 'Nhuộm', 'Duỗi', 'Gội đầu'],
+    staff: [
+      { name: 'Linh',   color: '#db2777' },
+      { name: 'Phương', color: '#7c3aed' },
+      { name: 'Thủy',   color: '#0891b2' },
+    ],
+    services: [
+      { name: 'Uốn tóc', price: 350000, duration: '120 phút', selected: true },
+      { name: 'Nhuộm tóc', price: 300000, duration: '90 phút', selected: true },
+      { name: 'Duỗi tóc', price: 400000, duration: '150 phút', selected: false },
+      { name: 'Cắt tóc nữ', price: 100000, duration: '40 phút', selected: false },
+      { name: 'Hấp dầu', price: 150000, duration: '45 phút', selected: false },
+      { name: 'Gội đầu', price: 50000, duration: '15 phút', selected: false },
+    ],
+    customers: [
+      { initials: 'NA', name: 'Nguyễn Anh',   bg: '#fce7f3', color: '#be185d', phone: '0911 000 088 · ⭐ Thành viên vàng' },
+      { initials: 'VP', name: 'Vũ Phương',    bg: '#ede9fe', color: '#7c3aed', phone: '0922 000 099 · Lần cuối: hôm qua' },
+      { initials: 'DT', name: 'Đinh Trang',   bg: '#dcfce7', color: '#16a34a', phone: '0933 111 000 · Lần cuối: 4 ngày' },
+    ],
+  },
+  makeup: {
+    label: 'Makeup Studio',
+    emoji: '💄',
+    categories: ['Tất cả', 'Trang điểm', 'Dạo tiệc', 'Cô dâu'],
+    quickPhrases: ['Cô dâu', 'Dạo tiệc', 'Dạo phố', 'Lookbook'],
+    staff: [
+      { name: 'Vân',  color: '#db2777' },
+      { name: 'Oanh', color: '#7c3aed' },
+      { name: 'Diễm', color: '#d97706' },
+    ],
+    services: [
+      { name: 'Trang điểm cô dâu', price: 2000000, duration: '180 phút', selected: true },
+      { name: 'Trang điểm dạo tiệc', price: 500000, duration: '60 phút', selected: false },
+      { name: 'Trang điểm dạo phố', price: 300000, duration: '45 phút', selected: false },
+      { name: 'Chụp ảnh lookbook', price: 800000, duration: '90 phút', selected: true },
+      { name: 'Trang điểm phỏng vấn', price: 350000, duration: '45 phút', selected: false },
+      { name: 'Trang điểm tốt nghiệp', price: 450000, duration: '60 phút', selected: false },
+    ],
+    customers: [
+      { initials: 'HN', name: 'Hạnh Nguyên',  bg: '#fce7f3', color: '#be185d', phone: '0900 111 222 · Cô dâu 15/6' },
+      { initials: 'TH', name: 'Thanh Hà',     bg: '#fef3c7', color: '#d97706', phone: '0901 222 333 · Tiệc 20/5' },
+      { initials: 'LM', name: 'Lý Mai',       bg: '#ede9fe', color: '#7c3aed', phone: '0902 333 444 · Lần cuối: hôm qua' },
+    ],
+  },
+  lash: {
+    label: 'Lash & PMU Studio',
+    emoji: '👁️',
+    categories: ['Tất cả', 'Nối mi', 'Xăm thẩm mỹ', 'Điều trị'],
+    quickPhrases: ['Nối mi', 'Xăm mày', 'Xăm môi', 'Xăm mí'],
+    staff: [
+      { name: 'Trang', color: '#db2777' },
+      { name: 'Huyền', color: '#7c3aed' },
+      { name: 'Nhi',   color: '#0891b2' },
+    ],
+    services: [
+      { name: 'Nối mi classic', price: 300000, duration: '90 phút', selected: true },
+      { name: 'Nối mi volume', price: 500000, duration: '120 phút', selected: false },
+      { name: 'Xăm mày', price: 1500000, duration: '90 phút', selected: false },
+      { name: 'Xăm môi', price: 2000000, duration: '120 phút', selected: false },
+      { name: 'Xăm mí', price: 1800000, duration: '90 phút', selected: false },
+      { name: 'Tháo mi', price: 100000, duration: '20 phút', selected: true },
+    ],
+    customers: [
+      { initials: 'MY', name: 'Minh Yến',   bg: '#fce7f3', color: '#be185d', phone: '0911 000 077 · ⭐ Thành viên vàng' },
+      { initials: 'TT', name: 'Thu Trang',  bg: '#ede9fe', color: '#7c3aed', phone: '0922 111 088 · Lần cuối: hôm qua' },
+      { initials: 'LH', name: 'Lan Hương',  bg: '#dcfce7', color: '#16a34a', phone: '0933 222 099 · Lần cuối: 2 ngày' },
+    ],
+  },
+};
+
+// ── Helpers ────────────────────────────────────────────────────────
+function fmt(n) {
+  return n.toLocaleString('vi-VN') + ' ₫';
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+let currentShop = 'barber';
+
+// ── Render functions ───────────────────────────────────────────────
+function renderScreen1(shop) {
+  const d = SHOPS[shop];
+  document.getElementById('label-s1').textContent = d.label;
+
+  // categories
+  const catContainer = document.getElementById('cats-s1');
+  catContainer.innerHTML = d.categories.map((c, i) =>
+    `<div class="cat-tab${i===0?' active':''}">${c}</div>`
+  ).join('');
+
+  // quick phrases
+  const qc = document.getElementById('quick-s1');
+  qc.innerHTML = `<div class="quick-label">💬 Ghi chú nhanh</div>
+    <div class="quick-chips">${d.quickPhrases.map(p => `<div class="quick-chip">${p}</div>`).join('')}</div>`;
+
+  // service grid
+  const selected = d.services.filter(s => s.selected);
+  const total = selected.reduce((sum, s) => sum + s.price, 0);
+  const grid = document.getElementById('grid-s1');
+  grid.innerHTML = d.services.map(s => `
+    <div class="service-card${s.selected?' selected':''}">
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-duration">⏱ ${s.duration}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="svc-price">${fmt(s.price)}</div>
+        <div class="svc-add${s.selected?' added':''}">${s.selected?'✓':'+'}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('badge-s1').textContent = selected.length;
+  document.getElementById('cart-count-s1').textContent = selected.length;
+  document.getElementById('cart-total-s1').textContent = fmt(total);
+}
+
+function renderScreen2(shop) {
+  const d = SHOPS[shop];
+  document.getElementById('label-s2').textContent = d.label;
+  const selected = d.services.filter(s => s.selected);
+  const total = selected.reduce((sum, s) => sum + s.price, 0);
+
+  document.getElementById('cart-items-s2').innerHTML = selected.map(s => `
+    <div class="cart-item-row">
+      <div class="ci-info">
+        <div class="ci-name">${s.name}</div>
+        <div class="ci-qty">⏱ ${s.duration} · x1</div>
+      </div>
+      <div class="ci-price">${fmt(s.price)}</div>
+      <div class="ci-del">🗑</div>
+    </div>
+  `).join('');
+
+  document.getElementById('subtotal-s2').textContent = fmt(total);
+  document.getElementById('total-s2').textContent = fmt(total);
+  document.getElementById('cart-total2-s2').textContent = fmt(total);
+}
+
+function renderScreen3(shop) {
+  const d = SHOPS[shop];
+  document.getElementById('label-s3').textContent = d.label;
+  const selected = d.services.filter(s => s.selected);
+  const total = selected.reduce((sum, s) => sum + s.price, 0);
+  document.getElementById('s3-total').textContent = fmt(total);
+
+  // per-service assignment
+  const container = document.getElementById('staff-assign-s3');
+  container.innerHTML = selected.map((s, i) => `
+    <div class="staff-assign-section" style="margin-bottom:10px;">
+      <div class="staff-assign-title" style="font-size:12px;margin-bottom:8px;">📋 ${s.name}</div>
+      <div class="staff-chips">
+        ${d.staff.map((st, j) => `
+          <div class="staff-chip${i===0&&j===0?' selected':''}">
+            <div class="staff-avatar" style="background:${st.color};">${st.name[0]}</div>
+            ${st.name}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  // global staff
+  document.getElementById('global-staff-s3').innerHTML = d.staff.map(st => `
+    <div class="staff-chip">
+      <div class="staff-avatar" style="background:${st.color};">${st.name[0]}</div>
+      ${st.name}
+    </div>
+  `).join('');
+}
+
+function renderScreen4(shop) {
+  const d = SHOPS[shop];
+  document.getElementById('label-s4').textContent = d.label;
+  const selected = d.services.filter(s => s.selected);
+  const total = selected.reduce((sum, s) => sum + s.price, 0);
+  const tendered = Math.ceil(total / 50000) * 50000;
+  document.getElementById('s4-items-desc').innerHTML =
+    `${selected.length} dịch vụ · <span id="s4-shop-name">${d.label}</span>`;
+  document.getElementById('s4-total').textContent = fmt(total);
+  document.getElementById('s4-tendered').textContent = fmt(tendered);
+  document.getElementById('s4-change').textContent = fmt(tendered - total);
+}
+
+function renderScreen5(shop) {
+  const d = SHOPS[shop];
+  document.getElementById('label-s5').textContent = d.label;
+  const selected = d.services.filter(s => s.selected);
+  const total = selected.reduce((sum, s) => sum + s.price, 0);
+  const tendered = Math.ceil(total / 50000) * 50000;
+  document.getElementById('s5-total').textContent = fmt(total);
+  document.getElementById('s5-receipt-items').innerHTML = selected.map(s =>
+    `<div class="receipt-row"><span>${s.name}</span><span>${fmt(s.price)}</span></div>`
+  ).join('');
+}
+
+function renderScreen7(shop) {
+  const d = SHOPS[shop];
+  document.getElementById('label-s7').textContent = d.label;
+  const [c1, c2, c3] = d.customers;
+  document.getElementById('s7-c1-name').textContent  = c1.name;
+  document.getElementById('s7-c1-phone').textContent = c1.phone;
+  document.getElementById('s7-c2-name').textContent  = c2.name;
+  document.getElementById('s7-c2-phone').textContent = c2.phone;
+  document.getElementById('s7-c3-name').textContent  = c3.name;
+  document.getElementById('s7-c3-phone').textContent = c3.phone;
+}
+
+function renderAll(shop) {
+  renderScreen1(shop);
+  renderScreen2(shop);
+  renderScreen3(shop);
+  renderScreen4(shop);
+  renderScreen5(shop);
+  renderScreen7(shop);
+}
+
+function switchShop(shop, btn) {
+  currentShop = shop;
+  document.querySelectorAll('.shop-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll(shop);
+}
+
+// Initial render
+renderAll('barber');
+</script>
+</body>
+</html>

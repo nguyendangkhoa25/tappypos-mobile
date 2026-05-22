@@ -171,6 +171,8 @@ type SheetValues = {
   dynamicPrice: boolean;
   durationMinutes: string;
   showDuration: boolean;
+  categoryName: string;
+  isCustom: boolean;
 };
 
 function ProductEditSheet({
@@ -178,6 +180,7 @@ function ProductEditSheet({
   onClose,
   onSave,
   backendCode,
+  categories,
 }: {
   values: SheetValues | null;
   onClose: () => void;
@@ -188,8 +191,10 @@ function ProductEditSheet({
     unit: string;
     dynamicPrice: boolean;
     durationMinutes: number;
+    categoryName: string;
   }) => void;
   backendCode: string | null;
+  categories: string[];
 }) {
   const { t } = useTranslation();
   const typo = useTypography();
@@ -200,6 +205,7 @@ function ProductEditSheet({
   const [unit, setUnit] = useState(DEFAULT_ONBOARDING_UNIT);
   const [dynamicPrice, setDynamicPrice] = useState(false);
   const [durationStr, setDurationStr] = useState('');
+  const [categoryName, setCategoryName] = useState('');
 
   useEffect(() => {
     if (values) {
@@ -208,6 +214,7 @@ function ProductEditSheet({
       setUnit(values.unit);
       setDynamicPrice(values.dynamicPrice);
       setDurationStr(values.durationMinutes);
+      setCategoryName(values.categoryName);
     }
   }, [values]);
 
@@ -238,9 +245,8 @@ function ProductEditSheet({
       price: dynamicPrice ? 0 : (rawPrice ? parseInt(rawPrice, 10) : 0),
       unit,
       dynamicPrice,
-      durationMinutes: values?.showDuration
-        ? (durationStr ? parseInt(durationStr, 10) : 0)
-        : (durationStr ? parseInt(durationStr, 10) : 0),
+      durationMinutes: durationStr ? parseInt(durationStr, 10) : 0,
+      categoryName,
     });
   };
 
@@ -380,6 +386,39 @@ function ProductEditSheet({
                 })}
               </View>
             </View>
+
+            {/* Category (custom products only) */}
+            {values?.isCustom && categories.length > 0 && (
+              <View className="mb-4">
+                <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 mb-1.5`}>
+                  {t('onboarding.step2.categoryLabel')}
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {categories.map((cat) => {
+                    const active = categoryName === cat;
+                    return (
+                      <TouchableOpacity
+                        key={cat}
+                        onPress={() => setCategoryName(active ? '' : cat)}
+                        className={`px-3 py-1.5 rounded-full border ${
+                          active
+                            ? 'bg-primary border-primary'
+                            : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        <Text
+                          className={`${typo.caption} font-medium ${
+                            active ? 'text-white' : 'text-gray-600 dark:text-gray-300'
+                          }`}
+                        >
+                          {cat}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
 
             {/* Duration (service shops) */}
             {(values?.showDuration || (durationStr && parseInt(durationStr, 10) > 0)) && (
@@ -569,6 +608,14 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
     if (templates.length > 0) initProducts(templates);
   }, [templates, initProducts]);
 
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    for (const tpl of templates) {
+      if (tpl.categoryName) seen.add(tpl.categoryName);
+    }
+    return [...seen];
+  }, [templates]);
+
   const sections = useMemo(() => {
     const map = new Map<string, ProductTemplate[]>();
     for (const tpl of templates) {
@@ -576,12 +623,30 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(tpl);
     }
+    // Inject custom products into their chosen category (or a catch-all group)
+    for (const cp of step2.products) {
+      if (!cp.templateId.startsWith('custom_')) continue;
+      const key = cp.categoryName || t('onboarding.step2.myProducts');
+      if (!map.has(key)) map.set(key, []);
+      if (!map.get(key)!.find((x) => x.id === cp.templateId)) {
+        map.get(key)!.push({
+          id: cp.templateId,
+          name: cp.name,
+          price: cp.price,
+          unit: cp.unit,
+          emoji: '📦',
+          dynamicPrice: cp.dynamicPrice ?? false,
+          categoryName: cp.categoryName,
+          durationMinutes: cp.durationMinutes ?? 0,
+        } as ProductTemplate);
+      }
+    }
     return Array.from(map.entries()).map(([title, allData]) => ({
       title,
       allData,
       data: collapsedSections.has(title) ? [] : allData,
     }));
-  }, [templates, t, collapsedSections]);
+  }, [templates, step2.products, t, collapsedSections]);
 
   const allSelected = templates.length > 0 && selectedIds.size === templates.length;
 
@@ -621,6 +686,7 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
   };
 
   const openEditSheet = (template: ProductTemplate) => {
+    const isCustom = template.id.startsWith('custom_');
     const stored = step2.products.find((p) => p.templateId === template.id);
     setSheet({
       templateId: template.id,
@@ -630,6 +696,8 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
       dynamicPrice: stored?.dynamicPrice ?? template.dynamicPrice,
       durationMinutes: String(stored?.durationMinutes ?? template.durationMinutes ?? 0),
       showDuration: (template.durationMinutes ?? 0) > 0,
+      categoryName: stored?.categoryName ?? template.categoryName ?? '',
+      isCustom,
     });
   };
 
@@ -642,6 +710,8 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
       dynamicPrice: false,
       durationMinutes: '',
       showDuration: false,
+      categoryName: categories[0] ?? '',
+      isCustom: true,
     });
   };
 
@@ -652,6 +722,7 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
     unit: string;
     dynamicPrice: boolean;
     durationMinutes: number;
+    categoryName: string;
   }) => {
     const isNew = !data.templateId || data.templateId.startsWith('custom_');
     if (isNew) {
@@ -663,11 +734,20 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
           price: data.price,
           unit: data.unit,
           dynamicPrice: data.dynamicPrice,
+          categoryName: data.categoryName || undefined,
+          durationMinutes: data.durationMinutes,
+        });
+      } else {
+        updateProduct(templateId, {
+          name: data.name,
+          price: data.price,
+          unit: data.unit,
+          dynamicPrice: data.dynamicPrice,
+          categoryName: data.categoryName || undefined,
           durationMinutes: data.durationMinutes,
         });
       }
     } else {
-      // Ensure the product is selected before updating
       if (!selectedIds.has(data.templateId)) {
         const tpl = templates.find((t) => t.id === data.templateId);
         addProduct({
@@ -890,6 +970,7 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
         onClose={() => setSheet(null)}
         onSave={handleSheetSave}
         backendCode={backendCode}
+        categories={categories}
       />
     </KeyboardAvoidingView>
   );

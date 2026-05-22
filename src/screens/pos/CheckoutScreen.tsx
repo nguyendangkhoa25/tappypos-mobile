@@ -23,6 +23,7 @@ import { useOfflineQueueStore } from '../../store/offlineQueueStore';
 import { useAuthStore } from '../../store/authStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { formatVnd } from '../../utils/format';
+import { MoneyInput } from '../../components/MoneyInput';
 import { useTypography } from '../../hooks/useTypography';
 import type { POSScreenProps } from '../../types/navigation';
 
@@ -78,7 +79,7 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
     });
   }, []);
 
-  const cashReceivedNum = parseFloat(cashReceived.replace(/[^0-9]/g, '')) || 0;
+  const cashReceivedNum = parseInt(cashReceived || '0', 10);
   const change = paymentMethod === 'CASH' ? Math.max(0, cashReceivedNum - total) : 0;
 
   const checkoutMutation = useMutation({
@@ -122,10 +123,10 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
         savedOffline: isOffline,
       });
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       submittingRef.current = false;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      if (err?.response?.data?.error === 'ORDER_LIMIT_EXCEEDED') {
+      if ((err as { response?: { data?: { error?: string } } })?.response?.data?.error === 'ORDER_LIMIT_EXCEEDED') {
         setUpgradeVisible(true);
       } else {
         setCheckoutError(t('pos.checkoutError'));
@@ -260,7 +261,6 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
         {/* Cash change calculator */}
         {paymentMethod === 'CASH' && (
           <View className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 mb-6">
-            {/* US-133: "Đúng tiền" chip next to label */}
             <View className="flex-row items-center justify-between mb-2">
               <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('pos.cashReceived')}</Text>
               <TouchableOpacity
@@ -270,19 +270,15 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
                 <Text className={`${typo.captionBold} text-indigo-700`}>{t('pos.exactAmount')}</Text>
               </TouchableOpacity>
             </View>
-            <TextInput
-              className={`bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 ${typo.inputSize} font-bold text-gray-900 dark:text-white mb-3`}
-              value={cashReceived}
-              onChangeText={setCashReceived}
-              keyboardType="numeric"
+            <MoneyInput
+              rawValue={cashReceived}
+              onChangeRaw={setCashReceived}
               placeholder="0"
             />
             {cashReceivedNum > 0 && (
-              <View className="flex-row justify-between items-center">
+              <View className="flex-row justify-between items-center mt-3">
                 <Text className={`${typo.caption} font-medium text-gray-600 dark:text-gray-300`}>{t('pos.change')}</Text>
-                <Text
-                  className={`${typo.section} font-bold ${change >= 0 ? 'text-indigo-600' : 'text-red-500'}`}
-                >
+                <Text className={`${typo.section} font-bold ${change >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>
                   {formatVnd(change)}
                 </Text>
               </View>

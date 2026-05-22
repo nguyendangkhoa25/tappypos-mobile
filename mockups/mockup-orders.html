@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Đơn Hàng</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; display: flex; background: #f1f5f9; color: #1e293b; }
+
+/* ─── Sidebar ─── */
+.sidebar {
+  width: 220px; min-height: 100vh;
+  background: #1e293b;
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; flex-shrink: 0;
+  padding: 20px 0 40px;
+  scrollbar-width: thin; scrollbar-color: #334155 transparent;
+}
+.sidebar-brand { padding: 0 16px 6px; }
+.sidebar-brand-title { font-size: 13px; font-weight: 800; color: #f1f5f9; letter-spacing: 0.02em; }
+.sidebar-brand-sub { font-size: 10px; color: #475569; margin-top: 1px; }
+.sidebar-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 10px 0 8px; }
+.nav-section-label {
+  font-size: 9px; font-weight: 700; color: #475569;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 8px 16px 3px;
+}
+.nav-link {
+  display: block; font-size: 12px; color: #94a3b8;
+  padding: 6px 16px; text-decoration: none;
+  line-height: 1.35; cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nav-link:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+.nav-link.active { color: #a5b4fc; font-weight: 600; background: rgba(99,102,241,0.18); border-left: 2px solid #818cf8; padding-left: 14px; }
+
+/* ─── Main ─── */
+.main { flex: 1; padding: 40px 48px; overflow-x: auto; min-width: 0; }
+.page-title { font-size: 26px; font-weight: 800; color: #111827; margin-bottom: 4px; }
+.page-sub { font-size: 14px; color: #64748b; margin-bottom: 40px; }
+
+/* ─── Screen wrapper ─── */
+.screen-block { display: none; }
+.screen-block.visible { display: block; }
+.screen-block-title {
+  font-size: 13px; font-weight: 700; color: #334155;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* ─── Phone frame ─── */
+.phone-row { display: flex; flex-wrap: wrap; gap: 36px; align-items: flex-start; }
+.phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.phone-label {
+  font-size: 11px; font-weight: 700; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: #e2e8f0; padding: 4px 14px; border-radius: 20px;
+}
+.phone {
+  width: 390px; height: 844px;
+  background: #f9fafb;
+  border-radius: 48px;
+  border: 10px solid #1e293b;
+  overflow: hidden; position: relative;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.12);
+  flex-shrink: 0;
+}
+.notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 130px; height: 34px;
+  background: #1e293b;
+  border-radius: 0 0 22px 22px;
+  z-index: 100;
+}
+.status-bar {
+  height: 44px; flex-shrink: 0;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 22px 6px;
+  position: relative; z-index: 10;
+}
+.s-time { font-size: 15px; font-weight: 700; }
+.s-icons { font-size: 12px; display: flex; gap: 4px; align-items: center; }
+.status-bar.white { background: white; }
+.status-bar.white .s-time { color: #111827; }
+.status-bar.white .s-icons { color: #374151; }
+.status-bar.indigo { background: #4f46e5; }
+.status-bar.indigo .s-time { color: white; }
+.status-bar.indigo .s-icons { color: rgba(255,255,255,0.8); }
+.status-bar.success { background: #4f46e5; }
+.status-bar.success .s-time { color: white; }
+.status-bar.success .s-icons { color: rgba(255,255,255,0.8); }
+
+/* ─── Bottom Nav Bar ─── */
+.bottom-nav {
+  height: 60px; flex-shrink: 0;
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  display: flex; align-items: stretch;
+  padding-bottom: 4px;
+}
+.bn-tab {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px; cursor: pointer;
+}
+.bn-icon { font-size: 20px; }
+.bn-label { font-size: 10px; font-weight: 600; color: #9ca3af; }
+.bn-tab.active .bn-label { color: #4f46e5; }
+.bn-active-dot { width: 4px; height: 4px; border-radius: 2px; background: #4f46e5; }
+
+/* ─── Scroll body ─── */
+.scroll-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; }
+.scrollable::-webkit-scrollbar { display: none; }
+
+/* ─── Shared components ─── */
+.chip {
+  padding: 5px 13px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  background: white; color: #6b7280;
+  border: 1.5px solid #e5e7eb; white-space: nowrap; flex-shrink: 0; cursor: pointer;
+}
+.chip.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+.chip.active-green { background: #dcfce7; color: #15803d; border-color: #86efac; }
+.chip.active-amber { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+
+.badge {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.badge-indigo { background: #eef2ff; color: #4f46e5; }
+.badge-green { background: #dcfce7; color: #15803d; }
+.badge-amber { background: #fef3c7; color: #92400e; }
+.badge-gray { background: #f3f4f6; color: #6b7280; }
+.badge-red { background: #fef2f2; color: #ef4444; }
+.badge-white { background: rgba(255,255,255,0.25); color: white; border: 1px solid rgba(255,255,255,0.4); }
+
+/* ─── Skeleton shimmer ─── */
+.sk {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px; display: block;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ────────────────────────────────
+   SCREEN 1: Order List
+───────────────────────────────── */
+.ol-header {
+  background: white;
+  padding: 10px 18px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+.ol-header-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ol-title { font-size: 17px; font-weight: 700; color: #111827; }
+.ol-icons { display: flex; gap: 12px; align-items: center; }
+.ol-icon { font-size: 20px; color: #4f46e5; }
+
+.chips-row { display: flex; gap: 6px; overflow: hidden; }
+
+.month-picker {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 18px; background: #f9fafb; border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+.mp-arrow { font-size: 18px; color: #4f46e5; font-weight: 700; cursor: pointer; }
+.mp-label { font-size: 14px; font-weight: 700; color: #111827; }
+
+.summary-bar {
+  display: flex; gap: 8px; padding: 10px 16px;
+  background: white; border-bottom: 1px solid #f3f4f6; flex-shrink: 0;
+}
+.stat-chip {
+  flex: 1; background: #f9fafb; border-radius: 10px;
+  padding: 7px 8px; text-align: center; border: 1px solid #f3f4f6;
+}
+.stat-chip-val { font-size: 13px; font-weight: 800; color: #111827; }
+.stat-chip-lbl { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+.stat-chip.revenue .stat-chip-val { color: #4f46e5; }
+.stat-chip.cancel .stat-chip-val { color: #ef4444; }
+
+.orders-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+.order-card {
+  background: white; border-radius: 16px; padding: 14px 15px;
+  border: 1px solid #e5e7eb; display: flex; align-items: flex-start; gap: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-shrink: 0;
+}
+.order-dot { width: 8px; height: 8px; border-radius: 4px; margin-top: 6px; flex-shrink: 0; }
+.dot-indigo { background: #4f46e5; }
+.dot-green { background: #22c55e; }
+.dot-amber { background: #f59e0b; }
+.dot-gray { background: #9ca3af; }
+.order-middle { flex: 1; min-width: 0; }
+.order-num { font-size: 13px; font-weight: 800; color: #111827; }
+.order-customer { font-size: 12px; color: #6b7280; margin-top: 1px; }
+.order-items { font-size: 11px; color: #9ca3af; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.order-datetime { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+.order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.order-total { font-size: 14px; font-weight: 800; color: #111827; }
+.elapsed { font-size: 10px; color: #4f46e5; font-weight: 600; margin-top: 2px; }
+
+/* ────────────────────────────────
+   SCREEN 2: Order Detail – IN_PROGRESS
+───────────────────────────────── */
+.od-header {
+  background: #4f46e5; padding: 12px 18px 16px; flex-shrink: 0;
+}
+.od-header-top {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+}
+.od-back { font-size: 22px; color: white; cursor: pointer; }
+.od-num { font-size: 16px; font-weight: 800; color: white; flex: 1; margin-left: 8px; }
+.od-printer { font-size: 20px; color: rgba(255,255,255,0.8); }
+.od-ts { font-size: 12px; color: rgba(255,255,255,0.7); }
+
+.od-body { flex: 1; overflow: hidden; }
+.od-scroll { padding: 12px 14px 0; display: flex; flex-direction: column; gap: 10px; }
+
+.info-card {
+  background: white; border-radius: 14px; padding: 12px 14px;
+  border: 1px solid #f1f5f9;
+}
+.section-lbl {
+  font-size: 10px; font-weight: 700; color: #9ca3af;
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+}
+.cust-row-inner { display: flex; align-items: center; gap: 10px; }
+.avatar-circle {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #eef2ff; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #4f46e5; flex-shrink: 0;
+}
+.avatar-circle.small { width: 30px; height: 30px; font-size: 12px; }
+.avatar-circle.green { background: #dcfce7; color: #15803d; }
+.cust-name-lbl { font-size: 14px; font-weight: 700; color: #111827; }
+.cust-phone-lbl { font-size: 12px; color: #6b7280; }
+.loyalty-pts { font-size: 11px; color: #f59e0b; font-weight: 600; }
+
+.item-row { padding: 9px 0; border-bottom: 1px solid #f9fafb; display: flex; align-items: flex-start; }
+.item-row:last-child { border-bottom: none; }
+.item-info { flex: 1; min-width: 0; margin-right: 8px; }
+.item-name { font-size: 13px; font-weight: 600; color: #111827; }
+.item-staff { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+.item-qty-price { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.item-subtotal { font-size: 13px; font-weight: 700; color: #111827; flex-shrink: 0; }
+.item-actions { display: flex; gap: 6px; margin-left: 6px; flex-shrink: 0; }
+.item-action-icon { font-size: 14px; color: #d1d5db; cursor: pointer; }
+
+.add-service-btn {
+  border: 1.5px dashed #c7d2fe; border-radius: 10px;
+  padding: 9px; text-align: center;
+  font-size: 13px; font-weight: 600; color: #4f46e5;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  cursor: pointer; margin-top: 2px;
+}
+
+.total-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f9fafb; }
+.total-row:last-child { border-bottom: none; }
+.total-lbl { font-size: 13px; color: #6b7280; }
+.total-val { font-size: 13px; font-weight: 500; color: #1f2937; }
+.total-row.grand .total-lbl { font-size: 15px; font-weight: 700; color: #111827; }
+.total-row.grand .total-val { font-size: 16px; font-weight: 800; color: #4f46e5; }
+.discount-val { color: #f59e0b; }
+
+.note-field {
+  background: #f9fafb; border-radius: 10px; padding: 8px 10px;
+  font-size: 12px; color: #9ca3af; line-height: 1.5;
+}
+
+.action-footer {
+  background: white; border-top: 1px solid #f1f5f9;
+  padding: 12px 16px 18px; flex-shrink: 0;
+}
+.complete-btn {
+  background: #4f46e5; border-radius: 14px; padding: 14px;
+  text-align: center; color: white; font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-bottom: 8px; cursor: pointer;
+}
+
+/* ────────────────────────────────
+   SCREEN 3: Order Detail – COMPLETED
+───────────────────────────────── */
+.payment-info-row {
+  display: flex; align-items: center; gap: 8px;
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px;
+  padding: 8px 10px;
+}
+.payment-method-icon { font-size: 16px; }
+.payment-method-text { font-size: 13px; font-weight: 600; color: #15803d; }
+.payment-amount { font-size: 13px; color: #6b7280; margin-left: auto; }
+
+.receipt-btn {
+  background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 14px;
+  padding: 12px; text-align: center;
+  font-size: 14px; font-weight: 600; color: #374151;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer;
+}
+
+/* ────────────────────────────────
+   SCREEN 4: Receipt Modal
+───────────────────────────────── */
+.receipt-modal {
+  position: absolute; inset: 0; z-index: 50;
+  display: flex; flex-direction: column;
+}
+.receipt-top {
+  background: #4f46e5; padding: 0 18px 28px; flex-shrink: 0;
+}
+.receipt-top-bar {
+  height: 44px; display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 6px;
+}
+.receipt-close-btn {
+  width: 30px; height: 30px; border-radius: 15px;
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: white; cursor: pointer;
+}
+.receipt-top-actions { display: flex; gap: 10px; align-items: center; }
+.receipt-top-icon {
+  width: 30px; height: 30px; border-radius: 15px;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; cursor: pointer;
+}
+.receipt-top-icon.active { background: rgba(255,255,255,0.35); }
+.receipt-total-lbl { font-size: 11px; color: rgba(255,255,255,0.65); margin-bottom: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+.receipt-total-amount { font-size: 44px; font-weight: 800; color: white; letter-spacing: -1px; }
+.receipt-customer { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 6px; }
+
+.receipt-card-wrap {
+  flex: 1; background: white;
+  border-radius: 28px 28px 0 0;
+  overflow: hidden; display: flex; flex-direction: column;
+  margin-top: -12px; z-index: 1;
+}
+.receipt-card-scroll { flex: 1; overflow-y: auto; padding: 20px 18px 24px; }
+.receipt-card-scroll::-webkit-scrollbar { display: none; }
+
+.receipt-meta-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.receipt-meta-lbl { font-size: 12px; color: #9ca3af; }
+.receipt-meta-val { font-size: 12px; font-weight: 600; color: #374151; }
+
+.dashed-divider {
+  border: none; border-top: 1.5px dashed #e5e7eb; margin: 12px 0;
+}
+.receipt-item-row { display: flex; align-items: flex-start; padding: 6px 0; }
+.receipt-item-info { flex: 1; }
+.receipt-item-name { font-size: 13px; font-weight: 600; color: #111827; }
+.receipt-item-staff { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+.receipt-item-price { font-size: 13px; font-weight: 700; color: #111827; flex-shrink: 0; }
+
+.receipt-total-row {
+  background: #4f46e5; border-radius: 12px; padding: 10px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  margin: 4px 0 12px;
+}
+.receipt-total-row-lbl { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.85); }
+.receipt-total-row-val { font-size: 16px; font-weight: 800; color: white; }
+
+.payment-badge-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.payment-badge-icon { font-size: 18px; }
+.payment-badge-text { font-size: 13px; font-weight: 600; color: #374151; }
+
+.qr-section { border-top: 1.5px dashed #e5e7eb; padding-top: 14px; text-align: center; }
+.qr-box {
+  width: 160px; height: 160px; border-radius: 12px;
+  background: #f3f4f6; border: 2px solid #e5e7eb;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 10px;
+  font-size: 14px; font-weight: 700; color: #9ca3af; letter-spacing: 4px;
+}
+.qr-amount { font-size: 18px; font-weight: 800; color: #4f46e5; margin-bottom: 6px; }
+.qr-bank { font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+.qr-acct-row { display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 2px; }
+.qr-acct { font-size: 13px; font-weight: 600; color: #374151; }
+.qr-copy { font-size: 14px; color: #4f46e5; cursor: pointer; }
+.qr-name { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+.qr-hint { font-size: 11px; color: #9ca3af; }
+.receipt-footer { text-align: center; padding-top: 14px; font-size: 13px; color: #9ca3af; }
+
+/* ────────────────────────────────
+   SCREEN 5: Order Success
+───────────────────────────────── */
+.success-screen {
+  display: flex; flex-direction: column; align-items: stretch;
+  flex: 1; background: #4f46e5;
+}
+.success-top {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px 24px 24px;
+}
+.success-checkmark {
+  width: 80px; height: 80px; border-radius: 40px;
+  background: white; border: 3px solid #22c55e;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px; margin-bottom: 20px;
+}
+.success-h1 { font-size: 24px; font-weight: 800; color: white; margin-bottom: 8px; text-align: center; }
+.success-ref { font-size: 14px; color: rgba(255,255,255,0.75); font-weight: 500; }
+.success-progress-wrap { width: 100%; margin-top: 32px; }
+.success-progress-lbl { font-size: 11px; color: rgba(255,255,255,0.55); text-align: center; margin-bottom: 6px; }
+.success-progress-bar-bg {
+  width: 100%; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.2);
+}
+.success-progress-bar-fill {
+  width: 35%; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.85);
+}
+.success-bottom {
+  background: white; border-radius: 28px 28px 0 0; padding: 24px 20px 28px;
+}
+.success-btn-row { display: flex; gap: 10px; }
+.success-btn-outline {
+  flex: 1; border: 1.5px solid #e5e7eb; border-radius: 14px;
+  padding: 14px; text-align: center; font-size: 14px; font-weight: 700; color: #374151; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.success-btn-primary {
+  flex: 1; background: #4f46e5; border-radius: 14px;
+  padding: 14px; text-align: center; font-size: 14px; font-weight: 700; color: white; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Sidebar ─── -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-title">TappyPOS</div>
+    <div class="sidebar-brand-sub">Đơn Hàng · 5 screens</div>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="nav-section-label">Đơn Hàng</div>
+  <a class="nav-link active" data-screen="s1" onclick="showScreen('s1',this)">1 · Danh sách đơn hàng</a>
+  <a class="nav-link" data-screen="s2" onclick="showScreen('s2',this)">2 · Chi tiết · Đang làm</a>
+  <a class="nav-link" data-screen="s3" onclick="showScreen('s3',this)">3 · Chi tiết · Hoàn thành</a>
+  <a class="nav-link" data-screen="s4" onclick="showScreen('s4',this)">4 · Biên nhận (Receipt Modal)</a>
+  <a class="nav-link" data-screen="s5" onclick="showScreen('s5',this)">5 · Thanh toán thành công</a>
+</div>
+
+<!-- ─── Main ─── -->
+<div class="main">
+  <div class="page-title">TappyPOS – Đơn Hàng</div>
+  <div class="page-sub">Order management screens · Click a screen in the sidebar to view</div>
+
+  <!-- ═══════════════════════════════════
+       SCREEN 1 — Order List
+  ════════════════════════════════════ -->
+  <div id="s1" class="screen-block visible">
+    <div class="screen-block-title">Screen 1 — Danh sách đơn hàng</div>
+    <div class="phone-row">
+      <div class="phone-wrap">
+        <div class="phone-label">Order List</div>
+        <div class="phone">
+          <div class="notch"></div>
+
+          <!-- Status bar -->
+          <div class="status-bar white">
+            <span class="s-time">9:41</span>
+            <div class="s-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+          </div>
+
+          <!-- Header -->
+          <div class="ol-header">
+            <div class="ol-header-top">
+              <span class="ol-title">Đơn Hàng</span>
+              <div class="ol-icons">
+                <span class="ol-icon">🔍</span>
+                <span class="ol-icon">⊟</span>
+              </div>
+            </div>
+            <div class="chips-row">
+              <div class="chip active">Tất cả</div>
+              <div class="chip">Đang làm</div>
+              <div class="chip">Chờ xử lý</div>
+              <div class="chip">Hoàn thành</div>
+              <div class="chip">Đã hủy</div>
+            </div>
+          </div>
+
+          <!-- Month picker -->
+          <div class="month-picker">
+            <span class="mp-arrow">‹</span>
+            <span class="mp-label">05 / 2026</span>
+            <span class="mp-arrow">›</span>
+          </div>
+
+          <!-- Summary bar -->
+          <div class="summary-bar">
+            <div class="stat-chip">
+              <div class="stat-chip-val">47</div>
+              <div class="stat-chip-lbl">Tổng đơn</div>
+            </div>
+            <div class="stat-chip revenue">
+              <div class="stat-chip-val">12,4tr</div>
+              <div class="stat-chip-lbl">Doanh thu</div>
+            </div>
+            <div class="stat-chip cancel">
+              <div class="stat-chip-val">2</div>
+              <div class="stat-chip-lbl">Đã hủy</div>
+            </div>
+          </div>
+
+          <!-- Order list -->
+          <div class="scroll-body">
+            <div class="scrollable">
+              <div class="orders-list">
+
+                <!-- Order 1 – IN_PROGRESS -->
+                <div class="order-card">
+                  <div class="order-dot dot-indigo"></div>
+                  <div class="order-middle">
+                    <div class="order-num">#B2024001</div>
+                    <div class="order-customer">Nguyễn Văn A</div>
+                    <div class="order-items">Cắt tóc nam, Gội đầu</div>
+                    <div class="order-datetime">21/05/2026, 14:30</div>
+                  </div>
+                  <div class="order-right">
+                    <div class="order-total">130.000 ₫</div>
+                    <div class="badge badge-indigo">Đang làm</div>
+                    <div class="elapsed">⏱ 25 phút</div>
+                  </div>
+                </div>
+
+                <!-- Order 2 – IN_PROGRESS -->
+                <div class="order-card">
+                  <div class="order-dot dot-indigo"></div>
+                  <div class="order-middle">
+                    <div class="order-num">#B2024002</div>
+                    <div class="order-customer">Trần Thị B</div>
+                    <div class="order-items">Nhuộm tóc, Duỗi tóc</div>
+                    <div class="order-datetime">21/05/2026, 13:45</div>
+                  </div>
+                  <div class="order-right">
+                    <div class="order-total">380.000 ₫</div>
+                    <div class="badge badge-indigo">Đang làm</div>
+                    <div class="elapsed">⏱ 70 phút</div>
+                  </div>
+                </div>
+
+                <!-- Order 3 – PENDING -->
+                <div class="order-card">
+                  <div class="order-dot dot-amber"></div>
+                  <div class="order-middle">
+                    <div class="order-num">#B2024003</div>
+                    <div class="order-customer">Khách lẻ</div>
+                    <div class="order-items">Cắt tóc trẻ em</div>
+                    <div class="order-datetime">21/05/2026, 15:00</div>
+                  </div>
+                  <div class="order-right">
+                    <div class="order-total">60.000 ₫</div>
+                    <div class="badge badge-amber">Chờ xử lý</div>
+                  </div>
+                </div>
+
+                <!-- Order 4 – COMPLETED -->
+                <div class="order-card">
+                  <div class="order-dot dot-green"></div>
+                  <div class="order-middle">
+                    <div class="order-num">#B2024004</div>
+                    <div class="order-customer">Lê Văn C</div>
+                    <div class="order-items">Cắt tóc nam, Cạo râu</div>
+                    <div class="order-datetime">21/05/2026, 11:00</div>
+                  </div>
+                  <div class="order-right">
+                    <div class="order-total">160.000 ₫</div>
+                    <div class="badge badge-green">Hoàn thành</div>
+                  </div>
+                </div>
+
+                <!-- Order 5 – COMPLETED -->
+                <div class="order-card">
+                  <div class="order-dot dot-green"></div>
+                  <div class="order-middle">
+                    <div class="order-num">#B2024005</div>
+                    <div class="order-customer">Phạm Minh D</div>
+                    <div class="order-items">Gội đầu, Massage đầu</div>
+                    <div class="order-datetime">21/05/2026, 10:15</div>
+                  </div>
+                  <div class="order-right">
+                    <div class="order-total">90.000 ₫</div>
+                    <div class="badge badge-green">Hoàn thành</div>
+                  </div>
+                </div>
+
+                <!-- Order 6 – CANCELLED -->
+                <div class="order-card">
+                  <div class="order-dot dot-gray"></div>
+                  <div class="order-middle">
+                    <div class="order-num">#B2024006</div>
+                    <div class="order-customer">Khách lẻ</div>
+                    <div class="order-items">Nhuộm tóc</div>
+                    <div class="order-datetime">21/05/2026, 09:00</div>
+                  </div>
+                  <div class="order-right">
+                    <div class="order-total">250.000 ₫</div>
+                    <div class="badge badge-red">Đã hủy</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Bottom nav -->
+            <div class="bottom-nav">
+              <div class="bn-tab">
+                <span class="bn-icon">🏠</span>
+                <span class="bn-label">Trang chủ</span>
+              </div>
+              <div class="bn-tab active">
+                <span class="bn-icon">🛍️</span>
+                <span class="bn-label" style="color:#4f46e5;">Bán Hàng</span>
+                <div class="bn-active-dot"></div>
+              </div>
+              <div class="bn-tab">
+                <span class="bn-icon">📊</span>
+                <span class="bn-label">Báo Cáo</span>
+              </div>
+              <div class="bn-tab">
+                <span class="bn-icon">☰</span>
+                <span class="bn-label">Thêm</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- .phone -->
+      </div><!-- .phone-wrap -->
+    </div><!-- .phone-row -->
+  </div><!-- #s1 -->
+
+  <!-- ═══════════════════════════════════
+       SCREEN 2 — Order Detail (IN_PROGRESS)
+  ════════════════════════════════════ -->
+  <div id="s2" class="screen-block">
+    <div class="screen-block-title">Screen 2 — Chi tiết đơn hàng · Đang làm</div>
+    <div class="phone-row">
+      <div class="phone-wrap">
+        <div class="phone-label">IN_PROGRESS</div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="status-bar indigo">
+            <span class="s-time">9:41</span>
+            <div class="s-icons"><span>●●●</span><span>🔋</span></div>
+          </div>
+
+          <!-- Order header -->
+          <div class="od-header">
+            <div class="od-header-top">
+              <span class="od-back">‹</span>
+              <span class="od-num">#B2024001</span>
+              <div class="badge badge-white">Đang làm</div>
+              <span style="width:10px;"></span>
+              <span class="od-printer">🖨</span>
+            </div>
+            <div class="od-ts">📅 21/05/2026, 14:30 · ⏱ 25 phút</div>
+          </div>
+
+          <!-- Scrollable body -->
+          <div class="od-body">
+            <div class="scrollable">
+              <div class="od-scroll">
+
+                <!-- Customer -->
+                <div class="info-card">
+                  <div class="section-lbl">Khách hàng</div>
+                  <div class="cust-row-inner">
+                    <div class="avatar-circle">A</div>
+                    <div style="flex:1;">
+                      <div class="cust-name-lbl">Nguyễn Văn A</div>
+                      <div class="cust-phone-lbl">0912 345 678</div>
+                    </div>
+                    <div class="loyalty-pts">★ 240 điểm</div>
+                  </div>
+                </div>
+
+                <!-- Staff -->
+                <div class="info-card">
+                  <div class="section-lbl">Nhân viên phụ trách</div>
+                  <div class="cust-row-inner">
+                    <div class="avatar-circle small green">T</div>
+                    <div class="cust-name-lbl" style="margin-left:8px;">Tuấn</div>
+                  </div>
+                </div>
+
+                <!-- Items -->
+                <div class="info-card">
+                  <div class="section-lbl">Dịch vụ</div>
+
+                  <div class="item-row">
+                    <div class="item-info">
+                      <div class="item-name">Cắt tóc nam</div>
+                      <div class="item-staff">👤 Tuấn</div>
+                      <div class="item-qty-price">1 × 80.000 ₫</div>
+                    </div>
+                    <div class="item-subtotal">80.000 ₫</div>
+                    <div class="item-actions">
+                      <span class="item-action-icon">✏️</span>
+                      <span class="item-action-icon">🗑</span>
+                    </div>
+                  </div>
+
+                  <div class="item-row">
+                    <div class="item-info">
+                      <div class="item-name">Gội đầu</div>
+                      <div class="item-staff">👤 Minh</div>
+                      <div class="item-qty-price">1 × 40.000 ₫</div>
+                    </div>
+                    <div class="item-subtotal">40.000 ₫</div>
+                    <div class="item-actions">
+                      <span class="item-action-icon">✏️</span>
+                      <span class="item-action-icon">🗑</span>
+                    </div>
+                  </div>
+
+                  <div class="item-row">
+                    <div class="item-info">
+                      <div class="item-name">Cạo râu</div>
+                      <div class="item-staff">👤 Tuấn</div>
+                      <div class="item-qty-price">1 × 10.000 ₫</div>
+                    </div>
+                    <div class="item-subtotal">10.000 ₫</div>
+                    <div class="item-actions">
+                      <span class="item-action-icon">✏️</span>
+                      <span class="item-action-icon">🗑</span>
+                    </div>
+                  </div>
+
+                  <div class="add-service-btn">
+                    <span>+</span> Thêm dịch vụ
+                  </div>
+                </div>
+
+                <!-- Note -->
+                <div class="info-card">
+                  <div class="section-lbl">Ghi chú</div>
+                  <div class="note-field">Khách yêu cầu cắt ngắn, không gội lại</div>
+                </div>
+
+                <!-- Summary -->
+                <div class="info-card">
+                  <div class="section-lbl">Tổng cộng</div>
+                  <div class="total-row">
+                    <span class="total-lbl">Tạm tính</span>
+                    <span class="total-val">130.000 ₫</span>
+                  </div>
+                  <div class="total-row">
+                    <span class="total-lbl">Giảm giá</span>
+                    <span class="total-val discount-val">— 0 ₫</span>
+                  </div>
+                  <div class="total-row">
+                    <span class="total-lbl">Tip</span>
+                    <span class="total-val">0 ₫</span>
+                  </div>
+                  <div class="total-row grand">
+                    <span class="total-lbl">Tổng</span>
+                    <span class="total-val">130.000 ₫</span>
+                  </div>
+                </div>
+
+                <div style="height:8px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action footer -->
+          <div class="action-footer">
+            <div class="complete-btn">
+              ✓ Hoàn tất &amp; Thanh toán
+            </div>
+          </div>
+
+        </div><!-- .phone -->
+      </div>
+    </div>
+  </div><!-- #s2 -->
+
+  <!-- ═══════════════════════════════════
+       SCREEN 3 — Order Detail (COMPLETED)
+  ════════════════════════════════════ -->
+  <div id="s3" class="screen-block">
+    <div class="screen-block-title">Screen 3 — Chi tiết đơn hàng · Hoàn thành</div>
+    <div class="phone-row">
+      <div class="phone-wrap">
+        <div class="phone-label">COMPLETED</div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="status-bar" style="background:#15803d;">
+            <span class="s-time" style="color:white;">9:41</span>
+            <div class="s-icons" style="color:rgba(255,255,255,0.8);"><span>●●●</span><span>🔋</span></div>
+          </div>
+
+          <div class="od-header" style="background:#15803d;">
+            <div class="od-header-top">
+              <span class="od-back">‹</span>
+              <span class="od-num">#B2024004</span>
+              <div class="badge" style="background:rgba(255,255,255,0.25);color:white;border:1px solid rgba(255,255,255,0.4);">Hoàn thành</div>
+              <span style="width:10px;"></span>
+              <span class="od-printer">🖨</span>
+            </div>
+            <div class="od-ts" style="color:rgba(255,255,255,0.7);">📅 21/05/2026, 11:00 · Xong lúc 12:05</div>
+          </div>
+
+          <div class="od-body">
+            <div class="scrollable">
+              <div class="od-scroll">
+
+                <!-- Customer -->
+                <div class="info-card">
+                  <div class="section-lbl">Khách hàng</div>
+                  <div class="cust-row-inner">
+                    <div class="avatar-circle" style="background:#dcfce7;color:#15803d;">C</div>
+                    <div style="flex:1;">
+                      <div class="cust-name-lbl">Lê Văn C</div>
+                      <div class="cust-phone-lbl">0933 456 789</div>
+                    </div>
+                    <div class="loyalty-pts">★ 180 điểm</div>
+                  </div>
+                </div>
+
+                <!-- Staff -->
+                <div class="info-card">
+                  <div class="section-lbl">Nhân viên phụ trách</div>
+                  <div class="cust-row-inner">
+                    <div class="avatar-circle small green">H</div>
+                    <div class="cust-name-lbl" style="margin-left:8px;">Hùng</div>
+                  </div>
+                </div>
+
+                <!-- Items -->
+                <div class="info-card">
+                  <div class="section-lbl">Dịch vụ</div>
+                  <div class="item-row">
+                    <div class="item-info">
+                      <div class="item-name">Cắt tóc nam</div>
+                      <div class="item-staff">👤 Hùng</div>
+                      <div class="item-qty-price">1 × 80.000 ₫</div>
+                    </div>
+                    <div class="item-subtotal">80.000 ₫</div>
+                  </div>
+                  <div class="item-row">
+                    <div class="item-info">
+                      <div class="item-name">Cạo râu</div>
+                      <div class="item-staff">👤 Hùng</div>
+                      <div class="item-qty-price">1 × 80.000 ₫</div>
+                    </div>
+                    <div class="item-subtotal">80.000 ₫</div>
+                  </div>
+                </div>
+
+                <!-- Payment info -->
+                <div class="info-card">
+                  <div class="section-lbl">Thanh toán</div>
+                  <div class="payment-info-row">
+                    <span class="payment-method-icon">💵</span>
+                    <span class="payment-method-text">Tiền mặt</span>
+                    <span class="payment-amount">160.000 ₫</span>
+                  </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="info-card">
+                  <div class="section-lbl">Tổng cộng</div>
+                  <div class="total-row">
+                    <span class="total-lbl">Tạm tính</span>
+                    <span class="total-val">160.000 ₫</span>
+                  </div>
+                  <div class="total-row">
+                    <span class="total-lbl">Giảm giá</span>
+                    <span class="total-val discount-val">— 0 ₫</span>
+                  </div>
+                  <div class="total-row">
+                    <span class="total-lbl">Khách đưa</span>
+                    <span class="total-val">200.000 ₫</span>
+                  </div>
+                  <div class="total-row grand">
+                    <span class="total-lbl">Tổng</span>
+                    <span class="total-val">160.000 ₫</span>
+                  </div>
+                  <div class="total-row" style="padding-top:2px;">
+                    <span class="total-lbl">Tiền thối</span>
+                    <span class="total-val" style="color:#4f46e5;font-weight:700;">40.000 ₫</span>
+                  </div>
+                </div>
+
+                <div style="height:8px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action footer (completed — only reprint) -->
+          <div class="action-footer">
+            <div class="receipt-btn">
+              🖨 In lại biên nhận
+            </div>
+          </div>
+
+        </div><!-- .phone -->
+      </div>
+    </div>
+  </div><!-- #s3 -->
+
+  <!-- ═══════════════════════════════════
+       SCREEN 4 — Receipt Modal
+  ════════════════════════════════════ -->
+  <div id="s4" class="screen-block">
+    <div class="screen-block-title">Screen 4 — Biên nhận (Receipt Modal)</div>
+    <div class="phone-row">
+      <div class="phone-wrap">
+        <div class="phone-label">Receipt · QR visible</div>
+        <div class="phone" style="background:#4f46e5;">
+          <div class="notch" style="background:#3730a3;"></div>
+
+          <div class="receipt-modal">
+            <!-- Indigo top -->
+            <div class="receipt-top">
+              <div class="receipt-top-bar" style="padding-top:38px;">
+                <div class="receipt-close-btn">×</div>
+                <div class="receipt-top-actions">
+                  <div class="receipt-top-icon active">⬡</div>
+                  <div class="receipt-top-icon">🖨</div>
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <div class="receipt-total-lbl">TỔNG THANH TOÁN</div>
+                <div class="receipt-total-amount">130.000 ₫</div>
+                <div class="receipt-customer">Khách: Nguyễn Văn A</div>
+              </div>
+            </div>
+
+            <!-- White card -->
+            <div class="receipt-card-wrap">
+              <div class="receipt-card-scroll">
+                <div class="receipt-meta-row">
+                  <span class="receipt-meta-lbl">Mã đơn</span>
+                  <span class="receipt-meta-val">#B2024001</span>
+                </div>
+                <div class="receipt-meta-row">
+                  <span class="receipt-meta-lbl">Thời gian</span>
+                  <span class="receipt-meta-val">21/05/2026 · 14:30</span>
+                </div>
+
+                <hr class="dashed-divider">
+
+                <div class="receipt-item-row">
+                  <div class="receipt-item-info">
+                    <div class="receipt-item-name">Cắt tóc nam</div>
+                    <div class="receipt-item-staff">👤 Tuấn</div>
+                  </div>
+                  <div class="receipt-item-price">80.000 ₫</div>
+                </div>
+                <div class="receipt-item-row">
+                  <div class="receipt-item-info">
+                    <div class="receipt-item-name">Gội đầu</div>
+                    <div class="receipt-item-staff">👤 Minh</div>
+                  </div>
+                  <div class="receipt-item-price">40.000 ₫</div>
+                </div>
+                <div class="receipt-item-row">
+                  <div class="receipt-item-info">
+                    <div class="receipt-item-name">Cạo râu</div>
+                    <div class="receipt-item-staff">👤 Tuấn</div>
+                  </div>
+                  <div class="receipt-item-price">10.000 ₫</div>
+                </div>
+
+                <hr class="dashed-divider">
+
+                <div class="receipt-total-row">
+                  <span class="receipt-total-row-lbl">Tổng cộng</span>
+                  <span class="receipt-total-row-val">130.000 ₫</span>
+                </div>
+
+                <div class="payment-badge-row">
+                  <span class="payment-badge-icon">💵</span>
+                  <span class="payment-badge-text">Tiền mặt</span>
+                </div>
+
+                <!-- VietQR section -->
+                <div class="qr-section">
+                  <div class="qr-box">▣▣▣<br>QR</div>
+                  <div class="qr-amount">130.000 ₫</div>
+                  <div class="qr-bank">Vietcombank</div>
+                  <div class="qr-acct-row">
+                    <span class="qr-acct">1234567890</span>
+                    <span class="qr-copy">⎘</span>
+                  </div>
+                  <div class="qr-name">NGUYEN VAN A</div>
+                  <div class="qr-hint">Quét mã để thanh toán</div>
+                </div>
+
+                <div class="receipt-footer">🙏 Cảm ơn quý khách!</div>
+              </div>
+            </div>
+          </div><!-- .receipt-modal -->
+        </div><!-- .phone -->
+      </div>
+    </div>
+  </div><!-- #s4 -->
+
+  <!-- ═══════════════════════════════════
+       SCREEN 5 — Order Success
+  ════════════════════════════════════ -->
+  <div id="s5" class="screen-block">
+    <div class="screen-block-title">Screen 5 — Thanh toán thành công</div>
+    <div class="phone-row">
+      <div class="phone-wrap">
+        <div class="phone-label">Order Success</div>
+        <div class="phone" style="background:#4f46e5;">
+          <div class="notch" style="background:#3730a3;"></div>
+          <div class="status-bar success" style="background:#4f46e5;">
+            <span class="s-time" style="color:white;">9:41</span>
+            <div class="s-icons" style="color:rgba(255,255,255,0.8);"><span>●●●</span><span>🔋</span></div>
+          </div>
+
+          <div class="success-screen">
+            <div class="success-top">
+              <div class="success-checkmark">✓</div>
+              <div class="success-h1">Thanh toán<br>thành công!</div>
+              <div class="success-ref">#B2024001 · 130.000 ₫</div>
+              <div class="success-progress-wrap">
+                <div class="success-progress-lbl">Tự đóng sau 8 giây</div>
+                <div class="success-progress-bar-bg">
+                  <div class="success-progress-bar-fill"></div>
+                </div>
+              </div>
+            </div>
+            <div class="success-bottom">
+              <div class="success-btn-row">
+                <div class="success-btn-outline">🖨 In biên nhận</div>
+                <div class="success-btn-primary">🛍️ Đơn hàng mới</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- .phone -->
+      </div>
+    </div>
+  </div><!-- #s5 -->
+
+</div><!-- .main -->
+
+<script>
+function showScreen(id, link) {
+  // Hide all
+  document.querySelectorAll('.screen-block').forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+  // Show target
+  document.getElementById(id).classList.add('visible');
+  link.classList.add('active');
+}
+</script>
+</body>
+</html>

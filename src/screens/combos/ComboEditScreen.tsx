@@ -22,6 +22,7 @@ import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { comboApi, productExtApi, type ComboItem, type ProductData } from '../../services/api';
 import { useTypography } from '../../hooks/useTypography';
 import { formatVnd } from '../../utils/format';
+import { MoneyInput } from '../../components/MoneyInput';
 import type { ComboScreenProps } from '../../types/navigation';
 
 type FormItem = { productId: string; productName: string; quantity: number; price: number };
@@ -248,13 +249,10 @@ export function ComboEditScreen({ navigation, route }: ComboScreenProps<'ComboEd
           <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
             <SectionHeader icon="tag-outline" title={t('combos.sectionPrice')} />
             <FormField label={`${t('combos.priceLabel')} *`}>
-              <TextInput
-                value={price}
-                onChangeText={(v) => { setPrice(v.replace(/\D/g, '')); setError(''); }}
+              <MoneyInput
+                rawValue={price}
+                onChangeRaw={(digits) => { setPrice(digits); setError(''); }}
                 placeholder={t('combos.pricePlaceholder')}
-                placeholderTextColor="#9ca3af"
-                keyboardType="numeric"
-                className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-white dark:bg-gray-700`}
               />
             </FormField>
             <View className="flex-row justify-between">

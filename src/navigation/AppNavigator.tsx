@@ -45,7 +45,6 @@ import { ActivityLogScreen } from '../screens/settings/ActivityLogScreen';
 import { DeleteAccountScreen } from '../screens/settings/DeleteAccountScreen';
 import { NotificationPreferencesScreen } from '../screens/settings/NotificationPreferencesScreen';
 import { FeedbackScreen } from '../screens/settings/FeedbackScreen';
-import { FeedbackHistoryScreen } from '../screens/settings/FeedbackHistoryScreen';
 import { SubscriptionScreen } from '../screens/settings/SubscriptionScreen';
 import { BankAccountsScreen } from '../screens/settings/BankAccountsScreen';
 import { LoyaltyConfigScreen } from '../screens/settings/LoyaltyConfigScreen';
@@ -187,7 +186,6 @@ function SettingsNavigator() {
       <SettingsStack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <SettingsStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
       <SettingsStack.Screen name="Feedback" component={FeedbackScreen} />
-      <SettingsStack.Screen name="FeedbackHistory" component={FeedbackHistoryScreen} />
       <SettingsStack.Screen name="Subscription" component={SubscriptionScreen} />
       <SettingsStack.Screen name="BankAccounts" component={BankAccountsScreen} />
       <SettingsStack.Screen name="LoyaltyConfig" component={LoyaltyConfigScreen} />
@@ -308,6 +306,12 @@ export function AppNavigator() {
         <Tab.Screen
           name="Sell"
           component={SellingNavigator}
+          listeners={({ navigation }) => ({
+            tabPress: (e) => {
+              e.preventDefault();
+              navigation.navigate('Sell', { screen: 'POSMain' });
+            },
+          })}
           options={{
             title: t('selling.title'),
             tabBarButton: (props) => <Pressable {...props} testID="tab-sell" />,

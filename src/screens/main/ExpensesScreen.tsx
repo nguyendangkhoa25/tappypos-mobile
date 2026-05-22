@@ -23,7 +23,7 @@ import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { useTypography } from '../../hooks/useTypography';
 import { useNetworkStore } from '../../store/networkStore';
 import { useOfflineQueueStore } from '../../store/offlineQueueStore';
-import { expenseApi, type ExpenseData } from '../../services/api';
+import { expenseApi, type ExpenseData, type DefaultExpense } from '../../services/api';
 import { formatVnd, formatDate } from '../../utils/format';
 import { ClearableInput } from '../../components/ClearableInput';
 import { MoneyInput } from '../../components/MoneyInput';
@@ -158,6 +158,8 @@ export function ExpensesScreen({ navigation }: Props) {
   const canLoadMore = useRef(false);
 
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [cloneSheetVisible, setCloneSheetVisible] = useState(false);
+  const [selectedDefaultIds, setSelectedDefaultIds] = useState<Set<string>>(new Set());
   const [catExpanded, setCatExpanded] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseData | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -296,11 +298,19 @@ export function ExpensesScreen({ navigation }: Props) {
     onError: showErrorAlert,
   });
 
+  const { data: defaultExpenses = [] } = useQuery<DefaultExpense[]>({
+    queryKey: ['defaultExpenses'],
+    queryFn: () => expenseApi.getDefaults().then((r) => r.data.data),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const cloneMutation = useMutation({
-    mutationFn: () => expenseApi.cloneDefaults(period.from.slice(0, 7)),
+    mutationFn: (ids: string[]) => expenseApi.cloneDefaults(period.from.slice(0, 7), ids),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] });
       qc.invalidateQueries({ queryKey: ['expensesSummary'] });
       setPage(0);
+      setCloneSheetVisible(false);
       showToast(t('expenses.cloneSuccess'));
     },
     onError: showErrorAlert,
@@ -340,11 +350,9 @@ export function ExpensesScreen({ navigation }: Props) {
   }, [showAlert, t, deleteMutation]);
 
   const handleClone = useCallback(() => {
-    showAlert(t('expenses.cloneDefaultsTitle'), t('expenses.cloneDefaultsMsg'), [
-      { label: t('common.cancel'), style: 'cancel' },
-      { label: t('expenses.cloneDefaultsBtn'), onPress: () => cloneMutation.mutate() },
-    ]);
-  }, [showAlert, t, cloneMutation]);
+    setSelectedDefaultIds(new Set(defaultExpenses.map((d) => d.id)));
+    setCloneSheetVisible(true);
+  }, [defaultExpenses]);
 
   const categoryLabel = useCallback((cat: string) =>
     t(`onboarding.step4.categories.${cat}`, { defaultValue: cat }), [t]);
@@ -493,7 +501,7 @@ export function ExpensesScreen({ navigation }: Props) {
           keyExtractor={(e) => e.id}
           contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: insets.bottom + 80 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4f46e5" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />
           }
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.3}
@@ -518,6 +526,86 @@ export function ExpensesScreen({ navigation }: Props) {
       >
         <MaterialCommunityIcons name="plus" size={28} color="#fff" />
       </TouchableOpacity>
+
+      {/* Clone Selection Sheet */}
+      <Modal visible={cloneSheetVisible} animationType="slide" transparent onRequestClose={() => setCloneSheetVisible(false)}>
+        <View className="flex-1 justify-end bg-black/40">
+          <View className="bg-white dark:bg-gray-800 rounded-t-3xl px-6 pt-6" style={{ maxHeight: '80%', paddingBottom: insets.bottom + 16 }}>
+            <View className="flex-row items-center justify-between mb-1">
+              <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('expenses.cloneSelectTitle')}</Text>
+              <TouchableOpacity onPress={() => setCloneSheetVisible(false)}>
+                <MaterialCommunityIcons name="close" size={22} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+            <Text className={`${typo.caption} text-gray-400 mb-4`}>{t('expenses.cloneSelectHint')}</Text>
+
+            {/* Select all / deselect all */}
+            <TouchableOpacity
+              onPress={() => setSelectedDefaultIds(
+                selectedDefaultIds.size === defaultExpenses.length
+                  ? new Set()
+                  : new Set(defaultExpenses.map((d) => d.id))
+              )}
+              className="flex-row items-center gap-2 mb-3"
+            >
+              <MaterialCommunityIcons
+                name={selectedDefaultIds.size === defaultExpenses.length ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                size={20}
+                color="#4f46e5"
+              />
+              <Text className={`${typo.label} text-indigo-600`}>
+                {selectedDefaultIds.size === defaultExpenses.length ? t('expenses.deselectAll') : t('expenses.selectAll')}
+              </Text>
+            </TouchableOpacity>
+
+            <ScrollView showsVerticalScrollIndicator={false} className="mb-4">
+              {defaultExpenses.map((def) => {
+                const selected = selectedDefaultIds.has(def.id);
+                return (
+                  <TouchableOpacity
+                    key={def.id}
+                    onPress={() => setSelectedDefaultIds((prev) => {
+                      const next = new Set(prev);
+                      selected ? next.delete(def.id) : next.add(def.id);
+                      return next;
+                    })}
+                    className="flex-row items-center gap-3 py-3 border-b border-gray-100 dark:border-gray-700"
+                  >
+                    <MaterialCommunityIcons
+                      name={selected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={22}
+                      color={selected ? '#4f46e5' : '#9ca3af'}
+                    />
+                    <View className="flex-1">
+                      <Text className={`${typo.label} text-gray-900 dark:text-white`} numberOfLines={1}>
+                        {def.description}
+                      </Text>
+                      <Text className={`${typo.caption} text-gray-400`}>
+                        {def.categoryDisplayName} · {formatVnd(def.amount)}
+                        {def.paymentDay ? ` · ngày ${def.paymentDay}` : ''}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            <TouchableOpacity
+              onPress={() => cloneMutation.mutate(Array.from(selectedDefaultIds))}
+              disabled={cloneMutation.isPending || selectedDefaultIds.size === 0}
+              className={`rounded-2xl py-4 items-center ${cloneMutation.isPending || selectedDefaultIds.size === 0 ? 'bg-gray-200 dark:bg-gray-700' : 'bg-indigo-600'}`}
+            >
+              {cloneMutation.isPending ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className={`${typo.labelBold} ${selectedDefaultIds.size === 0 ? 'text-gray-400' : 'text-white'}`}>
+                  {t('expenses.cloneDefaultsBtn')} ({selectedDefaultIds.size})
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Add/Edit Sheet */}
       <Modal visible={sheetVisible} animationType="slide" transparent onRequestClose={() => setSheetVisible(false)}>

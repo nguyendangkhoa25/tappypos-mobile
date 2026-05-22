@@ -55,13 +55,8 @@ export async function scheduleOrderReminder(order: OrderReminderData): Promise<v
   const granted = await requestNotificationPermission();
   if (!granted) return;
 
-  const lang = i18n.language;
-  const title = lang === 'vi'
-    ? `⏰ Đơn hàng #${order.orderNumber} chờ xử lý`
-    : `⏰ Order #${order.orderNumber} pending`;
-  const body = lang === 'vi'
-    ? `Đơn hàng đã chờ ${order.dueInMinutes} phút. Vui lòng xử lý sớm.`
-    : `Order has been pending for ${order.dueInMinutes} minutes.`;
+  const title = i18n.t('notifications.orderReminderTitle', { orderNumber: order.orderNumber });
+  const body = i18n.t('notifications.orderReminderBody', { minutes: order.dueInMinutes });
 
   await Notifications.scheduleNotificationAsync({
     content: {

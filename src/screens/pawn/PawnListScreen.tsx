@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
-  ActivityIndicator, RefreshControl, Alert,
+  ActivityIndicator, RefreshControl,
 } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -11,6 +11,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { pawnApi, type PawnData, type PawnStatus, type PawnKPIs } from '../../services/api';
+import { useAlertStore } from '../../store/alertStore';
 import { useTypography } from '../../hooks/useTypography';
 import { formatVnd, formatDate } from '../../utils/format';
 import { ErrorState } from '../../components/ErrorState';
@@ -252,14 +253,13 @@ const STATUS_VI: Record<string, string> = {
 
 function buildListHtml(contracts: PawnData[], filterLabel: string): string {
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const fmtVnd = (n: number) => n.toLocaleString('vi-VN') + ' ₫';
   const rows = contracts.map((p, i) => `
     <tr style="background:${i % 2 === 0 ? '#fff' : '#f9f9f9'}">
       <td>${i + 1}</td>
       <td>#${p.pawnId}</td>
       <td>${p.itemName}</td>
       <td>${p.customerName || 'Vãng lai'}${p.phone ? '<br><small>' + p.phone + '</small>' : ''}</td>
-      <td style="text-align:right">${fmtVnd(p.pawnAmount)}</td>
+      <td style="text-align:right">${formatVnd(p.pawnAmount)}</td>
       <td style="text-align:center">${p.interestRate}%</td>
       <td style="text-align:center">${fmtDate(p.pawnDate)}</td>
       <td style="text-align:center">${fmtDate(p.pawnDueDate)}</td>
@@ -287,7 +287,7 @@ function buildListHtml(contracts: PawnData[], filterLabel: string): string {
   <tbody>${rows}</tbody>
   <tfoot><tr class="total-row">
     <td colspan="4">Tổng cộng (${contracts.length} HĐ)</td>
-    <td style="text-align:right">${fmtVnd(total)}</td>
+    <td style="text-align:right">${formatVnd(total)}</td>
     <td colspan="4"></td>
   </tr></tfoot>
 </table>
@@ -299,6 +299,7 @@ export function PawnListScreen() {
   const { t } = useTranslation();
   const typo = useTypography();
   const navigation = useNavigation<Nav>();
+  const { show: showAlert } = useAlertStore();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('PAWNED');
   const [search, setSearch] = useState('');
@@ -345,7 +346,7 @@ export function PawnListScreen() {
       const { uri } = await Print.printToFileAsync({ html });
       await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: '.pdf' });
     } catch (e) {
-      Alert.alert('Lỗi', 'Không thể xuất danh sách. Vui lòng thử lại.');
+      showAlert(t('common.error'), t('pawn.exportError'));
     } finally {
       setExporting(false);
     }
@@ -489,7 +490,7 @@ export function PawnListScreen() {
           contentContainerStyle={{ paddingTop: 8, paddingBottom: insets.bottom + 80 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4f46e5" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />
           }
         />
       )}

@@ -238,7 +238,7 @@ export function ProductListScreen({ navigation }: ProductsScreenProps<'ProductLi
           numColumns={2}
           contentContainerStyle={{ padding: 6, paddingBottom: insets.bottom + 80 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4f46e5" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />
           }
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.3}

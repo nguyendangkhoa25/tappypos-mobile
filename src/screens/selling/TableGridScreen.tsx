@@ -302,7 +302,7 @@ export function TableGridScreen() {
           showsVerticalScrollIndicator={false}
           columnWrapperStyle={{ alignItems: 'stretch' }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4f46e5" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />
           }
         />
       )}

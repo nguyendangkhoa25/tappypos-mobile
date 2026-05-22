@@ -1,4 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
 import { ShopTypeScreen } from '../screens/onboarding/ShopTypeScreen';
 import { Step1Screen } from '../screens/onboarding/Step1Screen';
 import { Step2Screen } from '../screens/onboarding/Step2Screen';
@@ -14,6 +15,7 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 export function OnboardingNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: true }}>
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="ShopType" component={ShopTypeScreen} />
       <Stack.Screen name="Step1" component={Step1Screen} />
       <Stack.Screen name="Step2" component={Step2Screen} />

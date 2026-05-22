@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TappyPOS – Settings Mockups</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #4f46e5;
+    --primary-light: #eef2ff;
+    --primary-dark: #3730a3;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --radius-card: 16px;
+    --radius-sm: 8px;
+    --font: system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: #e8eaf0;
+    min-height: 100vh;
+    display: flex;
+    gap: 0;
+  }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: var(--gray-900);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo .logo-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.3px;
+  }
+  .sidebar-logo .logo-sub {
+    font-size: 11px;
+    color: var(--gray-400);
+    margin-top: 2px;
+  }
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    padding: 20px 20px 6px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 0;
+    transition: background 0.15s;
+    color: var(--gray-400);
+    font-size: 13.5px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .sidebar-item:hover { background: rgba(255,255,255,0.05); color: var(--white); }
+  .sidebar-item.active { background: var(--primary); color: var(--white); }
+  .sidebar-item .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+  .sidebar-item.active .dot { opacity: 1; background: var(--white); }
+
+  /* ─── Main area ─── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px;
+    gap: 0;
+    overflow-y: auto;
+  }
+  .screen-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  /* ─── Phone frame ─── */
+  .phone {
+    width: 390px;
+    min-height: 844px;
+    background: var(--gray-50);
+    border-radius: 48px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 50px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    flex-shrink: 0;
+  }
+  .status-time { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .status-icons span { font-size: 12px; color: var(--gray-900); }
+
+  /* Screen content */
+  .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .screen.active { display: flex; }
+
+  /* Header */
+  .screen-header {
+    background: var(--white);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--gray-200);
+    flex-shrink: 0;
+  }
+  .screen-header .back-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    color: var(--primary); font-size: 20px;
+  }
+  .screen-header .title {
+    font-size: 16px; font-weight: 700; color: var(--gray-900);
+  }
+  .screen-header .action-btn {
+    font-size: 13px; font-weight: 600; color: var(--primary);
+    background: none; border: none; cursor: pointer; padding: 6px 10px;
+    border-radius: 8px;
+  }
+  .screen-header .save-btn {
+    background: var(--primary); color: var(--white);
+    border: none; border-radius: 10px;
+    padding: 7px 14px; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
+  .header-placeholder { width: 32px; }
+
+  /* Scrollable body */
+  .screen-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 80px;
+  }
+  .screen-body::-webkit-scrollbar { display: none; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    height: 72px;
+    background: var(--white);
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+    cursor: pointer; border: none; background: none;
+    color: var(--gray-400); font-size: 10px; font-weight: 500;
+    transition: color 0.15s;
+  }
+  .nav-item.active { color: var(--primary); }
+  .nav-item .nav-icon { font-size: 20px; line-height: 1; }
+
+  /* ─── Components ─── */
+
+  /* Profile card */
+  .profile-card {
+    margin: 16px;
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .avatar-circle {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: var(--white);
+    flex-shrink: 0;
+  }
+  .avatar-circle.lg {
+    width: 72px; height: 72px; font-size: 24px;
+  }
+  .profile-info .name { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+  .profile-info .role { font-size: 13px; color: var(--primary); font-weight: 500; margin-top: 2px; }
+  .profile-info .shop { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
+
+  /* Section group */
+  .settings-section { margin: 0 16px 6px; }
+  .section-header {
+    font-size: 11px; font-weight: 600;
+    color: var(--gray-500); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 14px 4px 8px;
+  }
+  .settings-card {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .settings-row {
+    display: flex; align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--gray-100);
+    cursor: pointer; transition: background 0.12s;
+    gap: 12px;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row:active { background: var(--gray-50); }
+  .row-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+  .row-label { flex: 1; font-size: 14px; color: var(--gray-900); font-weight: 500; }
+  .row-value { font-size: 13px; color: var(--gray-400); }
+  .row-chevron { font-size: 14px; color: var(--gray-300); }
+
+  .logout-section { margin: 6px 16px 16px; }
+  .logout-btn {
+    width: 100%; background: var(--white); border: none; cursor: pointer;
+    border-radius: var(--radius-card);
+    padding: 16px;
+    font-size: 15px; font-weight: 600; color: var(--red);
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  /* Badge */
+  .badge {
+    font-size: 10px; font-weight: 600;
+    padding: 2px 7px; border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .badge-green { background: #dcfce7; color: #16a34a; }
+  .badge-amber { background: #fef3c7; color: #d97706; }
+  .badge-red { background: #fee2e2; color: #dc2626; }
+  .badge-primary { background: var(--primary-light); color: var(--primary); }
+  .badge-trial { background: #fef3c7; color: #92400e; font-size: 10px; }
+
+  .upgrade-btn {
+    background: var(--primary); color: var(--white);
+    border: none; border-radius: 8px;
+    padding: 5px 10px; font-size: 11px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  /* Toggle */
+  .toggle-switch {
+    width: 44px; height: 26px; flex-shrink: 0;
+    border-radius: 13px; position: relative; cursor: pointer;
+    border: none; padding: 0;
+    transition: background 0.2s;
+  }
+  .toggle-switch.on { background: var(--green); }
+  .toggle-switch.off { background: var(--gray-300); }
+  .toggle-switch::after {
+    content: '';
+    position: absolute; top: 3px;
+    width: 20px; height: 20px;
+    background: var(--white); border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: left 0.2s;
+  }
+  .toggle-switch.on::after { left: calc(100% - 23px); }
+  .toggle-switch.off::after { left: 3px; }
+
+  /* Form */
+  .form-group { padding: 16px; }
+  .form-group + .form-group { padding-top: 0; }
+  .form-card { background: var(--white); border-radius: var(--radius-card); padding: 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin: 0 16px 12px; }
+  .form-field {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .form-field:last-child { border-bottom: none; }
+  .form-label { font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .form-input {
+    width: 100%; border: none; outline: none;
+    font-size: 14px; color: var(--gray-900);
+    background: transparent; font-family: var(--font);
+    padding: 0; resize: none;
+  }
+  .form-textarea { min-height: 70px; }
+
+  .submit-btn {
+    display: block; width: calc(100% - 32px);
+    margin: 0 16px 16px; padding: 15px;
+    background: var(--primary); color: var(--white);
+    border: none; border-radius: var(--radius-card);
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+  }
+
+  /* Hint bar */
+  .hint-bar {
+    margin: 12px 16px; padding: 10px 14px;
+    background: var(--primary-light); border-radius: 10px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--primary);
+  }
+
+  /* Bank card */
+  .bank-card {
+    background: var(--white); border-radius: var(--radius-card);
+    margin: 0 16px 10px; padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .bank-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .bank-name { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+  .bank-card-actions { display: flex; gap: 8px; }
+  .icon-btn { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--gray-400); padding: 4px; }
+  .bank-number { font-size: 15px; font-weight: 600; color: var(--gray-700); letter-spacing: 0.5px; }
+  .bank-holder { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+  .add-dashed-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: calc(100% - 32px); margin: 0 16px 16px;
+    padding: 14px; background: none;
+    border: 2px dashed var(--gray-300); border-radius: var(--radius-card);
+    cursor: pointer; color: var(--primary); font-size: 14px; font-weight: 600;
+  }
+  .add-dashed-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+
+  /* Font size selector */
+  .font-size-selector {
+    display: flex; margin: 0 16px 12px; gap: 0;
+    background: var(--gray-100); border-radius: 10px; padding: 3px;
+  }
+  .font-size-option {
+    flex: 1; padding: 8px; border: none; background: none;
+    border-radius: 8px; cursor: pointer; font-size: 13px;
+    color: var(--gray-500); font-weight: 500; transition: all 0.15s;
+    font-family: var(--font);
+  }
+  .font-size-option.active { background: var(--white); color: var(--gray-900); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  /* Tier table */
+  .tier-table { margin: 0 16px 12px; border-radius: var(--radius-card); overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .tier-row {
+    display: flex; align-items: center; padding: 12px 16px;
+    background: var(--white); border-bottom: 1px solid var(--gray-100);
+    gap: 10px;
+  }
+  .tier-row:last-child { border-bottom: none; }
+  .tier-row.highlighted { background: #fffbeb; }
+  .tier-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .tier-name { font-size: 13px; font-weight: 600; color: var(--gray-900); min-width: 70px; }
+  .tier-range { font-size: 12px; color: var(--gray-500); flex: 1; }
+  .tier-star { font-size: 14px; }
+
+  /* Session info */
+  .session-info {
+    font-size: 11px; color: var(--gray-400); margin-top: 2px;
+  }
+
+  /* Security row with detail */
+  .security-row-detail {
+    display: flex; flex-direction: column;
+  }
+  .security-label { font-size: 14px; color: var(--gray-900); font-weight: 500; }
+  .security-sub { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
+
+  /* Avatar section */
+  .avatar-section {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 16px 16px; background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .change-photo-btn {
+    margin-top: 8px; background: none; border: none;
+    color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+
+  /* Gender select */
+  .select-input {
+    width: 100%; border: none; outline: none;
+    font-size: 14px; color: var(--gray-900);
+    background: transparent; font-family: var(--font);
+    appearance: none;
+  }
+
+  /* Points rate card */
+  .rate-card {
+    margin: 0 16px 12px; background: var(--primary-light);
+    border-radius: var(--radius-card); padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .rate-label { font-size: 12px; color: var(--primary); font-weight: 500; }
+  .rate-value { font-size: 16px; font-weight: 700; color: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- ═══ Sidebar ═══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-name">TappyPOS</div>
+    <div class="logo-sub">Settings Screens</div>
+  </div>
+  <div class="sidebar-section-label">Màn hình</div>
+  <button class="sidebar-item active" onclick="showScreen('s1', this)"><span class="dot"></span> Cài đặt chính</button>
+  <button class="sidebar-item" onclick="showScreen('s2', this)"><span class="dot"></span> Thông tin cửa hàng</button>
+  <button class="sidebar-item" onclick="showScreen('s3', this)"><span class="dot"></span> Tài khoản ngân hàng</button>
+  <button class="sidebar-item" onclick="showScreen('s4', this)"><span class="dot"></span> Mẫu in biên nhận</button>
+  <button class="sidebar-item" onclick="showScreen('s5', this)"><span class="dot"></span> Tùy chọn thông báo</button>
+  <button class="sidebar-item" onclick="showScreen('s6', this)"><span class="dot"></span> Thông tin cá nhân</button>
+  <button class="sidebar-item" onclick="showScreen('s7', this)"><span class="dot"></span> Bảo mật</button>
+  <button class="sidebar-item" onclick="showScreen('s8', this)"><span class="dot"></span> Chương trình tích điểm</button>
+</aside>
+
+<!-- ═══ Main ═══ -->
+<main class="main">
+
+<!-- ── Screen 1: Settings Main ── -->
+<div class="screen-title" id="title-s1">Screen 1 · Cài đặt</div>
+<div class="phone" id="phone-s1">
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span class="status-time">09:41</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+  <!-- Screens wrapper -->
+  <div class="screen active" id="s1">
+    <!-- Header -->
+    <div class="screen-header">
+      <div class="header-placeholder"></div>
+      <span class="title">Cài đặt</span>
+      <div class="header-placeholder"></div>
+    </div>
+    <div class="screen-body">
+      <!-- Profile -->
+      <div class="profile-card">
+        <div class="avatar-circle">TU</div>
+        <div class="profile-info">
+          <div class="name">Tuấn</div>
+          <div class="role">Quản lý</div>
+          <div class="shop">Barber Shop Nguyễn</div>
+        </div>
+      </div>
+
+      <!-- Section: Cửa hàng -->
+      <div class="settings-section">
+        <div class="section-header">Cửa hàng</div>
+        <div class="settings-card">
+          <div class="settings-row" onclick="showScreen('s2', null)">
+            <span class="row-icon">🏪</span>
+            <span class="row-label">Thông tin cửa hàng</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row" onclick="showScreen('s4', null)">
+            <span class="row-icon">🖨️</span>
+            <span class="row-label">Mẫu in biên nhận</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row" onclick="showScreen('s3', null)">
+            <span class="row-icon">🏦</span>
+            <span class="row-label">Tài khoản ngân hàng</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row" onclick="showScreen('s8', null)">
+            <span class="row-icon">💎</span>
+            <span class="row-label">Chương trình tích điểm</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">💰</span>
+            <span class="row-label">Chi phí mặc định</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">📱</span>
+            <span class="row-label">Cấu hình POS</span>
+            <span class="row-chevron">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Tài khoản -->
+      <div class="settings-section">
+        <div class="section-header">Tài khoản</div>
+        <div class="settings-card">
+          <div class="settings-row" onclick="showScreen('s6', null)">
+            <span class="row-icon">👤</span>
+            <span class="row-label">Thông tin cá nhân</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row" onclick="showScreen('s7', null)">
+            <span class="row-icon">🔒</span>
+            <span class="row-label">Bảo mật</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row" onclick="showScreen('s5', null)">
+            <span class="row-icon">🔔</span>
+            <span class="row-label">Thông báo</span>
+            <span class="row-chevron">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Khác -->
+      <div class="settings-section">
+        <div class="section-header">Khác</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="row-icon">📋</span>
+            <span class="row-label">Nhật ký hoạt động</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">💬</span>
+            <span class="row-label">Phản hồi</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">📄</span>
+            <span class="row-label">Điều khoản sử dụng</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">🌙</span>
+            <span class="row-label">Giao diện</span>
+            <button class="toggle-switch off" onclick="this.classList.toggle('on');this.classList.toggle('off');event.stopPropagation()"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">🌐</span>
+            <span class="row-label">Ngôn ngữ</span>
+            <span class="row-value">Tiếng Việt</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">📦</span>
+            <span class="row-label">Gói cước</span>
+            <span class="badge badge-trial">Dùng thử</span>
+            <button class="upgrade-btn">Nâng cấp</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <div class="logout-section">
+        <button class="logout-btn">Đăng xuất</button>
+      </div>
+    </div>
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <button class="nav-item"><span class="nav-icon">🏠</span>Trang chủ</button>
+      <button class="nav-item"><span class="nav-icon">🛍️</span>Bán Hàng</button>
+      <button class="nav-item"><span class="nav-icon">📊</span>Báo Cáo</button>
+      <button class="nav-item active"><span class="nav-icon">☰</span>Thêm</button>
+    </div>
+  </div><!-- /s1 -->
+</div><!-- /phone-s1 -->
+
+
+<!-- ── Screen 2: Shop Info ── -->
+<div class="screen-title" id="title-s2" style="display:none;">Screen 2 · Thông tin cửa hàng</div>
+<div class="phone" id="phone-s2" style="display:none;">
+  <div class="status-bar">
+    <span class="status-time">09:41</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+  <div class="screen active" id="s2">
+    <div class="screen-header">
+      <button class="back-btn" onclick="showScreen('s1', null)">‹</button>
+      <span class="title">Thông tin cửa hàng</span>
+      <button class="save-btn">Lưu</button>
+    </div>
+    <div class="screen-body">
+      <div style="height:16px;"></div>
+      <div class="form-card">
+        <div class="form-field">
+          <div class="form-label">Tên cửa hàng</div>
+          <input class="form-input" type="text" value="Barber Shop Nguyễn">
+        </div>
+        <div class="form-field">
+          <div class="form-label">Số điện thoại</div>
+          <input class="form-input" type="tel" value="0912345678">
+        </div>
+        <div class="form-field">
+          <div class="form-label">Địa chỉ</div>
+          <input class="form-input" type="text" value="123 Lê Lợi, Q.1, TP.HCM">
+        </div>
+        <div class="form-field">
+          <div class="form-label">Email</div>
+          <input class="form-input" type="email" value="barbershop@gmail.com">
+        </div>
+        <div class="form-field">
+          <div class="form-label">Mô tả</div>
+          <textarea class="form-input form-textarea" placeholder="Giới thiệu về cửa hàng của bạn..."></textarea>
+        </div>
+      </div>
+      <button class="submit-btn">Lưu thông tin</button>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item"><span class="nav-icon">🏠</span>Trang chủ</button>
+      <button class="nav-item"><span class="nav-icon">🛍️</span>Bán Hàng</button>
+      <button class="nav-item"><span class="nav-icon">📊</span>Báo Cáo</button>
+      <button class="nav-item active"><span class="nav-icon">☰</span>Thêm</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Screen 3: Bank Accounts ── -->
+<div class="screen-title" id="title-s3" style="display:none;">Screen 3 · Tài khoản ngân hàng</div>
+<div class="phone" id="phone-s3" style="display:none;">
+  <div class="status-bar">
+    <span class="status-time">09:41</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+  <div class="screen active" id="s3">
+    <div class="screen-header">
+      <button class="back-btn" onclick="showScreen('s1', null)">‹</button>
+      <span class="title">Tài khoản ngân hàng</span>
+      <button class="action-btn">+ Thêm</button>
+    </div>
+    <div class="screen-body">
+      <div class="hint-bar">
+        <span>ℹ️</span>
+        <span>Dùng để tạo mã QR thanh toán</span>
+      </div>
+      <!-- VCB -->
+      <div class="bank-card">
+        <div class="bank-card-top">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:32px;height:32px;border-radius:8px;background:#006837;display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:10px;font-weight:800;color:white;">VCB</span>
+            </div>
+            <div class="bank-name">Vietcombank</div>
+            <span class="badge badge-green">PRIMARY</span>
+          </div>
+          <div class="bank-card-actions">
+            <button class="icon-btn">✏️</button>
+            <button class="icon-btn">🗑️</button>
+          </div>
+        </div>
+        <div class="bank-number">1234567890</div>
+        <div class="bank-holder">Nguyễn Văn Tuấn</div>
+      </div>
+      <!-- MB -->
+      <div class="bank-card">
+        <div class="bank-card-top">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:32px;height:32px;border-radius:8px;background:#7b2d8b;display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:10px;font-weight:800;color:white;">MB</span>
+            </div>
+            <div class="bank-name">MB Bank</div>
+          </div>
+          <div class="bank-card-actions">
+            <button class="icon-btn">✏️</button>
+            <button class="icon-btn">🗑️</button>
+          </div>
+        </div>
+        <div class="bank-number">9876543210</div>
+        <div class="bank-holder">Nguyễn Văn Tuấn</div>
+      </div>
+      <!-- Add -->
+      <button class="add-dashed-btn">
+        <span style="font-size:20px;">+</span>
+        <span>Thêm tài khoản ngân hàng</span>
+      </button>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item"><span class="nav-icon">🏠</span>Trang chủ</button>
+      <button class="nav-item"><span class="nav-icon">🛍️</span>Bán Hàng</button>
+      <button class="nav-item"><span class="nav-icon">📊</span>Báo Cáo</button>
+      <button class="nav-item active"><span class="nav-icon">☰</span>Thêm</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Screen 4: Print Template ── -->
+<div class="screen-title" id="title-s4" style="display:none;">Screen 4 · Mẫu in biên nhận</div>
+<div class="phone" id="phone-s4" style="display:none;">
+  <div class="status-bar">
+    <span class="status-time">09:41</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+  <div class="screen active" id="s4">
+    <div class="screen-header">
+      <button class="back-btn" onclick="showScreen('s1', null)">‹</button>
+      <span class="title">Mẫu in biên nhận</span>
+      <button class="save-btn">Lưu</button>
+    </div>
+    <div class="screen-body">
+      <div style="height:16px;"></div>
+      <!-- Toggles -->
+      <div class="settings-section" style="margin-bottom:12px;">
+        <div class="section-header">Nội dung hiển thị</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="row-label">In tiêu đề cửa hàng</span>
+            <button class="toggle-switch on"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-label">In địa chỉ</span>
+            <button class="toggle-switch on"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-label">In số điện thoại</span>
+            <button class="toggle-switch on"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-label">In logo</span>
+            <button class="toggle-switch off"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-label">In mã QR</span>
+            <button class="toggle-switch on"></button>
+          </div>
+        </div>
+      </div>
+      <!-- Font size -->
+      <div class="settings-section" style="margin-bottom:6px;">
+        <div class="section-header">Cỡ chữ</div>
+      </div>
+      <div class="font-size-selector">
+        <button class="font-size-option">Nhỏ</button>
+        <button class="font-size-option active">Vừa ★</button>
+        <button class="font-size-option">Lớn</button>
+      </div>
+      <!-- Footer text -->
+      <div class="settings-section" style="margin-bottom:6px;">
+        <div class="section-header">Chân biên nhận</div>
+      </div>
+      <div class="form-card">
+        <div class="form-field">
+          <div class="form-label">Nội dung chân</div>
+          <input class="form-input" type="text" value="Cảm ơn quý khách!">
+        </div>
+      </div>
+      <!-- Preview -->
+      <div style="margin: 0 16px 16px;">
+        <button style="width:100%;padding:13px;background:var(--gray-100);border:1.5px solid var(--gray-300);border-radius:var(--radius-card);font-size:14px;font-weight:600;color:var(--gray-700);cursor:pointer;">
+          👁 Xem trước biên nhận
+        </button>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item"><span class="nav-icon">🏠</span>Trang chủ</button>
+      <button class="nav-item"><span class="nav-icon">🛍️</span>Bán Hàng</button>
+      <button class="nav-item"><span class="nav-icon">📊</span>Báo Cáo</button>
+      <button class="nav-item active"><span class="nav-icon">☰</span>Thêm</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Screen 5: Notification Preferences ── -->
+<div class="screen-title" id="title-s5" style="display:none;">Screen 5 · Tùy chọn thông báo</div>
+<div class="phone" id="phone-s5" style="display:none;">
+  <div class="status-bar">
+    <span class="status-time">09:41</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+  <div class="screen active" id="s5">
+    <div class="screen-header">
+      <button class="back-btn" onclick="showScreen('s1', null)">‹</button>
+      <span class="title">Tùy chọn thông báo</span>
+      <div class="header-placeholder"></div>
+    </div>
+    <div class="screen-body">
+      <div style="height:16px;"></div>
+      <div class="settings-section">
+        <div class="section-header">Loại thông báo</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="row-icon">🛍️</span>
+            <span class="row-label">Đơn hàng mới</span>
+            <button class="toggle-switch on"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">📅</span>
+            <span class="row-label">Lịch hẹn mới</span>
+            <button class="toggle-switch on"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">💳</span>
+            <span class="row-label">Thanh toán thành công</span>
+            <button class="toggle-switch on"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">⏰</span>
+            <span class="row-label">Nhắc nhở lịch hẹn</span>
+            <button class="toggle-switch on"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">📊</span>
+            <span class="row-label">Báo cáo hàng ngày</span>
+            <button class="toggle-switch off"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">🔄</span>
+            <span class="row-label">Cập nhật hệ thống</span>
+            <button class="toggle-switch off"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item"><span class="nav-icon">🏠</span>Trang chủ</button>
+      <button class="nav-item"><span class="nav-icon">🛍️</span>Bán Hàng</button>
+      <button class="nav-item"><span class="nav-icon">📊</span>Báo Cáo</button>
+      <button class="nav-item active"><span class="nav-icon">☰</span>Thêm</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Screen 6: Profile ── -->
+<div class="screen-title" id="title-s6" style="display:none;">Screen 6 · Thông tin cá nhân</div>
+<div class="phone" id="phone-s6" style="display:none;">
+  <div class="status-bar">
+    <span class="status-time">09:41</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+  <div class="screen active" id="s6">
+    <div class="screen-header">
+      <button class="back-btn" onclick="showScreen('s1', null)">‹</button>
+      <span class="title">Thông tin cá nhân</span>
+      <button class="save-btn">Lưu</button>
+    </div>
+    <div class="screen-body">
+      <!-- Avatar -->
+      <div class="avatar-section">
+        <div class="avatar-circle lg">TU</div>
+        <button class="change-photo-btn">Thay đổi ảnh</button>
+      </div>
+      <div style="height:16px;"></div>
+      <div class="form-card">
+        <div class="form-field">
+          <div class="form-label">Họ và tên</div>
+          <input class="form-input" type="text" value="Nguyễn Văn Tuấn">
+        </div>
+        <div class="form-field">
+          <div class="form-label">Số điện thoại</div>
+          <input class="form-input" type="tel" value="0912345678">
+        </div>
+        <div class="form-field">
+          <div class="form-label">Email</div>
+          <input class="form-input" type="email" value="tuan.nguyen@gmail.com">
+        </div>
+        <div class="form-field">
+          <div class="form-label">Ngày sinh</div>
+          <input class="form-input" type="text" value="15/03/1990">
+        </div>
+        <div class="form-field">
+          <div class="form-label">Giới tính</div>
+          <select class="select-input form-input">
+            <option selected>Nam</option>
+            <option>Nữ</option>
+            <option>Khác</option>
+          </select>
+        </div>
+      </div>
+      <button class="submit-btn">Lưu thông tin</button>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item"><span class="nav-icon">🏠</span>Trang chủ</button>
+      <button class="nav-item"><span class="nav-icon">🛍️</span>Bán Hàng</button>
+      <button class="nav-item"><span class="nav-icon">📊</span>Báo Cáo</button>
+      <button class="nav-item active"><span class="nav-icon">☰</span>Thêm</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Screen 7: Security ── -->
+<div class="screen-title" id="title-s7" style="display:none;">Screen 7 · Bảo mật</div>
+<div class="phone" id="phone-s7" style="display:none;">
+  <div class="status-bar">
+    <span class="status-time">09:41</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+  <div class="screen active" id="s7">
+    <div class="screen-header">
+      <button class="back-btn" onclick="showScreen('s1', null)">‹</button>
+      <span class="title">Bảo mật</span>
+      <div class="header-placeholder"></div>
+    </div>
+    <div class="screen-body">
+      <div style="height:16px;"></div>
+      <div class="settings-section">
+        <div class="section-header">Xác thực</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="row-icon">🔑</span>
+            <span class="row-label">Đổi mật khẩu</span>
+            <span class="row-chevron">›</span>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">🔢</span>
+            <span class="row-label">Mã PIN đăng nhập</span>
+            <button class="toggle-switch on"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">🫶</span>
+            <span class="row-label">Sinh trắc học (Face ID)</span>
+            <button class="toggle-switch on"></button>
+          </div>
+          <div class="settings-row">
+            <span class="row-icon">🔄</span>
+            <span class="row-label">Đổi mã PIN</span>
+            <span class="row-chevron">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section" style="margin-top:8px;">
+        <div class="section-header">Phiên đăng nhập</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="row-icon">📱</span>
+            <div class="security-row-detail">
+              <span class="security-label">iPhone 14</span>
+              <span class="security-sub">TP.HCM · Hôm nay 09:41</span>
+            </div>
+            <span class="badge badge-green" style="font-size:9px;">Hiện tại</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item"><span class="nav-icon">🏠</span>Trang chủ</button>
+      <button class="nav-item"><span class="nav-icon">🛍️</span>Bán Hàng</button>
+      <button class="nav-item"><span class="nav-icon">📊</span>Báo Cáo</button>
+      <button class="nav-item active"><span class="nav-icon">☰</span>Thêm</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Screen 8: Loyalty Config ── -->
+<div class="screen-title" id="title-s8" style="display:none;">Screen 8 · Chương trình tích điểm</div>
+<div class="phone" id="phone-s8" style="display:none;">
+  <div class="status-bar">
+    <span class="status-time">09:41</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+  <div class="screen active" id="s8">
+    <div class="screen-header">
+      <button class="back-btn" onclick="showScreen('s1', null)">‹</button>
+      <span class="title">Chương trình tích điểm</span>
+      <div class="header-placeholder"></div>
+    </div>
+    <div class="screen-body">
+      <div style="height:16px;"></div>
+      <!-- Toggle enable -->
+      <div class="settings-section" style="margin-bottom:12px;">
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="row-icon">💎</span>
+            <span class="row-label" style="font-weight:700;">Bật tích điểm</span>
+            <button class="toggle-switch on"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rate card -->
+      <div class="rate-card">
+        <div>
+          <div class="rate-label">Tỷ lệ tích điểm</div>
+          <div class="rate-value">1.000₫ = 1 điểm</div>
+        </div>
+        <span style="font-size:24px;">🪙</span>
+      </div>
+
+      <!-- Tiers -->
+      <div class="settings-section" style="margin-bottom:6px;">
+        <div class="section-header">Hạng thành viên</div>
+      </div>
+      <div class="tier-table">
+        <div class="tier-row">
+          <div class="tier-dot" style="background:#b45309;"></div>
+          <span class="tier-name">Đồng</span>
+          <span class="tier-range">0 – 99 điểm</span>
+        </div>
+        <div class="tier-row">
+          <div class="tier-dot" style="background:#9ca3af;"></div>
+          <span class="tier-name">Bạc</span>
+          <span class="tier-range">100 – 199 điểm</span>
+        </div>
+        <div class="tier-row highlighted">
+          <div class="tier-dot" style="background:#f59e0b;"></div>
+          <span class="tier-name">Vàng</span>
+          <span class="tier-range">200 – 299 điểm</span>
+          <span class="tier-star">⭐</span>
+        </div>
+        <div class="tier-row">
+          <div class="tier-dot" style="background:#e2e8f0;border:1px solid #9ca3af;"></div>
+          <span class="tier-name">Bạch Kim</span>
+          <span class="tier-range">300 – 499 điểm</span>
+        </div>
+        <div class="tier-row">
+          <div class="tier-dot" style="background:#818cf8;"></div>
+          <span class="tier-name">Kim Cương</span>
+          <span class="tier-range">500+ điểm</span>
+        </div>
+      </div>
+
+      <!-- Redeem rate -->
+      <div class="rate-card" style="margin-top:12px;background:#f0fdf4;">
+        <div>
+          <div class="rate-label" style="color:#16a34a;">Tỷ lệ đổi điểm</div>
+          <div class="rate-value" style="color:#16a34a;">100 điểm = 10.000₫</div>
+        </div>
+        <span style="font-size:24px;">🎁</span>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item"><span class="nav-icon">🏠</span>Trang chủ</button>
+      <button class="nav-item"><span class="nav-icon">🛍️</span>Bán Hàng</button>
+      <button class="nav-item"><span class="nav-icon">📊</span>Báo Cáo</button>
+      <button class="nav-item active"><span class="nav-icon">☰</span>Thêm</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+  const screens = ['s1','s2','s3','s4','s5','s6','s7','s8'];
+
+  function showScreen(id, btn) {
+    screens.forEach(s => {
+      const phone = document.getElementById('phone-' + s);
+      const title = document.getElementById('title-' + s);
+      if (phone) phone.style.display = (s === id) ? '' : 'none';
+      if (title) title.style.display = (s === id) ? '' : 'none';
+    });
+
+    // Update sidebar active state
+    document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    else {
+      // Find the button that corresponds to this screen
+      const items = document.querySelectorAll('.sidebar-item');
+      const screenIndex = screens.indexOf(id);
+      if (items[screenIndex]) items[screenIndex].classList.add('active');
+    }
+
+    // Toggle toggles interactivity
+    document.querySelectorAll('.toggle-switch').forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        this.classList.toggle('on');
+        this.classList.toggle('off');
+      }, { once: false });
+    });
+  }
+
+  // Font size selector
+  document.querySelectorAll('.font-size-option').forEach(opt => {
+    opt.addEventListener('click', function() {
+      this.closest('.font-size-selector').querySelectorAll('.font-size-option').forEach(o => o.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Init toggle interactivity
+  document.querySelectorAll('.toggle-switch').forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      this.classList.toggle('on');
+      this.classList.toggle('off');
+    });
+  });
+</script>
+</body>
+</html>

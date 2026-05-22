@@ -615,7 +615,7 @@ export function StaffQueueScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 16, paddingBottom: bottom + 24 }}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#4f46e5" />
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#059669" />
           }
           ListHeaderComponent={ListHeader}
           renderItem={({ item }) => (
