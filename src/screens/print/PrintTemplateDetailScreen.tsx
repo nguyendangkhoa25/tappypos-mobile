@@ -112,7 +112,7 @@ export function PrintTemplateDetailScreen({ navigation, route }: PrintTemplateSc
             )}
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-0 mt-0.5`}>{t('printTemplates.detailHint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('printTemplates.detailHint')}</Text>
       </View>
 
       {isLoading ? (
@@ -120,7 +120,7 @@ export function PrintTemplateDetailScreen({ navigation, route }: PrintTemplateSc
           <ActivityIndicator color="#4f46e5" />
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, gap: 16 }}>
           {/* Name */}
           <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
             <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>{t('printTemplates.detail.nameLabel')}</Text>

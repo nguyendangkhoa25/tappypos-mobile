@@ -8,6 +8,8 @@ export const SUPPORT = {
   email: 'support@tappypos.vn',
   zaloOA: 'https://zalo.me/tappypos',
   website: 'https://tappypos.vn',
+  workingHours: '8:00 – 18:00',
+  workingDays: 'T2 – T7',
 } as const;
 
 export const SHOP_TYPES = [

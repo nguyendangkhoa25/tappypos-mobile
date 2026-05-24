@@ -115,14 +115,12 @@ export function UtilitiesScreen({ navigation }: Props) {
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
-          <View>
-            <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('tools.title')}</Text>
-            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('tools.subtitle')}</Text>
-          </View>
+          <Text className={`${typo.section} text-gray-900 dark:text-white flex-1`}>{t('tools.title')}</Text>
         </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('tools.subtitle')}</Text>
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, paddingBottom: bottom + 32 }}>
         {TOOL_GROUPS.map((group) => (
           <View key={group.titleKey} className="mb-5">
             <View className="flex-row items-center mb-3">

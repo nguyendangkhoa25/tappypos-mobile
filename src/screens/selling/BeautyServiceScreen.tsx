@@ -34,12 +34,10 @@ import {
   type EmployeeData,
   type CustomerData,
   type CategoryData,
-  type BankAccount,
   type LoyaltyProgramDTO,
   type CheckInPayload,
   type OrderSummary,
 } from '../../services/api';
-import { VietQrCard } from '../../components/VietQrCard';
 import { UpgradeModal } from '../../components/UpgradeModal';
 import { MoneyInput } from '../../components/MoneyInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -47,17 +45,19 @@ import { useAlertStore } from '../../store/alertStore';
 
 const LAST_PAYMENT_KEY = 'last_payment_method';
 const GRID_PREF_KEY = 'pos_grid_columns';
-const LAST_QR_BANK_KEY = 'last_qr_bank_id';
-import { formatVnd, formatMoneyDisplay, numberToWords } from '../../utils/format';
+import { formatVnd } from '../../utils/format';
 import { PAGE_SIZE } from '../../utils/constants';
 import { getQuickPhrases } from '../../utils/quickPhrases';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
 import { Skeleton } from '../../components/Skeleton';
 import { QuickPhraseBar } from '../../components/QuickPhraseBar';
+import { CustomerPickerSheet } from '../../components/CustomerPickerSheet';
 import { useFeatureCheck } from '../../hooks/useFeature';
 import { useTypography } from '../../hooks/useTypography';
 import { useSellingStore } from '../../store/sellingStore';
+import type { SelectedCustomer } from '../../store/cartStore';
+import { PaymentSheet, type PaymentMethod } from '../../components/PaymentSheet';
 import type { SellingScreenProps } from '../../types/navigation';
 
 const BARBER_PHRASES = getQuickPhrases('BARBER_SHOP');
@@ -65,6 +65,8 @@ const TIP_AMOUNTS = [10_000, 20_000, 50_000, 100_000];
 
 type CheckoutPayload = {
   customer: CustomerData | null;
+  /** Name for a one-off named guest (no managed record, no phone). Only used when customer === null. */
+  guestName?: string;
   paymentMethod: PaymentMethod;
   note: string;
   amountPaid?: number;
@@ -80,9 +82,17 @@ type CartItem = {
   quantity: number;
   employee: EmployeeData | null;
   note: string;
+  /** Manual commission override; null = let the server auto-calculate from rate */
+  commissionOverride: number | null;
 };
 
-type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CARD';
+/** Auto-calculate commission for display purposes (not sent to server when null/0) */
+function calcCommission(item: CartItem): number {
+  if (!item.employee) return 0;
+  const rate = item.product.commissionRate ?? item.employee.commissionRate ?? 0;
+  if (!rate) return 0;
+  return Math.round(item.product.price * item.quantity * rate / 100);
+}
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -120,6 +130,12 @@ function elapsed(createdAt: string): string {
 
 // ── Active Orders Strip ───────────────────────────────────────────────────────
 
+/** Compute total service duration from order items (sum of durationMinutes × quantity). */
+function totalServiceMinutes(items?: { durationMinutes?: number | null; quantity: number }[]): number {
+  if (!items || items.length === 0) return 0;
+  return items.reduce((acc, i) => acc + ((i.durationMinutes ?? 0) * (i.quantity ?? 1)), 0);
+}
+
 function OrderCard({
   order,
   expanded,
@@ -133,9 +149,41 @@ function OrderCard({
   t: (k: string) => string;
   typo: ReturnType<typeof useTypography>;
 }) {
+  // Tick every 30 s so elapsed/countdown stays fresh while cards are visible
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setTick((n) => n + 1), 30_000);
+    return () => clearInterval(iv);
+  }, []);
+
   const cardInitials = (order.customerName ?? t('orders.walkIn'))
     .split(' ').filter(Boolean).slice(0, 2)
     .map((w: string) => w[0].toUpperCase()).join('');
+
+  const elapsedMins = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60_000);
+  const totalDuration = totalServiceMinutes(order.items);
+  const hasTimer = totalDuration > 0;
+  const remainingMins = totalDuration - elapsedMins;
+  const isOvertime = hasTimer && remainingMins < 0;
+  const isWarning = hasTimer && !isOvertime && remainingMins <= Math.ceil(totalDuration * 0.2);
+
+  // Header color: overtime = red, warning = amber, normal = indigo
+  const headerBg = isOvertime
+    ? 'bg-red-600 dark:bg-red-700'
+    : isWarning
+    ? 'bg-amber-500 dark:bg-amber-600'
+    : 'bg-indigo-600 dark:bg-indigo-700';
+
+  // Countdown badge text
+  let countdownLabel: string;
+  if (!hasTimer) {
+    countdownLabel = elapsed(order.createdAt);
+  } else if (isOvertime) {
+    const over = Math.abs(remainingMins);
+    countdownLabel = `+${over < 60 ? `${over}p` : `${Math.floor(over / 60)}g${over % 60 > 0 ? `${over % 60}p` : ''}`}`;
+  } else {
+    countdownLabel = `${remainingMins < 60 ? `${remainingMins}p` : `${Math.floor(remainingMins / 60)}g${remainingMins % 60 > 0 ? `${remainingMins % 60}p` : ''}`}`;
+  }
 
   return (
     <TouchableOpacity
@@ -144,16 +192,30 @@ function OrderCard({
       style={expanded ? { flex: 1 } : { width: 172 }}
       className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-indigo-100 dark:border-indigo-800"
     >
-      {/* Indigo header: order number + elapsed */}
-      <View className="bg-indigo-600 dark:bg-indigo-700 px-3 py-2 flex-row items-center justify-between">
+      {/* Header: order number + timer / elapsed */}
+      <View className={`${headerBg} px-3 py-2 flex-row items-center justify-between`}>
         <Text className={`${typo.captionBold} text-white flex-1 mr-2`} numberOfLines={1}>
           #{order.orderNumber}
         </Text>
         <View className="flex-row items-center gap-x-1 flex-shrink-0 bg-white/20 rounded-full px-2 py-0.5">
-          <MaterialCommunityIcons name="clock-outline" size={10} color="#fff" />
-          <Text className={`${typo.caption} text-white`}>{elapsed(order.createdAt)}</Text>
+          <MaterialCommunityIcons
+            name={hasTimer ? (isOvertime ? 'timer-alert-outline' : 'timer-outline') : 'clock-outline'}
+            size={10}
+            color="#fff"
+          />
+          <Text className={`${typo.caption} text-white`}>{countdownLabel}</Text>
         </View>
       </View>
+
+      {/* Progress bar (only when timer is set) */}
+      {hasTimer && (
+        <View className="h-1 bg-gray-100 dark:bg-gray-700 w-full">
+          <View
+            className={`h-full ${isOvertime ? 'bg-red-500' : isWarning ? 'bg-amber-400' : 'bg-indigo-500'}`}
+            style={{ width: `${Math.min(100, Math.max(0, (elapsedMins / totalDuration) * 100))}%` }}
+          />
+        </View>
+      )}
 
       {/* Body */}
       <View className="px-3 py-2.5">
@@ -402,29 +464,6 @@ function EmployeeChip({
       >
         {employee.fullName.split(' ').pop()}
       </Text>
-    </TouchableOpacity>
-  );
-}
-
-// ── Customer Row ──────────────────────────────────────────────────────────────
-
-function CustomerRow({ customer, onPress }: { customer: CustomerData; onPress: () => void }) {
-  const typo = useTypography();
-  return (
-    <TouchableOpacity
-      className="flex-row items-center px-3 py-2.5 border-b border-gray-50 active:bg-gray-50"
-      onPress={onPress}
-    >
-      <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center mr-3">
-        <Text className={`${typo.captionBold} text-indigo-600`}>{initials(customer.name)}</Text>
-      </View>
-      <View className="flex-1">
-        <Text className={`${typo.caption} font-medium text-gray-900`}>{customer.name}</Text>
-        <Text className={`${typo.caption} text-gray-500`}>{customer.phone}</Text>
-      </View>
-      {customer.totalOrders > 0 && (
-        <Text className={`${typo.caption} text-gray-400`}>{customer.totalOrders} lần</Text>
-      )}
     </TouchableOpacity>
   );
 }
@@ -787,7 +826,6 @@ function CheckoutSheet({
   cartItems,
   hasCustomer,
   hasLoyalty,
-  banks,
   checkoutError,
   onDismissError,
   onRemoveItem,
@@ -798,12 +836,12 @@ function CheckoutSheet({
   onCustomerChange,
   employees,
   onUpdateItemEmployee,
+  onUpdateCommissionOverride,
 }: {
   visible: boolean;
   cartItems: CartItem[];
   hasCustomer: boolean;
   hasLoyalty: boolean;
-  banks: BankAccount[];
   checkoutError: string;
   onDismissError: () => void;
   onRemoveItem: (key: string) => void;
@@ -814,50 +852,48 @@ function CheckoutSheet({
   onCustomerChange?: (c: CustomerData | null) => void;
   employees: EmployeeData[];
   onUpdateItemEmployee: (key: string, employee: EmployeeData | null) => void;
+  onUpdateCommissionOverride: (key: string, amount: number | null) => void;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const typo = useTypography();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
+  const [paymentSheetVisible, setPaymentSheetVisible] = useState(false);
+  const [lastPaymentMethod, setLastPaymentMethod] = useState<PaymentMethod | null>(null);
   const [tip, setTip] = useState(0);
-  const [cashReceived, setCashReceived] = useState('');
-  const [cashManuallyEdited, setCashManuallyEdited] = useState(false);
   const [submitMode, setSubmitMode] = useState<'start' | 'pay' | null>(null);
   const [orderNote, setOrderNote] = useState('');
   const [isOrderNoteFocused, setIsOrderNoteFocused] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null);
-  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
-  const [customerSearch, setCustomerSearch] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const [showCustomerPicker, setShowCustomerPicker] = useState(false);
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState('');
   const [redeemPoints, setRedeemPoints] = useState(false);
-  const [selectedBankId, setSelectedBankId] = useState<number | null>(null);
   const [employeePickerKey, setEmployeePickerKey] = useState<string | null>(null);
   const [showCustomTip, setShowCustomTip] = useState(false);
-
-  const debouncedSearch = useDebounce(customerSearch, 350);
+  const [commissionEditKey, setCommissionEditKey] = useState<string | null>(null);
+  const [commissionEditValue, setCommissionEditValue] = useState('');
+  const hasFeature = useFeatureCheck();
+  const hasCommission = hasFeature('COMMISSION');
+  const hasCommissionViewAll = hasFeature('COMMISSION_VIEW_ALL');
 
   useEffect(() => {
     if (visible) {
       AsyncStorage.getItem(LAST_PAYMENT_KEY).then((saved) => {
         if (saved === 'CASH' || saved === 'BANK_TRANSFER') {
-          setPaymentMethod(saved as PaymentMethod);
+          setLastPaymentMethod(saved as PaymentMethod);
         }
-      });
-      AsyncStorage.getItem(LAST_QR_BANK_KEY).then((saved) => {
-        setSelectedBankId(saved ? Number(saved) : null);
       });
       if (initialCustomer) setSelectedCustomer(initialCustomer);
     } else {
-      setPaymentMethod('CASH');
+      setLastPaymentMethod(null);
+      setPaymentSheetVisible(false);
       setTip(0);
-      setCashReceived('');
-      setCashManuallyEdited(false);
       setSubmitMode(null);
       setOrderNote('');
       setIsOrderNoteFocused(false);
       setSelectedCustomer(null);
-      setShowCustomerSearch(false);
-      setCustomerSearch('');
+      setGuestName('');
+      setShowCustomerPicker(false);
       setPromoInput('');
       setAppliedPromo('');
       setRedeemPoints(false);
@@ -870,21 +906,6 @@ function CheckoutSheet({
     queryFn: () => loyaltyApi.getProgram().then((r) => r.data.data),
     staleTime: 10 * 60_000,
     enabled: visible && hasLoyalty,
-  });
-
-  const { data: recentCustomers = [] } = useQuery({
-    queryKey: ['customers', 'recent'],
-    queryFn: () => customerApi.recent(6).then((r) => r.data.data),
-    staleTime: 2 * 60_000,
-    enabled: visible && hasCustomer,
-  });
-
-  const { data: searchResults = [], isFetching: searching } = useQuery({
-    queryKey: ['customers', 'search', debouncedSearch],
-    queryFn: () =>
-      customerApi.list({ search: debouncedSearch, size: 5 }).then((r) => r.data.data.content),
-    staleTime: 30_000,
-    enabled: visible && hasCustomer && debouncedSearch.length >= 2,
   });
 
   const itemsTotal = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
@@ -901,44 +922,30 @@ function CheckoutSheet({
 
   const effectiveTotal = Math.max(0, itemsTotal + tip - pointsDiscount);
 
-  // Auto-fill cash received with the final amount; only stops if receptionist types a custom value
-  useEffect(() => {
-    if (visible && !cashManuallyEdited) {
-      setCashReceived(String(effectiveTotal));
+  // Derive SelectedCustomer | null for the picker from our internal CustomerData + guestName state
+  const customerPickerValue: SelectedCustomer | null = selectedCustomer
+    ? { type: 'managed', id: selectedCustomer.id, name: selectedCustomer.name, phone: selectedCustomer.phone }
+    : guestName ? { type: 'guest', name: guestName }
+    : null;
+
+  const handlePickerChange = (c: SelectedCustomer | null) => {
+    if (!c) {
+      setSelectedCustomer(null);
+      setGuestName('');
+      onCustomerChange?.(null);
+    } else if (c.type === 'guest') {
+      setSelectedCustomer(null);
+      setGuestName(c.name);
+      onCustomerChange?.(null);
     }
-  }, [effectiveTotal, visible, cashManuallyEdited]);
-
-  const activeBank =
-    (selectedBankId ? banks.find((b) => b.id === selectedBankId) : null) ??
-    banks.find((b) => b.isDefault) ??
-    banks[0] ??
-    null;
-
-  const handleBankSelect = (id: number) => {
-    Haptics.selectionAsync();
-    setSelectedBankId(id);
-    AsyncStorage.setItem(LAST_QR_BANK_KEY, String(id));
+    // 'managed' type is handled via onManagedCustomerData
   };
 
-  const qrDescription = useMemo(() => {
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    const mo = String(now.getMonth() + 1).padStart(2, '0');
-    return `TAPPYPOS ${hh}:${mm} ${dd}/${mo}`;
-  }, [paymentMethod]);
-
-  const cashReceivedNum = parseInt(cashReceived.replace(/[^0-9]/g, '') || '0', 10);
-  const cashDelta = cashReceivedNum - effectiveTotal;
-  const showSearchResults = debouncedSearch.length >= 2;
-  const showRecent = !showSearchResults && !selectedCustomer && recentCustomers.length > 0;
-
-  const paymentOptions: { value: PaymentMethod; label: string; icon: string }[] = [
-    { value: 'CASH', label: t('barber.paymentCash'), icon: 'cash' },
-    { value: 'BANK_TRANSFER', label: t('barber.paymentTransfer'), icon: 'bank-transfer' },
-    { value: 'CARD', label: t('barber.paymentCard'), icon: 'credit-card-outline' },
-  ];
+  const handleManagedCustomerData = (data: CustomerData) => {
+    setSelectedCustomer(data);
+    setGuestName('');
+    onCustomerChange?.(data);
+  };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -955,124 +962,42 @@ function CheckoutSheet({
             {hasCustomer && (
               <TouchableOpacity
                 className="flex-row items-center gap-x-1.5 bg-gray-100 rounded-full pl-2 pr-3 py-1.5 max-w-[48%]"
-                onPress={() => setShowCustomerSearch((v) => !v)}
+                onPress={() => setShowCustomerPicker(true)}
                 activeOpacity={0.75}
               >
-                <View className={`w-6 h-6 rounded-full items-center justify-center flex-shrink-0 ${selectedCustomer ? 'bg-indigo-100' : 'bg-gray-300'}`}>
+                <View className={`w-6 h-6 rounded-full items-center justify-center flex-shrink-0 ${selectedCustomer ? 'bg-indigo-100' : guestName ? 'bg-violet-100' : 'bg-gray-300'}`}>
                   {selectedCustomer ? (
-                    <Text className={`${typo.captionBold} text-indigo-600`} style={{ fontSize: 10 }}>
+                    <Text className={`${typo.captionBold} text-indigo-600`}>
                       {initials(selectedCustomer.name)}
                     </Text>
+                  ) : guestName ? (
+                    <MaterialCommunityIcons name="account-edit-outline" size={13} color="#7c3aed" />
                   ) : (
                     <MaterialCommunityIcons name="account-outline" size={13} color="#6b7280" />
                   )}
                 </View>
                 <Text
-                  className={`${typo.captionBold} flex-shrink ${selectedCustomer ? 'text-gray-800' : 'text-gray-500'}`}
+                  className={`${typo.captionBold} flex-shrink ${selectedCustomer ? 'text-gray-800' : guestName ? 'text-violet-700' : 'text-gray-500'}`}
                   numberOfLines={1}
                 >
-                  {selectedCustomer ? selectedCustomer.name : t('pos.walkIn')}
+                  {selectedCustomer ? selectedCustomer.name : guestName || t('pos.walkIn')}
                 </Text>
-                <MaterialCommunityIcons
-                  name={showCustomerSearch ? 'chevron-up' : 'pencil-outline'}
-                  size={13}
-                  color="#9ca3af"
-                />
+                <MaterialCommunityIcons name="pencil-outline" size={13} color="#9ca3af" />
               </TouchableOpacity>
             )}
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-            {/* Customer panel — expands when editing */}
-            {hasCustomer && showCustomerSearch && (
-              <View className="mb-4 bg-gray-50 rounded-2xl p-3">
-                {selectedCustomer ? (
-                  <View className="flex-row items-center">
-                    <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center mr-2.5">
-                      <Text className={`${typo.captionBold} text-indigo-600`}>{initials(selectedCustomer.name)}</Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className={`${typo.label} text-gray-900`}>{selectedCustomer.name}</Text>
-                      <Text className={`${typo.caption} text-gray-500`}>{selectedCustomer.phone}</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => { setSelectedCustomer(null); setShowCustomerSearch(true); onCustomerChange?.(null); }}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <MaterialCommunityIcons name="close-circle" size={20} color="#9ca3af" />
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <>
-                    <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-3 py-2.5">
-                      <MaterialCommunityIcons name="magnify" size={16} color="#9ca3af" />
-                      <TextInput
-                        className={`flex-1 ml-2 ${typo.inputSize} text-gray-800`}
-                        placeholder={t('barber.customerSearchPlaceholder')}
-                        placeholderTextColor="#9ca3af"
-                        value={customerSearch}
-                        onChangeText={setCustomerSearch}
-                        returnKeyType="search"
-                        autoFocus
-                      />
-                      {searching && <ActivityIndicator size="small" color="#9ca3af" />}
-                      {customerSearch.length > 0 && !searching && (
-                        <TouchableOpacity onPress={() => setCustomerSearch('')}>
-                          <MaterialCommunityIcons name="close-circle" size={16} color="#9ca3af" />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-
-                    {showSearchResults && (
-                      <View className="mt-1 bg-white border border-gray-100 rounded-xl overflow-hidden max-h-36">
-                        {searchResults.length === 0 && !searching ? (
-                          <Text className={`${typo.caption} text-gray-400 text-center py-3`}>
-                            {t('barber.customerNotFound')}
-                          </Text>
-                        ) : (
-                          <ScrollView nestedScrollEnabled>
-                            {searchResults.map((c) => (
-                              <CustomerRow
-                                key={c.id}
-                                customer={c}
-                                onPress={() => {
-                                  Haptics.selectionAsync();
-                                  setSelectedCustomer(c);
-                                  setShowCustomerSearch(false);
-                                  setCustomerSearch('');
-                                  onCustomerChange?.(c);
-                                }}
-                              />
-                            ))}
-                          </ScrollView>
-                        )}
-                      </View>
-                    )}
-
-                    {showRecent && (
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
-                        {recentCustomers.map((c) => (
-                          <TouchableOpacity
-                            key={c.id}
-                            className="bg-white border border-gray-200 rounded-full px-3 py-1.5 mr-2"
-                            onPress={() => {
-                              Haptics.selectionAsync();
-                              setSelectedCustomer(c);
-                              setShowCustomerSearch(false);
-                              onCustomerChange?.(c);
-                            }}
-                          >
-                            <Text className={`${typo.caption} text-gray-700 font-medium`}>
-                              {c.name.split(' ').pop()}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                    )}
-                  </>
-                )}
-              </View>
+            {/* Customer picker sheet — opens as a bottom-sheet modal */}
+            {hasCustomer && (
+              <CustomerPickerSheet
+                visible={showCustomerPicker}
+                onClose={() => setShowCustomerPicker(false)}
+                value={customerPickerValue}
+                onChange={handlePickerChange}
+                onManagedCustomerData={handleManagedCustomerData}
+              />
             )}
 
             {/* Allergy warning — always visible when customer has allergies */}
@@ -1118,49 +1043,90 @@ function CheckoutSheet({
             })()}
 
             {/* Cart items */}
-            {cartItems.map((item) => (
-              <View key={item.key} className="flex-row items-start py-3 border-b border-gray-50">
-                <View className="flex-1">
-                  <Text className={`${typo.label} text-gray-900`}>{item.product.name}</Text>
-                  {employees.length > 0 && (
-                    <TouchableOpacity
-                      className="flex-row items-center gap-x-1 mt-0.5"
-                      onPress={() => setEmployeePickerKey(item.key)}
-                      activeOpacity={0.7}
-                      hitSlop={{ top: 4, bottom: 4, left: 0, right: 8 }}
-                    >
-                      <MaterialCommunityIcons
-                        name="account-circle-outline"
-                        size={13}
-                        color={item.employee ? '#4f46e5' : '#9ca3af'}
-                      />
-                      <Text className={`${typo.caption} ${item.employee ? 'text-indigo-600' : 'text-gray-400'}`}>
-                        {item.employee ? item.employee.fullName.split(' ').pop() : t('barber.assignLabel')}
-                      </Text>
-                      <MaterialCommunityIcons name="chevron-down" size={12} color="#9ca3af" />
-                    </TouchableOpacity>
-                  )}
-                  {!!item.note && (
-                    <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{item.note}</Text>
-                  )}
-                  {item.quantity > 1 && (
-                    <Text className={`${typo.caption} text-gray-500 mt-0.5`}>×{item.quantity}</Text>
-                  )}
+            {cartItems.map((item) => {
+              const commissionAmt = item.commissionOverride ?? calcCommission(item);
+              return (
+                <View key={item.key} className="flex-row items-start py-3 border-b border-gray-50">
+                  <View className="flex-1">
+                    <Text className={`${typo.label} text-gray-900`}>{item.product.name}</Text>
+                    {employees.length > 0 && (
+                      <TouchableOpacity
+                        className="flex-row items-center gap-x-1 mt-0.5"
+                        onPress={() => setEmployeePickerKey(item.key)}
+                        activeOpacity={0.7}
+                        hitSlop={{ top: 4, bottom: 4, left: 0, right: 8 }}
+                      >
+                        <MaterialCommunityIcons
+                          name="account-circle-outline"
+                          size={13}
+                          color={item.employee ? '#4f46e5' : '#9ca3af'}
+                        />
+                        <Text className={`${typo.caption} ${item.employee ? 'text-indigo-600' : 'text-gray-400'}`}>
+                          {item.employee ? item.employee.fullName.split(' ').pop() : t('barber.assignLabel')}
+                        </Text>
+                        <MaterialCommunityIcons name="chevron-down" size={12} color="#9ca3af" />
+                      </TouchableOpacity>
+                    )}
+                    {/* Commission badge — shown when employee assigned and COMMISSION feature is on */}
+                    {hasCommission && !!item.employee && commissionAmt > 0 && (
+                      <TouchableOpacity
+                        className="flex-row items-center gap-x-1 mt-0.5 self-start"
+                        activeOpacity={hasCommissionViewAll ? 0.7 : 1}
+                        onPress={() => {
+                          if (!hasCommissionViewAll) return;
+                          setCommissionEditKey(item.key);
+                          setCommissionEditValue(String(item.commissionOverride ?? calcCommission(item)));
+                        }}
+                        hitSlop={{ top: 4, bottom: 4, left: 0, right: 8 }}
+                      >
+                        <MaterialCommunityIcons name="cash-multiple" size={12} color="#059669" />
+                        <Text className={`${typo.caption} text-emerald-600`}>
+                          {t('commission.badge', { amount: formatVnd(commissionAmt) })}
+                        </Text>
+                        {hasCommissionViewAll && (
+                          <MaterialCommunityIcons name="pencil-outline" size={11} color="#059669" />
+                        )}
+                      </TouchableOpacity>
+                    )}
+                    {!!item.note && (
+                      <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{item.note}</Text>
+                    )}
+                    {item.quantity > 1 && (
+                      <Text className={`${typo.caption} text-gray-500 mt-0.5`}>×{item.quantity}</Text>
+                    )}
+                  </View>
+                  <Text className={`${typo.label} font-bold text-indigo-600 mr-3 mt-0.5`}>
+                    {formatVnd(item.product.price * item.quantity)}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => onRemoveItem(item.key)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <MaterialCommunityIcons name="close-circle" size={20} color="#d1d5db" />
+                  </TouchableOpacity>
                 </View>
-                <Text className={`${typo.label} font-bold text-indigo-600 mr-3 mt-0.5`}>
-                  {formatVnd(item.product.price * item.quantity)}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => onRemoveItem(item.key)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <MaterialCommunityIcons name="close-circle" size={20} color="#d1d5db" />
-                </TouchableOpacity>
-              </View>
-            ))}
+              );
+            })}
 
             {/* Totals */}
             <View className="py-3 mb-1">
+              {/* Commission total summary — only visible when COMMISSION feature on */}
+              {hasCommission && (() => {
+                const totalCommission = cartItems.reduce((sum, item) => {
+                  if (!item.employee) return sum;
+                  return sum + (item.commissionOverride ?? calcCommission(item));
+                }, 0);
+                if (totalCommission <= 0) return null;
+                return (
+                  <View className="flex-row items-center justify-between bg-emerald-50 rounded-xl px-3 py-2 mb-2">
+                    <View className="flex-row items-center gap-x-1.5">
+                      <MaterialCommunityIcons name="cash-multiple" size={14} color="#059669" />
+                      <Text className={`${typo.caption} text-emerald-700`}>{t('commission.totalLabel')}</Text>
+                    </View>
+                    <Text className={`${typo.captionBold} text-emerald-600`}>{formatVnd(totalCommission)}</Text>
+                  </View>
+                );
+              })()}
               {(tip > 0 || pointsDiscount > 0) && (
                 <>
                   <View className="flex-row justify-between items-center mb-1">
@@ -1297,123 +1263,6 @@ function CheckoutSheet({
               </TouchableOpacity>
             )}
 
-            {/* Cash received — large full-width input */}
-            {paymentMethod === 'CASH' && (
-              <View className="mb-3">
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text className={`${typo.label} text-gray-700`}>{t('barber.cashReceived')}</Text>
-                  {cashManuallyEdited && (
-                    <TouchableOpacity
-                      className="flex-row items-center gap-x-1"
-                      onPress={() => { Haptics.selectionAsync(); setCashManuallyEdited(false); }}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <MaterialCommunityIcons name="refresh" size={13} color="#4f46e5" />
-                      <Text className={`${typo.captionBold} text-indigo-600`}>{t('barber.exactAmount')}</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-                <View className="flex-row items-center border-2 border-indigo-200 rounded-2xl overflow-hidden bg-indigo-50">
-                  <TextInput
-                    value={formatMoneyDisplay(cashReceived)}
-                    onChangeText={(text) => {
-                      const digits = text.replace(/[^0-9]/g, '');
-                      setCashReceived(digits);
-                      setCashManuallyEdited(true);
-                    }}
-                    keyboardType="number-pad"
-                    selectionColor="#4f46e5"
-                    placeholder="0"
-                    placeholderTextColor="#a5b4fc"
-                    style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 14, fontSize: 26, fontWeight: '700', color: '#111827' }}
-                  />
-                  <View className="px-3 self-stretch justify-center bg-indigo-100 border-l border-indigo-200">
-                    <Text style={{ fontSize: 20, fontWeight: '700', color: '#4f46e5' }}>đ</Text>
-                  </View>
-                </View>
-                {cashReceived ? (
-                  <Text className={`${typo.caption} text-indigo-600 mt-1 ml-1 italic`}>
-                    {numberToWords(parseInt(cashReceived, 10), i18n.language)}
-                  </Text>
-                ) : null}
-                {cashReceivedNum > 0 && cashDelta !== 0 && (
-                  <View className="flex-row justify-between items-center mt-2 px-1">
-                    <Text className={`${typo.label} text-gray-600`}>
-                      {cashDelta >= 0 ? t('barber.change') : t('barber.shortage')}
-                    </Text>
-                    <Text className={`${typo.section} font-bold ${cashDelta >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>
-                      {formatVnd(Math.abs(cashDelta))}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-
-            {/* Payment method — compact pills with icons */}
-            <View className="flex-row gap-x-2 mb-3">
-              {paymentOptions.map(({ value, label, icon }) => (
-                <TouchableOpacity
-                  key={value}
-                  className={`flex-1 flex-row items-center justify-center gap-x-1.5 py-2 rounded-xl border ${
-                    paymentMethod === value ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-200'
-                  }`}
-                  onPress={() => { Haptics.selectionAsync(); setPaymentMethod(value); }}
-                >
-                  <MaterialCommunityIcons
-                    name={icon as any}
-                    size={14}
-                    color={paymentMethod === value ? '#fff' : '#6b7280'}
-                  />
-                  <Text className={`${typo.captionBold} ${paymentMethod === value ? 'text-white' : 'text-gray-600'}`}>
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Bank transfer QR */}
-            {paymentMethod === 'BANK_TRANSFER' && (
-              <View className="bg-gray-50 rounded-2xl p-4 mb-3">
-                {activeBank ? (
-                  <>
-                    {banks.length > 1 && (
-                      <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ gap: 6, paddingBottom: 12 }}
-                      >
-                        {banks.map((bank) => {
-                          const isActive = bank.id === activeBank.id;
-                          return (
-                            <TouchableOpacity
-                              key={bank.id}
-                              className={`rounded-full px-3 py-1.5 border ${isActive ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-200'}`}
-                              onPress={() => handleBankSelect(bank.id)}
-                            >
-                              <Text className={`${typo.captionBold} ${isActive ? 'text-white' : 'text-gray-600'}`}>
-                                {bank.bankShortName ?? bank.bankName}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </ScrollView>
-                    )}
-                    <VietQrCard
-                      bank={activeBank}
-                      amount={effectiveTotal}
-                      description={qrDescription}
-                    />
-                  </>
-                ) : (
-                  <View className="items-center py-2">
-                    <MaterialCommunityIcons name="bank-outline" size={32} color="#9ca3af" />
-                    <Text className={`${typo.label} text-gray-500 mt-2 text-center`}>{t('barber.noBankAccount')}</Text>
-                    <Text className={`${typo.caption} text-gray-400 mt-1 text-center`}>{t('barber.noBankAccountHint')}</Text>
-                  </View>
-                )}
-              </View>
-            )}
-
             {/* Order note */}
             <View className="mb-5">
               <Text className={`${typo.label} text-gray-700 mb-2`}>{t('barber.orderNote')}</Text>
@@ -1461,7 +1310,8 @@ function CheckoutSheet({
               setSubmitMode('start');
               onConfirm({
                 customer: selectedCustomer,
-                paymentMethod,
+                guestName: guestName || undefined,
+                paymentMethod: 'CASH',
                 note: orderNote,
                 tip,
                 promoCode: appliedPromo,
@@ -1482,38 +1332,100 @@ function CheckoutSheet({
             )}
           </TouchableOpacity>
 
-          {/* SECONDARY: Pay now (collect & complete immediately) */}
+          {/* SECONDARY: Pay now — opens PaymentSheet */}
           <TouchableOpacity
             testID="barber-place-order-btn"
-            className="border border-indigo-600 rounded-2xl py-3.5 items-center mt-2 flex-row justify-center"
-            onPress={() => {
-              setSubmitMode('pay');
-              onConfirm({
-                customer: selectedCustomer,
-                paymentMethod,
-                note: orderNote,
-                amountPaid: paymentMethod === 'CASH' && cashReceivedNum > 0 ? cashReceivedNum : undefined,
-                tip,
-                promoCode: appliedPromo,
-                loyaltyPointsToRedeem: redeemPoints && canRedeem ? customerPoints : 0,
-              });
-            }}
+            className="border border-indigo-600 rounded-2xl py-3.5 items-center mt-2 flex-row justify-center active:opacity-80"
+            onPress={() => setPaymentSheetVisible(true)}
             disabled={creating || cartItems.length === 0}
             activeOpacity={0.85}
           >
-            {creating && submitMode === 'pay' ? (
-              <ActivityIndicator color="#4f46e5" size="small" />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="cash-check" size={16} color="#4f46e5" style={{ marginRight: 6 }} />
-                <Text className={`${typo.labelBold} text-indigo-600`}>
-                  {t('barber.placeOrder')} · {formatVnd(effectiveTotal)}
-                </Text>
-              </>
-            )}
+            <MaterialCommunityIcons name="cash-check" size={16} color="#4f46e5" style={{ marginRight: 6 }} />
+            <Text className={`${typo.labelBold} text-indigo-600`}>
+              {t('barber.placeOrder')} · {formatVnd(effectiveTotal)}
+            </Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Payment sheet — slides up over the checkout sheet */}
+      <PaymentSheet
+        visible={paymentSheetVisible}
+        total={effectiveTotal}
+        initialMethod={lastPaymentMethod}
+        onClose={() => setPaymentSheetVisible(false)}
+        onConfirm={({ method, amountPaid }) => {
+          setPaymentSheetVisible(false);
+          setSubmitMode('pay');
+          onConfirm({
+            customer: selectedCustomer,
+            guestName: guestName || undefined,
+            paymentMethod: method,
+            note: orderNote,
+            amountPaid,
+            tip,
+            promoCode: appliedPromo,
+            loyaltyPointsToRedeem: redeemPoints && canRedeem ? customerPoints : 0,
+          });
+        }}
+        paying={creating && submitMode === 'pay'}
+      />
+
+      {/* Commission override input — for COMMISSION_VIEW_ALL users */}
+      <Modal
+        visible={!!commissionEditKey}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCommissionEditKey(null)}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/40 justify-center px-8"
+          activeOpacity={1}
+          onPress={() => setCommissionEditKey(null)}
+        >
+          <TouchableOpacity activeOpacity={1}>
+            <View className="bg-white rounded-2xl p-5">
+              <Text className={`${typo.section} text-gray-900 mb-1`}>{t('commission.overrideTitle')}</Text>
+              <Text className={`${typo.caption} text-gray-400 mb-4`}>{t('commission.overrideHint', {
+                max: formatVnd((() => {
+                  const item = cartItems.find((i) => i.key === commissionEditKey);
+                  return item ? item.product.price * item.quantity : 0;
+                })()),
+              })}</Text>
+              <TextInput
+                className={`bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 ${typo.inputSize} text-gray-900 text-right`}
+                keyboardType="numeric"
+                value={commissionEditValue}
+                onChangeText={setCommissionEditValue}
+                autoFocus
+                selectTextOnFocus
+              />
+              <View className="flex-row gap-x-3 mt-4">
+                <TouchableOpacity
+                  className="flex-1 bg-gray-100 rounded-xl py-3 items-center"
+                  onPress={() => setCommissionEditKey(null)}
+                >
+                  <Text className={`${typo.labelBold} text-gray-600`}>{t('common.cancel')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 bg-indigo-600 rounded-xl py-3 items-center"
+                  onPress={() => {
+                    if (!commissionEditKey) return;
+                    const item = cartItems.find((i) => i.key === commissionEditKey);
+                    const maxAmt = item ? item.product.price * item.quantity : 0;
+                    const parsed = parseInt(commissionEditValue.replace(/[^0-9]/g, ''), 10);
+                    const clamped = isNaN(parsed) ? 0 : Math.max(0, Math.min(parsed, maxAmt));
+                    onUpdateCommissionOverride(commissionEditKey, clamped === 0 ? null : clamped);
+                    setCommissionEditKey(null);
+                  }}
+                >
+                  <Text className={`${typo.labelBold} text-white`}>{t('common.save')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Employee picker for cart items */}
       <Modal
@@ -1579,7 +1491,7 @@ function CheckoutSheet({
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
-export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'POSMain'>) {
+export function BeautyServiceScreen({ navigation, route }: SellingScreenProps<'POSMain'>) {
   const { t } = useTranslation();
   const typo = useTypography();
   const insets = useSafeAreaInsets();
@@ -1663,12 +1575,15 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
         dynamicPrice: false,
         durationMinutes: svc.durationMinutes,
         status: 'ACTIVE',
+        imageUrl: null,
+        commissionRate: null,
       },
       quantity: 1,
       employee: svc.assignedEmployeeId
         ? { id: String(svc.assignedEmployeeId), fullName: svc.assignedEmployeeName ?? '', position: null, commissionRate: null }
         : null,
       note: '',
+      commissionOverride: null,
     }));
     setCartItems(items);
     if (checkInPayload.customerId) {
@@ -1689,6 +1604,12 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
         notes: null,
         note: null,
         idCardNumber: null,
+        idCardFullName: null,
+        idCardSex: null,
+        idCardNationality: null,
+        idCardPlaceOfOrigin: null,
+        idCardPlaceOfResidence: null,
+        idCardDateOfBirth: null,
         idCardIssuedDate: null,
         idCardIssuedPlace: null,
         permanentAddress: null,
@@ -1696,6 +1617,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
         totalSpend: 0,
         points: 0,
         createdAt: new Date().toISOString(),
+        avatarUrl: null,
       });
     }
     setCheckoutVisible(true);
@@ -1703,6 +1625,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
   const [creating, setCreating] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
   const [upgradeVisible, setUpgradeVisible] = useState(false);
+
 
   const commitSearch = () => {
     setSearch(searchInput);
@@ -1734,6 +1657,22 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
     },
     staleTime: 30_000,
   });
+
+  // Sync page-0 results from React Query cache.
+  // When the user switches filters within staleTime (30 s), queryFn is skipped (cache hit) and
+  // the setAllServices() inside queryFn never runs — so we must also sync from the hook's data.
+  useEffect(() => {
+    if (page === 0 && servicesPage) {
+      setAllServices(servicesPage.content);
+    }
+  }, [servicesPage]);
+
+  // Count for the active category chip — comes from the server's totalElements on the current
+  // filtered query. Zero extra API calls: the number is already in the query response.
+  // Only shown when a specific category is selected; hidden on "All" and during loading.
+  const activeCategoryCount = selectedCategoryId && !productsFetching
+    ? (servicesPage?.totalElements ?? null)
+    : null;
 
   const hasMore = servicesPage ? page < servicesPage.totalPages - 1 : false;
 
@@ -1779,17 +1718,11 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees', 'active'],
-    queryFn: () => employeeApi.listActive().then((r) => r.data.data),
+    queryFn: () => employeeApi.listActive().then((r) => r.data.data ?? []),
     staleTime: 5 * 60_000,
     enabled: has('EMPLOYEE'),
   });
 
-  const { data: banks = [] } = useQuery<BankAccount[]>({
-    queryKey: ['banks'],
-    queryFn: () => shopConfigApi.getBanks().then((r) => r.data.data),
-    staleTime: 10 * 60_000,
-    enabled: has('BANK_ACCOUNT'),
-  });
   const pendingCount = workItems?.content?.filter((i) => i.status === 'PENDING').length ?? 0;
   const inProgressCount = workItems?.content?.filter((i) => i.status === 'IN_PROGRESS').length ?? 0;
 
@@ -1831,6 +1764,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
       quantity,
       employee,
       note,
+      commissionOverride: null,
     };
     setCartItems((prev) => [...prev, newItem]);
     setSelectedProduct(null);
@@ -1854,6 +1788,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
 
   const handleCheckout = async ({
     customer,
+    guestName,
     paymentMethod,
     note: orderNote,
     amountPaid,
@@ -1877,7 +1812,8 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
         if (item.employee) {
           const newItem = allItems.find((i) => !knownItemIds.has(i.id));
           if (newItem) {
-            await cartApi.updateCommission(cartId, newItem.id, item.employee.id);
+            const override = item.commissionOverride ?? undefined;
+            await cartApi.updateCommission(cartId, newItem.id, item.employee.id, override);
           }
         }
 
@@ -1894,10 +1830,21 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
         tip: tip > 0 ? tip : undefined,
         notes: orderNote.trim() || undefined,
         customerId: customer?.id,
+        customerName: !customer && guestName ? guestName : undefined,
         loyaltyPointsToRedeem: loyaltyPointsToRedeem > 0 ? loyaltyPointsToRedeem : undefined,
         createAsInProgress: createAsInProgress ?? false,
       });
       const { orderId, orderNumber, total } = checkoutRes.data.data;
+
+      // Capture services for rebook before clearing cart
+      const rebookServices = cartItems.map((ci) => ({
+        productId: Number(ci.product.id),
+        productName: ci.product.name,
+        unitPrice: ci.product.price,
+        durationMinutes: ci.product.durationMinutes ?? 0,
+        assignedEmployeeId: ci.employee ? Number(ci.employee.id) : undefined,
+        assignedEmployeeName: ci.employee?.fullName ?? undefined,
+      }));
 
       setCartItems([]);
       setCheckoutVisible(false);
@@ -1912,7 +1859,18 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
         // Navigate to OrderDetail where staff can add/remove items and pay later
         navigation.navigate('OrderDetail', { orderId });
       } else {
-        navigation.navigate('OrderSuccess', { orderId, orderNumber, total });
+        navigation.navigate('OrderSuccess', {
+          orderId,
+          orderNumber,
+          total,
+          // Pass rebook data so OrderSuccessScreen can show the Book Appointment button
+          ...(has('APPOINTMENT') && {
+            rebookCustomer: customer
+              ? { id: Number(customer.id), name: customer.name, phone: customer.phone }
+              : null,
+            rebookServices,
+          }),
+        });
       }
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -1955,7 +1913,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
             />
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5 mb-0`}>{t('barber.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('barber.hint')}</Text>
 
         {/* View toggle */}
         <View className="flex-row bg-gray-100 dark:bg-gray-700 rounded-2xl p-1 mt-2 mb-3">
@@ -1965,6 +1923,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
             </Text>
           </View>
           <TouchableOpacity
+            testID="barber-orders-tab"
             className="flex-1 rounded-xl py-2 items-center active:opacity-70"
             onPress={() => { Haptics.selectionAsync(); setActiveView('ORDERS'); }}
           >
@@ -2019,7 +1978,7 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
             keyboardShouldPersistTaps="always"
           >
             <TouchableOpacity
-              className={`rounded-full px-3.5 py-1.5 border ${
+              className={`flex-row items-center gap-x-1 rounded-full px-3.5 py-1.5 border ${
                 selectedCategoryId === null
                   ? 'bg-indigo-600 border-indigo-600'
                   : 'bg-white border-gray-200'
@@ -2032,6 +1991,13 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
               <Text className={`${typo.captionBold} ${selectedCategoryId === null ? 'text-white' : 'text-gray-600'}`}>
                 {t('pos.allCategories')}
               </Text>
+              {selectedCategoryId === null && !productsFetching && servicesPage?.totalElements != null && (
+                <View className="rounded-full px-1.5 py-0.5 bg-white/25">
+                  <Text className={`${typo.caption} font-bold leading-none text-white`}>
+                    {servicesPage.totalElements}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
             {categories.map((cat) => {
               const active = selectedCategoryId === cat.id;
@@ -2050,6 +2016,13 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
                   <Text className={`${typo.captionBold} ${active ? 'text-white' : 'text-gray-600'}`}>
                     {cat.name}
                   </Text>
+                  {active && activeCategoryCount !== null && (
+                    <View className="rounded-full px-1.5 py-0.5 bg-white/25">
+                      <Text className={`${typo.caption} font-bold leading-none text-white`}>
+                        {activeCategoryCount}
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -2147,7 +2120,6 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
         cartItems={cartItems}
         hasCustomer={has('CUSTOMER')}
         hasLoyalty={has('LOYALTY')}
-        banks={banks}
         checkoutError={checkoutError}
         onDismissError={() => setCheckoutError('')}
         onRemoveItem={handleRemoveItem}
@@ -2158,10 +2130,18 @@ export function BarberServiceScreen({ navigation, route }: SellingScreenProps<'P
         onCustomerChange={setBannerCustomer}
         employees={employees}
         onUpdateItemEmployee={(key, emp) =>
-          setCartItems((prev) => prev.map((i) => (i.key === key ? { ...i, employee: emp } : i)))
+          setCartItems((prev) => prev.map((i) =>
+            i.key === key ? { ...i, employee: emp, commissionOverride: null } : i
+          ))
+        }
+        onUpdateCommissionOverride={(key, amount) =>
+          setCartItems((prev) => prev.map((i) =>
+            i.key === key ? { ...i, commissionOverride: amount } : i
+          ))
         }
       />
       <UpgradeModal visible={upgradeVisible} onClose={() => setUpgradeVisible(false)} />
+
     </View>
   );
 }

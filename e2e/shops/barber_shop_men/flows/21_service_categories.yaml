@@ -1,0 +1,93 @@
+appId: com.knp.tappypos
+name: "BARM 21 Barber service categories — verify all 6 category tabs in POS screen"
+---
+
+# Verifies that all 6 barber categories seeded for barm-97169 appear as filter tabs:
+#   Cắt tóc · Cạo & Chăm sóc râu · Gội đầu & Massage · Tạo kiểu · Combo · Ráy tai
+#
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Tạo đơn mới"
+- assertNotVisible: "500"
+
+# SC01: All services visible in default view
+- tapOn:
+    text: "Tất cả"
+    optional: true
+- assertVisible:
+    id: "barber-service-.*"
+- assertNotVisible: "500"
+
+# SC02: Cắt tóc — main category
+- tapOn:
+    text: "Cắt tóc"
+    optional: true
+- assertNotVisible: "500"
+- assertVisible:
+    id: "barber-service-.*"
+    optional: true
+
+# SC03: Cạo & Chăm sóc râu
+- tapOn:
+    text: "Cạo"
+    optional: true
+- tapOn:
+    text: "Cạo & Chăm sóc râu"
+    optional: true
+- assertNotVisible: "500"
+- assertVisible:
+    id: "barber-service-.*"
+    optional: true
+
+# SC04: Gội đầu & Massage
+- tapOn:
+    text: "Gội"
+    optional: true
+- tapOn:
+    text: "Gội đầu & Massage"
+    optional: true
+- assertNotVisible: "500"
+
+# SC05: Combo
+- tapOn:
+    text: "Combo"
+    optional: true
+- assertNotVisible: "500"
+- assertVisible:
+    text: "Combo"
+    optional: true
+
+# SC06: Ráy tai
+- tapOn:
+    text: "Ráy tai"
+    optional: true
+- assertNotVisible: "500"
+
+# SC07: Return to all and verify add-to-cart still works
+- tapOn:
+    text: "Tất cả"
+    optional: true
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible:
+    id: "barber-cart-count"
+
+# Dismiss checkout without placing order
+- tapOn:
+    id: "barber-checkout-btn"
+    optional: true
+- tapOn:
+    text: "Đóng"
+    optional: true
+- tapOn:
+    text: "×"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

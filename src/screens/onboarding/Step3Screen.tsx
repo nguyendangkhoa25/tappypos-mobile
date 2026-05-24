@@ -130,7 +130,7 @@ function ExpenseEditSheet({
           {/* Header */}
           <View className="flex-row items-center justify-between px-5 pt-3 pb-3 border-b border-gray-100 dark:border-gray-800">
             <View className="flex-row items-center gap-2">
-              <Text style={{ fontSize: 20 }}>{CATEGORY_EMOJI[category] ?? '💰'}</Text>
+              <Text className={typo.section}>{CATEGORY_EMOJI[category] ?? '💰'}</Text>
               <Text className={`${typo.section} text-gray-900 dark:text-white`}>
                 {isAdd ? t('onboarding.step3.addExpense') : t('onboarding.step3.editExpense')}
               </Text>
@@ -197,7 +197,7 @@ function ExpenseEditSheet({
                             : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700'
                         }`}
                       >
-                        <Text style={{ fontSize: 15 }}>{emoji}</Text>
+                        <Text className={typo.label}>{emoji}</Text>
                         <Text
                           className={`${typo.caption} font-medium ${
                             active ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'
@@ -235,7 +235,8 @@ function ExpenseEditSheet({
               </View>
 
               {/* Input row — MoneyInput + calendar button */}
-              <View className="flex-row items-center gap-2">
+              {/* items-start keeps calendar icon aligned with the input even when words text appears below */}
+              <View className="flex-row items-start gap-2">
                 <View className="flex-1">
                   <MoneyInput
                     rawValue={rawAmount}
@@ -255,8 +256,8 @@ function ExpenseEditSheet({
                 >
                   {paymentDay ? (
                     <Text
-                      className="font-bold text-indigo-600 dark:text-indigo-400"
-                      style={{ fontSize: 16, lineHeight: 21, minWidth: 20, textAlign: 'center' }}
+                      className={`${typo.body} text-indigo-600 dark:text-indigo-400`}
+                      style={{ lineHeight: 21, minWidth: 20, textAlign: 'center' }}
                     >
                       {paymentDay}
                     </Text>
@@ -428,7 +429,7 @@ function ExpenseRow({
         color={isSelected ? '#4f46e5' : '#d1d5db'}
         style={{ marginRight: 12 }}
       />
-      <Text style={{ fontSize: 18 }}>{emoji}</Text>
+      <Text className={typo.section}>{emoji}</Text>
       <View className="flex-1 ml-2 min-w-0">
         <Text
           className={`${typo.caption} font-medium ${
@@ -682,13 +683,13 @@ export function Step3Screen({ navigation }: OnboardingScreenProps<'Step3'>) {
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Text className={`${typo.label} text-indigo-500`}>
-            {allSelected ? t('onboarding.step2.deselectAll') : t('onboarding.step2.selectAll')}
+            {allSelected ? t('onboarding.step3.deselectAll') : t('onboarding.step3.selectAll')}
           </Text>
         </TouchableOpacity>
         <View className="flex-row items-center gap-1.5 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1 rounded-full">
           <MaterialCommunityIcons name="check-circle-outline" size={14} color="#4f46e5" />
           <Text className={`${typo.captionBold} text-indigo-600 dark:text-indigo-400`}>
-            {t('onboarding.step2.selectedCount', { count: selectedNames.size })}
+            {t('onboarding.step3.selectedCount', { count: selectedNames.size })}
           </Text>
         </View>
       </View>

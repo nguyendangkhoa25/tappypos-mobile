@@ -14,10 +14,12 @@ import {
   SPECIFIC_SHOP_TYPES,
   SHOP_TYPE_GROUPS,
   getBackendCode,
+  isGroupSupported,
   type SpecificShopType,
 } from '../../utils/shopTypes';
 import { useOnboardingStore } from '../../store/onboardingStore';
 import { useAuthStore } from '../../store/authStore';
+import { useOnboardingFlow } from '../../hooks/useOnboardingFlow';
 import { OnboardingHeader } from './OnboardingHeader';
 import { useTypography } from '../../hooks/useTypography';
 import type { OnboardingScreenProps } from '../../types/navigation';
@@ -27,10 +29,22 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
   const { t } = useTranslation();
   const typo = useTypography();
   const { shopTypeCode, setShopType, setStep2, setStep3, completeStep } = useOnboardingStore();
+  const { totalSteps } = useOnboardingFlow();
   const logout = useAuthStore((s) => s.logout);
   const [selected, setSelected] = useState<string>(shopTypeCode ?? '');
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
+  // Unsupported groups are collapsed by default; user can expand to browse
+  const [expandedUnsupported, setExpandedUnsupported] = useState<Set<string>>(new Set());
+
+  const toggleUnsupportedGroup = (groupId: string) => {
+    setExpandedUnsupported((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  };
 
   const canGoBack = navigation.canGoBack();
 
@@ -69,8 +83,33 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
   };
 
   const renderGridCard = (type: SpecificShopType) => {
+    const supported = isGroupSupported(type.group);
     const isSelected = selected === type.id;
     const localName = t(`onboarding.shopType.specific.${type.id}.name`);
+
+    if (!supported) {
+      return (
+        <View
+          key={type.id}
+          style={{ width: cardWidth, minHeight: 88, opacity: 0.45 }}
+          className="rounded-2xl p-3 items-center justify-center border-2 bg-gray-50 dark:bg-gray-800 border-transparent"
+        >
+          <Text className={typo.heading}>{type.emoji}</Text>
+          <Text
+            className={`${typo.captionBold} text-center mt-1.5 leading-4 text-gray-500 dark:text-gray-400`}
+            numberOfLines={2}
+          >
+            {localName}
+          </Text>
+          <View className="absolute top-1.5 right-1.5 bg-gray-200 dark:bg-gray-700 rounded-full px-1.5 py-0.5">
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
+              {t('onboarding.shopType.comingSoon')}
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
     return (
       <TouchableOpacity
         key={type.id}
@@ -83,7 +122,7 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
             : 'bg-gray-50 dark:bg-gray-800 border-transparent'
         }`}
       >
-        <Text style={{ fontSize: 28 }}>{type.emoji}</Text>
+        <Text className={typo.heading}>{type.emoji}</Text>
         <Text
           className={`${typo.captionBold} text-center mt-1.5 leading-4 ${
             isSelected ? 'text-primary dark:text-indigo-300' : 'text-gray-700 dark:text-gray-200'
@@ -114,7 +153,7 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
           <View className="px-6">
             <OnboardingHeader
               step={0}
-              total={4}
+              total={totalSteps}
               onBack={canGoBack ? () => navigation.goBack() : undefined}
             />
             {!canGoBack && (
@@ -181,18 +220,20 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
 
             {SHOP_TYPE_GROUPS.map((group) => {
               const isActive = activeGroup === group.id && !filter;
+              const supported = isGroupSupported(group.id);
               return (
                 <TouchableOpacity
                   key={group.id}
                   onPress={() => handleGroupPress(group.id)}
                   activeOpacity={0.7}
+                  style={!supported ? { opacity: 0.45 } : undefined}
                   className={`flex-row items-center gap-1.5 rounded-full border px-4 py-2 ${
                     isActive
                       ? 'bg-primary border-primary'
                       : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
                   }`}
                 >
-                  <Text style={{ fontSize: 14 }}>{group.emoji}</Text>
+                  <Text className={typo.label}>{group.emoji}</Text>
                   <Text
                     className={`${typo.label} ${
                       isActive ? 'text-white' : 'text-gray-600 dark:text-gray-300'
@@ -207,14 +248,15 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
 
           {/* Shop type grid */}
           {showGrouped ? (
-            // All selected: grouped sections with section headers
+            // All selected: supported groups first, then collapsed "coming soon" section
             <View className="px-6 gap-6">
-              {SHOP_TYPE_GROUPS.map((group) => {
+              {/* ── Supported groups ── */}
+              {SHOP_TYPE_GROUPS.filter((g) => isGroupSupported(g.id)).map((group) => {
                 const groupTypes = SPECIFIC_SHOP_TYPES.filter((s) => s.group === group.id);
                 return (
                   <View key={group.id}>
                     <View className="flex-row items-center gap-2 mb-3">
-                      <Text style={{ fontSize: 15 }}>{group.emoji}</Text>
+                      <Text className={typo.label}>{group.emoji}</Text>
                       <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-widest`}>
                         {t(`onboarding.shopType.groups.${group.id}`)}
                       </Text>
@@ -222,6 +264,50 @@ export function ShopTypeScreen({ navigation }: OnboardingScreenProps<'ShopType'>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                       {groupTypes.map((type) => renderGridCard(type))}
                     </View>
+                  </View>
+                );
+              })}
+
+              {/* ── "Coming soon" divider ── */}
+              <View className="flex-row items-center gap-3 mt-2">
+                <View className="flex-1 h-px bg-gray-100 dark:bg-gray-700" />
+                <View className="flex-row items-center gap-1.5 bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1">
+                  <MaterialCommunityIcons name="clock-outline" size={12} color="#9ca3af" />
+                  <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
+                    {t('onboarding.shopType.comingSoon')}
+                  </Text>
+                </View>
+                <View className="flex-1 h-px bg-gray-100 dark:bg-gray-700" />
+              </View>
+
+              {/* ── Unsupported groups — collapsed by default ── */}
+              {SHOP_TYPE_GROUPS.filter((g) => !isGroupSupported(g.id)).map((group) => {
+                const groupTypes = SPECIFIC_SHOP_TYPES.filter((s) => s.group === group.id);
+                const isExpanded = expandedUnsupported.has(group.id);
+                return (
+                  <View key={group.id}>
+                    <TouchableOpacity
+                      onPress={() => toggleUnsupportedGroup(group.id)}
+                      activeOpacity={0.7}
+                      className="flex-row items-center gap-2"
+                    >
+                      <Text className={`${typo.label} opacity-40`}>{group.emoji}</Text>
+                      <Text
+                        className={`${typo.captionBold} text-gray-300 dark:text-gray-600 uppercase tracking-widest flex-1`}
+                      >
+                        {t(`onboarding.shopType.groups.${group.id}`)}
+                      </Text>
+                      <MaterialCommunityIcons
+                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                        size={16}
+                        color="#d1d5db"
+                      />
+                    </TouchableOpacity>
+                    {isExpanded && (
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                        {groupTypes.map((type) => renderGridCard(type))}
+                      </View>
+                    )}
                   </View>
                 );
               })}

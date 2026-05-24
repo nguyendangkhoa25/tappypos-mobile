@@ -870,11 +870,11 @@ export function PawnDetailScreen() {
             />
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-0 mt-0.5`}>{t('pawn.detailHint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('pawn.detailHint')}</Text>
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 120 }}
+        contentContainerStyle={{ padding: 4, paddingTop: 12, paddingBottom: insets.bottom + 120 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Status banner */}

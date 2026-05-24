@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { DatePickerModal } from './DatePickerModal';
 import { useTypography } from '../hooks/useTypography';
 
@@ -10,6 +11,7 @@ type Props = {
   placeholder?: string;
   minimumDate?: Date;
   maximumDate?: Date;
+  clearable?: boolean;
 };
 
 function toDate(s: string): Date | undefined {
@@ -25,13 +27,13 @@ function toISO(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export function DatePickerInput({ value, onChange, placeholder, minimumDate, maximumDate }: Props) {
+export function DatePickerInput({ value, onChange, placeholder, minimumDate, maximumDate, clearable = false }: Props) {
   const { t, i18n } = useTranslation();
   const typo = useTypography();
   const [show, setShow] = useState(false);
 
   const selected = toDate(value);
-  const modalValue = selected ?? minimumDate ?? new Date();
+  const modalValue = selected ?? maximumDate ?? minimumDate ?? new Date();
 
   const locale = i18n.language === 'vi' ? 'vi-VN' : 'en-US';
   const displayText = selected
@@ -40,17 +42,31 @@ export function DatePickerInput({ value, onChange, placeholder, minimumDate, max
 
   return (
     <View>
-      <TouchableOpacity
-        onPress={() => setShow(true)}
-        className="flex-row items-center justify-between"
-        activeOpacity={0.7}
-      >
-        {displayText
-          ? <Text className={`${typo.body} text-gray-900 dark:text-gray-100`}>{displayText}</Text>
-          : <Text className={`${typo.body} text-gray-400 dark:text-gray-500`}>{placeholder ?? t('common.selectDate')}</Text>
-        }
-        <Text className={`${typo.body}`}>📅</Text>
-      </TouchableOpacity>
+      <View className="flex-row items-center justify-between">
+        <TouchableOpacity
+          onPress={() => setShow(true)}
+          className="flex-1 flex-row items-center"
+          activeOpacity={0.7}
+        >
+          {displayText
+            ? <Text className={`${typo.body} text-gray-900 dark:text-gray-100 flex-1`}>{displayText}</Text>
+            : <Text className={`${typo.body} text-gray-400 dark:text-gray-500 flex-1`}>{placeholder ?? t('common.selectDate')}</Text>
+          }
+        </TouchableOpacity>
+        <View className="flex-row items-center ml-2" style={{ gap: 8 }}>
+          {clearable && selected && (
+            <TouchableOpacity
+              onPress={() => onChange('')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MaterialCommunityIcons name="close-circle" size={18} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={() => setShow(true)} activeOpacity={0.7}>
+            <Text className={`${typo.body}`}>📅</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <DatePickerModal
         visible={show}

@@ -34,9 +34,10 @@ export function BillSplitterScreen({ navigation }: Props) {
           </TouchableOpacity>
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('billSplit.title')}</Text>
         </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('billSplit.subtitle')}</Text>
       </View>
 
-      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, paddingBottom: bottom + 32 }}>
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
           <Text className={`${typo.label} text-gray-700 mb-2`}>{t('billSplit.total')}</Text>
           <MoneyInput rawValue={total} onChangeRaw={setTotal} placeholder="0" />

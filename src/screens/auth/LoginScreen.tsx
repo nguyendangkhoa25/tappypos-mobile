@@ -13,7 +13,7 @@ import { isAxiosError } from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { ClearableInput } from '../../components/ClearableInput';
+import { PhoneInput } from '../../components/PhoneInput';
 import { PasswordInput } from '../../components/PasswordInput';
 import { LanguageChip } from '../../components/LanguageChip';
 import { useTypography } from '../../hooks/useTypography';
@@ -116,14 +116,13 @@ export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
             <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
               {t('auth.login.phoneLabel')}
             </Text>
-            <ClearableInput
+            <PhoneInput
               testID="login-phone"
               value={phone}
-              onChangeText={(v) => { setPhone(v); setPhoneError(''); }}
+              onChangeRaw={(v) => { setPhone(v); setPhoneError(''); }}
               onClear={() => { setPhone(''); setPhoneError(''); }}
               placeholder={t('auth.login.phoneInputHint')}
               autoFocus
-              keyboardType="default"
               returnKeyType="next"
               onSubmitEditing={() => passwordRef.current?.focus()}
             />
@@ -151,13 +150,14 @@ export function LoginScreen({ navigation, route }: AuthScreenProps<'Login'>) {
             <Text testID="login-error" className={`${typo.caption} text-red-500 mt-1 mb-2`}>{phoneError}</Text>
           ) : null}
 
-          {/* Forgot password */}
-          <TouchableOpacity
+          {/* Forgot password — hidden until Zalo ZNS OTP is configured */}
+          {/* <TouchableOpacity
             className="self-end mb-6"
             onPress={() => navigation.navigate('ForgotPassword', { prefillPhone: phone.trim() })}
           >
             <Text className={`${typo.caption} text-primary`}>{t('auth.login.forgotPassword')}</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
+          <View className="mb-6" />
 
           {/* Login button */}
           <TouchableOpacity

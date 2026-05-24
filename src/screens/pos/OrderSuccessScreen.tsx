@@ -3,11 +3,14 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import * as Print from 'expo-print';
-import { orderApi } from '../../services/api';
+import * as Haptics from 'expo-haptics';
+import { orderApi, shopInfoApi, invoiceApi } from '../../services/api';
 import { formatVnd } from '../../utils/format';
 import { useTypography } from '../../hooks/useTypography';
+import { useFeatureCheck } from '../../hooks/useFeature';
+import { useToastStore } from '../../store/toastStore';
 import type { POSScreenProps } from '../../types/navigation';
 
 const AUTO_SECONDS = 10;
@@ -28,11 +31,16 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
   const { t } = useTranslation();
   const typo = useTypography();
   const insets = useSafeAreaInsets();
-  const { orderId, orderNumber, total, savedOffline } = route.params;
+  const has = useFeatureCheck();
+  const showToast = useToastStore((s) => s.show);
+  const { orderId, orderNumber, total, savedOffline, rebookCustomer, rebookServices } = route.params;
 
   const [countdown, setCountdown] = useState(AUTO_SECONDS);
   const [printing, setPrinting] = useState(false);
+  const [invoiceId, setInvoiceId] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Server data ──────────────────────────────────────────────────────────
 
   const { data: orderData } = useQuery({
     queryKey: ['order', orderId],
@@ -40,6 +48,31 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
     staleTime: 60_000,
     enabled: !savedOffline && !!orderId,
   });
+
+  // Check if e-invoice is configured (only relevant when INVOICE feature is on)
+  const { data: shopInfo } = useQuery({
+    queryKey: ['shop-info'],
+    queryFn: () => shopInfoApi.get().then((r) => r.data.data),
+    staleTime: 5 * 60_000,
+    enabled: has('INVOICE') && !savedOffline,
+  });
+
+  const eInvoiceConfigured = !!(shopInfo?.invoiceVendor && shopInfo?.eInvoiceUsername);
+
+  // Check if an invoice already exists for this order
+  const { data: existingInvoice, isLoading: checkingInvoice } = useQuery({
+    queryKey: ['invoice-order', orderId],
+    queryFn: () => invoiceApi.getByOrderId(orderId).then((r) => r.data.data),
+    staleTime: 60_000,
+    enabled: has('INVOICE') && !savedOffline && eInvoiceConfigured,
+    retry: false, // 404 = no invoice yet; don't retry
+  });
+
+  useEffect(() => {
+    if (existingInvoice?.id) setInvoiceId(existingInvoice.id);
+  }, [existingInvoice]);
+
+  // ── Countdown ────────────────────────────────────────────────────────────
 
   const startCountdown = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -63,6 +96,8 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
     if (countdown === 0) navigation.popToTop();
   }, [countdown, navigation]);
 
+  // ── Actions ──────────────────────────────────────────────────────────────
+
   const handlePrint = async () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setPrinting(true);
@@ -79,6 +114,54 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
     if (timerRef.current) clearInterval(timerRef.current);
     navigation.popToTop();
   };
+
+  // ── E-Invoice creation ───────────────────────────────────────────────────
+
+  const { mutate: createInvoice, isPending: creatingInvoice } = useMutation({
+    mutationFn: () => invoiceApi.createFromOrder(orderId),
+    onSuccess: (res) => {
+      const created = res.data.data;
+      if (created?.id) setInvoiceId(created.id);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showToast(t('eInvoice.createSuccess'));
+    },
+    onError: () => {
+      showToast(t('eInvoice.createError'));
+    },
+  });
+
+  const handleCreateInvoice = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    createInvoice();
+    startCountdown();
+  };
+
+  const handleBookAppointment = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    (navigation as any).navigate('More', {
+      screen: 'AppointmentForm',
+      params: {
+        prefill: {
+          customerId: rebookCustomer?.id,
+          customerName: rebookCustomer?.name,
+          customerPhone: rebookCustomer?.phone,
+          services: rebookServices,
+        },
+      },
+    });
+  };
+
+  // ── Derived ──────────────────────────────────────────────────────────────
+
+  const showEInvoiceBtn =
+    has('INVOICE') &&
+    !savedOffline &&
+    eInvoiceConfigured &&
+    !checkingInvoice;
+
+  const invoiceAlreadyCreated = invoiceId !== null || !!existingInvoice;
+
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <View
@@ -101,7 +184,7 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
         </View>
       )}
 
-      <View className="items-center mb-10">
+      <View className="items-center mb-8">
         <Text testID="order-success-number" className={`${typo.caption} text-gray-500 dark:text-gray-400`}>
           {savedOffline ? t('pos.willSyncWhenOnline') : (
             <>
@@ -110,7 +193,7 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
             </>
           )}
         </Text>
-        <Text className={`${typo.heading} text-indigo-600 mt-2`}>{formatVnd(total)}</Text>
+        <Text className={`${typo.heading} text-indigo-600 dark:text-indigo-400 mt-2`}>{formatVnd(total)}</Text>
 
         {orderData?.paymentMethod && (
           <View className="items-center mt-3 gap-y-1">
@@ -121,7 +204,7 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
               </Text>
             </View>
             {orderData.paymentMethod === 'CASH' && (orderData.changeAmount ?? 0) > 0 && (
-              <Text className={`${typo.caption} font-medium text-emerald-600`}>
+              <Text className={`${typo.caption} font-medium text-emerald-600 dark:text-emerald-400`}>
                 {t('pos.change')}: {formatVnd(orderData.changeAmount!)}
               </Text>
             )}
@@ -129,7 +212,7 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
         )}
       </View>
 
-      {/* Print receipt — hidden when saved offline (no server order exists yet) */}
+      {/* Print receipt — hidden when saved offline */}
       {!savedOffline && (
         <TouchableOpacity
           className={`w-full rounded-2xl py-4 items-center justify-center flex-row gap-2 mb-3 border-2 ${
@@ -143,11 +226,7 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
           {printing ? (
             <ActivityIndicator size="small" color="#4f46e5" />
           ) : (
-            <MaterialCommunityIcons
-              name="printer-outline"
-              size={20}
-              color="#4f46e5"
-            />
+            <MaterialCommunityIcons name="printer-outline" size={20} color="#4f46e5" />
           )}
           <Text
             className={`${typo.labelBold} ${
@@ -155,6 +234,56 @@ export function OrderSuccessScreen({ navigation, route }: POSScreenProps<'OrderS
             }`}
           >
             {printing ? t('pos.printing') : t('pos.printReceipt')}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* E-Invoice button — only when INVOICE feature is on and shop has credentials */}
+      {showEInvoiceBtn && (
+        invoiceAlreadyCreated ? (
+          /* Invoice already created — show a muted badge */
+          <View className="w-full rounded-2xl py-3.5 items-center justify-center flex-row gap-2 mb-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+            <MaterialCommunityIcons name="check-circle" size={18} color="#059669" />
+            <Text className={`${typo.labelBold} text-emerald-700 dark:text-emerald-400`}>
+              {t('eInvoice.invoiceExists')}
+            </Text>
+          </View>
+        ) : (
+          /* Not yet created — show creation button */
+          <TouchableOpacity
+            className={`w-full rounded-2xl py-4 items-center justify-center flex-row gap-2 mb-3 border-2 ${
+              creatingInvoice
+                ? 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
+                : 'border-emerald-200 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 active:opacity-70'
+            }`}
+            onPress={handleCreateInvoice}
+            disabled={creatingInvoice}
+          >
+            {creatingInvoice ? (
+              <ActivityIndicator size="small" color="#059669" />
+            ) : (
+              <MaterialCommunityIcons name="file-document-outline" size={20} color="#059669" />
+            )}
+            <Text
+              className={`${typo.labelBold} ${
+                creatingInvoice ? 'text-gray-400 dark:text-gray-500' : 'text-emerald-700 dark:text-emerald-400'
+              }`}
+            >
+              {creatingInvoice ? t('eInvoice.creating') : t('eInvoice.createInvoice')}
+            </Text>
+          </TouchableOpacity>
+        )
+      )}
+
+      {/* Book Appointment — only for APPOINTMENT feature shops, from BeautyServiceScreen */}
+      {has('APPOINTMENT') && !!rebookServices?.length && !savedOffline && (
+        <TouchableOpacity
+          className="w-full rounded-2xl py-4 items-center justify-center flex-row gap-2 mb-3 border-2 border-violet-200 dark:border-violet-700 bg-violet-50 dark:bg-violet-900/30 active:opacity-70"
+          onPress={handleBookAppointment}
+        >
+          <MaterialCommunityIcons name="calendar-plus" size={20} color="#7c3aed" />
+          <Text className={`${typo.labelBold} text-violet-700 dark:text-violet-400`}>
+            {t('barber.rebookNow')}
           </Text>
         </TouchableOpacity>
       )}

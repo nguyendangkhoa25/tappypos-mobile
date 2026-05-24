@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
@@ -14,9 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useQuery } from '@tanstack/react-query';
 import { useCartStore } from '../../store/cartStore';
-import { cartApi, customerApi, type CustomerData } from '../../services/api';
+import { cartApi } from '../../services/api';
 import { useAlertStore } from '../../store/alertStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { useFeatureCheck } from '../../hooks/useFeature';
@@ -24,6 +22,7 @@ import { formatVnd } from '../../utils/format';
 import { useTypography } from '../../hooks/useTypography';
 import { MoneyInput } from '../../components/MoneyInput';
 import { EmptyState } from '../../components/EmptyState';
+import { CustomerPickerSheet } from '../../components/CustomerPickerSheet';
 import type { POSScreenProps } from '../../types/navigation';
 
 export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
@@ -38,30 +37,11 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
   const total = getTotal();
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
 
-  // Customer picker sheet
   const [customerSheet, setCustomerSheet] = useState(false);
-  const [customerSearch, setCustomerSearch] = useState('');
 
   // Price edit sheet
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState('');
-
-  const { data: recentCustomers = [] } = useQuery({
-    queryKey: ['customers', 'recent'],
-    queryFn: () => customerApi.recent(5).then((r) => r.data.data),
-    staleTime: 60_000,
-    enabled: has('CUSTOMER') && customerSheet,
-  });
-
-  const { data: searchResults = [] } = useQuery({
-    queryKey: ['customers', 'search', customerSearch],
-    queryFn: () =>
-      customerApi.list({ search: customerSearch, size: 10 }).then((r) => r.data.data.content),
-    staleTime: 30_000,
-    enabled: has('CUSTOMER') && customerSearch.length >= 2,
-  });
-
-  const displayCustomers = customerSearch.length >= 2 ? searchResults : recentCustomers;
 
   const handleSaveOrder = async () => {
     setSaving(true);
@@ -149,8 +129,11 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
                 <Text className={`${typo.labelBold} text-gray-900 dark:text-white`}>
                   {selectedCustomer ? selectedCustomer.name : t('pos.walkIn')}
                 </Text>
-                {selectedCustomer && (
+                {selectedCustomer?.type === 'managed' && !!selectedCustomer.phone && (
                   <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{selectedCustomer.phone}</Text>
+                )}
+                {selectedCustomer?.type === 'guest' && (
+                  <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 italic`}>{t('pos.guestCustomer')}</Text>
                 )}
               </View>
               <MaterialCommunityIcons
@@ -266,6 +249,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              testID="cart-checkout-btn"
               className="bg-primary rounded-2xl py-4 items-center active:opacity-80"
               onPress={() => navigation.navigate('Checkout')}
             >
@@ -276,98 +260,12 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
       )}
 
       {/* Customer picker sheet */}
-      <Modal
+      <CustomerPickerSheet
         visible={customerSheet}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setCustomerSheet(false)}
-      >
-        <TouchableOpacity
-          className="flex-1 bg-black/40"
-          activeOpacity={1}
-          onPress={() => setCustomerSheet(false)}
-        />
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View
-            className="bg-white dark:bg-gray-800 rounded-t-3xl px-5 pt-5"
-            style={{ paddingBottom: insets.bottom + 24, maxHeight: '80%' }}
-          >
-            <View className="w-10 h-1 bg-gray-200 dark:bg-gray-600 rounded-full self-center mb-4" />
-            <Text className={`${typo.section} text-gray-900 dark:text-white mb-4`}>{t('pos.selectCustomer')}</Text>
-
-            {/* Walk-in — always first, prominent */}
-            <TouchableOpacity
-              className={`flex-row items-center p-4 rounded-2xl border-2 mb-3 ${
-                !selectedCustomer ? 'border-primary bg-primary-light dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
-              }`}
-              onPress={() => { setCustomer(null); setCustomerSheet(false); }}
-            >
-              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${!selectedCustomer ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-500'}`}>
-                <MaterialCommunityIcons name="account-outline" size={20} color="white" />
-              </View>
-              <View className="flex-1">
-                <Text className={`${typo.labelBold} ${!selectedCustomer ? 'text-primary' : 'text-gray-700 dark:text-gray-200'}`}>
-                  {t('pos.walkIn')}
-                </Text>
-                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{t('pos.walkInHint')}</Text>
-              </View>
-              {!selectedCustomer && (
-                <MaterialCommunityIcons name="check-circle" size={22} color="#4f46e5" />
-              )}
-            </TouchableOpacity>
-
-            {/* Search */}
-            <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-3 py-2.5 mb-3">
-              <MaterialCommunityIcons name="magnify" size={18} color="#9ca3af" />
-              <TextInput
-                className={`flex-1 ml-2 ${typo.inputSize} text-gray-800 dark:text-gray-100`}
-                placeholder={t('pos.searchCustomer')}
-                placeholderTextColor="#9ca3af"
-                value={customerSearch}
-                onChangeText={setCustomerSearch}
-              />
-            </View>
-
-            {/* Customer list */}
-            <FlatList
-              data={displayCustomers}
-              keyExtractor={(c) => c.id}
-              style={{ maxHeight: 300 }}
-              renderItem={({ item: c }) => {
-                const active = selectedCustomer?.id === c.id;
-                return (
-                  <TouchableOpacity
-                    className={`flex-row items-center p-3.5 rounded-xl mb-2 border ${
-                      active ? 'border-primary bg-primary-light dark:bg-indigo-900/30' : 'border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700'
-                    }`}
-                    onPress={() => {
-                      setCustomer({ id: c.id, name: c.name, phone: c.phone });
-                      setCustomerSheet(false);
-                      setCustomerSearch('');
-                    }}
-                  >
-                    <View className={`w-9 h-9 rounded-full items-center justify-center mr-3 ${active ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'}`}>
-                      <Text className={`${typo.label} ${active ? 'text-white' : 'text-gray-600 dark:text-gray-200'}`}>
-                        {c.name.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className={`${typo.label} ${active ? 'text-primary' : 'text-gray-800 dark:text-gray-100'}`}>{c.name}</Text>
-                      <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{c.phone}</Text>
-                    </View>
-                    {active && <MaterialCommunityIcons name="check-circle" size={20} color="#4f46e5" />}
-                  </TouchableOpacity>
-                );
-              }}
-              ListEmptyComponent={
-                customerSearch.length >= 2 ? (
-                  <Text className={`${typo.caption} text-center text-gray-400 dark:text-gray-500 py-4`}>{t('pos.noCustomerFound')}</Text>
-                ) : null
-              }
-            />
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        onClose={() => setCustomerSheet(false)}
+        value={selectedCustomer}
+        onChange={setCustomer}
+      />
 
       {/* Price edit sheet */}
       <Modal
@@ -397,6 +295,7 @@ export function CartScreen({ navigation }: POSScreenProps<'Cart'>) {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
     </View>
   );
 }

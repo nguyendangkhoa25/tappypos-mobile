@@ -7,7 +7,6 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
-  Linking,
 } from 'react-native';
 import { isAxiosError } from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,31 +15,30 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PhoneInput } from '../../components/PhoneInput';
 import { useSubmitting } from '../../hooks/useSubmitting';
 import { useTypography } from '../../hooks/useTypography';
+import { useAlertStore } from '../../store/alertStore';
 import { authExtApi } from '../../services/api';
-import { SUPPORT } from '../../utils/constants';
 import type { AuthScreenProps } from '../../types/navigation';
 
 export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'ForgotPassword'>) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const typo = useTypography();
+  const { show: showAlert } = useAlertStore();
   const [phone, setPhone] = useState(route.params?.prefillPhone?.replace(/\D/g, '') ?? '');
   const [submitting, withSubmit] = useSubmitting();
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSend = () => withSubmit(async () => {
-    if (!phone.trim()) return;
-    setError('');
+    const trimmed = phone.trim();
+    if (!trimmed) return;
     try {
-      await authExtApi.requestPasswordReset(phone.trim());
-      setSent(true);
+      const res = await authExtApi.requestPasswordReset(trimmed);
+      const maskedPhone = res.data?.data?.maskedPhone ?? trimmed;
+      navigation.navigate('OtpVerify', { phone: trimmed, maskedPhone });
     } catch (err) {
-      if (isAxiosError(err) && !err.response) {
-        setError(t('auth.forgotPassword.networkError'));
+      if (isAxiosError(err) && err.response?.status === 429) {
+        showAlert(t('auth.forgotPassword.rateLimitedTitle'), t('auth.forgotPassword.rateLimited'));
       } else {
-        // Always show success-like message to avoid phone enumeration
-        setSent(true);
+        showAlert(t('auth.forgotPassword.networkErrorTitle'), t('auth.forgotPassword.networkError'));
       }
     }
   });
@@ -55,6 +53,7 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 px-6">
+          {/* Back */}
           <TouchableOpacity
             className="mb-6 self-start"
             onPress={() => navigation.goBack()}
@@ -63,6 +62,10 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
             <MaterialCommunityIcons name="arrow-left" size={24} color="#374151" />
           </TouchableOpacity>
 
+          {/* Zalo icon + title */}
+          <View className="w-14 h-14 rounded-2xl bg-blue-50 items-center justify-center mb-4">
+            <MaterialCommunityIcons name="message-text-outline" size={28} color="#0068ff" />
+          </View>
           <Text className={`${typo.heading} text-gray-900 dark:text-white mb-1`}>
             {t('auth.forgotPassword.title')}
           </Text>
@@ -70,71 +73,50 @@ export function ForgotPasswordScreen({ navigation, route }: AuthScreenProps<'For
             {t('auth.forgotPassword.subtitle')}
           </Text>
 
-          {!sent ? (
-            <>
-              <View className="mb-6">
-                <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
-                  {t('auth.forgotPassword.phoneLabel')}
-                </Text>
-                <PhoneInput
-                  value={phone}
-                  onChangeRaw={(v) => { setPhone(v); setError(''); }}
-                  placeholder="0901 234 567"
-                  returnKeyType="send"
-                  onSubmitEditing={handleSend}
-                />
-                {error ? <Text className={`${typo.caption} text-red-500 mt-1`}>{error}</Text> : null}
-              </View>
-
-              <TouchableOpacity
-                className={`rounded-2xl py-4 items-center justify-center ${
-                  submitting || !phone.trim()
-                    ? 'bg-gray-300'
-                    : 'bg-primary active:opacity-80'
-                }`}
-                onPress={handleSend}
-                disabled={submitting || !phone.trim()}
-              >
-                {submitting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text className={`${typo.labelBold} ${!phone.trim() ? 'text-gray-400' : 'text-white'}`}>
-                    {t('auth.forgotPassword.send')}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </>
-          ) : (
-            <View className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-5 items-center mb-6">
-              <Text className="text-3xl mb-3">✅</Text>
-              <Text className={`${typo.body} text-indigo-700 dark:text-indigo-300 text-center mb-1`}>
-                {t('auth.forgotPassword.sentTitle')}
-              </Text>
-              <Text className={`${typo.caption} text-indigo-600 dark:text-indigo-400 text-center leading-5`}>
-                {t('auth.forgotPassword.sentDesc')}
-              </Text>
-            </View>
-          )}
-
-          {/* Support contacts — always visible */}
-          <View className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-2xl p-4">
-            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-3`}>
-              {t('auth.forgotPassword.supportTitle')}
+          {/* Phone input */}
+          <View className="mb-6">
+            <Text className={`${typo.label} text-gray-700 dark:text-gray-300 mb-2`}>
+              {t('auth.forgotPassword.phoneLabel')}
             </Text>
-            <TouchableOpacity
-              className="flex-row items-center gap-3 py-2"
-              onPress={() => Linking.openURL(`tel:${SUPPORT.phone}`)}
-            >
-              <MaterialCommunityIcons name="phone-outline" size={18} color="#4f46e5" />
-              <Text className={`${typo.caption} text-primary font-medium`}>{SUPPORT.phone}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-row items-center gap-3 py-2"
-              onPress={() => Linking.openURL(`mailto:${SUPPORT.email}`)}
-            >
-              <MaterialCommunityIcons name="email-outline" size={18} color="#4f46e5" />
-              <Text className={`${typo.caption} text-primary font-medium`}>{SUPPORT.email}</Text>
-            </TouchableOpacity>
+            <PhoneInput
+              value={phone}
+              onChangeRaw={setPhone}
+              placeholder="0901 234 567"
+              returnKeyType="send"
+              onSubmitEditing={handleSend}
+            />
+          </View>
+
+          {/* Submit */}
+          <TouchableOpacity
+            className={`rounded-2xl py-4 items-center justify-center flex-row gap-x-2 ${
+              submitting || !phone.trim() ? 'bg-gray-200 dark:bg-gray-700' : 'bg-primary active:opacity-80'
+            }`}
+            onPress={handleSend}
+            disabled={submitting || !phone.trim()}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <MaterialCommunityIcons
+                  name="send-outline"
+                  size={17}
+                  color={phone.trim() ? '#fff' : '#9ca3af'}
+                />
+                <Text className={`${typo.labelBold} ${!phone.trim() ? 'text-gray-400 dark:text-gray-500' : 'text-white'}`}>
+                  {t('auth.forgotPassword.send')}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Hint */}
+          <View className="mt-5 flex-row items-start gap-x-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3">
+            <MaterialCommunityIcons name="information-outline" size={15} color="#3b82f6" style={{ marginTop: 1 }} />
+            <Text className={`${typo.caption} text-blue-700 dark:text-blue-300 flex-1 leading-5`}>
+              {t('auth.forgotPassword.hint')}
+            </Text>
           </View>
         </View>
       </ScrollView>

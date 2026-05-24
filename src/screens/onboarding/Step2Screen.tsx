@@ -116,7 +116,7 @@ function PawnTypePickerView({
                     <MaterialCommunityIcons name="check-circle" size={18} color="#4f46e5" />
                   </View>
                 )}
-                <Text style={{ fontSize: 36 }}>{item.emoji}</Text>
+                <Text style={{ fontSize: typo.displaySize }}>{item.emoji}</Text>
                 <Text
                   className={`${typo.label} text-center ${
                     isOn ? 'text-primary' : 'text-gray-700 dark:text-gray-200'
@@ -506,7 +506,7 @@ function ProductRow({
           color={isSelected ? '#4f46e5' : '#d1d5db'}
           style={{ marginRight: 12 }}
         />
-        <Text style={{ fontSize: 18 }}>{template.emoji}</Text>
+        <Text className={typo.section}>{template.emoji}</Text>
         <View className="flex-1 ml-2 min-w-0">
           <Text
             className={`${typo.caption} font-medium ${
@@ -550,7 +550,7 @@ function ProductRow({
           className="flex-row items-center gap-1 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 px-2.5 py-1.5 rounded-xl ml-2 shrink-0"
         >
           <MaterialCommunityIcons name="pencil-outline" size={13} color="#4f46e5" />
-          <Text className={`${typo.caption} text-primary font-semibold`} style={{ fontSize: 11 }}>
+          <Text className={`${typo.caption} text-primary font-semibold`}>
             {t('onboarding.common.edit')}
           </Text>
         </TouchableOpacity>
@@ -648,26 +648,33 @@ export function Step2Screen({ navigation }: OnboardingScreenProps<'Step2'>) {
     }));
   }, [templates, step2.products, t, collapsedSections]);
 
-  const allSelected = templates.length > 0 && selectedIds.size === templates.length;
+  const templateSelectedCount = useMemo(
+    () => templates.filter((t) => selectedIds.has(t.id)).length,
+    [templates, selectedIds],
+  );
+  const allSelected = templates.length > 0 && templateSelectedCount === templates.length;
 
   const handleSelectAll = () => {
-    setStep2({
-      products: templates.map((t) => {
-        const existing = step2.products.find((p) => p.templateId === t.id);
-        return {
-          templateId: t.id,
-          name: t.name,
-          price: existing?.price ?? t.price,
-          unit: t.unit,
-          dynamicPrice: t.dynamicPrice,
-          categoryName: t.categoryName,
-          durationMinutes: t.durationMinutes,
-        };
-      }),
+    const customProducts = step2.products.filter((p) => p.templateId.startsWith('custom_'));
+    const templateProducts = templates.map((t) => {
+      const existing = step2.products.find((p) => p.templateId === t.id);
+      return {
+        templateId: t.id,
+        name: t.name,
+        price: existing?.price ?? t.price,
+        unit: t.unit,
+        dynamicPrice: t.dynamicPrice,
+        categoryName: t.categoryName,
+        durationMinutes: t.durationMinutes,
+      };
     });
+    setStep2({ products: [...templateProducts, ...customProducts] });
   };
 
-  const handleDeselectAll = () => setStep2({ products: [] });
+  const handleDeselectAll = () => {
+    const customProducts = step2.products.filter((p) => p.templateId.startsWith('custom_'));
+    setStep2({ products: customProducts });
+  };
 
   const handleToggle = (template: ProductTemplate) => {
     if (selectedIds.has(template.id)) {

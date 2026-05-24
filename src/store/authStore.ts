@@ -106,7 +106,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Clear tenant_id so the next login (or registration) starts with a clean slate —
     // setAuthenticated will restore it from the JWT on successful re-login.
     const { useOnboardingStore } = await import('./onboardingStore');
+    const { useCartStore } = await import('./cartStore');
+    const { useUserStore } = await import('./userStore');
     useOnboardingStore.getState().reset();
+    useCartStore.getState().clearCart();
+    await useUserStore.getState().clear();
     await Promise.all([
       SecureStore.deleteItemAsync('access_token'),
       SecureStore.deleteItemAsync('tenant_id'),

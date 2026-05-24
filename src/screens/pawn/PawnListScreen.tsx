@@ -374,7 +374,12 @@ export function PawnListScreen() {
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
-        <Text className={`${typo.section} text-gray-900 dark:text-white mb-0.5`}>{t('pawn.title')}</Text>
+        <View className="flex-row items-center justify-between mb-0.5">
+          <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('pawn.title')}</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('PawnForm', {})} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <MaterialCommunityIcons name="plus" size={24} color="#4f46e5" />
+          </TouchableOpacity>
+        </View>
         <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-3 mt-0.5`}>{t('pawn.hint')}</Text>
         <View className="flex-row items-center">
         {kpis && kpis.overdueCount > 0 && (
@@ -487,7 +492,7 @@ export function PawnListScreen() {
           ListHeaderComponent={
             <FilterSummaryBanner filter={statusFilter} contracts={contracts} />
           }
-          contentContainerStyle={{ paddingTop: 8, paddingBottom: insets.bottom + 80 }}
+          contentContainerStyle={{ padding: 4, paddingTop: 8, paddingBottom: insets.bottom + 80 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />

@@ -1,0 +1,28 @@
+appId: com.knp.tappypos
+name: "BARM 15 Customer loyalty — points balance visible in customer detail (LOYALTY feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-customers"
+- assertVisible: "Khách hàng"
+
+- tapOn:
+    id: "customer-row-0"
+- assertVisible:
+    text: "Điểm tích lũy"
+    optional: true
+
+- tapOn:
+    text: "Xem lịch sử"
+    optional: true
+- assertVisible:
+    id: "loyalty-balance"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

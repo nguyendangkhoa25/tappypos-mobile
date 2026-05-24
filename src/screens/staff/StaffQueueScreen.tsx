@@ -160,7 +160,7 @@ function EmployeeCard({ employee, inProgress, pending, waitMin }: {
           style={{ backgroundColor: color + '20', width: 44, height: 44, borderRadius: 22 }}
           className="items-center justify-center mr-3"
         >
-          <Text style={{ color, fontSize: 18, fontWeight: '700' }}>{initials}</Text>
+          <Text className={`${typo.section} font-bold`} style={{ color }}>{initials}</Text>
         </View>
 
         <View className="flex-1">
@@ -352,7 +352,7 @@ function ConcurrentSessionsSection({ sessions }: { sessions: ConcurrentSession[]
                           style={{ backgroundColor: empColor + '25', width: 22, height: 22, borderRadius: 11 }}
                           className="items-center justify-center"
                         >
-                          <Text style={{ color: empColor, fontSize: 10, fontWeight: '700' }}>{initials}</Text>
+                          <Text className={`${typo.caption} font-bold`} style={{ color: empColor }}>{initials}</Text>
                         </View>
                         <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`} numberOfLines={1}>
                           {item.assignedEmployeeName}
@@ -444,9 +444,14 @@ export function StaffQueueScreen({ navigation }: Props) {
   const { employeeRows, available, stats, minWait, hasFree, concurrentSessions } = useMemo(() => {
     if (!data) return { employeeRows: [], available: [], stats: { working: 0, waiting: 0, free: 0, unassigned: 0 }, minWait: 0, hasFree: false, concurrentSessions: [] };
 
+    // Guard against null/undefined from API (e.g. empty queue or no active employees)
+    const assigned = data.assigned ?? [];
+    const employees = data.employees ?? [];
+    const avail = data.available ?? [];
+
     // Group assigned items by employee name
     const byName = new Map<string, { inProgress: WorkItemDTO[]; pending: WorkItemDTO[] }>();
-    for (const item of data.assigned) {
+    for (const item of assigned) {
       const key = item.assignedEmployeeName ?? '';
       if (!key) continue;
       if (!byName.has(key)) byName.set(key, { inProgress: [], pending: [] });
@@ -455,7 +460,7 @@ export function StaffQueueScreen({ navigation }: Props) {
       else bucket.pending.push(item);
     }
 
-    const rows = data.employees.map((emp) => {
+    const rows = employees.map((emp) => {
       const bucket = byName.get(emp.fullName) ?? { inProgress: [], pending: [] };
       const waitMin = [...bucket.inProgress, ...bucket.pending]
         .reduce((sum, item) => sum + (item.durationMinutes || 0), 0);
@@ -479,7 +484,7 @@ export function StaffQueueScreen({ navigation }: Props) {
 
     // Build concurrent sessions: orders with 2+ distinct assigned technicians
     const byOrder = new Map<number, WorkItemDTO[]>();
-    for (const item of data.assigned) {
+    for (const item of assigned) {
       if (!item.assignedEmployeeId) continue;
       if (!byOrder.has(item.orderId)) byOrder.set(item.orderId, []);
       byOrder.get(item.orderId)!.push(item);
@@ -497,8 +502,8 @@ export function StaffQueueScreen({ navigation }: Props) {
 
     return {
       employeeRows: rows,
-      available: data.available,
-      stats: { working, waiting, free, unassigned: data.available.length },
+      available: avail,
+      stats: { working, waiting, free, unassigned: avail.length },
       minWait,
       hasFree,
       concurrentSessions,
@@ -569,38 +574,38 @@ export function StaffQueueScreen({ navigation }: Props) {
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: top + 12, paddingBottom: 12 }}
       >
-        <View className="flex-row items-center">
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            className="mr-2"
-          >
-            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
-          </TouchableOpacity>
-          <View className="flex-1">
-            <Text className={`${typo.section} text-gray-900 dark:text-white`}>
+        <View>
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              className="mr-2"
+            >
+              <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+            </TouchableOpacity>
+            <Text className={`${typo.section} text-gray-900 dark:text-white flex-1`}>
               {t('queue.title')}
             </Text>
-            {updatedTime ? (
-              <Text className={`${typo.caption} text-gray-400 mt-0.5`}>
-                {t('queue.updatedAt', { time: updatedTime })}
-              </Text>
-            ) : (
-              <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
-                {t('queue.hint')}
-              </Text>
-            )}
+            <TouchableOpacity
+              onPress={() => refetch()}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MaterialCommunityIcons
+                name="refresh"
+                size={22}
+                color={isRefetching ? '#a5b4fc' : '#4f46e5'}
+              />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={() => refetch()}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <MaterialCommunityIcons
-              name="refresh"
-              size={22}
-              color={isRefetching ? '#a5b4fc' : '#4f46e5'}
-            />
-          </TouchableOpacity>
+          {updatedTime ? (
+            <Text className={`${typo.caption} text-gray-400 mt-0.5`}>
+              {t('queue.updatedAt', { time: updatedTime })}
+            </Text>
+          ) : (
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
+              {t('queue.hint')}
+            </Text>
+          )}
         </View>
       </View>
 
@@ -613,7 +618,7 @@ export function StaffQueueScreen({ navigation }: Props) {
           data={employeeRows}
           keyExtractor={(item) => item.employee.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 16, paddingBottom: bottom + 24 }}
+          contentContainerStyle={{ padding: 4, paddingBottom: bottom + 24 }}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#059669" />
           }

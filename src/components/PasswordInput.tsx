@@ -1,17 +1,20 @@
 import { forwardRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, type TextInputProps } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTypography } from '../hooks/useTypography';
 
-type Rule = { label: string; test: (v: string) => boolean };
+type Rule = { labelKey: string; test: (v: string) => boolean };
 
 const RULES: Rule[] = [
-  { label: 'Ít nhất 8 ký tự', test: (v) => v.length >= 8 },
-  { label: 'Chữ hoa (A–Z)', test: (v) => /[A-Z]/.test(v) },
-  { label: 'Chữ thường (a–z)', test: (v) => /[a-z]/.test(v) },
-  { label: 'Chữ số (0–9)', test: (v) => /\d/.test(v) },
-  { label: 'Ký tự đặc biệt (!@#…)', test: (v) => /[^A-Za-z0-9]/.test(v) },
+  { labelKey: 'auth.password.rules.minLength', test: (v) => v.length >= 8 },
+  { labelKey: 'auth.password.rules.uppercase',  test: (v) => /[A-Z]/.test(v) },
+  { labelKey: 'auth.password.rules.lowercase',  test: (v) => /[a-z]/.test(v) },
+  { labelKey: 'auth.password.rules.digit',      test: (v) => /\d/.test(v) },
+  { labelKey: 'auth.password.rules.special',    test: (v) => /[^A-Za-z0-9]/.test(v) },
 ];
+
+const STRENGTH_COLORS = ['', '#ef4444', '#f59e0b', '#3b82f6', '#059669'];
 
 function getStrength(v: string): 0 | 1 | 2 | 3 | 4 {
   const passed = RULES.filter((r) => r.test(v)).length;
@@ -20,9 +23,6 @@ function getStrength(v: string): 0 | 1 | 2 | 3 | 4 {
   if (passed === 3) return 3;
   return 4;
 }
-
-const STRENGTH_LABELS = ['', 'Yếu', 'Trung bình', 'Khá', 'Mạnh'];
-const STRENGTH_COLORS = ['', '#ef4444', '#f59e0b', '#3b82f6', '#059669'];
 
 type Props = Omit<TextInputProps, 'value' | 'secureTextEntry'> & {
   value: string;
@@ -33,8 +33,17 @@ type Props = Omit<TextInputProps, 'value' | 'secureTextEntry'> & {
 export const PasswordInput = forwardRef<TextInput, Props>(
   ({ value, showRules = false, showStrength = true, ...rest }, ref) => {
     const [show, setShow] = useState(false);
+    const { t } = useTranslation();
     const typo = useTypography();
     const strength = value.length > 0 ? getStrength(value) : 0;
+
+    const STRENGTH_LABEL_KEYS = [
+      '',
+      'auth.password.strength.weak',
+      'auth.password.strength.fair',
+      'auth.password.strength.good',
+      'auth.password.strength.strong',
+    ] as const;
 
     return (
       <View>
@@ -68,7 +77,7 @@ export const PasswordInput = forwardRef<TextInput, Props>(
               ))}
             </View>
             <Text className={typo.caption} style={{ color: STRENGTH_COLORS[strength] }}>
-              {STRENGTH_LABELS[strength]}
+              {strength > 0 ? t(STRENGTH_LABEL_KEYS[strength]) : ''}
             </Text>
           </View>
         )}
@@ -78,14 +87,14 @@ export const PasswordInput = forwardRef<TextInput, Props>(
             {RULES.map((rule) => {
               const passed = rule.test(value);
               return (
-                <View key={rule.label} className="flex-row items-center gap-2">
+                <View key={rule.labelKey} className="flex-row items-center gap-2">
                   <MaterialCommunityIcons
                     name={passed ? 'check-circle' : 'circle-outline'}
                     size={14}
                     color={passed ? '#059669' : '#9ca3af'}
                   />
                   <Text className={`${typo.caption} ${passed ? 'text-primary' : 'text-gray-400'}`}>
-                    {rule.label}
+                    {t(rule.labelKey)}
                   </Text>
                 </View>
               );

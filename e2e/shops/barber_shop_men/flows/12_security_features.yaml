@@ -1,0 +1,34 @@
+appId: com.knp.tappypos
+name: "BARM 12 Security — barber features present, inventory + gold absent, sell shows barber screen"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+
+# INVENTORY tile absent (barbers don't track stock)
+- assertNotVisible:
+    id: "more-config-inventory"
+
+# Gold price tile absent (not a pawn/gold shop)
+- assertNotVisible:
+    id: "more-config-goldPrice"
+
+# APPOINTMENT tile present (barbers book appointments)
+- assertVisible:
+    id: "more-config-appointments"
+
+# Sell tab shows barber service screen (not generic POS / scan screen)
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Tạo đơn mới"
+- assertNotVisible: "Tìm sản phẩm..."
+- assertNotVisible: "500"
+
+# Vendor absent (barbers don't do purchase orders)
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertNotVisible: "Nhà cung cấp"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

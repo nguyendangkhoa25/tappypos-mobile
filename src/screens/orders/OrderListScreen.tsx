@@ -23,6 +23,8 @@ import { BarChart, type ChartGranularity } from '../../components/BarChart';
 import { useSellingStore } from '../../store/sellingStore';
 import { useOfflineQueueStore } from '../../store/offlineQueueStore';
 import { useTypography } from '../../hooks/useTypography';
+import { useFeature } from '../../hooks/useFeature';
+import { useAuthStore } from '../../store/authStore';
 import type { OrdersScreenProps } from '../../types/navigation';
 
 type Period = 'day' | 'week' | 'month' | 'year';
@@ -58,19 +60,23 @@ const PERIOD_TABS: { key: Period; labelKey: string }[] = [
   { key: 'year',  labelKey: 'orders.periodYear' },
 ];
 
-const STATUS_FILTERS = [
-  { key: '', labelKey: 'orders.all' },
-  { key: 'COMPLETED', labelKey: 'orders.completed' },
-  { key: 'IN_PROGRESS', labelKey: 'orders.in_progress' },
-  { key: 'PENDING', labelKey: 'orders.pending' },
-  { key: 'CANCELLED', labelKey: 'orders.cancelled' },
-];
+// Backend shop-type codes that use the multi-step order flow
+// (PENDING → IN_PROGRESS → COMPLETED). Pure retail/POS shops skip
+// the appointment queue and go straight to COMPLETED, so they don't
+// need the PENDING / IN_PROGRESS filter chips.
+const SERVICE_SHOP_CODES = new Set([
+  'BARBER_SHOP_MEN', 'HAIR_SALON', 'NAIL_SHOP', 'SPA_SHOP',
+  'LASH_PMU_STUDIO', 'MASSAGE_SHOP', 'BEAUTY_CLINIC', 'MAKEUP_STUDIO',
+  'RESTAURANT', 'COFFEE_SHOP', 'FOOD_BEVERAGE',
+  'PUB', 'PUB_SEAFOOD', 'PUB_GOAT', 'PUB_BEEF',
+]);
 
 const STATUS_COLORS: Record<string, string> = {
-  COMPLETED: '#059669',
+  COMPLETED:   '#059669',
   IN_PROGRESS: '#3b82f6',
-  PENDING: '#f59e0b',
-  CANCELLED: '#ef4444',
+  PENDING:     '#f59e0b',
+  CANCELLED:   '#ef4444',
+  VOIDED:      '#6b7280',
 };
 
 type OrderRowProps = {
@@ -124,6 +130,29 @@ export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) 
     [pendingOrders],
   );
   const insets = useSafeAreaInsets();
+  const shopTypeCode = useAuthStore((s) => s.shopTypeCode);
+  const canVoidOrders = useFeature('ORDER_VIEW_ALL');
+
+  // Build the status filter chips based on the shop's order flow and user permissions
+  const statusFilters = useMemo(() => {
+    const isServiceShop = shopTypeCode ? SERVICE_SHOP_CODES.has(shopTypeCode) : false;
+    const filters: { key: string; labelKey: string }[] = [
+      { key: '',          labelKey: 'orders.all' },
+      { key: 'COMPLETED', labelKey: 'orders.completed' },
+    ];
+    if (isServiceShop) {
+      filters.push(
+        { key: 'IN_PROGRESS', labelKey: 'orders.in_progress' },
+        { key: 'PENDING',     labelKey: 'orders.pending' },
+      );
+    }
+    filters.push({ key: 'CANCELLED', labelKey: 'orders.cancelled' });
+    if (canVoidOrders) {
+      filters.push({ key: 'VOIDED', labelKey: 'orders.voided' });
+    }
+    return filters;
+  }, [shopTypeCode, canVoidOrders]);
+
   const [period, setPeriod] = useState<Period>('day');
   const { from, to, granularity } = useMemo(() => getPeriodRange(period), [period]);
   const [status, setStatus] = useState('');
@@ -280,7 +309,7 @@ export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) 
       {/* Header */}
       <View className="bg-white dark:bg-gray-800 px-4 pb-3 shadow-sm" style={{ paddingTop: insets.top + 12 }}>
         <Text className={`${typo.heading} text-gray-900`}>{t('orders.title')}</Text>
-        <Text className={`${typo.caption} text-gray-500 mt-0.5 ${activeView === 'ORDERS' ? 'mb-2' : 'mb-3'}`}>{t('orders.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5 ${activeView === 'ORDERS' ? 'mb-2' : 'mb-3'}`}>{t('orders.hint')}</Text>
         {activeView === 'ORDERS' && (
           <View className="flex-row bg-gray-100 rounded-2xl p-1 mb-3">
             <TouchableOpacity
@@ -366,7 +395,7 @@ export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) 
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={STATUS_FILTERS}
+          data={statusFilters}
           keyExtractor={(item) => item.key}
           renderItem={({ item }) => (
             <TouchableOpacity
@@ -397,7 +426,7 @@ export function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) 
           showsVerticalScrollIndicator={false}
           data={allOrders}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}
+          contentContainerStyle={{ padding: 4, paddingBottom: insets.bottom + 16 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />
           }

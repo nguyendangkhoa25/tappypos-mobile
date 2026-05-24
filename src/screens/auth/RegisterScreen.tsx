@@ -14,6 +14,7 @@ import { isAxiosError } from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { TnCBody } from '../settings/TnCScreen';
 import { PhoneInput } from '../../components/PhoneInput';
 import { PasswordInput } from '../../components/PasswordInput';
 import { LanguageChip } from '../../components/LanguageChip';
@@ -110,7 +111,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
                 {t('auth.register.title')}
               </Text>
             </View>
-            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 ml-9`}>
+            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
               {t('auth.register.subtitle')}
             </Text>
           </View>
@@ -261,18 +262,19 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
         <View className="flex-1 bg-white dark:bg-gray-900" style={{ paddingTop: insets.top + 16 }}>
           <View className="flex-row items-center justify-between px-6 mb-4">
             <Text className={`${typo.section} text-gray-900 dark:text-white`}>
-              {t('auth.register.tncModalTitle')}
+              {t('settings.tnc.title')}
             </Text>
             <TouchableOpacity onPress={() => setShowTncModal(false)}>
               <MaterialCommunityIcons name="close" size={24} color="#374151" />
             </TouchableOpacity>
           </View>
           <ScrollView
-            className="flex-1 px-6"
+            className="flex-1 px-4"
+            showsVerticalScrollIndicator={false}
             onMomentumScrollEnd={() => setTncAccepted(true)}
+            contentContainerStyle={{ paddingBottom: 24 }}
           >
-            <Text className={`${typo.caption} text-gray-700 dark:text-gray-300 leading-6`}>{t('auth.register.tncContent')}</Text>
-            <View style={{ height: 32 }} />
+            <TnCBody />
           </ScrollView>
           <View className="px-6 pb-8 pt-4 border-t border-gray-100 dark:border-gray-700">
             <TouchableOpacity

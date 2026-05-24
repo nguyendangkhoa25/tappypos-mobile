@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  ActivityIndicator, Switch, KeyboardAvoidingView, Platform,
+  ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -10,9 +10,11 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import {
-  pawnApi, customerApi,
-  type PawnCategory, type PawnInterestMode, type CustomerData,
+  pawnApi,
+  type PawnCategory, type PawnInterestMode,
 } from '../../services/api';
+import { CustomerPickerSheet } from '../../components/CustomerPickerSheet';
+import type { SelectedCustomer } from '../../store/cartStore';
 import { useTypography } from '../../hooks/useTypography';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
@@ -89,17 +91,12 @@ export function PawnFormScreen() {
     staleTime: 30_000,
   });
 
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null);
-  const [isWalkIn, setIsWalkIn] = useState(!initCustomerId);
-  const [walkInName, setWalkInName] = useState(initCustomerName ?? '');
-
-  const { data: customerResults } = useQuery({
-    queryKey: ['customerSearch', customerSearch],
-    queryFn: () => customerApi.list({ search: customerSearch, size: 20 }).then((r) => r.data.data),
-    enabled: customerSearch.length >= 2 && !isWalkIn,
-    staleTime: 10_000,
-  });
+  const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(() =>
+    initCustomerId
+      ? { type: 'managed', id: String(initCustomerId), name: initCustomerName ?? '', phone: '' }
+      : null
+  );
+  const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
 
   const [itemName, setItemName] = useState('');
   const [itemBrand, setItemBrand] = useState('');
@@ -146,8 +143,13 @@ export function PawnFormScreen() {
     setPawnDate(existingPawn.pawnDate.slice(0, 10));
     setPawnDueDate(existingPawn.pawnDueDate.slice(0, 10));
     setCalcMode(existingPawn.interestCalcMode ?? 'MONTHLY');
-    if (existingPawn.customerName) setWalkInName(existingPawn.customerName);
-    setIsWalkIn(!existingPawn.customerId);
+    if (existingPawn.customerId) {
+      setSelectedCustomer({ type: 'managed', id: String(existingPawn.customerId), name: existingPawn.customerName ?? '', phone: '' });
+    } else if (existingPawn.customerName) {
+      setSelectedCustomer({ type: 'guest', name: existingPawn.customerName });
+    } else {
+      setSelectedCustomer(null);
+    }
     const el = existingPawn.electronicsDetail;
     if (el) { setBrand(el.brand ?? ''); setModel(el.model ?? ''); setSerialNumber(el.serialNumber ?? ''); setConditionGrade(el.conditionGrade ?? ''); }
     const vl = existingPawn.vehicleDetail;
@@ -159,11 +161,9 @@ export function PawnFormScreen() {
   }, [existingPawn]);
 
   const buildPayload = () => ({
-    customerId: selectedCustomer?.id
-      ? Number(selectedCustomer.id)
-      : (isEdit && existingPawn?.customerId ? existingPawn.customerId : undefined),
-    customerName: isWalkIn ? (walkInName.trim() || undefined) : undefined,
-    visitingGuest: isWalkIn,
+    customerId: selectedCustomer?.type === 'managed' ? Number(selectedCustomer.id) : undefined,
+    customerName: selectedCustomer?.type === 'guest' ? selectedCustomer.name : undefined,
+    visitingGuest: !selectedCustomer || selectedCustomer.type === 'guest',
     itemName: itemName.trim(),
     itemBrand: itemBrand.trim() || undefined,
     itemType: itemType.trim() || undefined,
@@ -225,7 +225,7 @@ export function PawnFormScreen() {
     >
       {/* Header */}
       <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
@@ -240,12 +240,12 @@ export function PawnFormScreen() {
             )}
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('pawn.formHint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('pawn.formHint')}</Text>
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+        contentContainerStyle={{ padding: 4, paddingBottom: insets.bottom + 24 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -253,65 +253,33 @@ export function PawnFormScreen() {
         <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
           <SectionHeader icon="account-outline" title={t('pawn.form.customerSection')} />
 
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-300`}>{t('pawn.form.walkIn')}</Text>
-            <Switch value={isWalkIn} onValueChange={setIsWalkIn} trackColor={{ true: '#4f46e5' }} thumbColor="#fff" />
-          </View>
-
-          {isWalkIn ? (
-            <FormField label={t('pawn.form.customerName')}>
-              <TextInput
-                value={walkInName}
-                onChangeText={setWalkInName}
-                placeholder={t('pawn.noCustomer')}
-                placeholderTextColor="#9ca3af"
-                className={inputClass}
-              />
-            </FormField>
-          ) : (
-            <>
-              {selectedCustomer ? (
-                <TouchableOpacity
-                  onPress={() => { setSelectedCustomer(null); setCustomerSearch(''); }}
-                  className="flex-row items-center bg-primary/10 dark:bg-primary/20 rounded-xl px-4 py-3"
-                >
-                  <MaterialCommunityIcons name="account-check" size={18} color="#4f46e5" />
-                  <View className="ml-2 flex-1">
-                    <Text className={`${typo.label} text-primary`}>{selectedCustomer.name}</Text>
+          <TouchableOpacity
+            className="flex-row items-center bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3"
+            onPress={() => setCustomerPickerVisible(true)}
+          >
+            {selectedCustomer ? (
+              <>
+                <MaterialCommunityIcons
+                  name={selectedCustomer.type === 'managed' ? 'account-check' : 'account-outline'}
+                  size={18}
+                  color="#4f46e5"
+                />
+                <View className="ml-2 flex-1">
+                  <Text className={`${typo.label} text-primary`}>{selectedCustomer.name}</Text>
+                  {selectedCustomer.type === 'managed' && selectedCustomer.phone ? (
                     <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{selectedCustomer.phone}</Text>
-                  </View>
-                  <MaterialCommunityIcons name="close" size={16} color="#9ca3af" />
-                </TouchableOpacity>
-              ) : (
-                <FormField label={t('pawn.form.selectCustomer')}>
-                  <TextInput
-                    value={customerSearch}
-                    onChangeText={setCustomerSearch}
-                    placeholder={t('customers.searchPlaceholder')}
-                    placeholderTextColor="#9ca3af"
-                    className={inputClass}
-                  />
-                  {customerResults?.content && customerSearch.length >= 2 && (
-                    <View className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 mt-2 overflow-hidden">
-                      {customerResults.content.slice(0, 5).map((c) => (
-                        <TouchableOpacity
-                          key={c.id}
-                          onPress={() => { setSelectedCustomer(c); setCustomerSearch(''); }}
-                          className="flex-row items-center px-4 py-3 border-b border-gray-50 dark:border-gray-700"
-                        >
-                          <MaterialCommunityIcons name="account-outline" size={16} color="#6b7280" />
-                          <View className="ml-2">
-                            <Text className={`${typo.caption} font-medium text-gray-900 dark:text-white`}>{c.name}</Text>
-                            <Text className={`${typo.caption} text-gray-400`}>{c.phone}</Text>
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
-                </FormField>
-              )}
-            </>
-          )}
+                  ) : null}
+                </View>
+                <MaterialCommunityIcons name="pencil-outline" size={16} color="#9ca3af" />
+              </>
+            ) : (
+              <>
+                <MaterialCommunityIcons name="account-plus-outline" size={18} color="#9ca3af" />
+                <Text className={`${typo.label} text-gray-400 dark:text-gray-500 ml-2 flex-1`}>{t('pawn.noCustomer')}</Text>
+                <MaterialCommunityIcons name="chevron-right" size={16} color="#9ca3af" />
+              </>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Section: Item */}
@@ -584,6 +552,12 @@ export function PawnFormScreen() {
         </View>
       </ScrollView>
 
+      <CustomerPickerSheet
+        visible={customerPickerVisible}
+        onClose={() => setCustomerPickerVisible(false)}
+        value={selectedCustomer}
+        onChange={setSelectedCustomer}
+      />
     </KeyboardAvoidingView>
   );
 }

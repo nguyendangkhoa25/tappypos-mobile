@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { cartApi, expenseApi, BASE_URL } from '../services/api';
@@ -22,14 +22,14 @@ async function isOnline(): Promise<boolean> {
 }
 
 export function useOfflineSync() {
-  const { setOffline } = useNetworkStore();
+  const { isOffline, setOffline } = useNetworkStore();
   const { pendingOrders, pendingExpenses, updateOrderStatus, updateExpenseStatus, removeOrder, removeExpense } =
     useOfflineQueueStore();
   const { show: showToast } = useToastStore();
   const qc = useQueryClient();
   const isSyncing = useRef(false);
 
-  const syncQueue = async () => {
+  const syncQueue = useCallback(async () => {
     if (isSyncing.current) return;
     const orders = useOfflineQueueStore.getState().pendingOrders.filter((o) => o.status === 'pending');
     const expenses = useOfflineQueueStore.getState().pendingExpenses.filter((e) => e.status === 'pending');
@@ -83,16 +83,37 @@ export function useOfflineSync() {
       qc.invalidateQueries({ queryKey: ['expensesSummary'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showToast, qc, updateOrderStatus, updateExpenseStatus, removeOrder, removeExpense]);
 
-  const checkAndSync = async () => {
-    const online = await isOnline();
-    const wasOffline = useNetworkStore.getState().isOffline;
-    setOffline(!online);
-    if (online && wasOffline) {
+  // ── Watch isOffline: flush queue on any offline→online transition ─────────
+  // The API interceptor can clear isOffline (on successful response) before the
+  // health-poll fires. React to that change here so the queue syncs immediately
+  // regardless of which path restored connectivity.
+  const prevOfflineRef = useRef(isOffline);
+  useEffect(() => {
+    const wasOffline = prevOfflineRef.current;
+    prevOfflineRef.current = isOffline;
+    if (!isOffline && wasOffline) {
       syncQueue();
     }
-  };
+  }, [isOffline, syncQueue]);
+
+  // ── Health poll + app-foreground check ────────────────────────────────────
+  const checkAndSync = useCallback(async () => {
+    const online = await isOnline();
+    const store = useNetworkStore.getState();
+    if (online) {
+      // Probe succeeded → server is up and device is connected.
+      // Clear both flags so the banner hides without waiting for an Axios call.
+      // Guard each write so we don't trigger spurious re-renders every 30 s.
+      if (store.isOffline)     store.setOffline(false);
+      if (store.isMaintenance) store.setMaintenance(false);
+    } else {
+      // Probe failed → device offline or server completely unreachable.
+      if (!store.isOffline) store.setOffline(true);
+    }
+  }, []);
 
   useEffect(() => {
     checkAndSync();
@@ -104,5 +125,5 @@ export function useOfflineSync() {
       clearInterval(interval);
       sub.remove();
     };
-  }, []);
+  }, [checkAndSync]);
 }

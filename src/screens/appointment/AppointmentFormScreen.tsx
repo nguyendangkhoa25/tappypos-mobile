@@ -17,16 +17,17 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   appointmentApi,
-  customerApi,
   productExtApi,
   employeeApi,
   type AppointmentServiceRequest,
-  type CustomerData,
   type ProductData,
   type EmployeeData,
 } from '../../services/api';
+import { CustomerPickerSheet } from '../../components/CustomerPickerSheet';
+import type { SelectedCustomer } from '../../store/cartStore';
 import { useAlertStore } from '../../store/alertStore';
 import { useTypography } from '../../hooks/useTypography';
+import { DatePickerInput } from '../../components/DatePickerInput';
 import type { MoreScreenProps } from '../../types/navigation';
 
 type Props = MoreScreenProps<'AppointmentForm'>;
@@ -141,70 +142,6 @@ function ServiceRow({
   );
 }
 
-function CustomerSearchModal({
-  visible,
-  onClose,
-  onSelect,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onSelect: (c: CustomerData) => void;
-}) {
-  const { t } = useTranslation();
-  const typo = useTypography();
-  const [query, setQuery] = useState('');
-
-  const { data, isFetching } = useQuery({
-    queryKey: ['customer-search-appt', query],
-    queryFn: async () => {
-      const res = await customerApi.list({ search: query, size: 20 });
-      return res.data.data?.content ?? [];
-    },
-    enabled: visible,
-    staleTime: 10_000,
-  });
-
-  return (
-    <Modal visible={visible} transparent animationType="slide">
-      <TouchableOpacity className="flex-1 bg-black/40" activeOpacity={1} onPress={onClose} />
-      <View className="bg-white dark:bg-gray-800 rounded-t-3xl px-4 pt-4 pb-8" style={{ maxHeight: '75%' }}>
-        <Text className={`${typo.labelBold} text-gray-900 dark:text-white mb-3`}>{t('appt.searchCustomer')}</Text>
-        <View className="flex-row items-center bg-gray-100 dark:bg-gray-700 rounded-xl px-3 py-2 mb-3" style={{ gap: 8 }}>
-          <MaterialCommunityIcons name="magnify" size={18} color="#9ca3af" />
-          <TextInput
-            className={`flex-1 ${typo.inputSize} text-gray-900 dark:text-white`}
-            placeholder={t('appt.searchCustomer')}
-            placeholderTextColor="#9ca3af"
-            value={query}
-            onChangeText={setQuery}
-            autoFocus
-          />
-          {isFetching && <ActivityIndicator size="small" color="#9ca3af" />}
-        </View>
-        <FlatList
-          data={data ?? []}
-          keyExtractor={(c) => c.id}
-          keyboardShouldPersistTaps="handled"
-          renderItem={({ item: c }) => (
-            <TouchableOpacity
-              onPress={() => { onSelect(c); onClose(); }}
-              className="py-3 border-b border-gray-50 dark:border-gray-700"
-            >
-              <Text className={`${typo.label} text-gray-900 dark:text-white`}>{c.name}</Text>
-              {c.phone && <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{c.phone}</Text>}
-            </TouchableOpacity>
-          )}
-          ListEmptyComponent={
-            !isFetching ? (
-              <Text className={`${typo.caption} text-gray-400 py-4 text-center`}>{t('appt.walkIn')}</Text>
-            ) : null
-          }
-        />
-      </View>
-    </Modal>
-  );
-}
-
 function ProductPickerModal({
   visible,
   onClose,
@@ -275,20 +212,42 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const showAlert = useAlertStore((s) => s.show);
-  const { appointmentId } = route.params ?? {};
+  const { appointmentId, prefill } = route.params ?? {};
   const isEdit = !!appointmentId;
 
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerId, setCustomerId] = useState<number | undefined>();
-  const [date, setDate] = useState(toDateStr(new Date()));
+  const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(() => {
+    if (prefill?.customerId) {
+      return { type: 'managed', id: String(prefill.customerId), name: prefill.customerName ?? '', phone: prefill.customerPhone ?? '' };
+    }
+    if (prefill?.customerName) {
+      return { type: 'guest', name: prefill.customerName };
+    }
+    return null;
+  });
+  const [date, setDate] = useState(() => toDateStr(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)));
   const [hour, setHour] = useState(new Date().getHours());
   const [minute, setMinute] = useState(0);
-  const [duration, setDuration] = useState(60);
+  // Default duration from prefill services total, otherwise 60 min
+  const [duration, setDuration] = useState(() => {
+    if (!prefill?.services) return 60;
+    const total = prefill.services.reduce((s, svc) => s + (svc.durationMinutes ?? 0), 0);
+    return total > 0 ? total : 60;
+  });
   const [note, setNote] = useState('');
-  const [services, setServices] = useState<DraftService[]>([]);
+  const [services, setServices] = useState<DraftService[]>(() => {
+    if (!prefill?.services) return [];
+    return prefill.services.map((s, i) => ({
+      _key: `prefill-${i}`,
+      productId: s.productId,
+      productName: s.productName,
+      unitPrice: s.unitPrice,
+      durationMinutes: s.durationMinutes ?? 0,
+      assignedEmployeeId: s.assignedEmployeeId,
+      assignedEmployeeName: s.assignedEmployeeName,
+    }));
+  });
 
-  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
+  const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
   const [showProductPicker, setShowProductPicker] = useState(false);
 
   const { data: employees = [] } = useQuery({
@@ -306,9 +265,11 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     if (!existingAppt) return;
-    setCustomerName(existingAppt.customerName);
-    setCustomerPhone(existingAppt.customerPhone ?? '');
-    setCustomerId(existingAppt.customerId ?? undefined);
+    if (existingAppt.customerId) {
+      setSelectedCustomer({ type: 'managed', id: String(existingAppt.customerId), name: existingAppt.customerName, phone: existingAppt.customerPhone ?? '' });
+    } else {
+      setSelectedCustomer({ type: 'guest', name: existingAppt.customerName });
+    }
     setDate(existingAppt.scheduledDate);
     const [h, m] = existingAppt.scheduledStartTime.split(':').map(Number);
     setHour(h);
@@ -333,48 +294,56 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
     if (appointmentId) qc.invalidateQueries({ queryKey: ['appointment', appointmentId] });
   }
 
+  function handleSaveSuccess(warnings: string[]) {
+    invalidate();
+    if (warnings.length > 0) {
+      // Show conflict warning first, then go back when the user dismisses it.
+      showAlert(
+        t('appt.conflictWarningTitle'),
+        warnings.join('\n'),
+        [{ label: 'OK', onPress: () => navigation.goBack() }],
+      );
+    } else {
+      showAlert(t('appt.saveSuccess'), '', [{ label: 'OK', onPress: () => navigation.goBack() }]);
+    }
+  }
+
   const createMutation = useMutation({
     mutationFn: () =>
       appointmentApi.create({
-        customerId,
-        customerName: customerName.trim(),
-        customerPhone: customerPhone.trim() || undefined,
+        customerId: selectedCustomer?.type === 'managed' ? Number(selectedCustomer.id) : undefined,
+        customerName: selectedCustomer?.name?.trim() ?? '',
+        customerPhone: selectedCustomer?.type === 'managed' ? (selectedCustomer.phone?.trim() || undefined) : undefined,
         scheduledDate: date,
         scheduledStartTime: toTimeStr(hour, minute),
         durationMinutes: duration,
         note: note.trim() || undefined,
         services: services.map(({ _key, ...s }) => s),
       }),
-    onSuccess: () => {
-      invalidate();
-      showAlert(t('appt.saveSuccess'), '', [{ label: 'OK', onPress: () => navigation.goBack() }]);
-    },
+    onSuccess: (res) => handleSaveSuccess(res.data.data?.warnings ?? []),
     onError: (e: unknown) => showAlert(t('common.error'), apiMsg(e) ?? t('appt.saveFailed')),
   });
 
   const updateMutation = useMutation({
     mutationFn: () =>
       appointmentApi.update(appointmentId!, {
-        customerId,
-        customerName: customerName.trim(),
-        customerPhone: customerPhone.trim() || undefined,
+        customerId: selectedCustomer?.type === 'managed' ? Number(selectedCustomer.id) : undefined,
+        customerName: selectedCustomer?.name?.trim() ?? '',
+        customerPhone: selectedCustomer?.type === 'managed' ? (selectedCustomer.phone?.trim() || undefined) : undefined,
         scheduledDate: date,
         scheduledStartTime: toTimeStr(hour, minute),
         durationMinutes: duration,
         note: note.trim() || undefined,
         services: services.map(({ _key, ...s }) => s),
       }),
-    onSuccess: () => {
-      invalidate();
-      showAlert(t('appt.saveSuccess'), '', [{ label: 'OK', onPress: () => navigation.goBack() }]);
-    },
+    onSuccess: (res) => handleSaveSuccess(res.data.data?.warnings ?? []),
     onError: (e: unknown) => showAlert(t('common.error'), apiMsg(e) ?? t('appt.saveFailed')),
   });
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   function handleSave() {
-    if (!customerName.trim()) {
+    if (!selectedCustomer?.name?.trim()) {
       showAlert(t('common.error'), t('appt.customerNameRequired'));
       return;
     }
@@ -413,11 +382,6 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
     );
   }
 
-  function shiftDay(delta: number) {
-    const d = new Date(date);
-    d.setDate(d.getDate() + delta);
-    setDate(toDateStr(d));
-  }
 
   function shiftHour(delta: number) {
     setHour((h) => Math.max(0, Math.min(23, h + delta)));
@@ -432,9 +396,6 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
     });
   }
 
-  const [y, mo, da] = date.split('-');
-  const displayDate = `${da}/${mo}/${y}`;
-
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-gray-50 dark:bg-gray-900"
@@ -442,7 +403,7 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
     >
       {/* Header */}
       <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
@@ -455,46 +416,48 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
             )}
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('appt.formHint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('appt.formHint')}</Text>
       </View>
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+        contentContainerStyle={{ padding: 4, paddingBottom: insets.bottom + 24 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Section: Customer */}
         <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
           <SectionHeader icon="account-outline" title={t('appt.customerSection')} />
 
-          <FormField label={`${t('appt.customerName')} *`}>
-            <View className="flex-row items-center border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 px-3">
-              <TextInput
-                testID="appt-customer-name"
-                className={`flex-1 py-3 ${typo.inputSize} text-gray-900 dark:text-white`}
-                placeholder={t('appt.customerNamePlaceholder')}
-                placeholderTextColor="#9ca3af"
-                value={customerName}
-                onChangeText={setCustomerName}
-              />
-              <TouchableOpacity onPress={() => setShowCustomerSearch(true)} hitSlop={8}>
-                <MaterialCommunityIcons name="account-search-outline" size={20} color="#4f46e5" />
-              </TouchableOpacity>
-            </View>
-          </FormField>
-
-          <FormField label={t('appt.customerPhone')}>
-            <TextInput
-              testID="appt-customer-phone"
-              className={`border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 ${typo.inputSize} text-gray-900 dark:text-white bg-white dark:bg-gray-700`}
-              placeholder={t('appt.customerPhonePlaceholder')}
-              placeholderTextColor="#9ca3af"
-              value={customerPhone}
-              onChangeText={setCustomerPhone}
-              keyboardType="phone-pad"
-            />
-          </FormField>
+          <TouchableOpacity
+            testID="appt-customer-picker"
+            className="flex-row items-center border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 px-3 py-3"
+            onPress={() => setCustomerPickerVisible(true)}
+          >
+            {selectedCustomer ? (
+              <>
+                <MaterialCommunityIcons
+                  name={selectedCustomer.type === 'managed' ? 'account-check' : 'account-outline'}
+                  size={18}
+                  color="#4f46e5"
+                  style={{ marginRight: 8 }}
+                />
+                <View className="flex-1">
+                  <Text className={`${typo.label} text-gray-900 dark:text-white`}>{selectedCustomer.name}</Text>
+                  {selectedCustomer.type === 'managed' && selectedCustomer.phone ? (
+                    <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{selectedCustomer.phone}</Text>
+                  ) : null}
+                </View>
+                <MaterialCommunityIcons name="pencil-outline" size={16} color="#4f46e5" />
+              </>
+            ) : (
+              <>
+                <MaterialCommunityIcons name="account-plus-outline" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
+                <Text className={`${typo.label} text-gray-400 dark:text-gray-500 flex-1`}>{t('appt.customerNamePlaceholder')}</Text>
+                <MaterialCommunityIcons name="chevron-right" size={16} color="#9ca3af" />
+              </>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Section: Date & time */}
@@ -502,14 +465,11 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
           <SectionHeader icon="calendar-clock-outline" title={t('appt.datetimeSection')} />
 
           <FormField label={t('appt.date')}>
-            <View className="flex-row items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3">
-              <TouchableOpacity onPress={() => shiftDay(-1)} hitSlop={8}>
-                <MaterialCommunityIcons name="chevron-left" size={22} color="#6b7280" />
-              </TouchableOpacity>
-              <Text className={`${typo.label} text-gray-900 dark:text-white`}>{displayDate}</Text>
-              <TouchableOpacity onPress={() => shiftDay(1)} hitSlop={8}>
-                <MaterialCommunityIcons name="chevron-right" size={22} color="#6b7280" />
-              </TouchableOpacity>
+            <View className="border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 bg-white dark:bg-gray-700">
+              <DatePickerInput
+                value={date}
+                onChange={setDate}
+              />
             </View>
           </FormField>
 
@@ -606,14 +566,11 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
       </ScrollView>
 
 
-      <CustomerSearchModal
-        visible={showCustomerSearch}
-        onClose={() => setShowCustomerSearch(false)}
-        onSelect={(c) => {
-          setCustomerId(Number(c.id));
-          setCustomerName(c.name);
-          setCustomerPhone(c.phone ?? '');
-        }}
+      <CustomerPickerSheet
+        visible={customerPickerVisible}
+        onClose={() => setCustomerPickerVisible(false)}
+        value={selectedCustomer}
+        onChange={setSelectedCustomer}
       />
 
       <ProductPickerModal

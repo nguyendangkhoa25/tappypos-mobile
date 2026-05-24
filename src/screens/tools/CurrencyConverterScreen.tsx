@@ -126,15 +126,10 @@ export function CurrencyConverterScreen({ navigation }: Props) {
           </TouchableOpacity>
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('currencyConverter.title')}</Text>
         </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('currencyConverter.subtitle')}</Text>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        {/* Hint */}
-        <View className="flex-row items-start bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100 mb-3">
-          <Text className="text-indigo-400 mr-2 mt-0.5">💡</Text>
-          <Text className={`${typo.caption} text-indigo-600 leading-4 flex-1`}>{t('currencyConverter.hint')}</Text>
-        </View>
-
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 4, paddingBottom: bottom + 32 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Disclaimer */}
         <View className="flex-row items-start bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 mb-3">
           <MaterialCommunityIcons name="information-outline" size={16} color="#d97706" style={{ marginTop: 1, marginRight: 6 }} />

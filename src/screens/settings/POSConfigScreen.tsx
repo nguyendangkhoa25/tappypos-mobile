@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,10 @@ import {
   Switch,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import type { TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,6 +18,7 @@ import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { shopConfigApi } from '../../services/api';
 import { useTypography } from '../../hooks/useTypography';
+import { MoneyInput } from '../../components/MoneyInput';
 import type { SettingsScreenProps } from '../../types/navigation';
 
 const DENOMINATIONS = [1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000, 200_000, 500_000];
@@ -52,6 +56,9 @@ export function POSConfigScreen({ navigation }: SettingsScreenProps<'POSConfig'>
   const showErrorAlert = useErrorAlert();
 
   const [settings, setSettings] = useState<LocalPosSettings | null>(null);
+  const [showAddDenom, setShowAddDenom] = useState(false);
+  const [customInput, setCustomInput] = useState('');
+  const customInputRef = useRef<TextInput>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['posConfig'],
@@ -101,6 +108,30 @@ export function POSConfigScreen({ navigation }: SettingsScreenProps<'POSConfig'>
     setSettings({ ...settings, denominations: next });
   };
 
+  // Custom denominations = saved values not in the preset list
+  const customDenominations = settings
+    ? settings.denominations.filter((d) => !DENOMINATIONS.includes(d))
+    : [];
+
+  // All chips to show = presets + any custom ones, sorted
+  const allDenominations = [...new Set([...DENOMINATIONS, ...customDenominations])].sort((a, b) => a - b);
+
+  const confirmAddDenom = () => {
+    const val = parseInt(customInput.replace(/[^0-9]/g, ''), 10);
+    if (!val || val <= 0 || !settings) return;
+    if (!allDenominations.includes(val)) {
+      // Add + auto-select the new denomination
+      setSettings({ ...settings, denominations: [...settings.denominations, val] });
+    }
+    setCustomInput('');
+    setShowAddDenom(false);
+  };
+
+  const removeCustomDenom = (d: number) => {
+    if (!settings) return;
+    setSettings({ ...settings, denominations: settings.denominations.filter((x) => x !== d) });
+  };
+
   const modeOptions: { value: PosMode; label: string; icon: string }[] = [
     { value: 'LIST', label: t('settings.posConfig.modeList'), icon: 'view-list-outline' },
     { value: 'BARCODE', label: t('settings.posConfig.modeBarcode'), icon: 'barcode-scan' },
@@ -115,7 +146,10 @@ export function POSConfigScreen({ navigation }: SettingsScreenProps<'POSConfig'>
       : `${v}`;
 
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-gray-900">
+    <KeyboardAvoidingView
+      className="flex-1 bg-gray-50 dark:bg-gray-900"
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <View
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
@@ -139,7 +173,7 @@ export function POSConfigScreen({ navigation }: SettingsScreenProps<'POSConfig'>
             )}
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-0 mt-0.5`}>{t('settings.posConfig.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('settings.posConfig.hint')}</Text>
       </View>
 
       {isLoading || !settings ? (
@@ -147,7 +181,7 @@ export function POSConfigScreen({ navigation }: SettingsScreenProps<'POSConfig'>
           <ActivityIndicator color="#4f46e5" />
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, gap: 16 }}>
           {/* POS Mode */}
           <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
             <Text className={`${typo.label} text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3`}>
@@ -241,13 +275,14 @@ export function POSConfigScreen({ navigation }: SettingsScreenProps<'POSConfig'>
             </Text>
             <Text className={`${typo.caption} text-gray-400 mb-3`}>{t('settings.posConfig.denominationsHint')}</Text>
             <View className="flex-row flex-wrap gap-2">
-              {DENOMINATIONS.map((d) => {
+              {allDenominations.map((d) => {
                 const selected = settings.denominations.includes(d);
+                const isCustom = !DENOMINATIONS.includes(d);
                 return (
                   <TouchableOpacity
                     key={d}
                     onPress={() => toggleDenomination(d)}
-                    className={`px-4 py-2 rounded-xl border-2 ${
+                    className={`flex-row items-center px-3 py-2 rounded-xl border-2 ${
                       selected
                         ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
                         : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
@@ -258,13 +293,74 @@ export function POSConfigScreen({ navigation }: SettingsScreenProps<'POSConfig'>
                     }`}>
                       {formatDenomination(d)}
                     </Text>
+                    {isCustom && (
+                      <TouchableOpacity
+                        onPress={() => removeCustomDenom(d)}
+                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 4 }}
+                        className="ml-1.5"
+                      >
+                        <MaterialCommunityIcons
+                          name="close-circle"
+                          size={14}
+                          color={selected ? '#6366f1' : '#9ca3af'}
+                        />
+                      </TouchableOpacity>
+                    )}
                   </TouchableOpacity>
                 );
               })}
+
+              {/* Add custom denomination chip */}
+              {!showAddDenom && (
+                <TouchableOpacity
+                  onPress={() => setShowAddDenom(true)}
+                  className="flex-row items-center px-3 py-2 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600"
+                >
+                  <MaterialCommunityIcons name="plus" size={14} color="#9ca3af" />
+                  <Text className={`${typo.caption} text-gray-400 ml-1`}>
+                    {t('settings.posConfig.addDenomination')}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
+
+            {/* Money input form — shown when user taps + */}
+            {showAddDenom && (
+              <View className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-2`}>
+                  {t('settings.posConfig.addDenominationLabel')}
+                </Text>
+                <MoneyInput
+                  ref={customInputRef}
+                  rawValue={customInput}
+                  onChangeRaw={setCustomInput}
+                  placeholder="0"
+                  returnKeyType="done"
+                  onSubmitEditing={confirmAddDenom}
+                  autoFocus
+                />
+                <View className="flex-row gap-2 mt-3">
+                  <TouchableOpacity
+                    onPress={() => { setShowAddDenom(false); setCustomInput(''); }}
+                    className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 items-center"
+                  >
+                    <Text className={`${typo.label} text-gray-500 dark:text-gray-400`}>{t('common.cancel')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={confirmAddDenom}
+                    disabled={!customInput}
+                    className={`flex-1 py-2.5 rounded-xl items-center ${customInput ? 'bg-indigo-600' : 'bg-indigo-200 dark:bg-indigo-900/40'}`}
+                  >
+                    <Text className={`${typo.label} font-semibold ${customInput ? 'text-white' : 'text-indigo-300'}`}>
+                      {t('settings.posConfig.addDenominationConfirm')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
         </ScrollView>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }

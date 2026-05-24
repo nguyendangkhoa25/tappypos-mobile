@@ -1,0 +1,43 @@
+appId: com.knp.tappypos
+name: "BARM 19 Print templates + bank accounts — list, smoke test (PRINT_TEMPLATE + BANK_ACCOUNT)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+# printTemplates is in "Cấu hình cửa hàng" (collapsed — scroll 2x to reach it)
+- scroll
+- scroll
+- tapOn:
+    id: "more-section-shopConfig"
+- waitForAnimationToEnd
+- scroll
+- scroll
+- tapOn:
+    id: "more-config-printTemplates"
+- assertVisible: "Mẫu in"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+- tapOn:
+    id: "print-template-row-0"
+    optional: true
+- assertNotVisible: "500"
+# Back to MoreMain via tab press (tabPress listener navigates to MoreMain)
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- scroll
+- scroll
+- tapOn:
+    id: "more-section-shopConfig"
+- waitForAnimationToEnd
+- scroll
+- tapOn:
+    id: "more-config-bankAccounts"
+- assertVisible: "Tài khoản ngân hàng"
+- assertNotVisible: "500"
+# Smoke test: list loads — skip opening the add form (modal has no testID for close)
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

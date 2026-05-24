@@ -9,6 +9,8 @@ import { PinLoginScreen } from '../screens/auth/PinLoginScreen';
 import { PinSetupScreen } from '../screens/auth/PinSetupScreen';
 import { ForgotPinScreen } from '../screens/auth/ForgotPinScreen';
 import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
+import { OtpVerifyScreen } from '../screens/auth/OtpVerifyScreen';
+import { ResetPasswordScreen } from '../screens/auth/ResetPasswordScreen';
 import { ForgotShopIdScreen } from '../screens/auth/ForgotShopIdScreen';
 import type { AuthStackParamList } from '../types/navigation';
 
@@ -34,6 +36,8 @@ export function AuthNavigator() {
         <Stack.Screen name="PinSetup" component={PinSetupScreen} />
         <Stack.Screen name="ForgotPin" component={ForgotPinScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="OtpVerify" component={OtpVerifyScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="ForgotShopId" component={ForgotShopIdScreen} />
       </Stack.Navigator>
     </View>

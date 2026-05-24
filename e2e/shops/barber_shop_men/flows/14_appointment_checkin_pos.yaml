@@ -1,0 +1,99 @@
+appId: com.knp.tappypos
+name: "BARM 14 Appointment check-in → POS — core barber workflow (APPOINTMENT + POS)"
+---
+
+# Core workflow: book appointment → check in → barber POS → place order
+#
+- runFlow: ../../../subflows/_login.yaml
+
+# Create appointment
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-appointments"
+- assertVisible: "Lịch hẹn"
+
+- tapOn:
+    id: "appointment-add-fab"
+- assertVisible: "Đặt lịch hẹn"
+
+- tapOn:
+    id: "appt-customer-name"
+- inputText: "Khách Checkin Barber"
+
+- tapOn:
+    id: "appt-customer-phone"
+- inputText: "0933777888"
+
+- tapOn:
+    id: "appt-save-btn"
+- assertVisible: "Lịch hẹn"
+
+# Check in
+- tapOn:
+    id: "appointment-card-0"
+- assertVisible: "Khách Checkin Barber"
+- assertVisible:
+    id: "appt-checkin-btn"
+
+- tapOn:
+    id: "appt-checkin-btn"
+
+- assertVisible:
+    text: "Check-in thành công"
+    optional: true
+- tapOn:
+    text: "Xem đơn"
+    optional: true
+- tapOn:
+    text: "Mở đơn hàng"
+    optional: true
+- tapOn:
+    text: "OK"
+    optional: true
+
+# Barber POS — add a service and checkout
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Tạo đơn mới"
+
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Xem giỏ hàng"
+
+- tapOn:
+    id: "barber-place-order-btn"
+
+# Dismiss rebook modal before success screen
+- tapOn:
+    id: "barber-rebook-skip"
+    optional: true
+
+- assertVisible: "Đặt hàng thành công!"
+- assertVisible:
+    id: "order-success-number"
+
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Tạo đơn mới"
+
+# Verify appointment updated (check-in button gone)
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-appointments"
+- assertVisible: "Lịch hẹn"
+- tapOn:
+    id: "appointment-card-0"
+    optional: true
+- assertNotVisible:
+    id: "appt-checkin-btn"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

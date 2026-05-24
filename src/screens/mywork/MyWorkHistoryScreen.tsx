@@ -178,6 +178,11 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
           <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
             {item.orderNumber} · {item.customerName ?? t('pos.walkIn')}
           </Text>
+          {item.note ? (
+            <Text className={`${typo.caption} text-amber-600 dark:text-amber-400 italic mt-0.5`} numberOfLines={2}>
+              → {item.note}
+            </Text>
+          ) : null}
         </View>
         <View className="items-end gap-0.5">
           <Text className={`${typo.labelBold} text-emerald-600`}>{formatVnd(item.amount)}</Text>
@@ -241,7 +246,7 @@ export function MyWorkHistoryScreen({ navigation }: MyWorkScreenProps<'MyWorkHis
         keyExtractor={(item) => String(item.itemId)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+        contentContainerStyle={{ padding: 4, paddingBottom: insets.bottom + 20 }}
         ListHeaderComponent={
           <View>
             {/* Date navigation */}

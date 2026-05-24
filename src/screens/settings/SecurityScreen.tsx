@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Switch, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +9,9 @@ import { useAuthStore } from '../../store/authStore';
 import { useAlertStore } from '../../store/alertStore';
 import { useTypography } from '../../hooks/useTypography';
 import type { SettingsScreenProps } from '../../types/navigation';
+
+const TIMEOUT_OPTIONS = [0, 1, 5, 15, 30] as const;
+const DEFAULT_TIMEOUT = 5;
 
 export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) {
   const insets = useSafeAreaInsets();
@@ -18,6 +22,7 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricType, setBiometricType] = useState<'face' | 'fingerprint' | 'none'>('none');
   const [checkingBiometric, setCheckingBiometric] = useState(true);
+  const [lockTimeout, setLockTimeout] = useState<number>(DEFAULT_TIMEOUT);
 
   useEffect(() => {
     Promise.all([
@@ -32,6 +37,10 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
         setBiometricType('fingerprint');
       }
       setCheckingBiometric(false);
+    });
+
+    AsyncStorage.getItem('lock_timeout_minutes').then((stored) => {
+      if (stored !== null) setLockTimeout(parseInt(stored, 10));
     });
   }, []);
 
@@ -61,6 +70,16 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
     await setBiometricEnabled(value);
   };
 
+  const handleTimeoutSelect = async (minutes: number) => {
+    setLockTimeout(minutes);
+    await AsyncStorage.setItem('lock_timeout_minutes', String(minutes));
+  };
+
+  const timeoutLabel = (minutes: number) =>
+    minutes === 0
+      ? t('settings.securitySettings.lockImmediately')
+      : t('settings.securitySettings.lockAfterMinutes', { n: minutes });
+
   const biometricIcon = biometricType === 'face'
     ? 'face-recognition'
     : biometricType === 'fingerprint'
@@ -85,7 +104,7 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -97,7 +116,7 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
             {t('settings.securitySettings.title')}
           </Text>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('settings.securitySettings.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('settings.securitySettings.hint')}</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 40 }}>
@@ -143,6 +162,45 @@ export function SecurityScreen({ navigation }: SettingsScreenProps<'Security'>) 
             </>
           )}
         </View>
+
+        {/* Auto-lock section — only relevant when PIN is on */}
+        {pinEnabled && (
+          <>
+            <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1`}>
+              {t('settings.securitySettings.sectionAutoLock')}
+            </Text>
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4">
+              <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-3`}>
+                {t('settings.securitySettings.autoLockSubtitle')}
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {TIMEOUT_OPTIONS.map((minutes) => {
+                  const selected = lockTimeout === minutes;
+                  return (
+                    <TouchableOpacity
+                      key={minutes}
+                      onPress={() => handleTimeoutSelect(minutes)}
+                      activeOpacity={0.7}
+                      className={`px-3.5 py-2 rounded-xl border-2 ${
+                        selected
+                          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                          : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
+                      }`}
+                    >
+                      <Text className={`${typo.caption} font-medium ${
+                        selected
+                          ? 'text-indigo-700 dark:text-indigo-400'
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}>
+                        {timeoutLabel(minutes)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </>
+        )}
 
         {/* Biometric section */}
         <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1`}>

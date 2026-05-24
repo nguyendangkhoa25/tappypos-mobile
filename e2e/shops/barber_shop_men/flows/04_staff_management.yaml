@@ -1,0 +1,38 @@
+appId: com.knp.tappypos
+name: "BARM 04 Staff management — view staff list, open add form (USER feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-staff"
+- assertVisible: "Nhân viên"
+- assertNotVisible: "500"
+
+# At least 1 staff row visible (the shop owner)
+- assertVisible:
+    id: "staff-row-0"
+
+# Open add staff form
+- tapOn:
+    id: "staff-add-fab"
+- assertVisible:
+    text: "Thêm nhân viên"
+    optional: true
+- assertVisible:
+    text: "Tạo tài khoản"
+    optional: true
+- assertNotVisible: "500"
+
+# Dismiss without saving
+- tapOn:
+    text: "Huỷ"
+    optional: true
+- tapOn:
+    text: "‹"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

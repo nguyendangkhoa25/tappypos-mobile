@@ -17,6 +17,7 @@ type ListItem = {
   label: string;
   hint?: string;
   onPress: () => void;
+  disabled?: boolean;
 };
 
 export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
@@ -32,9 +33,7 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
 
   // First 2 sections expanded by default, rest collapsed
   const SECTION_KEYS = ['catalog', 'people', 'ops', 'shopConfig', 'tools', 'support', 'settings'] as const;
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
-    new Set(SECTION_KEYS.slice(2)),
-  );
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
   const toggle = (key: string) =>
     setCollapsedSections((prev) => {
       const next = new Set(prev);
@@ -111,20 +110,12 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
       hint: t('staff.hint'),
       onPress: () => navigation.navigate('StaffList'),
     } as ListItem] : []),
-    ...(has('ORDER_VIEW_ALL') ? [{
-      key: 'staffPerformance',
-      icon: 'chart-bar',
-      iconBg: 'bg-violet-100 dark:bg-violet-900/30',
-      iconColor: '#7c3aed',
-      label: t('more.staffPerformance'),
-      hint: t('perf.hint'),
-      onPress: () => navigation.navigate('StaffPerformance'),
-    } as ListItem] : []),
+    // StaffPerformance merged into StaffListScreen — removed from More menu
   ];
 
   // ── Operations section ───────────────────────────────────────────────────────
   const opsItems: ListItem[] = [
-    {
+    ...(has('MY_WORK') ? [{
       key: 'mywork',
       icon: 'clipboard-check-outline',
       iconBg: 'bg-teal-100 dark:bg-teal-900/30',
@@ -132,8 +123,17 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
       label: t('more.myWork'),
       hint: t('myWork.hint'),
       onPress: () => navigation.navigate('MyWork'),
-    },
-    ...(has('ORDER_VIEW_ALL') ? [{
+    } as ListItem] : []),
+    ...(has('COMMISSION') ? [{
+      key: 'commission',
+      icon: 'cash-multiple',
+      iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+      iconColor: '#059669',
+      label: t('more.commission'),
+      hint: t('commission.hint'),
+      onPress: () => navigation.navigate('Commission'),
+    } as ListItem] : []),
+    ...(has('MY_WORK') && has('ORDER_VIEW_ALL') ? [{
       key: 'queueView',
       icon: 'account-clock-outline',
       iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
@@ -258,7 +258,7 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
       hint: t('settings.posConfig.hint'),
       onPress: () => navigation.navigate('POSConfig'),
     },
-    ...(has('SHOP_SETTING') ? [{
+    ...(has('BANK_ACCOUNT') ? [{
       key: 'bankAccounts',
       icon: 'bank-outline',
       iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
@@ -285,6 +285,17 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
       hint: t('printTemplates.hint'),
       onPress: () => navigation.navigate('PrintTemplates'),
     },
+    // E-invoice — disabled until invoice management feature is fully implemented
+    {
+      key: 'eInvoice',
+      icon: 'file-document-multiple-outline',
+      iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
+      iconColor: '#4f46e5',
+      label: t('more.eInvoice'),
+      hint: t('more.hintEInvoice'),
+      onPress: () => navigation.navigate('EInvoiceSetup'),
+      disabled: true,
+    },
     ...(has('LOYALTY') ? [{
       key: 'loyaltyConfig',
       icon: 'star-circle-outline',
@@ -294,6 +305,26 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
       hint: t('more.hintLoyaltyConfig'),
       onPress: () => navigation.navigate('LoyaltyConfig'),
     } as ListItem] : []),
+    // Zalo — visible but disabled until fully tested
+    {
+      key: 'zaloSettings',
+      icon: 'chat-processing-outline',
+      iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+      iconColor: '#0068ff',
+      label: t('settings.zaloSettings'),
+      hint: t('zalo.settings.hint'),
+      onPress: () => {},
+      disabled: true,
+    },
+    {
+      key: 'subscription',
+      icon: 'crown-outline',
+      iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+      iconColor: '#d97706',
+      label: t('more.subscription'),
+      hint: t('more.hintSubscription'),
+      onPress: () => navigation.navigate('Subscription'),
+    },
   ];
 
   return (
@@ -328,7 +359,7 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
 
         {catalogItems.length > 0 && (
           <>
-            <SectionLabel label={t('more.sectionCatalog')} isCollapsed={collapsedSections.has('catalog')} onToggle={() => toggle('catalog')} />
+            <SectionLabel label={t('more.sectionCatalog')} sectionKey="catalog" isCollapsed={collapsedSections.has('catalog')} onToggle={() => toggle('catalog')} />
             {!collapsedSections.has('catalog') && (
               <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
                 {catalogItems.map((item, index) => (
@@ -341,7 +372,7 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
 
         {peopleItems.length > 0 && (
           <>
-            <SectionLabel label={t('more.sectionPeople')} isCollapsed={collapsedSections.has('people')} onToggle={() => toggle('people')} />
+            <SectionLabel label={t('more.sectionPeople')} sectionKey="people" isCollapsed={collapsedSections.has('people')} onToggle={() => toggle('people')} />
             {!collapsedSections.has('people') && (
               <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
                 {peopleItems.map((item, index) => (
@@ -354,7 +385,7 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
 
         {opsItems.length > 0 && (
           <>
-            <SectionLabel label={t('more.sectionOperations')} isCollapsed={collapsedSections.has('ops')} onToggle={() => toggle('ops')} />
+            <SectionLabel label={t('more.sectionOperations')} sectionKey="ops" isCollapsed={collapsedSections.has('ops')} onToggle={() => toggle('ops')} />
             {!collapsedSections.has('ops') && (
               <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
                 {opsItems.map((item, index) => (
@@ -365,7 +396,7 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
           </>
         )}
 
-        <SectionLabel label={t('more.sectionShopConfig')} isCollapsed={collapsedSections.has('shopConfig')} onToggle={() => toggle('shopConfig')} />
+        <SectionLabel label={t('more.sectionShopConfig')} sectionKey="shopConfig" isCollapsed={collapsedSections.has('shopConfig')} onToggle={() => toggle('shopConfig')} />
         {!collapsedSections.has('shopConfig') && (
           <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
             {shopConfigItems.map((item, index) => (
@@ -374,7 +405,7 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
           </View>
         )}
 
-        <SectionLabel label={t('tools.title')} isCollapsed={collapsedSections.has('tools')} onToggle={() => toggle('tools')} />
+        <SectionLabel label={t('tools.title')} sectionKey="tools" isCollapsed={collapsedSections.has('tools')} onToggle={() => toggle('tools')} />
         {!collapsedSections.has('tools') && (
           <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
             {toolsItems.map((item, index) => (
@@ -383,7 +414,7 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
           </View>
         )}
 
-        <SectionLabel label={t('settings.sectionSupport')} isCollapsed={collapsedSections.has('support')} onToggle={() => toggle('support')} />
+        <SectionLabel label={t('settings.sectionSupport')} sectionKey="support" isCollapsed={collapsedSections.has('support')} onToggle={() => toggle('support')} />
         {!collapsedSections.has('support') && (
           <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
             <ConfigRow
@@ -401,7 +432,7 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
           </View>
         )}
 
-        <SectionLabel label={t('settings.sectionSettingsSecurity')} isCollapsed={collapsedSections.has('settings')} onToggle={() => toggle('settings')} />
+        <SectionLabel label={t('settings.sectionSettingsSecurity')} sectionKey="settings" isCollapsed={collapsedSections.has('settings')} onToggle={() => toggle('settings')} />
         {!collapsedSections.has('settings') && (
           <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
             <ConfigRow
@@ -449,10 +480,11 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
   );
 }
 
-function SectionLabel({ label, isCollapsed, onToggle }: { label: string; isCollapsed: boolean; onToggle: () => void }) {
+function SectionLabel({ label, sectionKey, isCollapsed, onToggle }: { label: string; sectionKey?: string; isCollapsed: boolean; onToggle: () => void }) {
   const typo = useTypography();
   return (
     <TouchableOpacity
+      testID={sectionKey ? `more-section-${sectionKey}` : undefined}
       onPress={onToggle}
       activeOpacity={0.6}
       className="flex-row items-center justify-between mb-2 mt-4 px-1"
@@ -470,29 +502,36 @@ function SectionLabel({ label, isCollapsed, onToggle }: { label: string; isColla
 }
 
 function ConfigRow({ item, isLast }: { item: ListItem; isLast: boolean }) {
+  const { t } = useTranslation();
   const typo = useTypography();
+  const disabled = item.disabled ?? false;
   return (
     <>
       <TouchableOpacity
         testID={`more-config-${item.key}`}
         onPress={item.onPress}
-        activeOpacity={0.7}
+        activeOpacity={disabled ? 1 : 0.7}
+        disabled={disabled}
         className="flex-row items-center px-4 py-3.5"
       >
-        <View className={`w-9 h-9 rounded-xl ${item.iconBg} items-center justify-center mr-3 flex-shrink-0`}>
-          <MaterialCommunityIcons name={item.icon as any} size={18} color={item.iconColor} />
+        <View className={`w-9 h-9 rounded-xl ${disabled ? 'bg-gray-100 dark:bg-gray-700' : item.iconBg} items-center justify-center mr-3 flex-shrink-0`}>
+          <MaterialCommunityIcons name={item.icon as any} size={18} color={disabled ? '#9ca3af' : item.iconColor} />
         </View>
         <View className="flex-1">
-          <Text className={`${typo.caption} font-medium text-gray-800 dark:text-gray-100`} numberOfLines={1}>
+          <Text className={`${typo.label} ${disabled ? 'text-gray-400 dark:text-gray-600' : 'text-gray-800 dark:text-gray-100'}`} numberOfLines={1}>
             {item.label}
           </Text>
           {item.hint && (
-            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5`} numberOfLines={1}>
+            <Text className={`${typo.caption} ${disabled ? 'text-gray-300 dark:text-gray-700' : 'text-gray-400 dark:text-gray-500'} mt-0.5`} numberOfLines={1}>
               {item.hint}
             </Text>
           )}
         </View>
-        <MaterialCommunityIcons name="chevron-right" size={16} color="#9ca3af" />
+        {disabled ? (
+          <Text className={`${typo.caption} text-gray-400 dark:text-gray-600 mr-1`}>{t('common.comingSoon')}</Text>
+        ) : (
+          <MaterialCommunityIcons name="chevron-right" size={16} color="#9ca3af" />
+        )}
       </TouchableOpacity>
       {!isLast && <View className="h-px bg-gray-100 dark:bg-gray-700 ml-16" />}
     </>

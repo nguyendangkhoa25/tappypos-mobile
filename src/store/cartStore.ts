@@ -9,11 +9,15 @@ export type CartItem = {
   unit: string;
 };
 
-export type SelectedCustomer = {
-  id: string;
-  name: string;
-  phone: string;
-};
+/**
+ * Discriminated union for the customer attached to a POS cart.
+ *  - `type: 'managed'`  — a customer record tracked in the shop's CRM
+ *  - `type: 'guest'`    — a named walk-in with no managed record
+ *  - `null`             — anonymous walk-in (default)
+ */
+export type SelectedCustomer =
+  | { type: 'managed'; id: string; name: string; phone: string | null }
+  | { type: 'guest'; name: string };
 
 type CartState = {
   items: CartItem[];
@@ -22,6 +26,12 @@ type CartState = {
   selectedCustomer: SelectedCustomer | null;
   tableId: number | null;
   tableLabel: string | null;
+  /** Set when opening an already-occupied table (PENDING order) for F&B add-more flow. */
+  activeOrderId: string | null;
+  /** True when the current F&B order is a takeaway (no table). */
+  isTakeaway: boolean;
+  /** ISO datetime string for the target pickup time (takeaway only). */
+  takeawayPickupTime: string | null;
 
   addItem: (item: Omit<CartItem, 'cartItemId'>) => void;
   updateQty: (productId: string, qty: number) => void;
@@ -31,6 +41,8 @@ type CartState = {
   setPromo: (code: string | null, discount: number) => void;
   setCustomer: (c: SelectedCustomer | null) => void;
   setTable: (tableId: number | null, tableLabel: string | null) => void;
+  setActiveOrderId: (orderId: string | null) => void;
+  setTakeaway: (pickupTime: string | null) => void;
   clearCart: () => void;
   getTotal: () => number;
 };
@@ -42,6 +54,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   selectedCustomer: null,
   tableId: null,
   tableLabel: null,
+  activeOrderId: null,
+  isTakeaway: false,
+  takeawayPickupTime: null,
 
   addItem: (item) =>
     set((state) => {
@@ -81,9 +96,25 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   setCustomer: (c) => set({ selectedCustomer: c }),
 
-  setTable: (tableId, tableLabel) => set({ tableId, tableLabel }),
+  setTable: (tableId, tableLabel) => set({ tableId, tableLabel, isTakeaway: false, takeawayPickupTime: null }),
 
-  clearCart: () => set({ items: [], promoCode: null, discount: 0, selectedCustomer: null, tableId: null, tableLabel: null }),
+  setActiveOrderId: (orderId) => set({ activeOrderId: orderId }),
+
+  setTakeaway: (pickupTime) =>
+    set({ isTakeaway: true, takeawayPickupTime: pickupTime, tableId: null, tableLabel: null, activeOrderId: null }),
+
+  clearCart: () =>
+    set({
+      items: [],
+      promoCode: null,
+      discount: 0,
+      selectedCustomer: null,
+      tableId: null,
+      tableLabel: null,
+      activeOrderId: null,
+      isTakeaway: false,
+      takeawayPickupTime: null,
+    }),
 
   getTotal: () => {
     const state = get();

@@ -36,15 +36,21 @@ name: "05 Barber POS — pick service → add to order → checkout → success"
 # ── B05: Open CheckoutSheet ──────────────────────────────────────────────────
 - tapOn:
     id: "barber-checkout-btn"
-- assertVisible: "Xem đơn hàng"
-- assertVisible: "Phương thức thanh toán"
+- assertVisible: "Xem giỏ hàng"
 
-# ── B06: Default payment is Cash ─────────────────────────────────────────────
-- assertVisible: "Tiền mặt"
+# ── B06: Default payment is Cash — assert via testID (text inside Modal ScrollView
+#        may not be in Maestro's visible accessibility tree)
+- assertVisible:
+    id: "checkout-payment-cash"
 
 # ── B07: Place order ─────────────────────────────────────────────────────────
 - tapOn:
     id: "barber-place-order-btn"
+
+# ── B07b: Dismiss rebook modal (shown after pay-now success when customer may/may not be set)
+- tapOn:
+    id: "barber-rebook-skip"
+    optional: true
 
 # ── B08: Order success screen ────────────────────────────────────────────────
 - assertVisible: "Đặt hàng thành công!"

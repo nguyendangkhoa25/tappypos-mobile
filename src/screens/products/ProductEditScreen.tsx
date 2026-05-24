@@ -153,7 +153,7 @@ export function ProductEditScreen({ navigation, route }: Props) {
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900">
         <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
-          <View className="flex-row items-center">
+          <View className="flex-row items-center mb-0.5">
             <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
               <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
             </TouchableOpacity>
@@ -185,13 +185,13 @@ export function ProductEditScreen({ navigation, route }: Props) {
             )}
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`} numberOfLines={1}>{product?.name}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`} numberOfLines={1}>{product?.name}</Text>
       </View>
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: bottom + 24 }}
+        contentContainerStyle={{ padding: 4, paddingBottom: bottom + 24 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Section 1 — Basic info */}

@@ -1,15 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import * as Print from 'expo-print';
 import {
   View, Text, ScrollView, TouchableOpacity, ActivityIndicator,
-  Modal, TextInput, KeyboardAvoidingView, Platform, FlatList,
+  Modal, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { orderApi, customerApi, employeeApi, shopConfigApi, type CustomerData, type EmployeeData, type BankAccount } from '../../services/api';
+import { orderApi, employeeApi, shopConfigApi, type EmployeeData, type BankAccount } from '../../services/api';
+import { CustomerPickerSheet } from '../../components/CustomerPickerSheet';
+import type { SelectedCustomer } from '../../store/cartStore';
+import { PaymentSheet, type PaymentMethod } from '../../components/PaymentSheet';
 import { useAlertStore } from '../../store/alertStore';
 import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
@@ -17,6 +20,7 @@ import { formatVnd, formatDateTime, formatMoneyDisplay } from '../../utils/forma
 import { VietQrCard } from '../../components/VietQrCard';
 import { MoneyInput } from '../../components/MoneyInput';
 import { useTypography } from '../../hooks/useTypography';
+import { useFeature } from '../../hooks/useFeature';
 import { Skeleton } from '../../components/Skeleton';
 import { ErrorState } from '../../components/ErrorState';
 import type { OrdersScreenProps } from '../../types/navigation';
@@ -24,6 +28,148 @@ import type { OrdersScreenProps } from '../../types/navigation';
 type Props = OrdersScreenProps<'OrderDetail'>;
 
 import type { OrderDetail } from '../../services/api';
+
+// ── Reason Sheet (cancel / void) ──────────────────────────────────────────────
+
+function ReasonSheet({
+  visible, title, hint, warning, chips, placeholder,
+  confirmLabel, confirmDestructive = false, isPending, requireReason = false,
+  onConfirm, onClose,
+}: {
+  visible: boolean;
+  title: string;
+  hint?: string;
+  warning?: string;
+  chips: string[];
+  placeholder?: string;
+  confirmLabel: string;
+  confirmDestructive?: boolean;
+  isPending: boolean;
+  requireReason?: boolean;
+  onConfirm: (reason: string) => void;
+  onClose: () => void;
+}) {
+  const [reason, setReason] = useState('');
+  const typo = useTypography();
+  const insets = useSafeAreaInsets();
+
+  useEffect(() => { if (visible) setReason(''); }, [visible]);
+
+  // Reorder chips so matching ones bubble to front as user types
+  const sortedChips = useMemo(() => {
+    const q = reason.trim().toLowerCase();
+    if (!q) return chips;
+    return [
+      ...chips.filter((c) => c.toLowerCase().includes(q)),
+      ...chips.filter((c) => !c.toLowerCase().includes(q)),
+    ];
+  }, [chips, reason]);
+
+  const canConfirm = !requireReason || reason.trim().length > 0;
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        className="flex-1 justify-end bg-black/40"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View
+          className="bg-white dark:bg-gray-800 rounded-t-3xl px-5 pt-5"
+          style={{ paddingBottom: insets.bottom + 16 }}
+        >
+          {/* Header */}
+          <View className="flex-row items-center justify-between mb-1">
+            <Text className={`${typo.section} text-gray-900 dark:text-white`}>{title}</Text>
+            <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <MaterialCommunityIcons name="close" size={22} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+
+          {hint && (
+            <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mb-3`}>{hint}</Text>
+          )}
+
+          {/* Warning banner */}
+          {warning && (
+            <View className="bg-amber-50 dark:bg-amber-900/20 rounded-xl px-3 py-2.5 mb-3 flex-row items-start gap-2">
+              <MaterialCommunityIcons name="alert-outline" size={16} color="#d97706" style={{ marginTop: 1 }} />
+              <Text className={`${typo.caption} text-amber-700 dark:text-amber-400 flex-1`}>{warning}</Text>
+            </View>
+          )}
+
+          {/* Chips — single scrollable line, reorder on input */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8, paddingBottom: 12 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {sortedChips.map((chip) => {
+              const selected = reason === chip;
+              return (
+                <TouchableOpacity
+                  key={chip}
+                  onPress={() => setReason((prev) => (prev === chip ? '' : chip))}
+                  className={`rounded-full border px-3 py-1.5 ${
+                    selected
+                      ? confirmDestructive
+                        ? 'bg-red-500 border-red-500'
+                        : 'bg-indigo-600 border-indigo-600'
+                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                  }`}
+                >
+                  <Text
+                    className={`${typo.caption} font-medium ${
+                      selected ? 'text-white' : 'text-gray-600 dark:text-gray-300'
+                    }`}
+                  >
+                    {chip}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Free-text input */}
+          <TextInput
+            value={reason}
+            onChangeText={setReason}
+            placeholder={placeholder}
+            placeholderTextColor="#9ca3af"
+            autoCapitalize="sentences"
+            returnKeyType="done"
+            className={`${typo.inputSize} bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white mb-4`}
+          />
+
+          {/* Confirm button */}
+          <TouchableOpacity
+            onPress={() => canConfirm && onConfirm(reason.trim())}
+            disabled={isPending || !canConfirm}
+            className={`rounded-2xl py-4 items-center flex-row justify-center ${
+              isPending || !canConfirm
+                ? 'bg-gray-200 dark:bg-gray-700'
+                : confirmDestructive
+                ? 'bg-red-500 active:opacity-80'
+                : 'bg-indigo-600 active:opacity-80'
+            }`}
+          >
+            {isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text
+                className={`${typo.labelBold} ${
+                  !canConfirm ? 'text-gray-400' : 'text-white'
+                }`}
+              >
+                {confirmLabel}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
 
 // ── Receipt Preview Modal ─────────────────────────────────────────────────────
 
@@ -107,15 +253,15 @@ function ReceiptModal({
 
         {/* Total — large, customer-readable */}
         <View className="items-center px-6 pt-4 pb-8">
-          <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.7)', marginBottom: 6, letterSpacing: 1 }}>
-            TỔNG THANH TOÁN
+          <Text className={`${typo.label} text-center`} style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 6, letterSpacing: 1 }}>
+            {t('orders.receiptTotalLabel')}
           </Text>
-          <Text style={{ fontSize: 48, fontWeight: '800', color: '#fff', letterSpacing: -1 }}>
+          <Text style={{ fontSize: typo.displaySize, fontWeight: '800', color: '#fff', letterSpacing: -1 }}>
             {formatVnd(order.total ?? 0)}
           </Text>
           {order.customerName && (
-            <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 8 }}>
-              Khách: {order.customerName}
+            <Text className={typo.label} style={{ color: 'rgba(255,255,255,0.75)', marginTop: 8 }}>
+              {t('orders.receiptCustomer', { name: order.customerName })}
             </Text>
           )}
         </View>
@@ -123,18 +269,18 @@ function ReceiptModal({
         {/* Receipt card — white, scrollable */}
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+          contentContainerStyle={{ padding: 4, paddingBottom: insets.bottom + 24 }}
           style={{ backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28 }}
         >
           <View className="px-6 pt-6">
             {/* Order meta */}
             <View className="flex-row justify-between items-center mb-1">
-              <Text style={{ fontSize: 13, color: '#9ca3af' }}>Mã đơn</Text>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#111827' }}>#{order.orderNumber}</Text>
+              <Text className={`${typo.caption} text-gray-400`}>{t('orders.orderNumber')}</Text>
+              <Text className={`${typo.caption} font-bold text-gray-900`}>#{order.orderNumber}</Text>
             </View>
             <View className="flex-row justify-between items-center mb-4">
-              <Text style={{ fontSize: 13, color: '#9ca3af' }}>Thời gian</Text>
-              <Text style={{ fontSize: 13, color: '#374151' }}>
+              <Text className={`${typo.caption} text-gray-400`}>{t('orders.receiptTime')}</Text>
+              <Text className={`${typo.caption} text-gray-600`}>
                 {formatDateTime(order.createdAt)}
               </Text>
             </View>
@@ -146,17 +292,22 @@ function ReceiptModal({
             {order.items.map((item, idx) => (
               <View key={item.id ?? idx} className="flex-row justify-between items-start mb-3">
                 <View className="flex-1 mr-4">
-                  <Text style={{ fontSize: 15, fontWeight: '600', color: '#111827' }}>{item.productName}</Text>
+                  <Text className={`${typo.label} font-semibold text-gray-900`}>{item.productName}</Text>
+                  {item.note ? (
+                    <Text className={`${typo.caption} text-amber-600 italic mt-0.5`}>
+                      → {item.note}
+                    </Text>
+                  ) : null}
                   {item.assignedEmployeeName && (
-                    <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 1 }}>{item.assignedEmployeeName}</Text>
+                    <Text className={`${typo.caption} text-gray-500 mt-0.5`}>{item.assignedEmployeeName}</Text>
                   )}
                 </View>
                 <View className="items-end">
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827' }}>
+                  <Text className={`${typo.label} font-bold text-gray-900`}>
                     {formatVnd(item.subtotal ?? 0)}
                   </Text>
                   {item.quantity > 1 && (
-                    <Text style={{ fontSize: 12, color: '#9ca3af' }}>
+                    <Text className={`${typo.caption} text-gray-400`}>
                       {formatVnd(item.unitPrice ?? 0)} × {item.quantity}
                     </Text>
                   )}
@@ -171,19 +322,19 @@ function ReceiptModal({
             {hasExtras && (
               <View className="mb-3" style={{ gap: 8 }}>
                 <View className="flex-row justify-between">
-                  <Text style={{ fontSize: 14, color: '#6b7280' }}>Tạm tính</Text>
-                  <Text style={{ fontSize: 14, color: '#6b7280' }}>{formatVnd(subtotal)}</Text>
+                  <Text className={`${typo.caption} text-gray-500`}>{t('orders.subtotal')}</Text>
+                  <Text className={`${typo.caption} text-gray-500`}>{formatVnd(subtotal)}</Text>
                 </View>
                 {(order.discount ?? 0) > 0 && (
                   <View className="flex-row justify-between">
-                    <Text style={{ fontSize: 14, color: '#d97706' }}>Giảm giá</Text>
-                    <Text style={{ fontSize: 14, color: '#d97706' }}>−{formatVnd(order.discount ?? 0)}</Text>
+                    <Text className={`${typo.caption} text-amber-600`}>{t('orders.discount')}</Text>
+                    <Text className={`${typo.caption} text-amber-600`}>−{formatVnd(order.discount ?? 0)}</Text>
                   </View>
                 )}
                 {(order.tipAmount ?? 0) > 0 && (
                   <View className="flex-row justify-between">
-                    <Text style={{ fontSize: 14, color: '#059669' }}>Tip</Text>
-                    <Text style={{ fontSize: 14, color: '#059669' }}>+{formatVnd(order.tipAmount ?? 0)}</Text>
+                    <Text className={`${typo.caption} text-emerald-600`}>{t('orders.editTip')}</Text>
+                    <Text className={`${typo.caption} text-emerald-600`}>+{formatVnd(order.tipAmount ?? 0)}</Text>
                   </View>
                 )}
               </View>
@@ -191,8 +342,8 @@ function ReceiptModal({
 
             {/* Total row */}
             <View className="flex-row justify-between items-center bg-indigo-50 rounded-2xl px-4 py-3 mb-4">
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#4338ca' }}>Tổng cộng</Text>
-              <Text style={{ fontSize: 20, fontWeight: '800', color: '#4338ca' }}>
+              <Text className={`${typo.label} font-bold text-indigo-700`}>{t('orders.total')}</Text>
+              <Text className={`${typo.section} font-extrabold text-indigo-700`}>
                 {formatVnd(order.total ?? 0)}
               </Text>
             </View>
@@ -201,13 +352,13 @@ function ReceiptModal({
             {order.paymentMethod === 'CASH' && (order.amountPaid ?? 0) > 0 && (
               <View className="bg-gray-50 rounded-2xl px-4 py-3 mb-4" style={{ gap: 6 }}>
                 <View className="flex-row justify-between">
-                  <Text style={{ fontSize: 13, color: '#6b7280' }}>Tiền nhận</Text>
-                  <Text style={{ fontSize: 13, color: '#374151' }}>{formatVnd(order.amountPaid ?? 0)}</Text>
+                  <Text className={`${typo.caption} text-gray-500`}>{t('orders.amountPaid')}</Text>
+                  <Text className={`${typo.caption} text-gray-600`}>{formatVnd(order.amountPaid ?? 0)}</Text>
                 </View>
                 {(order.changeAmount ?? 0) > 0 && (
                   <View className="flex-row justify-between">
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#374151' }}>Tiền thừa</Text>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#4f46e5' }}>{formatVnd(order.changeAmount ?? 0)}</Text>
+                    <Text className={`${typo.caption} font-semibold text-gray-600`}>{t('orders.changeAmount')}</Text>
+                    <Text className={`${typo.caption} font-bold text-indigo-600`}>{formatVnd(order.changeAmount ?? 0)}</Text>
                   </View>
                 )}
               </View>
@@ -216,8 +367,12 @@ function ReceiptModal({
             {/* Payment method */}
             {order.paymentMethod && (
               <View className="items-center mb-6">
-                <Text style={{ fontSize: 13, color: '#9ca3af' }}>
-                  {order.paymentMethod === 'CASH' ? '💵 Tiền mặt' : order.paymentMethod === 'BANK_TRANSFER' ? '🏦 Chuyển khoản' : '💳 Thẻ'}
+                <Text className={`${typo.caption} text-gray-400`}>
+                  {order.paymentMethod === 'CASH'
+                    ? `💵 ${t('orders.paymentCash')}`
+                    : order.paymentMethod === 'BANK_TRANSFER'
+                    ? `🏦 ${t('orders.paymentBankTransfer')}`
+                    : `💳 ${t('orders.paymentCard')}`}
                 </Text>
               </View>
             )}
@@ -229,16 +384,18 @@ function ReceiptModal({
                 <VietQrCard
                   bank={primaryBank}
                   amount={order.total ?? 0}
-                  description={`Thanh toan don ${order.orderNumber}`}
+                  description={`${t('orders.orderNumber')} ${order.orderNumber}`}
                 />
               </View>
             )}
 
             {/* Thank-you footer */}
             <View className="items-center pb-2">
-              <Text style={{ fontSize: 22, marginBottom: 6 }}>🙏</Text>
-              <Text style={{ fontSize: 17, fontWeight: '700', color: '#111827', marginBottom: 4 }}>Cảm ơn quý khách!</Text>
-              <Text style={{ fontSize: 13, color: '#9ca3af' }}>Hẹn gặp lại lần sau</Text>
+              <Text className={`${typo.heading} mb-1.5`}>🙏</Text>
+              <Text className={`${typo.section} font-bold text-gray-900`} style={{ marginBottom: 4 }}>
+                {t('orders.receiptThankYou')}
+              </Text>
+              <Text className={`${typo.caption} text-gray-400`}>{t('orders.receiptSeeYouSoon')}</Text>
             </View>
           </View>
         </ScrollView>
@@ -252,9 +409,8 @@ const STATUS_COLOR: Record<string, string> = {
   IN_PROGRESS: '#3b82f6',
   PENDING:    '#f59e0b',
   CANCELLED:  '#ef4444',
+  VOIDED:     '#6b7280',
 };
-
-type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CARD';
 
 const TIP_AMOUNTS = [10_000, 20_000, 50_000, 100_000];
 
@@ -291,100 +447,6 @@ function InfoRow({
   );
 }
 
-// ── Customer Search Modal ──────────────────────────────────────────────────────
-
-function CustomerSearchModal({
-  visible,
-  currentCustomerId,
-  onClose,
-  onSelect,
-}: {
-  visible: boolean;
-  currentCustomerId: number | null;
-  onClose: () => void;
-  onSelect: (customer: CustomerData | null) => void;
-}) {
-  const { t } = useTranslation();
-  const typo = useTypography();
-  const [search, setSearch] = useState('');
-
-  const { data: searchResult, isFetching } = useQuery({
-    queryKey: ['customers-search-modal', search],
-    queryFn: () => customerApi.list({ search: search || undefined, size: 20 }).then((r) => r.data.data.content),
-    enabled: visible,
-    staleTime: 30_000,
-  });
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableOpacity className="flex-1 bg-black/40" activeOpacity={1} onPress={onClose} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View className="bg-white rounded-t-3xl px-4 pt-4" style={{ maxHeight: 520 }}>
-          <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-4" />
-          <Text className={`${typo.section} text-gray-900 mb-3`}>{t('orders.selectCustomer')}</Text>
-
-          <View className="flex-row items-center bg-gray-100 rounded-xl px-3 mb-3">
-            <MaterialCommunityIcons name="magnify" size={18} color="#9ca3af" />
-            <TextInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder={t('orders.customerSearch')}
-              className="flex-1 py-2.5 ml-2"
-              style={{ fontSize: 15, color: '#1f2937' }}
-              autoFocus
-            />
-            {isFetching && <ActivityIndicator size="small" color="#4f46e5" />}
-          </View>
-
-          {/* Walk-in option */}
-          <TouchableOpacity
-            className={`flex-row items-center py-3 border-b border-gray-100 ${
-              currentCustomerId === null ? 'opacity-50' : ''
-            }`}
-            onPress={() => { Haptics.selectionAsync(); onSelect(null); onClose(); }}
-          >
-            <View className="w-8 h-8 rounded-full bg-gray-200 items-center justify-center mr-3">
-              <MaterialCommunityIcons name="account-off-outline" size={16} color="#6b7280" />
-            </View>
-            <Text className={`${typo.label} text-gray-600 flex-1`}>{t('orders.walkInCustomer')}</Text>
-            {currentCustomerId === null && (
-              <MaterialCommunityIcons name="check" size={18} color="#4f46e5" />
-            )}
-          </TouchableOpacity>
-
-          <FlatList
-            data={searchResult ?? []}
-            keyExtractor={(item) => item.id}
-            style={{ maxHeight: 320 }}
-            contentContainerStyle={{ paddingBottom: 24 }}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                className="flex-row items-center py-3 border-b border-gray-50"
-                onPress={() => { Haptics.selectionAsync(); onSelect(item); onClose(); }}
-              >
-                <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center mr-3">
-                  <Text className={`${typo.captionBold} text-indigo-600`}>
-                    {item.name.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-                <View className="flex-1">
-                  <Text className={`${typo.label} text-gray-800`}>{item.name}</Text>
-                  {item.phone && (
-                    <Text className={`${typo.caption} text-gray-400`}>{item.phone}</Text>
-                  )}
-                </View>
-                {String(item.id) === String(currentCustomerId) && (
-                  <MaterialCommunityIcons name="check" size={18} color="#4f46e5" />
-                )}
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
-}
-
 // ── Employee Picker Modal ──────────────────────────────────────────────────────
 
 function EmployeePickerModal({
@@ -403,7 +465,7 @@ function EmployeePickerModal({
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees-active'],
-    queryFn: () => employeeApi.listActive().then((r) => r.data.data),
+    queryFn: () => employeeApi.listActive().then((r) => r.data.data ?? []),
     enabled: visible,
     staleTime: 60_000,
   });
@@ -462,146 +524,6 @@ function EmployeePickerModal({
   );
 }
 
-// ── Payment Sheet ─────────────────────────────────────────────────────────────
-
-function PaymentSheet({
-  visible,
-  total,
-  initialMethod,
-  onClose,
-  onConfirm,
-  paying,
-}: {
-  visible: boolean;
-  total: number;
-  initialMethod?: string | null;
-  onClose: () => void;
-  onConfirm: (method: PaymentMethod, amountPaid?: number) => void;
-  paying: boolean;
-}) {
-  const { t } = useTranslation();
-  const typo = useTypography();
-  const [method, setMethod] = useState<PaymentMethod>(
-    (initialMethod as PaymentMethod) ?? 'CASH'
-  );
-  const [cashInput, setCashInput] = useState(String(total));
-  const [cashManuallyEdited, setCashManuallyEdited] = useState(false);
-
-  useEffect(() => {
-    if (visible) {
-      setCashInput(String(total));
-      setCashManuallyEdited(false);
-      setMethod((initialMethod as PaymentMethod) ?? 'CASH');
-    }
-  }, [visible]);
-
-  const cashNum = parseInt(cashInput.replace(/[^0-9]/g, '') || '0', 10);
-  const cashDelta = cashNum > 0 ? cashNum - total : 0;
-
-  const paymentOptions: { value: PaymentMethod; label: string; icon: string }[] = [
-    { value: 'CASH', label: t('barber.paymentCash'), icon: 'cash' },
-    { value: 'BANK_TRANSFER', label: t('barber.paymentTransfer'), icon: 'bank-transfer' },
-    { value: 'CARD', label: t('barber.paymentCard'), icon: 'credit-card-outline' },
-  ];
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableOpacity className="flex-1 bg-black/40" activeOpacity={1} onPress={onClose} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View className="bg-white rounded-t-3xl px-5 pt-4 pb-8">
-          <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-4" />
-          <Text className={`${typo.section} text-gray-900 mb-4`}>{t('orders.collectPayment')}</Text>
-
-          <View className="flex-row justify-between items-center mb-5">
-            <Text className={`${typo.label} text-gray-700`}>{t('orders.total')}</Text>
-            <Text className={`${typo.heading} font-bold text-indigo-600`}>{formatVnd(total)}</Text>
-          </View>
-
-          <View className="flex-row gap-x-2 mb-4">
-            {paymentOptions.map(({ value, label, icon }) => (
-              <TouchableOpacity
-                key={value}
-                className={`flex-1 flex-row items-center justify-center gap-x-1.5 py-2 rounded-xl border ${
-                  method === value ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-200'
-                }`}
-                onPress={() => { Haptics.selectionAsync(); setMethod(value); }}
-              >
-                <MaterialCommunityIcons
-                  name={icon as any}
-                  size={14}
-                  color={method === value ? '#fff' : '#6b7280'}
-                />
-                <Text className={`${typo.captionBold} ${method === value ? 'text-white' : 'text-gray-600'}`}>
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {method === 'CASH' && (
-            <View className="mb-4">
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className={`${typo.label} text-gray-700`}>{t('barber.cashReceived')}</Text>
-                {cashManuallyEdited && (
-                  <TouchableOpacity
-                    className="flex-row items-center gap-x-1"
-                    onPress={() => { Haptics.selectionAsync(); setCashInput(String(total)); setCashManuallyEdited(false); }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <MaterialCommunityIcons name="refresh" size={13} color="#4f46e5" />
-                    <Text className={`${typo.captionBold} text-indigo-600`}>{t('barber.exactAmount')}</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              <View className="flex-row items-center border-2 border-indigo-200 rounded-2xl overflow-hidden bg-indigo-50">
-                <TextInput
-                  value={formatMoneyDisplay(cashInput)}
-                  onChangeText={(text) => {
-                    const digits = text.replace(/[^0-9]/g, '');
-                    setCashInput(digits);
-                    setCashManuallyEdited(true);
-                  }}
-                  keyboardType="number-pad"
-                  selectionColor="#4f46e5"
-                  placeholder="0"
-                  placeholderTextColor="#a5b4fc"
-                  style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 14, fontSize: 26, fontWeight: '700', color: '#111827' }}
-                />
-                <View className="px-3 self-stretch justify-center bg-indigo-100 border-l border-indigo-200">
-                  <Text style={{ fontSize: 20, fontWeight: '700', color: '#4f46e5' }}>đ</Text>
-                </View>
-              </View>
-              {cashNum > 0 && cashDelta !== 0 && (
-                <View className="flex-row justify-between items-center mt-2 px-1">
-                  <Text className={`${typo.label} text-gray-600`}>
-                    {cashDelta >= 0 ? t('barber.change') : t('barber.shortage')}
-                  </Text>
-                  <Text className={`${typo.section} font-bold ${cashDelta >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>
-                    {formatVnd(Math.abs(cashDelta))}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-
-          <TouchableOpacity
-            className="bg-indigo-600 rounded-2xl py-4 items-center"
-            onPress={() => onConfirm(method, method === 'CASH' && cashNum > 0 ? cashNum : undefined)}
-            disabled={paying}
-            activeOpacity={0.85}
-          >
-            {paying ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text className={`${typo.labelBold} text-white`}>{t('orders.payAndComplete')}</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
-}
-
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
 export function OrderDetailScreen({ navigation, route }: Props) {
@@ -613,16 +535,20 @@ export function OrderDetailScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { orderId } = route.params;
   const queryClient = useQueryClient();
+  const canVoid = useFeature('ORDER_VIEW_ALL');
+
   const [paymentSheetVisible, setPaymentSheetVisible] = useState(false);
   const [receiptVisible, setReceiptVisible] = useState(false);
-  const [customerSearchVisible, setCustomerSearchVisible] = useState(false);
   const [employeePickerItemId, setEmployeePickerItemId] = useState<number | null>(null);
   const [employeePickerCurrentId, setEmployeePickerCurrentId] = useState<number | null | undefined>(null);
+  const [cancelSheetVisible, setCancelSheetVisible] = useState(false);
+  const [voidSheetVisible, setVoidSheetVisible] = useState(false);
 
   // Edit state for IN_PROGRESS orders
   const [localTip, setLocalTip] = useState('');
   const [showCustomTip, setShowCustomTip] = useState(false);
   const [localCustomer, setLocalCustomer] = useState<{ id: string; name: string } | null | undefined>(undefined);
+  const [customerPickerVisible, setCustomerPickerVisible] = useState(false);
 
   const { data: order, isLoading, isError, refetch } = useQuery({
     queryKey: ['order', orderId],
@@ -656,10 +582,24 @@ export function OrderDetailScreen({ navigation, route }: Props) {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: () => orderApi.cancel(orderId).then((r) => r.data.data),
+    mutationFn: (reason: string) => orderApi.cancel(orderId, reason || undefined).then((r) => r.data.data),
     onSuccess: (updated) => {
       queryClient.setQueryData(['order', orderId], updated);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setCancelSheetVisible(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    },
+    onError: showErrorAlert,
+  });
+
+  const voidMutation = useMutation({
+    mutationFn: (reason: string) => orderApi.void(orderId, reason).then((r) => r.data.data),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['order', orderId], updated);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setVoidSheetVisible(false);
+      showToast(t('orders.voidSuccess'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     },
     onError: showErrorAlert,
   });
@@ -731,18 +671,7 @@ export function OrderDetailScreen({ navigation, route }: Props) {
   });
 
   function handleCancel() {
-    showAlert(
-      t('orders.cancelConfirmTitle'),
-      t('orders.cancelConfirmMsg'),
-      [
-        { label: t('common.cancel'), style: 'cancel' },
-        {
-          label: t('orders.cancelButton'),
-          style: 'destructive',
-          onPress: () => cancelMutation.mutate(),
-        },
-      ],
-    );
+    setCancelSheetVisible(true);
   }
 
   function handleRemoveItem(itemId: number, productName: string) {
@@ -785,7 +714,7 @@ export function OrderDetailScreen({ navigation, route }: Props) {
     return (
       <View className="flex-1 bg-gray-50 dark:bg-gray-900">
         <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}>
-          <View className="flex-row items-center">
+          <View className="flex-row items-center mb-0.5">
             <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
               <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
             </TouchableOpacity>
@@ -813,9 +742,11 @@ export function OrderDetailScreen({ navigation, route }: Props) {
     : order.paymentMethod;
 
   const isInProgress = order.status === 'IN_PROGRESS';
+  const isCompleted = order.status === 'COMPLETED';
+  const isVoided = order.status === 'VOIDED';
   const isActionable = order.status === 'PENDING' || isInProgress;
   const anyMutating = completeMutation.isPending || cancelMutation.isPending ||
-    removeItemMutation.isPending || updateQtyMutation.isPending;
+    voidMutation.isPending || removeItemMutation.isPending || updateQtyMutation.isPending;
 
   const tipNum = parseInt(localTip || '0', 10);
   const displayCustomer = localCustomer !== undefined ? localCustomer : null;
@@ -846,7 +777,7 @@ export function OrderDetailScreen({ navigation, route }: Props) {
             <Text className={typo.captionBold} style={{ color: statusColor }}>{statusLabel}</Text>
           </View>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{formatDateTime(order.createdAt)}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{formatDateTime(order.createdAt)}</Text>
       </View>
 
       {/* ── Scrollable body ─────────────────────────────────────────────────── */}
@@ -854,8 +785,10 @@ export function OrderDetailScreen({ navigation, route }: Props) {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          padding: 16,
-          paddingBottom: isActionable ? insets.bottom + (isInProgress ? 160 : 130) : insets.bottom + 24,
+          padding: 4,
+          paddingBottom: isActionable
+            ? insets.bottom + (isInProgress ? 160 : 130)
+            : (isCompleted && canVoid ? insets.bottom + 96 : insets.bottom + 24),
         }}
       >
         {/* Order meta */}
@@ -876,7 +809,7 @@ export function OrderDetailScreen({ navigation, route }: Props) {
               </Text>
               {isInProgress && (
                 <TouchableOpacity
-                  onPress={() => setCustomerSearchVisible(true)}
+                  onPress={() => setCustomerPickerVisible(true)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <MaterialCommunityIcons name="pencil-outline" size={16} color="#4f46e5" />
@@ -918,6 +851,11 @@ export function OrderDetailScreen({ navigation, route }: Props) {
                   <Text className={`${typo.label} text-gray-800`} numberOfLines={2}>
                     {item.productName}
                   </Text>
+                  {item.note ? (
+                    <Text className={`${typo.caption} text-amber-600 italic mt-0.5`} numberOfLines={2}>
+                      → {item.note}
+                    </Text>
+                  ) : null}
                   {isInProgress && item.id ? (
                     <TouchableOpacity
                       className="flex-row items-center mt-1 self-start"
@@ -1135,7 +1073,63 @@ export function OrderDetailScreen({ navigation, route }: Props) {
             )}
           </View>
         )}
+
+        {/* Void details */}
+        {isVoided && (order.voidReason || order.voidedBy || order.voidedAt) && (
+          <View
+            className="rounded-2xl p-4 mb-3 border border-gray-200"
+            style={{ backgroundColor: '#f9fafb' }}
+          >
+            <View className="flex-row items-center mb-3">
+              <MaterialCommunityIcons name="undo-variant" size={15} color="#6b7280" style={{ marginRight: 5 }} />
+              <Text className={`${typo.captionBold} uppercase tracking-wide text-gray-500`}>
+                {t('orders.voidButton')}
+              </Text>
+            </View>
+            {order.voidReason && (
+              <View className="mb-2">
+                <Text className={`${typo.caption} text-gray-400`}>{t('orders.voidReason')}</Text>
+                <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-300 mt-0.5`}>{order.voidReason}</Text>
+              </View>
+            )}
+            {order.voidedBy && (
+              <View className="mb-2">
+                <Text className={`${typo.caption} text-gray-400`}>{t('orders.voidedBy')}</Text>
+                <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-300 mt-0.5`}>{order.voidedBy}</Text>
+              </View>
+            )}
+            {order.voidedAt && (
+              <View>
+                <Text className={`${typo.caption} text-gray-400`}>{t('orders.voidedAt')}</Text>
+                <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-300 mt-0.5`}>
+                  {formatDateTime(order.voidedAt)}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
+
+      {/* ── Void footer — COMPLETED orders, managers/owners only ─────────────── */}
+      {isCompleted && canVoid && (
+        <View
+          className="bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 px-4 pt-3"
+          style={{ paddingBottom: insets.bottom + 16 }}
+        >
+          <TouchableOpacity
+            onPress={() => setVoidSheetVisible(true)}
+            disabled={anyMutating}
+            activeOpacity={0.8}
+            className="rounded-2xl py-3.5 items-center flex-row justify-center border border-gray-200 dark:border-gray-600"
+            style={{ backgroundColor: '#f9fafb' }}
+          >
+            <MaterialCommunityIcons name="undo-variant" size={18} color="#6b7280" style={{ marginRight: 6 }} />
+            <Text className={`${typo.label} text-gray-500 dark:text-gray-400`}>
+              {t('orders.voidButton')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* ── Sticky action footer ─────────────────────────────────────────────── */}
       {isActionable && (
@@ -1263,19 +1257,24 @@ export function OrderDetailScreen({ navigation, route }: Props) {
       <PaymentSheet
         visible={paymentSheetVisible}
         total={displayTotal}
-        initialMethod={order.paymentMethod}
+        initialMethod={order.paymentMethod as PaymentMethod | null}
         onClose={() => setPaymentSheetVisible(false)}
-        onConfirm={handlePayAndComplete}
+        onConfirm={({ method, amountPaid }) => handlePayAndComplete(method, amountPaid)}
         paying={payAndCompleteMutation.isPending}
+        qrDescription={`${t('orders.orderNumber')} ${order.orderNumber}`}
       />
 
-      {/* ── Customer search modal ────────────────────────────────────────────── */}
-      <CustomerSearchModal
-        visible={customerSearchVisible}
-        currentCustomerId={order.customerId}
-        onClose={() => setCustomerSearchVisible(false)}
-        onSelect={(customer) => {
-          setLocalCustomer(customer ? { id: customer.id, name: customer.name } : null);
+      {/* ── Customer picker ──────────────────────────────────────────────────── */}
+      <CustomerPickerSheet
+        visible={customerPickerVisible}
+        onClose={() => setCustomerPickerVisible(false)}
+        value={
+          localCustomer != null
+            ? ({ type: 'managed', id: localCustomer.id, name: localCustomer.name, phone: '' } as SelectedCustomer)
+            : null
+        }
+        onChange={(sel) => {
+          setLocalCustomer(sel?.type === 'managed' ? { id: sel.id, name: sel.name } : null);
         }}
       />
 
@@ -1297,6 +1296,36 @@ export function OrderDetailScreen({ navigation, route }: Props) {
         visible={receiptVisible}
         order={order}
         onClose={() => setReceiptVisible(false)}
+      />
+
+      {/* ── Cancel reason sheet ───────────────────────────────────────────────── */}
+      <ReasonSheet
+        visible={cancelSheetVisible}
+        title={t('orders.cancelReasonTitle')}
+        hint={t('orders.cancelReasonHint')}
+        chips={t('orders.cancelChips', { returnObjects: true }) as string[]}
+        placeholder={t('orders.cancelReasonPlaceholder')}
+        confirmLabel={t('orders.cancelConfirmBtn')}
+        confirmDestructive
+        isPending={cancelMutation.isPending}
+        onConfirm={(reason) => cancelMutation.mutate(reason)}
+        onClose={() => setCancelSheetVisible(false)}
+      />
+
+      {/* ── Void reason sheet ─────────────────────────────────────────────────── */}
+      <ReasonSheet
+        visible={voidSheetVisible}
+        title={t('orders.voidReasonTitle')}
+        hint={t('orders.voidReasonHint')}
+        warning={t('orders.voidWarning')}
+        chips={t('orders.voidChips', { returnObjects: true }) as string[]}
+        placeholder={t('orders.voidReasonPlaceholder')}
+        confirmLabel={t('orders.voidConfirmBtn')}
+        confirmDestructive
+        requireReason
+        isPending={voidMutation.isPending}
+        onConfirm={(reason) => voidMutation.mutate(reason)}
+        onClose={() => setVoidSheetVisible(false)}
       />
     </View>
   );

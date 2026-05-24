@@ -17,11 +17,11 @@ type Props = ToolsScreenProps<'MarketGoldPrices'>;
 const STORAGE_KEY = 'market_gold_price_source';
 const DEFAULT_SOURCE = 'MIHONG';
 
-const SOURCES: { key: string; label: string }[] = [
-  { key: 'SJC',    label: 'SJC' },
+const SOURCES: { key: string; label: string; disabled?: boolean }[] = [
+  { key: 'SJC',    label: 'SJC',     disabled: true },
   { key: 'MIHONG', label: 'Mi Hồng' },
   { key: 'PNJ',    label: 'PNJ' },
-  { key: 'BTMC',   label: 'BTMC' },
+  { key: 'BTMC',   label: 'BTMC',    disabled: true },
 ];
 
 function fmtPrice(n: number | null) {
@@ -48,10 +48,11 @@ export function MarketGoldPricesScreen({ navigation }: Props) {
   const [source, setSource] = useState(DEFAULT_SOURCE);
   const [sourceReady, setSourceReady] = useState(false);
 
-  // Restore last selected source
+  // Restore last selected source — skip disabled sources and fall back to default
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((v) => {
-      if (v && SOURCES.some((s) => s.key === v)) setSource(v);
+      const match = v ? SOURCES.find((s) => s.key === v) : null;
+      if (match && !match.disabled) setSource(v!);
       setSourceReady(true);
     });
   }, []);
@@ -78,42 +79,56 @@ export function MarketGoldPricesScreen({ navigation }: Props) {
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 pb-3"
         style={{ paddingTop: top + 12 }}
       >
-        <View className="flex-row items-center mb-1">
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            className="mr-3"
-          >
-            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
-          </TouchableOpacity>
-          <View className="flex-1">
-            <Text className={`${typo.section} text-gray-900 dark:text-white`}>
+        <View>
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              className="mr-3"
+            >
+              <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+            </TouchableOpacity>
+            <Text className={`${typo.section} text-gray-900 dark:text-white flex-1`}>
               {t('marketGold.title')}
             </Text>
-            {fetchedAt ? (
-              <Text className={`${typo.caption} text-gray-400`}>{t('marketGold.updatedAt', { time: fmtTime(fetchedAt) })}</Text>
-            ) : null}
+            <TouchableOpacity
+              onPress={() => refetch()}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MaterialCommunityIcons name="refresh" size={22} color="#4f46e5" />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={() => refetch()}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <MaterialCommunityIcons name="refresh" size={22} color="#4f46e5" />
-          </TouchableOpacity>
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('marketGold.hint')}</Text>
+          {fetchedAt ? (
+            <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{t('marketGold.updatedAt', { time: fmtTime(fetchedAt) })}</Text>
+          ) : null}
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-0 mt-0`}>{t('marketGold.hint')}</Text>
 
         {/* Source tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2 -mx-1">
           {SOURCES.map((s) => {
             const active = s.key === source;
+            const disabled = !!s.disabled;
             return (
               <TouchableOpacity
                 key={s.key}
-                onPress={() => selectSource(s.key)}
-                className={`mx-1 px-4 py-1.5 rounded-full ${active ? 'bg-indigo-600' : 'bg-gray-100 dark:bg-gray-700'}`}
+                onPress={disabled ? undefined : () => selectSource(s.key)}
+                activeOpacity={disabled ? 1 : 0.7}
+                className={`mx-1 px-4 py-1.5 rounded-full ${
+                  disabled
+                    ? 'bg-gray-100 dark:bg-gray-800 opacity-40'
+                    : active
+                    ? 'bg-indigo-600'
+                    : 'bg-gray-100 dark:bg-gray-700'
+                }`}
               >
-                <Text className={`${typo.label} ${active ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+                <Text className={`${typo.label} ${
+                  disabled
+                    ? 'text-gray-400 dark:text-gray-600 line-through'
+                    : active
+                    ? 'text-white'
+                    : 'text-gray-600 dark:text-gray-300'
+                }`}>
                   {s.label}
                 </Text>
               </TouchableOpacity>
@@ -124,7 +139,7 @@ export function MarketGoldPricesScreen({ navigation }: Props) {
 
       {/* Content */}
       {isLoading ? (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, gap: 12 }}>
           {[...Array(6)].map((_, i) => (
             <View key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-4">
               <Skeleton height={16} width="66%" style={{ marginBottom: 8 }} />
@@ -154,7 +169,7 @@ export function MarketGoldPricesScreen({ navigation }: Props) {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          contentContainerStyle={{ padding: 4, gap: 12 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#059669" />}
         >
           {/* Column headers */}

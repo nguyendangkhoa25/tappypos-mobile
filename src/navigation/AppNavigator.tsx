@@ -20,6 +20,7 @@ import { SettingsScreen } from '../screens/settings/SettingsScreen';
 
 // Selling stack screens
 import { POSMainScreen } from '../screens/selling/POSMainScreen';
+import { KitchenDisplayScreen } from '../screens/selling/KitchenDisplayScreen';
 import { CartScreen } from '../screens/pos/CartScreen';
 import { CheckoutScreen } from '../screens/pos/CheckoutScreen';
 import { OrderSuccessScreen } from '../screens/pos/OrderSuccessScreen';
@@ -48,6 +49,7 @@ import { FeedbackScreen } from '../screens/settings/FeedbackScreen';
 import { SubscriptionScreen } from '../screens/settings/SubscriptionScreen';
 import { BankAccountsScreen } from '../screens/settings/BankAccountsScreen';
 import { LoyaltyConfigScreen } from '../screens/settings/LoyaltyConfigScreen';
+import { LoyaltyProgramEditScreen } from '../screens/settings/LoyaltyProgramEditScreen';
 
 // Tools screens (now inside Settings stack)
 import { UtilitiesScreen } from '../screens/tools/UtilitiesScreen';
@@ -68,6 +70,7 @@ import { InventoryListScreen } from '../screens/inventory/InventoryListScreen';
 import { ComboListScreen } from '../screens/combos/ComboListScreen';
 import { ComboEditScreen } from '../screens/combos/ComboEditScreen';
 import { PrintTemplateListScreen } from '../screens/print/PrintTemplateListScreen';
+import { PrintTemplateCreateScreen } from '../screens/print/PrintTemplateCreateScreen';
 import { PrintTemplateDetailScreen } from '../screens/print/PrintTemplateDetailScreen';
 import { GoldPriceScreen } from '../screens/gold/GoldPriceScreen';
 import { ProductListScreen } from '../screens/products/ProductListScreen';
@@ -78,14 +81,23 @@ import { CategoryListScreen } from '../screens/products/CategoryListScreen';
 import { NotificationScreen } from '../screens/main/NotificationScreen';
 import { MyWorkScreen } from '../screens/mywork/MyWorkScreen';
 import { MyWorkHistoryScreen } from '../screens/mywork/MyWorkHistoryScreen';
+import { CommissionScreen } from '../screens/commission/CommissionScreen';
+import { CommissionDetailScreen } from '../screens/commission/CommissionDetailScreen';
 import { MoreScreen } from '../screens/more/MoreScreen';
 import { StaffListScreen } from '../screens/staff/StaffListScreen';
+import { StaffDetailScreen } from '../screens/staff/StaffDetailScreen';
 import { StaffFormScreen } from '../screens/staff/StaffFormScreen';
 import { StaffQueueScreen } from '../screens/staff/StaffQueueScreen';
-import { StaffPerformanceScreen } from '../screens/staff/StaffPerformanceScreen';
+import { GenerateInviteScreen } from '../screens/staff/GenerateInviteScreen';
+import { DeleteShopScreen } from '../screens/settings/DeleteShopScreen';
+import { EInvoiceSetupScreen } from '../screens/settings/EInvoiceSetupScreen';
 import { AppointmentListScreen } from '../screens/appointment/AppointmentListScreen';
 import { AppointmentDetailScreen } from '../screens/appointment/AppointmentDetailScreen';
 import { AppointmentFormScreen } from '../screens/appointment/AppointmentFormScreen';
+import { ZaloSettingsScreen } from '../screens/zalo/ZaloSettingsScreen';
+import { ZaloTemplateListScreen } from '../screens/zalo/ZaloTemplateListScreen';
+import { ZaloTemplateFormScreen } from '../screens/zalo/ZaloTemplateFormScreen';
+import { ZaloOaConnectScreen } from '../screens/zalo/ZaloOaConnectScreen';
 import { CustomerLoyaltyScreen } from '../screens/customers/CustomerLoyaltyScreen';
 
 import type {
@@ -147,6 +159,7 @@ function SellingNavigator() {
       <SellStack.Screen name="PawnDetail" component={PawnDetailScreen} />
       <SellStack.Screen name="PawnForm" component={PawnFormScreen} />
       <SellStack.Screen name="PawnSettings" component={PawnSettingsScreen} />
+      <SellStack.Screen name="KitchenDisplay" component={KitchenDisplayScreen} />
     </SellStack.Navigator>
   );
 }
@@ -189,6 +202,7 @@ function SettingsNavigator() {
       <SettingsStack.Screen name="Subscription" component={SubscriptionScreen} />
       <SettingsStack.Screen name="BankAccounts" component={BankAccountsScreen} />
       <SettingsStack.Screen name="LoyaltyConfig" component={LoyaltyConfigScreen} />
+      <SettingsStack.Screen name="LoyaltyProgramEdit" component={LoyaltyProgramEditScreen} />
       {/* Tools — accessible from Settings */}
       <SettingsStack.Screen name="UtilitiesHub" component={UtilitiesScreen} />
       <SettingsStack.Screen name="CurrencyConverter" component={CurrencyConverterScreen} />
@@ -199,6 +213,10 @@ function SettingsNavigator() {
       <SettingsStack.Screen name="BudgetRule" component={BudgetRuleScreen} />
       <SettingsStack.Screen name="Breakeven" component={BreakevenScreen} />
       <SettingsStack.Screen name="MarketGoldPrices" component={MarketGoldPricesScreen} />
+      <SettingsStack.Screen name="ZaloSettings" component={ZaloSettingsScreen} />
+      <SettingsStack.Screen name="ZaloTemplateList" component={ZaloTemplateListScreen} />
+      <SettingsStack.Screen name="ZaloTemplateForm" component={ZaloTemplateFormScreen} />
+      <SettingsStack.Screen name="ZaloOaConnect" component={ZaloOaConnectScreen} />
     </SettingsStack.Navigator>
   );
 }
@@ -220,9 +238,13 @@ function MoreNavigator() {
       <MoreStack.Screen name="Notifications" component={NotificationNavigator} />
       <MoreStack.Screen name="Settings" component={SettingsNavigator} />
       <MoreStack.Screen name="StaffList" component={StaffListScreen} />
+      <MoreStack.Screen name="StaffDetail" component={StaffDetailScreen} />
       <MoreStack.Screen name="StaffForm" component={StaffFormScreen} />
+      <MoreStack.Screen name="GenerateInvite" component={GenerateInviteScreen} />
+      <MoreStack.Screen name="DeleteShop" component={DeleteShopScreen} />
+      <MoreStack.Screen name="Subscription" component={SubscriptionScreen} />
+      <MoreStack.Screen name="EInvoiceSetup" component={EInvoiceSetupScreen} />
       <MoreStack.Screen name="QueueView" component={StaffQueueScreen} />
-      <MoreStack.Screen name="StaffPerformance" component={StaffPerformanceScreen} />
       <MoreStack.Screen name="AppointmentList" component={AppointmentListScreen} />
       <MoreStack.Screen name="AppointmentDetail" component={AppointmentDetailScreen} />
       <MoreStack.Screen name="AppointmentForm" component={AppointmentFormScreen} />
@@ -232,6 +254,7 @@ function MoreNavigator() {
       <MoreStack.Screen name="BankAccounts" component={BankAccountsScreen} />
       <MoreStack.Screen name="DefaultExpenses" component={DefaultExpensesScreen} />
       <MoreStack.Screen name="LoyaltyConfig" component={LoyaltyConfigScreen} />
+      <MoreStack.Screen name="LoyaltyProgramEdit" component={LoyaltyProgramEditScreen} />
       <MoreStack.Screen name="Display" component={DisplayScreen} />
       <MoreStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
       {/* Support screens — accessible from More > Support section */}
@@ -245,6 +268,13 @@ function MoreNavigator() {
       <MoreStack.Screen name="BudgetRule" component={BudgetRuleScreen} />
       <MoreStack.Screen name="Breakeven" component={BreakevenScreen} />
       <MoreStack.Screen name="MarketGoldPrices" component={MarketGoldPricesScreen} />
+      <MoreStack.Screen name="Commission" component={CommissionScreen} />
+      <MoreStack.Screen name="CommissionDetail" component={CommissionDetailScreen} />
+      {/* Zalo — registered here ready for when the feature is enabled */}
+      <MoreStack.Screen name="ZaloSettings" component={ZaloSettingsScreen} />
+      <MoreStack.Screen name="ZaloTemplateList" component={ZaloTemplateListScreen} />
+      <MoreStack.Screen name="ZaloTemplateForm" component={ZaloTemplateFormScreen} />
+      <MoreStack.Screen name="ZaloOaConnect" component={ZaloOaConnectScreen} />
     </MoreStack.Navigator>
   );
 }
@@ -407,6 +437,7 @@ export function PrintTemplateNavigator() {
   return (
     <PrintStack.Navigator screenOptions={{ headerShown: false }}>
       <PrintStack.Screen name="PrintTemplateList" component={PrintTemplateListScreen} />
+      <PrintStack.Screen name="PrintTemplateCreate" component={PrintTemplateCreateScreen} />
       <PrintStack.Screen name="PrintTemplateDetail" component={PrintTemplateDetailScreen} />
     </PrintStack.Navigator>
   );

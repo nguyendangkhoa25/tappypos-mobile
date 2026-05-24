@@ -6,17 +6,17 @@ import { SUPPORT } from '../utils/constants';
 
 type PlanConfig = {
   code: string;
-  price: string;
+  priceKey: string;
   maxUsers: number | null;
   maxOrdersPerMonth: number | null;
   highlight?: boolean;
 };
 
 const PLANS: PlanConfig[] = [
-  { code: 'STARTER',    price: '70.000 ₫/tháng',  maxUsers: 1,    maxOrdersPerMonth: 1_000 },
-  { code: 'BASIC',      price: '100.000 ₫/tháng', maxUsers: 3,    maxOrdersPerMonth: 5_000, highlight: true },
-  { code: 'PRO',        price: '300.000 ₫/tháng', maxUsers: 10,   maxOrdersPerMonth: null },
-  { code: 'ENTERPRISE', price: 'Liên hệ',          maxUsers: null, maxOrdersPerMonth: null },
+  { code: 'STARTER',    priceKey: 'upgrade.starterPrice',    maxUsers: 1,    maxOrdersPerMonth: 1_000 },
+  { code: 'BASIC',      priceKey: 'upgrade.basicPrice',      maxUsers: 3,    maxOrdersPerMonth: 5_000, highlight: true },
+  { code: 'PRO',        priceKey: 'upgrade.proPrice',        maxUsers: 10,   maxOrdersPerMonth: null },
+  { code: 'ENTERPRISE', priceKey: 'upgrade.enterprisePrice', maxUsers: null, maxOrdersPerMonth: null },
 ];
 
 type Props = {
@@ -63,7 +63,7 @@ export function UpgradeModal({ visible, onClose }: Props) {
                       </View>
                     )}
                   </View>
-                  <Text className={`${typo.label} font-bold text-indigo-600`}>{plan.price}</Text>
+                  <Text className={`${typo.label} font-bold text-indigo-600`}>{t(plan.priceKey)}</Text>
                 </View>
                 <View className="flex-row gap-4">
                   <View className="flex-row items-center gap-1">

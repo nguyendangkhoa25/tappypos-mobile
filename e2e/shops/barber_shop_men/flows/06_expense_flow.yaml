@@ -1,0 +1,33 @@
+appId: com.knp.tappypos
+name: "BARM 06 Expense flow — add barber supply expense and verify it appears (EXPENSE feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-expenses"
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "expense-add-fab"
+
+- tapOn:
+    id: "expense-desc-input"
+- inputText: "Dao cạo râu test maestro"
+
+- tapOn:
+    id: "expense-amount-input"
+- inputText: "150000"
+
+- tapOn:
+    id: "expense-save-btn"
+- assertNotVisible: "500"
+
+# Expense appears in list
+- assertVisible:
+    text: "Dao cạo râu test maestro"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

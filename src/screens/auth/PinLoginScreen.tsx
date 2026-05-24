@@ -5,6 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import { isAxiosError } from 'axios';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PinPad } from '../../components/PinPad';
 import { useTypography } from '../../hooks/useTypography';
 import { authApi } from '../../services/api';
@@ -25,10 +26,13 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [canBiometric, setCanBiometric] = useState(false);
+  const [canEnableBiometric, setCanEnableBiometric] = useState(false);
+  const [biometricType, setBiometricType] = useState<'face' | 'fingerprint'>('face');
+  const [enablingBiometric, setEnablingBiometric] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [remainingSecs, setRemainingSecs] = useState(0);
-  const { storedPhone, biometricEnabled, setAuthenticated } = useAuthStore();
+  const { storedPhone, biometricEnabled, setAuthenticated, setBiometricEnabled } = useAuthStore();
   const nickname = useUserStore((s) => s.nickname);
   const autoPrompted = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -61,13 +65,28 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
   }, [pin]);
 
   const checkBiometric = async () => {
-    const [hasHardware, isEnrolled, hasRefresh] = await Promise.all([
+    const [hasHardware, isEnrolled, hasRefresh, types] = await Promise.all([
       LocalAuthentication.hasHardwareAsync(),
       LocalAuthentication.isEnrolledAsync(),
       SecureStore.getItemAsync('refresh_token').then(Boolean),
+      LocalAuthentication.supportedAuthenticationTypesAsync(),
     ]);
-    const available = hasHardware && isEnrolled && hasRefresh && biometricEnabled;
+
+    // If the user previously enabled biometric but has since removed all biometrics
+    // from the device (e.g. deleted all fingerprints in Settings), silently disable it.
+    if (biometricEnabled && hasHardware && !isEnrolled) {
+      await setBiometricEnabled(false);
+    }
+
+    const hwReady = hasHardware && isEnrolled && hasRefresh;
+    const type = types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)
+      ? 'face'
+      : 'fingerprint';
+    setBiometricType(type);
+    const available = hwReady && biometricEnabled;
     setCanBiometric(available);
+    // Hardware is ready but user hasn't enabled biometric yet — offer the shortcut
+    setCanEnableBiometric(hwReady && !biometricEnabled);
     if (available && !autoPrompted.current) {
       autoPrompted.current = true;
       setTimeout(() => handleBiometric(), 400);
@@ -121,7 +140,27 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
         cancelLabel: t('auth.pinLogin.biometricCancel'),
         disableDeviceFallback: false,
       });
-      if (!result.success) return;
+
+      if (!result.success) {
+        // 'error' is set when the OS rejects the request (not when the user cancels).
+        // 'user_cancel' / 'system_cancel' → silent, the user tapped Cancel.
+        // 'BiometryNotEnrolled' / 'biometryNotEnrolled' → all biometrics removed.
+        // 'BiometryNotAvailable' / 'biometryNotAvailable' → hardware unavailable.
+        const err = (result as { success: false; error?: string }).error ?? '';
+        const isUnenrolled = /not.*enroll|BiometryNotEnrolled/i.test(err);
+        const isUnavailable = /not.*available|BiometryNotAvailable/i.test(err);
+        if (isUnenrolled || isUnavailable) {
+          await setBiometricEnabled(false);
+          setCanBiometric(false);
+          setCanEnableBiometric(false);
+          showAlert(
+            t('auth.pinLoginExt.biometricRemovedTitle'),
+            t('auth.pinLoginExt.biometricRemovedMsg'),
+            [{ label: t('common.ok') }],
+          );
+        }
+        return;
+      }
 
       const refreshToken = await SecureStore.getItemAsync('refresh_token');
       if (!refreshToken) {
@@ -144,6 +183,39 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEnableBiometric = async () => {
+    if (enablingBiometric) return;
+    setEnablingBiometric(true);
+    try {
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: t('auth.biometricOffer.title', {
+          type: t(biometricType === 'face'
+            ? 'settings.securitySettings.faceId'
+            : 'settings.securitySettings.fingerprint'),
+        }),
+        cancelLabel: t('auth.biometricOffer.notNow'),
+        disableDeviceFallback: true,
+      });
+      if (!result.success) return;
+      await setBiometricEnabled(true);
+      setCanBiometric(true);
+      setCanEnableBiometric(false);
+      showAlert(
+        t('auth.biometricOffer.title', {
+          type: t(biometricType === 'face'
+            ? 'settings.securitySettings.faceId'
+            : 'settings.securitySettings.fingerprint'),
+        }),
+        t('auth.biometricOffer.hint'),
+        [{ label: t('common.ok') }],
+      );
+    } catch {
+      // user dismissed — no-op
+    } finally {
+      setEnablingBiometric(false);
     }
   };
 
@@ -217,7 +289,33 @@ export function PinLoginScreen({ navigation }: AuthScreenProps<'PinLogin'>) {
 
       {!isLocked && (
         <>
-          <TouchableOpacity className="mt-8" onPress={() => navigation.navigate('ForgotPin')}>
+          {/* "Enable Face ID" shortcut — shown when hardware is ready but user hasn't enabled it yet */}
+          {canEnableBiometric && (
+            <TouchableOpacity
+              className="mt-6 flex-row items-center gap-1.5 px-4 py-2 rounded-full bg-indigo-50 dark:bg-indigo-900/30 active:opacity-70"
+              onPress={handleEnableBiometric}
+              disabled={enablingBiometric}
+            >
+              <MaterialCommunityIcons
+                name={biometricType === 'face' ? 'face-recognition' : 'fingerprint'}
+                size={16}
+                color="#4f46e5"
+              />
+              <Text className={`${typo.caption} font-semibold text-indigo-600 dark:text-indigo-400`}>
+                {enablingBiometric
+                  ? t('common.loading')
+                  : t('auth.biometricOffer.enable', {
+                      type: t(
+                        biometricType === 'face'
+                          ? 'settings.securitySettings.faceId'
+                          : 'settings.securitySettings.fingerprint',
+                      ),
+                    })}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity className="mt-6" onPress={() => navigation.navigate('ForgotPin')}>
             <Text className={`${typo.caption} text-primary`}>{t('auth.pinLogin.forgotPin')}</Text>
           </TouchableOpacity>
           <TouchableOpacity className="mt-4" onPress={() => navigation.navigate('Login')}>

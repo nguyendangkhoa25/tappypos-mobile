@@ -10,38 +10,22 @@ appId: com.knp.tappypos
 ---
 
 # clearState: false — preserves AsyncStorage so the Expo dev menu does NOT appear.
-# The Keychain (SecureStore) always survives regardless; auth state is handled below.
+# clearKeychain: true — clears SecureStore (JWT tokens) so the app returns to login.
+# Auth tokens live in Keychain; clearing them forces re-login without losing Metro URL.
 - launchApp:
     clearState: false
+    clearKeychain: true
 
-# ── 0. Handle already-logged-in case ─────────────────────────────────────────
-# Only runs if the app is on the main screen (tab-more visible = logged in).
-# More tab → Settings entry → logout → confirm FriendlyAlert.
+# ── 0a. Dev server picker (appears if AsyncStorage was cleared externally) ────
+# Tap port 8082 (dev Metro) to connect. The Expo dev launcher UI is native (not RN)
+# so text matching doesn't work — use coordinate tap for the second server row (~53% height).
 - runFlow:
     when:
       visible:
-        id: "tab-more"
+        text: "DEVELOPMENT SERVERS"
     commands:
       - tapOn:
-          id: "tab-more"
-      - scrollUntilVisible:
-          element:
-            id: "more-settings-entry"
-          direction: DOWN
-          timeout: 5000
-      - tapOn:
-          id: "more-settings-entry"
-      - scrollUntilVisible:
-          element:
-            id: "settings-logout-btn"
-          direction: DOWN
-          speed: 80
-          timeout: 10000
-      - tapOn:
-          id: "settings-logout-btn"
-      - tapOn:
-          id: "alert-btn-1"
-          optional: true
+          point: "50%, 37%"
 
 # ── 0b. PIN screen "change store" link ───────────────────────────────────────
 - tapOn:
@@ -60,8 +44,14 @@ appId: com.knp.tappypos
       - tapOn:
           id: "shop-id-submit"
 
-# ── 2. Login screen ──────────────────────────────────────────────────────────
-- assertVisible: "Đăng nhập"
+# ── 2. Login screen — ensure Vietnamese locale ───────────────────────────────
+# Use testID instead of text to be locale-independent (app may render in VI or EN).
+# Always tap VI to ensure flows that assert Vietnamese text work correctly.
+- assertVisible:
+    id: "login-phone"
+- tapOn:
+    id: "lang-btn-vi"
+    optional: true
 - tapOn:
     id: "login-phone"
 - inputText: ${PHONE}

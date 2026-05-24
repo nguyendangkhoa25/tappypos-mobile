@@ -11,8 +11,22 @@
     "preview": {
       "distribution": "internal"
     },
+    "staging": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://staging.tappypos.vn/api",
+        "EXPO_PUBLIC_APP_VARIANT": "staging"
+      }
+    },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://tappypos.vn/api",
+        "EXPO_PUBLIC_APP_VARIANT": "production"
+      }
     }
   },
   "submit": {

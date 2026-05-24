@@ -112,9 +112,14 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
   } = useQuery({
     queryKey: ['products', search, selectedCategory, page],
     queryFn: async () => {
-      const res = search
-        ? await productApi.search({ keyword: search, page, size: PAGE_SIZE })
-        : await productApi.list({ categoryId: selectedCategory ?? undefined, page, size: PAGE_SIZE });
+      // Always use productApi.list so both search and categoryId apply simultaneously.
+      // productApi.search (different endpoint) does not support categoryId filtering.
+      const res = await productApi.list({
+        search: search || undefined,
+        categoryId: selectedCategory ?? undefined,
+        page,
+        size: PAGE_SIZE,
+      });
       const content = res.data.data.content;
       if (page === 0) {
         setAllProducts(content);
@@ -127,14 +132,21 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
 
   const hasMore = productsPage ? page < productsPage.totalPages - 1 : false;
 
+  // Count badge for the active chip — from the server's totalElements, no extra API call.
+  const activeCategoryCount = !isFetching && productsPage?.totalElements != null
+    ? productsPage.totalElements
+    : null;
+
   const commitSearch = () => {
     setSearch(searchInput);
     setPage(0);
+    // Do NOT clear selectedCategory — search and category now combine correctly
   };
 
   const handleCategoryChange = (id: string | null) => {
     setSelectedCategory(id);
     setPage(0);
+    // Do NOT clear search — both filters work simultaneously
   };
 
   useEffect(() => {
@@ -230,7 +242,7 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
             pointerEvents="none"
           >
             <View style={{ backgroundColor: '#ef4444', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}>
-              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{t('pos.soldOut')}</Text>
+              <Text className={`${typo.caption} font-bold text-white`}>{t('pos.soldOut')}</Text>
             </View>
           </View>
         )}
@@ -373,24 +385,34 @@ export function POSScreen({ navigation }: POSScreenProps<'POSMain'>) {
             data={[{ id: null, name: t('pos.allCategories') }, ...categories]}
             keyExtractor={(item) => item.id ?? '__all__'}
             contentContainerStyle={{ gap: 8 }}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                className={`px-4 py-1.5 rounded-full border ${
-                  selectedCategory === item.id
-                    ? 'bg-indigo-600 border-indigo-600'
-                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'
-                }`}
-                onPress={() => handleCategoryChange(item.id ?? null)}
-              >
-                <Text
-                  className={`${typo.caption} font-medium ${
-                    selectedCategory === item.id ? 'text-white' : 'text-gray-600 dark:text-gray-400'
+            renderItem={({ item }) => {
+              const active = selectedCategory === item.id;
+              return (
+                <TouchableOpacity
+                  className={`flex-row items-center gap-x-1 px-4 py-1.5 rounded-full border ${
+                    active
+                      ? 'bg-indigo-600 border-indigo-600'
+                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'
                   }`}
+                  onPress={() => handleCategoryChange(item.id ?? null)}
                 >
-                  {item.name}
-                </Text>
-              </TouchableOpacity>
-            )}
+                  <Text
+                    className={`${typo.caption} font-medium ${
+                      active ? 'text-white' : 'text-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    {item.name}
+                  </Text>
+                  {active && activeCategoryCount !== null && (
+                    <View className="rounded-full px-1.5 py-0.5 bg-white/25">
+                      <Text className={`${typo.caption} font-bold leading-none text-white`}>
+                        {activeCategoryCount}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            }}
           />
         )}
       </View>

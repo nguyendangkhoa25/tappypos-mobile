@@ -22,6 +22,8 @@ export type AuthStackParamList = {
   PinSetup: { isFirstSetup: boolean; pendingAccessToken?: string; pendingRefreshToken?: string };
   ForgotPin: undefined;
   ForgotPassword: { prefillPhone?: string };
+  OtpVerify: { phone: string; maskedPhone: string };
+  ResetPassword: { resetToken: string };
   ForgotShopId: undefined;
 };
 
@@ -32,6 +34,7 @@ export type AuthScreenProps<T extends keyof AuthStackParamList> =
 
 export type OnboardingStackParamList = {
   Welcome: undefined;
+  JoinShop: undefined;
   ShopType: undefined;
   Step1: undefined;
   Step2: undefined;
@@ -77,13 +80,29 @@ export type SellingStackParamList = {
   POSMain: { checkInPayload?: CheckInPayload; existingOrderId?: string } | undefined;
   Cart: undefined;
   Checkout: undefined;
-  OrderSuccess: { orderId: string; orderNumber: string; total: number; savedOffline?: boolean };
+  OrderSuccess: {
+    orderId: string;
+    orderNumber: string;
+    total: number;
+    savedOffline?: boolean;
+    /** Pre-fill data for rebook — only passed from BeautyServiceScreen when APPOINTMENT feature is on */
+    rebookCustomer?: { id?: number; name?: string; phone?: string | null } | null;
+    rebookServices?: Array<{
+      productId: number;
+      productName: string;
+      unitPrice: number;
+      durationMinutes?: number;
+      assignedEmployeeId?: number;
+      assignedEmployeeName?: string;
+    }>;
+  };
   OrderList: undefined;
   OrderDetail: { orderId: string };
   PawnList: undefined;
   PawnDetail: { pawnId: number };
   PawnForm: { pawnId?: number; customerId?: number; customerName?: string };
   PawnSettings: undefined;
+  KitchenDisplay: undefined;
 };
 
 export type SettingsStackParamList = {
@@ -105,6 +124,12 @@ export type SettingsStackParamList = {
   Subscription: undefined;
   BankAccounts: undefined;
   LoyaltyConfig: undefined;
+  LoyaltyProgramEdit: undefined;
+  // Zalo settings
+  ZaloSettings: undefined;
+  ZaloTemplateList: undefined;
+  ZaloTemplateForm: { templateId?: number };
+  ZaloOaConnect: undefined;
   // Tools (moved from tab bar)
   UtilitiesHub: undefined;
   CurrencyConverter: undefined;
@@ -137,6 +162,7 @@ export type ComboStackParamList = {
 
 export type PrintTemplateStackParamList = {
   PrintTemplateList: undefined;
+  PrintTemplateCreate: undefined;
   PrintTemplateDetail: { templateId: string };
 };
 
@@ -204,20 +230,45 @@ export type MoreStackParamList = {
   Notifications: undefined;
   Settings: undefined;
   StaffList: undefined;
+  StaffDetail: { userId: string };
   StaffForm: { userId?: string };
+  GenerateInvite: undefined;
   QueueView: undefined;
-  StaffPerformance: undefined;
   AppointmentList: undefined;
   AppointmentDetail: { appointmentId: number };
-  AppointmentForm: { appointmentId?: number };
+  AppointmentForm: {
+    appointmentId?: number;
+    /** Pre-fill create form (rebook flow). Ignored when appointmentId is set. */
+    prefill?: {
+      customerName?: string;
+      customerPhone?: string;
+      customerId?: number;
+      services?: Array<{
+        productId: number;
+        productName: string;
+        unitPrice: number;
+        durationMinutes?: number;
+        assignedEmployeeId?: number;
+        assignedEmployeeName?: string;
+      }>;
+    };
+  };
   // Shop config (moved from Settings)
   ShopInfo: undefined;
   POSConfig: undefined;
   BankAccounts: undefined;
   DefaultExpenses: undefined;
   LoyaltyConfig: undefined;
+  LoyaltyProgramEdit: undefined;
   Display: undefined;
   NotificationPreferences: undefined;
+  // E-Invoice setup
+  EInvoiceSetup: undefined;
+  // Zalo (moved from Settings → Shop Config)
+  ZaloSettings: undefined;
+  ZaloTemplateList: undefined;
+  ZaloTemplateForm: { templateId?: number };
+  ZaloOaConnect: undefined;
   // Support (moved from Settings)
   UtilitiesHub: undefined;
   Feedback: undefined;
@@ -229,6 +280,15 @@ export type MoreStackParamList = {
   BudgetRule: undefined;
   Breakeven: undefined;
   MarketGoldPrices: undefined;
+  Commission: undefined;
+  CommissionDetail: {
+    employeeId: number;
+    employeeName: string;
+    month: number;
+    year: number;
+  };
+  DeleteShop: undefined;
+  Subscription: undefined;
 };
 
 export type MoreScreenProps<T extends keyof MoreStackParamList> =

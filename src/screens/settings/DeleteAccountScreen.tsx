@@ -77,7 +77,7 @@ export function DeleteAccountScreen({ navigation }: SettingsScreenProps<'DeleteA
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
       >
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
@@ -85,10 +85,10 @@ export function DeleteAccountScreen({ navigation }: SettingsScreenProps<'DeleteA
             {t('settings.deleteAccount.title')}
           </Text>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('settings.deleteAccount.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('settings.deleteAccount.hint')}</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }} keyboardShouldPersistTaps="handled">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, gap: 16 }} keyboardShouldPersistTaps="handled">
         {/* Warning card */}
         <View className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 border border-red-200 dark:border-red-800">
           <View className="flex-row items-center gap-2 mb-3">

@@ -58,7 +58,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps<'SettingsMain
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 32 }}
+        contentContainerStyle={{ padding: 4, paddingHorizontal: 16, paddingBottom: insets.bottom + 32 }}
       >
         {/* Account section */}
         <SectionLabel label={t('settings.sectionAccount')} />
@@ -84,6 +84,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps<'SettingsMain
         <SectionLabel label={t('settings.sectionSystem')} />
         <MenuGroup>
           <MenuItem
+            testID="settings-activity-log"
             icon="clipboard-list-outline"
             iconBg="bg-gray-100 dark:bg-gray-700"
             iconColor="#6b7280"
@@ -153,6 +154,7 @@ type MenuItemProps = {
   onPress: () => void;
   isLast?: boolean;
   disabled?: boolean;
+  testID?: string;
 };
 
 function MenuItem({
@@ -165,12 +167,14 @@ function MenuItem({
   onPress,
   isLast,
   disabled,
+  testID,
 }: MenuItemProps) {
   const { t } = useTranslation();
   const typo = useTypography();
   return (
     <>
       <TouchableOpacity
+        testID={testID}
         onPress={onPress}
         activeOpacity={disabled ? 1 : 0.7}
         disabled={disabled}

@@ -24,7 +24,7 @@ import { useTypography } from '../../hooks/useTypography';
 import { useNetworkStore } from '../../store/networkStore';
 import { useOfflineQueueStore } from '../../store/offlineQueueStore';
 import { expenseApi, type ExpenseData, type DefaultExpense } from '../../services/api';
-import { formatVnd, formatDate } from '../../utils/format';
+import { formatVnd, formatDate, formatRelativeDate } from '../../utils/format';
 import { ClearableInput } from '../../components/ClearableInput';
 import { MoneyInput } from '../../components/MoneyInput';
 import { TrendChart } from '../../components/TrendChart';
@@ -40,6 +40,36 @@ type Props = NativeStackScreenProps<ExpensesStackParamList, 'ExpenseMain'>;
 
 const CAT_FREQ_KEY = 'expense_category_counts';
 
+// ── Payment method display ─────────────────────────────────────────────────────
+const PAYMENT_DISPLAY: Record<string, { vi: string; en: string; icon: string }> = {
+  CASH:          { vi: 'Tiền mặt',     en: 'Cash',     icon: '💵' },
+  BANK_TRANSFER: { vi: 'Chuyển khoản', en: 'Transfer', icon: '🏦' },
+  CARD:          { vi: 'Thẻ',          en: 'Card',     icon: '💳' },
+};
+
+// ── Category avatar background colours ────────────────────────────────────────
+const CATEGORY_BG: Record<string, string> = {
+  RENT:         'bg-amber-100 dark:bg-amber-900/30',
+  ELECTRICITY:  'bg-yellow-100 dark:bg-yellow-900/30',
+  WATER:        'bg-blue-100 dark:bg-blue-900/30',
+  INTERNET:     'bg-sky-100 dark:bg-sky-900/30',
+  PHONE:        'bg-indigo-100 dark:bg-indigo-900/30',
+  SUPPLIES:     'bg-gray-100 dark:bg-gray-700',
+  EQUIPMENT:    'bg-orange-100 dark:bg-orange-900/30',
+  MARKETING:    'bg-pink-100 dark:bg-pink-900/30',
+  SALARY_EXTRA: 'bg-purple-100 dark:bg-purple-900/30',
+  TRANSPORT:    'bg-green-100 dark:bg-green-900/30',
+  PACKAGING:    'bg-teal-100 dark:bg-teal-900/30',
+  SOFTWARE:     'bg-violet-100 dark:bg-violet-900/30',
+  CLEANING:     'bg-cyan-100 dark:bg-cyan-900/30',
+  TAX:          'bg-red-100 dark:bg-red-900/30',
+  BANK_FEE:     'bg-emerald-100 dark:bg-emerald-900/30',
+  INSURANCE:    'bg-blue-100 dark:bg-blue-900/30',
+  MAINTENANCE:  'bg-orange-100 dark:bg-orange-900/30',
+  FOOD_STAFF:   'bg-amber-100 dark:bg-amber-900/30',
+  OTHER:        'bg-gray-100 dark:bg-gray-700',
+};
+
 type ExpenseRowProps = {
   item: ExpenseData;
   onEdit: (e: ExpenseData) => void;
@@ -54,36 +84,78 @@ const ExpenseRow = memo(function ExpenseRow({
   item, onEdit, onDelete, categoryLabel, fixedCategories, fixedLabel, variableLabel,
 }: ExpenseRowProps) {
   const typo = useTypography();
-  const isFixed = fixedCategories.has(item.category);
+  const { i18n } = useTranslation();
+  const lang = i18n.language ?? 'vi';
+
+  const isFixed   = fixedCategories.has(item.category);
+  const relDate   = formatRelativeDate(item.expenseDate, lang);
+  const payment   = item.paymentMethod ? PAYMENT_DISPLAY[item.paymentMethod] : null;
+  const avatarBg  = CATEGORY_BG[item.category] ?? 'bg-gray-100 dark:bg-gray-700';
+
   return (
     <TouchableOpacity
       onPress={() => onEdit(item)}
-      className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 flex-row items-center"
+      className="bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 flex-row items-start"
     >
-      <View className="flex-1 mr-3">
-        <View className="flex-row items-center gap-2">
+      {/* ── Emoji avatar ── */}
+      <View className={`w-10 h-10 rounded-2xl items-center justify-center mr-3 mt-0.5 flex-shrink-0 ${avatarBg}`}>
+        <Text className={typo.section}>{CATEGORY_EMOJI[item.category] ?? '🏷️'}</Text>
+      </View>
+
+      {/* ── Main content ── */}
+      <View className="flex-1 mr-2">
+
+        {/* Row 1: description + fixed/variable badge */}
+        <View className="flex-row items-center gap-1.5">
           <Text className={`${typo.label} text-gray-900 dark:text-white flex-1`} numberOfLines={1}>
             {item.description || '—'}
           </Text>
-          <View className="flex-row items-center px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700">
-            <Text className={`${typo.caption} mr-1`}>{CATEGORY_EMOJI[item.category] ?? '🏷️'}</Text>
-            <Text className={`${typo.caption} font-medium text-indigo-700 dark:text-indigo-400`}>
-              {categoryLabel(item.category)}
-            </Text>
-          </View>
-        </View>
-        <View className="flex-row items-center gap-1.5 mt-0.5">
-          <Text className={`${typo.caption} text-gray-400`}>{formatDate(item.expenseDate)}</Text>
-          <View className={`px-1.5 py-0.5 rounded-full ${isFixed ? 'bg-gray-100 dark:bg-gray-700' : 'bg-amber-50 dark:bg-amber-900/30'}`}>
+          <View className={`px-1.5 py-0.5 rounded-full flex-shrink-0 ${isFixed ? 'bg-gray-100 dark:bg-gray-700' : 'bg-amber-50 dark:bg-amber-900/30'}`}>
             <Text className={`${typo.caption} font-medium ${isFixed ? 'text-gray-500 dark:text-gray-400' : 'text-amber-600 dark:text-amber-400'}`}>
               {isFixed ? fixedLabel : variableLabel}
             </Text>
           </View>
         </View>
+
+        {/* Row 2: relative date · payment method */}
+        <View className="flex-row items-center flex-wrap mt-0.5" style={{ gap: 4 }}>
+          <Text className={`${typo.caption} text-gray-400`}>{relDate}</Text>
+          {payment && (
+            <>
+              <Text className={`${typo.caption} text-gray-300 dark:text-gray-600`}>·</Text>
+              <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>
+                {payment.icon} {lang === 'vi' ? payment.vi : payment.en}
+              </Text>
+            </>
+          )}
+        </View>
+
+        {/* Row 3: category chip · #ref · 👤 created-by */}
+        <View className="flex-row items-center flex-wrap mt-1" style={{ gap: 4 }}>
+          <View className="bg-indigo-50 dark:bg-indigo-900/20 rounded-full px-2 py-0.5">
+            <Text className={`${typo.caption} font-medium text-indigo-700 dark:text-indigo-400`}>
+              {categoryLabel(item.category)}
+            </Text>
+          </View>
+          {!!item.referenceNumber && (
+            <>
+              <Text className={`${typo.caption} text-gray-300 dark:text-gray-600`}>·</Text>
+              <Text className={`${typo.caption} text-gray-400`}>#{item.referenceNumber}</Text>
+            </>
+          )}
+          {!!item.createdBy && (
+            <>
+              <Text className={`${typo.caption} text-gray-300 dark:text-gray-600`}>·</Text>
+              <Text className={`${typo.caption} text-gray-400`}>👤 {item.createdBy}</Text>
+            </>
+          )}
+        </View>
       </View>
-      <View className="items-end">
+
+      {/* ── Amount + delete ── */}
+      <View className="items-end flex-shrink-0">
         <Text className={`${typo.labelBold} text-gray-900 dark:text-white`}>{formatVnd(item.amount)}</Text>
-        <TouchableOpacity onPress={() => onDelete(item)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mt-1">
+        <TouchableOpacity onPress={() => onDelete(item)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mt-1.5">
           <MaterialCommunityIcons name="trash-can-outline" size={16} color="#ef4444" />
         </TouchableOpacity>
       </View>
@@ -151,6 +223,7 @@ export function ExpensesScreen({ navigation }: Props) {
   const [monthOffset, setMonthOffset] = useState(0);
   const [chartGranularity, setChartGranularity] = useState<ChartGranularity>('day');
   const [categoryFilter, setCategoryFilter] = useState<'' | 'FIXED' | 'VARIABLE'>('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [page, setPage] = useState(0);
   const [allExpenses, setAllExpenses] = useState<ExpenseData[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -169,8 +242,8 @@ export function ExpensesScreen({ navigation }: Props) {
 
   const period = getMonthRange(monthOffset);
 
-  const handleMonthPrev = useCallback(() => { setMonthOffset((o) => o - 1); setPage(0); }, []);
-  const handleMonthNext = useCallback(() => { setMonthOffset((o) => Math.min(0, o + 1)); setPage(0); }, []);
+  const handleMonthPrev = useCallback(() => { setMonthOffset((o) => o - 1); setPage(0); setSelectedCategory(''); }, []);
+  const handleMonthNext = useCallback(() => { setMonthOffset((o) => Math.min(0, o + 1)); setPage(0); setSelectedCategory(''); }, []);
 
   const { data: expensesPage, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['expenses', period.from, period.to, page],
@@ -197,13 +270,44 @@ export function ExpensesScreen({ navigation }: Props) {
 
   const hasMore = expensesPage ? page < expensesPage.totalPages - 1 : false;
 
-  const displayedExpenses = useMemo(() =>
-    categoryFilter === 'FIXED'
-      ? allExpenses.filter((e) => FIXED_CATEGORIES.has(e.category))
-      : categoryFilter === 'VARIABLE'
-      ? allExpenses.filter((e) => !FIXED_CATEGORIES.has(e.category))
-      : allExpenses,
-  [categoryFilter, allExpenses]);
+  const displayedExpenses = useMemo(() => {
+    let list = allExpenses;
+    if (categoryFilter === 'FIXED') list = list.filter((e) => FIXED_CATEGORIES.has(e.category));
+    else if (categoryFilter === 'VARIABLE') list = list.filter((e) => !FIXED_CATEGORIES.has(e.category));
+    if (selectedCategory) list = list.filter((e) => e.category === selectedCategory);
+    return list;
+  }, [categoryFilter, selectedCategory, allExpenses]);
+
+  // Categories present in the current month — used to build the chip row
+  const presentCategories = useMemo(() =>
+    Array.from(new Set(allExpenses.map((e) => e.category))).sort(),
+  [allExpenses]);
+
+  // Count per Fixed/Variable chip — respects current selectedCategory so numbers
+  // reflect "how many would appear if I tap this chip".
+  const filterChipCounts = useMemo(() => {
+    const base = selectedCategory
+      ? allExpenses.filter((e) => e.category === selectedCategory)
+      : allExpenses;
+    return {
+      '':       base.length,
+      FIXED:    base.filter((e) =>  FIXED_CATEGORIES.has(e.category)).length,
+      VARIABLE: base.filter((e) => !FIXED_CATEGORIES.has(e.category)).length,
+    } as Record<string, number>;
+  }, [allExpenses, selectedCategory]);
+
+  // Count per category chip — respects current Fixed/Variable filter.
+  const catChipCounts = useMemo(() => {
+    const base =
+      categoryFilter === 'FIXED'     ? allExpenses.filter((e) =>  FIXED_CATEGORIES.has(e.category)) :
+      categoryFilter === 'VARIABLE'  ? allExpenses.filter((e) => !FIXED_CATEGORIES.has(e.category)) :
+      allExpenses;
+    const counts: Record<string, number> = {};
+    for (const cat of presentCategories) {
+      counts[cat] = base.filter((e) => e.category === cat).length;
+    }
+    return counts;
+  }, [allExpenses, categoryFilter, presentCategories]);
 
   useEffect(() => {
     if (!isFetching) isLoadingMore.current = false;
@@ -223,6 +327,11 @@ export function ExpensesScreen({ navigation }: Props) {
 
   const handleCategoryFilter = useCallback((filter: '' | 'FIXED' | 'VARIABLE') => {
     setCategoryFilter(filter);
+    setSelectedCategory('');
+  }, []);
+
+  const handleCategorySelect = useCallback((cat: string) => {
+    setSelectedCategory((prev) => (prev === cat ? '' : cat));
   }, []);
 
   const onRefresh = useCallback(async () => {
@@ -392,34 +501,81 @@ export function ExpensesScreen({ navigation }: Props) {
           />
         </View>
       )}
-      <View className="flex-row gap-2 mb-1">
-        {FILTER_CHIPS.map((chip) => (
-          <TouchableOpacity
-            key={chip.key}
-            onPress={() => handleCategoryFilter(chip.key)}
-            className={`px-4 py-1.5 rounded-full border ${
-              categoryFilter === chip.key
-                ? 'bg-indigo-600 border-indigo-600'
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'
-            }`}
-          >
-            <Text className={`${typo.caption} font-medium ${categoryFilter === chip.key ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
-              {chip.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </>
-  ), [pendingExpenses, chartData, chartGranularity, FILTER_CHIPS, categoryFilter, handleCategoryFilter, t]);
 
+      {/* ── Fixed / Variable filter ── */}
+      <View className="flex-row gap-2 mb-2">
+        {FILTER_CHIPS.map((chip) => {
+          const active = categoryFilter === chip.key;
+          const count  = filterChipCounts[chip.key] ?? 0;
+          return (
+            <TouchableOpacity
+              key={chip.key}
+              onPress={() => handleCategoryFilter(chip.key)}
+              className={`flex-row items-center gap-1.5 px-3.5 py-1.5 rounded-full border ${
+                active
+                  ? 'bg-indigo-600 border-indigo-600'
+                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'
+              }`}
+            >
+              <Text className={`${typo.caption} font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                {chip.label}
+              </Text>
+              {allExpenses.length > 0 && (
+                <View className={`rounded-full px-1.5 py-0.5 min-w-[18px] items-center ${active ? 'bg-white/25' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                  <Text className={`${typo.captionBold} ${active ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>{count}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* ── Category chips (dynamic — only categories present this month) ── */}
+      {presentCategories.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, paddingBottom: 8 }}
+        >
+          {presentCategories.map((cat) => {
+            const active = selectedCategory === cat;
+            const count  = catChipCounts[cat] ?? 0;
+            return (
+              <TouchableOpacity
+                key={cat}
+                onPress={() => handleCategorySelect(cat)}
+                className={`flex-row items-center gap-1.5 rounded-full border px-3 py-1.5 ${
+                  active
+                    ? 'bg-indigo-600 border-indigo-600'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'
+                }`}
+              >
+                <Text className={typo.caption}>{CATEGORY_EMOJI[cat] ?? '🏷️'}</Text>
+                <Text className={`${typo.caption} font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                  {categoryLabel(cat)}
+                </Text>
+                <View className={`rounded-full px-1.5 py-0.5 min-w-[18px] items-center ${active ? 'bg-white/25' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                  <Text className={`${typo.captionBold} ${active ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>{count}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+    </>
+  ), [pendingExpenses, chartData, chartGranularity, FILTER_CHIPS, categoryFilter, handleCategoryFilter,
+      filterChipCounts, allExpenses.length, presentCategories, catChipCounts,
+      selectedCategory, handleCategorySelect, categoryLabel, t, typo]);
+
+  const hasAnyFilter = categoryFilter !== '' || selectedCategory !== '';
   const listEmpty = useMemo(() => (
     <View className="items-center justify-center px-8 py-12">
       <MaterialCommunityIcons name="receipt" size={56} color="#d1d5db" />
       <Text className={`${typo.body} text-gray-400 mt-4 text-center`}>{t('expenses.empty')}</Text>
       <Text className={`${typo.caption} text-gray-400 mt-1 text-center`}>
-        {categoryFilter ? t('expenses.emptyFilter') : t('expenses.emptyHint')}
+        {hasAnyFilter ? t('expenses.emptyFilter') : t('expenses.emptyHint')}
       </Text>
-      {!categoryFilter && (
+      {!hasAnyFilter && (
         <TouchableOpacity
           onPress={handleClone}
           disabled={cloneMutation.isPending}
@@ -429,7 +585,7 @@ export function ExpensesScreen({ navigation }: Props) {
         </TouchableOpacity>
       )}
     </View>
-  ), [categoryFilter, handleClone, cloneMutation.isPending, t]);
+  ), [hasAnyFilter, handleClone, cloneMutation.isPending, t, typo]);
 
   const renderItem = useCallback(({ item }: { item: ExpenseData }) => (
     <ExpenseRow
@@ -468,7 +624,7 @@ export function ExpensesScreen({ navigation }: Props) {
             </View>
           </View>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-3`}>{t('expenses.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-3 mt-0.5`}>{t('expenses.hint')}</Text>
 
         {/* Summary */}
         {summary && (
@@ -499,7 +655,7 @@ export function ExpensesScreen({ navigation }: Props) {
         <FlatList
           data={displayedExpenses}
           keyExtractor={(e) => e.id}
-          contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: insets.bottom + 80 }}
+          contentContainerStyle={{ padding: 4, gap: 8, paddingBottom: insets.bottom + 80 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />
           }

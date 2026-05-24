@@ -188,11 +188,11 @@ export function PawnSettingsScreen() {
             )}
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-0 mt-0.5`}>{t('pawn.settings.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('pawn.settings.hint')}</Text>
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingTop: 16, paddingBottom: insets.bottom + 32 }}
+        contentContainerStyle={{ padding: 4, paddingTop: 16, paddingBottom: insets.bottom + 32 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >

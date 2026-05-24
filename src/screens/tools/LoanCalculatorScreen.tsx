@@ -95,14 +95,10 @@ export function LoanCalculatorScreen({ navigation }: Props) {
           </TouchableOpacity>
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('loanCalc.title')}</Text>
         </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('loanCalc.subtitle')}</Text>
       </View>
 
-      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
-        <View className="flex-row items-start bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100 mb-3">
-          <Text className="text-indigo-400 mr-2 mt-0.5">💡</Text>
-          <Text className={`${typo.caption} text-indigo-600 leading-4 flex-1`}>{t('loanCalc.hint')}</Text>
-        </View>
-
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, paddingBottom: bottom + 32 }}>
         <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
           <Text className={`${typo.label} text-gray-700 mb-2`}>{t('loanCalc.amount')}</Text>
           <MoneyInput rawValue={amount} onChangeRaw={setAmount} placeholder="0" />

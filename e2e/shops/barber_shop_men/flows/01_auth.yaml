@@ -1,0 +1,18 @@
+appId: com.knp.tappypos
+name: "BARM 01 Auth — login, skip PIN, arrive at Dashboard, sell tab shows barber screen"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- assertVisible: "Doanh thu"
+- assertNotVisible: "500"
+
+# Sell tab shows barber service screen
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Tạo đơn mới"
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

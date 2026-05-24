@@ -38,9 +38,9 @@ const STATUS_COLORS: Record<FeedbackData['status'], { bg: string; text: string }
 };
 
 const CONTACT_ITEMS = [
-  { key: 'phone', icon: 'phone-outline' as const, iconBg: 'bg-teal-100 dark:bg-teal-900/30', iconColor: '#0f766e', getValue: () => SUPPORT.phone, getUrl: () => `tel:${SUPPORT.phone}` },
-  { key: 'email', icon: 'email-outline' as const, iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: '#2563eb', getValue: () => SUPPORT.email, getUrl: () => `mailto:${SUPPORT.email}` },
-  { key: 'zalo', icon: 'chat-outline' as const, iconBg: 'bg-sky-100 dark:bg-sky-900/30', iconColor: '#0ea5e9', getValue: () => 'Zalo OA', getUrl: () => SUPPORT.zaloOA },
+  { key: 'phone', icon: 'phone-outline' as const, iconBg: 'bg-teal-100 dark:bg-teal-900/30', iconColor: '#0f766e', getValue: () => SUPPORT.phone, getUrl: () => `tel:${SUPPORT.phone}`, hintKey: 'more.hintHotline' },
+  { key: 'email', icon: 'email-outline' as const, iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: '#2563eb', getValue: () => SUPPORT.email, getUrl: () => `mailto:${SUPPORT.email}`, hintKey: 'more.hintEmail' },
+  { key: 'zalo', icon: 'chat-outline' as const, iconBg: 'bg-sky-100 dark:bg-sky-900/30', iconColor: '#0ea5e9', getValue: () => 'Zalo OA', getUrl: () => SUPPORT.zaloOA, hintKey: 'more.hintZalo' },
 ] as const;
 
 type Props = { navigation: { goBack: () => void } };
@@ -119,31 +119,21 @@ export function FeedbackScreen({ navigation }: Props) {
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
       >
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {t('settings.sectionSupport')}
           </Text>
-          {has('FEEDBACK') && !submitted && (
-            <TouchableOpacity onPress={handleSubmit} disabled={mutation.isPending} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              {mutation.isPending ? (
-                <ActivityIndicator size="small" color="#4f46e5" />
-              ) : (
-                <Text className={`${typo.labelBold} text-indigo-600 dark:text-indigo-400`}>
-                  {t('settings.feedback.submitBtn')}
-                </Text>
-              )}
-            </TouchableOpacity>
-          )}
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('more.hintSupport')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('more.hintSupport')}</Text>
       </View>
 
       <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: insets.bottom + 32 }}
+        contentContainerStyle={{ padding: 4, gap: 16, paddingBottom: insets.bottom + 32 }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
         {/* ── Contact info ─────────────────────────────────────────────── */}
@@ -153,15 +143,33 @@ export function FeedbackScreen({ navigation }: Props) {
               key={item.key}
               onPress={() => openLink(item.getUrl())}
               activeOpacity={0.7}
-              className={`flex-row items-center px-4 py-3.5 ${idx < CONTACT_ITEMS.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}`}
+              className={`flex-row items-center px-4 py-3.5 border-b border-gray-100 dark:border-gray-700`}
             >
-              <View className={`w-9 h-9 rounded-xl ${item.iconBg} items-center justify-center mr-3`}>
+              <View className={`w-9 h-9 rounded-xl ${item.iconBg} items-center justify-center mr-3 flex-shrink-0`}>
                 <MaterialCommunityIcons name={item.icon} size={18} color={item.iconColor} />
               </View>
-              <Text className={`${typo.label} text-gray-800 dark:text-gray-200 flex-1`}>{item.getValue()}</Text>
+              <View className="flex-1">
+                <Text className={`${typo.label} text-gray-800 dark:text-gray-200`}>{item.getValue()}</Text>
+                <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5`}>{t(item.hintKey)}</Text>
+              </View>
               <MaterialCommunityIcons name="chevron-right" size={18} color="#9ca3af" />
             </TouchableOpacity>
           ))}
+
+          {/* Working hours — non-tappable info row */}
+          <View className="flex-row items-center px-4 py-3.5">
+            <View className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/30 items-center justify-center mr-3 flex-shrink-0">
+              <MaterialCommunityIcons name="clock-outline" size={18} color="#d97706" />
+            </View>
+            <View className="flex-1">
+              <Text className={`${typo.label} text-gray-800 dark:text-gray-200`}>
+                {t('more.workingHoursValue', { hours: SUPPORT.workingHours })}
+              </Text>
+              <Text className={`${typo.caption} text-gray-400 dark:text-gray-500 mt-0.5`}>
+                {t('more.workingHours')}
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* ── Feedback form / Success ───────────────────────────────────── */}
@@ -199,6 +207,7 @@ export function FeedbackScreen({ navigation }: Props) {
                       return (
                         <TouchableOpacity
                           key={cat.key}
+                          testID={`feedback-category-${cat.key.toLowerCase()}`}
                           onPress={() => { setCategory(cat.key); setError(''); }}
                           className={`flex-row items-center gap-2 px-4 py-2 rounded-xl border-2 ${
                             active
@@ -241,7 +250,22 @@ export function FeedbackScreen({ navigation }: Props) {
                   </Text>
                 </View>
 
-                {error ? <Text className={`${typo.caption} text-red-500 px-1 -mt-2`}>{error}</Text> : null}
+                {error ? <Text className={`${typo.caption} text-red-500 dark:text-red-400 px-1 -mt-2`}>{error}</Text> : null}
+
+                <TouchableOpacity
+                  testID="feedback-submit-btn"
+                  onPress={handleSubmit}
+                  disabled={mutation.isPending}
+                  className="bg-indigo-600 rounded-2xl py-4 items-center active:opacity-80"
+                >
+                  {mutation.isPending ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text className={`${typo.labelBold} text-white`}>
+                      {t('settings.feedback.submitBtn')}
+                    </Text>
+                  )}
+                </TouchableOpacity>
               </>
             )}
 

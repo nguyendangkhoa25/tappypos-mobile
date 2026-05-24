@@ -52,16 +52,34 @@ function processQueue(error: unknown, token: string | null) {
 
 api.interceptors.response.use(
   (res) => {
-    useNetworkStore.getState().setMaintenance(false);
+    // Any successful response proves the server is up and the device is online.
+    // Clear both flags immediately — don't wait for the next health-poll tick.
+    const networkState = useNetworkStore.getState();
+    if (networkState.isMaintenance) networkState.setMaintenance(false);
+    if (networkState.isOffline)     networkState.setOffline(false);
     return res;
   },
   async (error) => {
     const original = error.config;
 
-    if (error.response?.status === 503) {
+    if (!error.response) {
+      // No response at all = request timed out or device lost connectivity.
+      useNetworkStore.getState().setOffline(true);
+    } else if (error.response.status === 502 || error.response.status === 503) {
+      // Bad Gateway (502) or Service Unavailable (503) = server-side outage / maintenance.
       useNetworkStore.getState().setMaintenance(true);
-    } else if (error.response) {
-      useNetworkStore.getState().setMaintenance(false);
+    } else {
+      // Any other HTTP error (400, 401, 404, 422 …) = server is reachable and responding.
+      // Clear both flags: we're online and the server is up.
+      const networkState = useNetworkStore.getState();
+      if (networkState.isMaintenance) networkState.setMaintenance(false);
+      if (networkState.isOffline)     networkState.setOffline(false);
+    }
+
+    // 410 Gone = shop has been soft-deleted. Force logout so the user lands on Welcome/Onboarding.
+    if (error.response?.status === 410 && error.response?.data?.error === 'SHOP_DELETED') {
+      await forceLogout('session_expired');
+      return Promise.reject(error);
     }
 
     if (error.response?.status === 401 && !original.url?.startsWith('/auth/')) {
@@ -147,7 +165,8 @@ type ProfileData = {
   username: string;
   fullName: string | null;
   shopName: string | null;
-  role: string | null;
+  roles: string[];
+  avatarUrl: string | null;
 };
 
 // ── Auth API ──────────────────────────────────────────────────────────────────
@@ -212,6 +231,20 @@ export const authApi = {
 
 export const profileApi = {
   getMe: () => api.get<ApiResponse<ProfileData>>('/profiles/me'),
+
+  uploadAvatar: async (uri: string) => {
+    const formData = new FormData();
+    const filename = uri.split('/').pop() ?? 'avatar.jpg';
+    const ext = filename.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+    // React Native FormData accepts the file as an object with uri/type/name
+    formData.append('file', { uri, type: mime, name: filename } as unknown as Blob);
+    return api.post<ApiResponse<ProfileData>>('/profiles/me/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  deleteAvatar: () => api.delete<ApiResponse<ProfileData>>('/profiles/me/avatar'),
 };
 
 // ── Employee API ──────────────────────────────────────────────────────────────
@@ -236,11 +269,18 @@ export type EmployeeProfile = {
   notes: string | null;
   userId: number | null;
   idCardNumber: string | null;
+  idCardFullName: string | null;
+  idCardSex: string | null;
+  idCardNationality: string | null;
+  idCardPlaceOfOrigin: string | null;
+  idCardPlaceOfResidence: string | null;
+  idCardDateOfBirth: string | null;
+  idCardIssuedDate: string | null;
+  idCardIssuedPlace: string | null;
   dateOfBirth: string | null;
   gender: string | null;
   permanentAddress: string | null;
-  idCardIssuedDate: string | null;
-  idCardIssuedPlace: string | null;
+  avatarUrl: string | null;
 };
 
 export type CreateEmployeePayload = {
@@ -255,17 +295,58 @@ export type CreateEmployeePayload = {
   notes?: string;
   userId?: number;
   idCardNumber?: string;
+  idCardFullName?: string;
+  idCardSex?: string;
+  idCardNationality?: string;
+  idCardPlaceOfOrigin?: string;
+  idCardPlaceOfResidence?: string;
+  idCardDateOfBirth?: string;
+  idCardIssuedDate?: string;
+  idCardIssuedPlace?: string;
   dateOfBirth?: string;
   gender?: string;
   permanentAddress?: string;
-  idCardIssuedDate?: string;
-  idCardIssuedPlace?: string;
 };
 
 export type UpdateEmployeePayload = Partial<CreateEmployeePayload>;
 
+export type EmployeeAnalyticsSummary = {
+  totalRevenue: number;
+  totalCommission: number;
+  activeEmployeeCount: number;
+  avgRevenuePerEmployee: number;
+};
+
+export type EmployeeRevenueRankItem = {
+  employeeName: string;
+  userId: string | null;
+  orderCount: number;
+  revenue: number;
+};
+
+export type EmployeeCommissionRankItem = {
+  employeeId: string | null;
+  employeeName: string;
+  commission: number;
+  orderCount: number;
+  revenue: number;
+};
+
+export type EmployeeTrendPoint = {
+  label: string;
+  revenue: number;
+  commission: number;
+};
+
+export type EmployeeAnalytics = {
+  summary: EmployeeAnalyticsSummary;
+  rankingRevenue: EmployeeRevenueRankItem[];
+  rankingCommission: EmployeeCommissionRankItem[];
+  trend: EmployeeTrendPoint[];
+};
+
 export const employeeApi = {
-  listActive: () => api.get<ApiResponse<EmployeeData[]>>('/employees/active'),
+  listActive: () => api.get<ApiResponse<EmployeeData[]>>('/employees/all'),
 
   getByUserId: (userId: string | number) =>
     api.get<EmployeeProfile>(`/employees/by-user/${userId}`),
@@ -275,6 +356,23 @@ export const employeeApi = {
 
   update: (id: number, data: UpdateEmployeePayload) =>
     api.put<EmployeeProfile>(`/employees/${id}`, data),
+
+  analytics: (params: { from: string; to: string; granularity?: string; limit?: number }) =>
+    api.get<ApiResponse<EmployeeAnalytics>>('/employees/analytics', { params }),
+
+  uploadAvatar: (id: number, uri: string) => {
+    const formData = new FormData();
+    const filename = uri.split('/').pop() ?? 'avatar.jpg';
+    const ext = filename.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+    formData.append('file', { uri, type: mime, name: filename } as unknown as Blob);
+    return api.post<ApiResponse<EmployeeProfile>>(`/employees/${id}/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  deleteAvatar: (id: number) =>
+    api.delete<ApiResponse<EmployeeProfile>>(`/employees/${id}/avatar`),
 };
 
 // ── Dashboard API ─────────────────────────────────────────────────────────────
@@ -305,12 +403,28 @@ export type ProductData = {
   dynamicPrice: boolean;
   durationMinutes: number;
   status: string;
+  imageUrl: string | null;
+  commissionRate: number | null;
 };
 
 export type CategoryData = {
   id: string;
   name: string;
   emoji: string;
+  productCount: number;
+  outOfStockCount: number;
+  revenueThisMonth: number;
+};
+
+export type ProductStatsDTO = {
+  orderCount: number;
+  qtySold: number;
+  revenue: number;
+  lastSoldAt: string | null;
+  revenueThisMonth: number;
+  revenueLastMonth: number;
+  topCustomers: { name: string; orderCount: number; totalSpend: number }[];
+  topEmployees: { name: string; orderCount: number }[];
 };
 
 export type ProductUpdatePayload = {
@@ -367,6 +481,9 @@ export const productApi = {
   getById: (id: string) =>
     api.get<ApiResponse<ProductData>>(`/products/${id}`),
 
+  getStats: (id: string, days = 30) =>
+    api.get<ApiResponse<ProductStatsDTO>>(`/products/${id}/stats`, { params: { days } }),
+
   update: (id: string, data: ProductUpdatePayload) =>
     api.put<ApiResponse<ProductData>>(`/products/${id}`, data),
 
@@ -378,6 +495,18 @@ export const productApi = {
 
   create: (data: ProductCreatePayload) =>
     api.post<ApiResponse<ProductData>>('/products', data),
+
+  uploadImage: (id: string, uri: string) => {
+    const form = new FormData();
+    // React Native FormData accepts { uri, name, type } as a file entry
+    form.append('file', { uri, name: 'product.jpg', type: 'image/jpeg' } as any);
+    return api.post<ApiResponse<ProductData>>(`/products/${id}/image`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  deleteImage: (id: string) =>
+    api.delete<ApiResponse<void>>(`/products/${id}/image`),
 };
 
 // ── Cart API ──────────────────────────────────────────────────────────────────
@@ -390,6 +519,11 @@ export type CartItemResponse = {
   quantity: number;
   unit: string;
   subtotal: number;
+  notes?: string | null;
+  assignedEmployeeId: number | null;
+  assignedEmployeeName: string | null;
+  commissionRate: number | null;
+  commissionAmount: number | null;
 };
 
 export type CartResponse = {
@@ -406,11 +540,15 @@ export type CheckoutRequest = {
   amountPaid?: number;
   tip?: number;
   customerId?: string;
+  /** Name for a one-off guest customer (no managed record). Only set when customerId is absent. */
+  customerName?: string;
   notes?: string;
   loyaltyPointsToRedeem?: number;
   tableId?: number | null;
   tableLabel?: string | null;
   createAsInProgress?: boolean;
+  /** ISO datetime string for takeaway pickup time (null = dine-in). */
+  pickupTime?: string | null;
 };
 
 export type LoyaltyProgramDTO = {
@@ -466,12 +604,16 @@ export const cartApi = {
 
   get: (cartId: string) => api.get<ApiResponse<CartResponse>>(`/carts/${cartId}`),
 
-  addItem: (cartId: string, productId: string, quantity: number, unitPrice?: number) =>
+  addItem: (cartId: string, productId: string, quantity: number, unitPrice?: number, note?: string) =>
     api.post<ApiResponse<CartResponse>>(`/carts/${cartId}/items`, {
       productId,
       quantity,
       ...(unitPrice !== undefined && unitPrice > 0 ? { unitPrice } : {}),
+      ...(note ? { notes: note } : {}),
     }),
+
+  updateItemNote: (cartId: string, itemId: string | number, note: string | null) =>
+    api.patch<ApiResponse<CartResponse>>(`/carts/${cartId}/items/${itemId}/note`, { note: note ?? null }),
 
   updateItem: (cartId: string, cartItemId: string, quantity: number) =>
     api.put<ApiResponse<CartResponse>>(`/carts/${cartId}/items/${cartItemId}`, { newQuantity: quantity }),
@@ -482,24 +624,50 @@ export const cartApi = {
   applyPromo: (cartId: string, promoCode: string) =>
     api.post<ApiResponse<CartResponse>>(`/carts/${cartId}/promotion`, { promoCode }),
 
-  updateCommission: (cartId: string, itemId: string, employeeId: string) =>
+  updateCommission: (
+    cartId: string,
+    itemId: string,
+    employeeId: string,
+    commissionAmount?: number | null,
+  ) =>
     api.patch<ApiResponse<CartResponse>>(`/carts/${cartId}/items/${itemId}/commission`, {
       assignedEmployeeId: employeeId,
+      ...(commissionAmount !== undefined && commissionAmount !== null
+        ? { commissionAmount }
+        : {}),
     }),
 
   checkout: (cartId: string, req: CheckoutRequest) =>
     api.post<ApiResponse<CheckoutResponse>>(`/carts/${cartId}/checkout`, req),
 
-  sendToKitchen: (cartId: string, tableId?: number, tableLabel?: string) =>
+  sendToKitchen: (
+    cartId: string,
+    tableId?: number,
+    tableLabel?: string,
+    pickupTime?: string | null,
+  ) =>
     api.post<ApiResponse<{ orderId: string; orderNumber: string; tableLabel: string; status: string }>>(
       `/carts/${cartId}/send-to-kitchen`,
-      { tableId: tableId ?? null, tableLabel: tableLabel ?? null },
+      { tableId: tableId ?? null, tableLabel: tableLabel ?? null, pickupTime: pickupTime ?? null },
     ),
+
+  addCombo: (cartId: string, comboId: string) =>
+    api.post<ApiResponse<CartResponse>>(`/carts/${cartId}/combos/${comboId}`),
 };
 
 // ── Order API ─────────────────────────────────────────────────────────────────
 
-export type OrderStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'VOIDED';
+
+export type OrderSummaryItem = {
+  productName: string;
+  quantity: number;
+  unitPrice?: number;
+  durationMinutes?: number | null;
+  assignedEmployeeName?: string | null;
+  note?: string | null;
+  itemStatus?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | null;
+};
 
 export type OrderSummary = {
   id: string;
@@ -510,7 +678,7 @@ export type OrderSummary = {
   createdByName: string | null;
   createdAt: string;
   itemCount: number;
-  items?: { productName: string; quantity: number }[];
+  items?: OrderSummaryItem[];
 };
 
 export type OrderItemDetail = {
@@ -521,8 +689,12 @@ export type OrderItemDetail = {
   unitPrice: number;
   subtotal: number;
   unit: string;
+  note?: string | null;
+  itemStatus?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | null;
   assignedEmployeeId?: number | null;
   assignedEmployeeName?: string | null;
+  /** Service duration in minutes (0 = no timer). */
+  durationMinutes?: number | null;
 };
 
 export type OrderDetail = Omit<OrderSummary, 'items'> & {
@@ -538,6 +710,9 @@ export type OrderDetail = Omit<OrderSummary, 'items'> & {
   cancelReason: string | null;
   cancelledBy: string | null;
   cancelledAt: string | null;
+  voidReason: string | null;
+  voidedBy: string | null;
+  voidedAt: string | null;
 };
 
 export type WorkItemStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
@@ -560,6 +735,7 @@ export type WorkItemDTO = {
   orderCreatedAt: string;
   commissionRate: number | null;
   commissionAmount: number | null;
+  note?: string | null;
 };
 
 export type WorkItemSummaryDTO = {
@@ -587,9 +763,15 @@ export const orderApi = {
 
   getById: (id: string) => api.get<ApiResponse<OrderDetail>>(`/orders/${id}`),
 
+  /** Transition PENDING → IN_PROGRESS. Required before addItem / removeItem / payAndComplete. */
+  start: (id: string) => api.put<ApiResponse<OrderDetail>>(`/orders/${id}/start`),
+
   complete: (id: string) => api.put<ApiResponse<OrderDetail>>(`/orders/${id}/complete`),
 
-  cancel: (id: string) => api.post<ApiResponse<OrderDetail>>(`/orders/${id}/cancel`),
+  cancel: (id: string, reason?: string) =>
+    api.post<ApiResponse<OrderDetail>>(`/orders/${id}/cancel`, { reason }),
+  void: (id: string, reason: string) =>
+    api.post<ApiResponse<OrderDetail>>(`/orders/${id}/void`, { reason }),
 
   create: (req: {
     items: { productId: string; quantity: number }[];
@@ -612,6 +794,18 @@ export const orderApi = {
   topCustomers: (params: { limit?: number; from: string; to: string }) =>
     api.get<ApiResponse<{ name: string; orderCount: number; totalSpend: number; customerId: string }[]>>(
       '/orders/top-customers',
+      { params },
+    ),
+
+  topCustomersByFrequency: (params: { limit?: number; from: string; to: string }) =>
+    api.get<ApiResponse<{ name: string; orderCount: number; totalSpend: number; customerId: string }[]>>(
+      '/orders/top-customers/by-frequency',
+      { params },
+    ),
+
+  customerStats: (params: { from: string; to: string }) =>
+    api.get<ApiResponse<{ total: number; newCount: number; returningCount: number }>>(
+      '/orders/customer-stats',
       { params },
     ),
 
@@ -681,8 +875,11 @@ export const orderApi = {
   workItemTrend: (params?: { filterType?: string; day?: number; month?: number; year?: number }) =>
     api.get<ApiResponse<{ label: string; count: number; revenue: number }[]>>('/orders/work-items/trend', { params }),
 
-  addItem: (orderId: string, req: { productId: string; quantity: number; employeeId?: string }) =>
+  addItem: (orderId: string, req: { productId: string; quantity: number; employeeId?: string; note?: string }) =>
     api.post<ApiResponse<OrderItemDetail>>(`/orders/${orderId}/items`, req),
+
+  updateItemNote: (orderId: string, itemId: number, note: string | null) =>
+    api.patch<ApiResponse<OrderItemDetail>>(`/orders/${orderId}/items/${itemId}/note`, { note: note ?? null }),
 
   removeItem: (orderId: string, itemId: number) =>
     api.delete<ApiResponse<null>>(`/orders/${orderId}/items/${itemId}`),
@@ -701,6 +898,35 @@ export const orderApi = {
 
   getReceipt: (id: string) =>
     api.get<string>(`/orders/${id}/receipt`, { responseType: 'text' }),
+};
+
+// ── Kitchen API ───────────────────────────────────────────────────────────────
+
+export type KitchenOrderItem = {
+  id: number;
+  productName: string;
+  quantity: number;
+  note?: string | null;
+  itemStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  durationMinutes?: number | null;
+};
+
+export type KitchenOrder = {
+  id: string;
+  orderNumber: string;
+  tableLabel: string | null;
+  createdAt: string;
+  items: KitchenOrderItem[];
+  /** ISO datetime string — set for takeaway orders, null for dine-in. */
+  pickupTime?: string | null;
+};
+
+export const kitchenApi = {
+  getOrders: () =>
+    api.get<ApiResponse<KitchenOrder[]>>('/orders/kitchen'),
+
+  bumpItem: (itemId: number) =>
+    api.patch<ApiResponse<KitchenOrderItem>>(`/orders/kitchen/items/${itemId}/bump`),
 };
 
 // ── App version API ───────────────────────────────────────────────────────────
@@ -798,7 +1024,13 @@ export const authExtApi = {
     }),
 
   requestPasswordReset: (phone: string) =>
-    api.post<ApiResponse<null>>('/auth/password-reset/request', { phone }),
+    api.post<ApiResponse<{ maskedPhone: string }>>('/auth/password-reset/request', { phone }),
+
+  verifyOtp: (phone: string, otp: string) =>
+    api.post<ApiResponse<{ resetToken: string }>>('/auth/password-reset/verify', { phone, otp }),
+
+  resetPassword: (resetToken: string, newPassword: string) =>
+    api.post<ApiResponse<null>>('/auth/password-reset/reset', { resetToken, newPassword }),
 };
 
 // ── Subscription API ──────────────────────────────────────────────────────────
@@ -898,16 +1130,53 @@ export const expenseApi = {
 
   getDefaults: () => api.get<ApiResponse<DefaultExpense[]>>('/expenses/defaults'),
 
-  createDefault: (data: { description: string; amount: number; paymentDay?: number | null }) =>
+  createDefault: (data: { description: string; amount: number; category?: string; paymentDay?: number | null }) =>
     api.post<ApiResponse<DefaultExpense>>('/expenses/defaults', data),
 
-  updateDefault: (id: string, data: { description?: string; amount?: number; paymentDay?: number | null }) =>
+  updateDefault: (id: string, data: { description?: string; amount?: number; category?: string; paymentDay?: number | null }) =>
     api.put<ApiResponse<DefaultExpense>>(`/expenses/defaults/${id}`, data),
 
   deleteDefault: (id: string) => api.delete<ApiResponse<null>>(`/expenses/defaults/${id}`),
 
   cloneDefaults: (month: string, ids?: string[]) =>
     api.post<ApiResponse<ExpenseData[]>>('/expenses/clone-defaults', { month, ids: ids ?? null }),
+
+  /** Date-range expense-category breakdown */
+  categoryBreakdown: (from: string, to: string) =>
+    api.get<ApiResponse<ExpenseCategoryBreakdownItem[]>>('/expenses/category-breakdown/range', { params: { from, to } }),
+};
+
+// ── Revenue analytics API ─────────────────────────────────────────────────────
+
+export type PaymentBreakdownItem = {
+  paymentMethod: string;
+  orderCount: number;
+  totalAmount: number;
+  percentage: number;
+};
+
+export type CategoryRevenueItem = {
+  categoryName: string;
+  orderCount: number;
+  revenue: number;
+  percentage: number;
+};
+
+export type ExpenseCategoryBreakdownItem = {
+  category: string;
+  categoryDisplayName: string;
+  total: number;
+  percentage: number;
+};
+
+export const revenueApi = {
+  /** Payment method breakdown for a date range */
+  paymentBreakdown: (from: string, to: string) =>
+    api.get<ApiResponse<PaymentBreakdownItem[]>>('/revenue/payment-methods/range', { params: { from, to } }),
+
+  /** Revenue by product category for a date range */
+  categoryBreakdown: (from: string, to: string) =>
+    api.get<ApiResponse<CategoryRevenueItem[]>>('/revenue/categories/range', { params: { from, to } }),
 };
 
 // ── Customer API ──────────────────────────────────────────────────────────────
@@ -915,7 +1184,7 @@ export const expenseApi = {
 export type CustomerData = {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
   email: string | null;
   gender: 'MALE' | 'FEMALE' | 'OTHER' | null;
   dateOfBirth: string | null;
@@ -929,6 +1198,12 @@ export type CustomerData = {
   notes: string | null;
   note: string | null;
   idCardNumber: string | null;
+  idCardFullName: string | null;
+  idCardSex: string | null;
+  idCardNationality: string | null;
+  idCardPlaceOfOrigin: string | null;
+  idCardPlaceOfResidence: string | null;
+  idCardDateOfBirth: string | null;
   idCardIssuedDate: string | null;
   idCardIssuedPlace: string | null;
   permanentAddress: string | null;
@@ -937,11 +1212,12 @@ export type CustomerData = {
   points: number;
   createdAt: string;
   walkIn?: boolean;
+  avatarUrl: string | null;
 };
 
 export type CustomerFormPayload = {
   name: string;
-  phone: string;
+  phone?: string;
   email?: string;
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
   dateOfBirth?: string;
@@ -953,6 +1229,12 @@ export type CustomerFormPayload = {
   specialRequests?: string;
   notes?: string;
   idCardNumber?: string;
+  idCardFullName?: string;
+  idCardSex?: string;
+  idCardNationality?: string;
+  idCardPlaceOfOrigin?: string;
+  idCardPlaceOfResidence?: string;
+  idCardDateOfBirth?: string;
   idCardIssuedDate?: string;
   idCardIssuedPlace?: string;
   permanentAddress?: string;
@@ -981,8 +1263,26 @@ export const customerApi = {
   recent: (limit = 5) =>
     api.get<ApiResponse<CustomerData[]>>('/customers/recent', { params: { limit } }),
 
+  /** Customers whose birthday falls in the current calendar month, sorted by day-of-month. */
+  birthdaysThisMonth: () =>
+    api.get<ApiResponse<CustomerData[]>>('/customers/birthdays/this-month'),
+
+  orders: (id: string, page = 0, size = 15) =>
+    api.get<ApiResponse<{ content: OrderSummary[]; totalPages: number; totalElements: number }>>(
+      `/customers/${id}/orders`,
+      { params: { page, size, sort: 'createdAt,desc' } },
+    ),
+
   orderSummary: (id: string, from: string, to: string) =>
-    api.get<ApiResponse<{ totalRevenue: number; orderCount: number; completedCount: number; avgOrderValue: number }>>(
+    api.get<ApiResponse<{
+      totalRevenue: number;
+      orderCount: number;
+      completedCount: number;
+      avgOrderValue: number;
+      lastVisitDate: string | null;
+      daysSinceLastVisit: number;
+      favoriteService: string | null;
+    }>>(
       `/customers/${id}/orders/summary`,
       { params: { from, to } },
     ),
@@ -992,6 +1292,43 @@ export const customerApi = {
       `/customers/${id}/orders/chart`,
       { params: { from, to, granularity } },
     ),
+
+  // ── List analytics ──────────────────────────────────────────────────────────
+
+  analyticsSummary: (from: string, to: string) =>
+    api.get<ApiResponse<{
+      totalCustomers: number;
+      activeCustomers: number;
+      newCustomers: number;
+      totalRevenue: number;
+      avgSpend: number;
+    }>>('/customers/analytics/summary', { params: { from, to } }),
+
+  analyticsTrend: (from: string, to: string, granularity: string, metric: 'revenue' | 'visits' | 'new') =>
+    api.get<ApiResponse<{ label: string; value: number }[]>>(
+      '/customers/analytics/trend',
+      { params: { from, to, granularity, metric } },
+    ),
+
+  analyticsRanking: (params: { limit?: number; allTime?: boolean; from?: string; to?: string }) =>
+    api.get<ApiResponse<{ name: string; orderCount: number; totalSpend: number; customerId: string | null }[]>>(
+      '/customers/analytics/ranking',
+      { params: { limit: 10, ...params } },
+    ),
+
+  uploadAvatar: (id: string, uri: string) => {
+    const formData = new FormData();
+    const filename = uri.split('/').pop() ?? 'avatar.jpg';
+    const ext = filename.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+    formData.append('file', { uri, type: mime, name: filename } as unknown as Blob);
+    return api.post<ApiResponse<CustomerData>>(`/customers/${id}/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  deleteAvatar: (id: string) =>
+    api.delete<ApiResponse<CustomerData>>(`/customers/${id}/avatar`),
 };
 
 // ── Shop config API ───────────────────────────────────────────────────────────
@@ -1028,6 +1365,8 @@ export type PosConfig = {
   quickPhrases: string[];
 };
 
+// ── Shop config ───────────────────────────────────────────────────────────────
+
 export const shopConfigApi = {
   getInfo: () => api.get<ApiResponse<ShopInfo>>('/shop-config'),
 
@@ -1058,6 +1397,77 @@ export const shopConfigApi = {
     api.put<ApiResponse<{ logoUrl: string }>>('/shop-config/logo', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
+};
+
+// ── Shop Info / E-Invoice API ─────────────────────────────────────────────────
+
+export type EInvoiceVendor = 'SINVOICE' | 'BKAV' | 'MISA';
+
+/** Fields returned by GET /shop-info relevant to e-invoice setup. */
+export type EInvoiceConfig = {
+  invoiceVendor: EInvoiceVendor | null;
+  eInvoiceUsername: string | null;
+  /** Never returned by the server (encrypted at rest) */
+  eInvoicePassword: null;
+  /** Never returned by the server (encrypted at rest) */
+  eInvoiceKey: null;
+  templateCode: string | null;
+  invoiceSeries: string | null;
+  /** Backend env-var — returned for info only, not user-editable */
+  invoiceSystem: string | null;
+};
+
+export type FullShopInfo = EInvoiceConfig & {
+  shopName: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  supplierTaxCode: string | null;
+  companyName: string | null;
+  defaultTaxRate: number | null;
+};
+
+export type InvoiceData = {
+  id: number;
+  invoiceNumber: string | null;
+  status: string;
+  invoiceVendor: string | null;
+  totalAmount: number;
+  createdAt: string;
+};
+
+export const shopInfoApi = {
+  /** GET /shop-info — returns full shop info including e-invoice non-sensitive fields */
+  get: () => api.get<ApiResponse<FullShopInfo>>('/shop-info'),
+
+  /** PUT /shop-info — updates any subset of shop info, including e-invoice credentials */
+  saveEInvoiceConfig: (data: {
+    invoiceVendor?: string | null;
+    eInvoiceUsername?: string;
+    eInvoicePassword?: string;
+    eInvoiceKey?: string;
+    templateCode?: string;
+    invoiceSeries?: string;
+    // invoiceSystem is a backend env-var — never sent from the client
+  }) => api.put<ApiResponse<FullShopInfo>>('/shop-info', data),
+};
+
+export const invoiceApi = {
+  /** GET /invoices/order/{orderId} — check if an invoice already exists for this order */
+  getByOrderId: (orderId: string) =>
+    api.get<ApiResponse<InvoiceData>>(`/invoices/order/${orderId}`),
+
+  /** POST /invoices — create a new invoice from a single order (minimal body; server fills defaults) */
+  createFromOrder: (orderId: string) =>
+    api.post<ApiResponse<InvoiceData>>('/invoices', {
+      orderIds: [Number(orderId)],
+      currencyCode: 'VND',
+      taxPercentage: 0,
+    }),
+
+  /** PUT /invoices/{id}/issue — transmit the invoice to the external provider */
+  issueInvoice: (invoiceId: number) =>
+    api.put<ApiResponse<InvoiceData>>(`/invoices/${invoiceId}/issue`),
 };
 
 // ── Category API ──────────────────────────────────────────────────────────────
@@ -1103,6 +1513,33 @@ export type ComboData = {
   totalIndividualPrice: number;
 };
 
+export type ComboAnalyticsSummary = {
+  totalSold: number;
+  totalRevenue: number;
+  activeCount: number;
+  avgOrderValue: number;
+};
+
+export type ComboRankingItem = {
+  comboId: string;
+  comboName: string;
+  qtySold: number;
+  revenue: number;
+  orderCount: number;
+};
+
+export type ComboTrendPoint = {
+  label: string;
+  qtySold: number;
+  revenue: number;
+};
+
+export type ComboAnalytics = {
+  summary: ComboAnalyticsSummary;
+  ranking: ComboRankingItem[];
+  trend: ComboTrendPoint[];
+};
+
 export const comboApi = {
   list: (active?: boolean) =>
     api.get<ApiResponse<ComboData[]>>('/combos', {
@@ -1116,6 +1553,9 @@ export const comboApi = {
     api.put<ApiResponse<ComboData>>(`/combos/${id}`, data),
 
   delete: (id: string) => api.delete<ApiResponse<null>>(`/combos/${id}`),
+
+  analytics: (params: { from: string; to: string; granularity?: string; limit?: number }) =>
+    api.get<ApiResponse<ComboAnalytics>>('/combos/analytics', { params }),
 };
 
 // ── Inventory API ─────────────────────────────────────────────────────────────
@@ -1172,15 +1612,19 @@ export const notificationApi = {
 // ── Activity log API ──────────────────────────────────────────────────────────
 
 export type ActivityLogEntry = {
-  id: string;
+  id: number;
+  actorUsername: string;
+  actorFullName: string | null;
   action: string;
+  targetType: string | null;
+  targetId: string | null;
   description: string;
-  source: 'WEB' | 'MOBILE';
+  ipAddress: string | null;
   createdAt: string;
 };
 
 export const activityLogApi = {
-  list: (params?: { page?: number; category?: string; from?: string; to?: string }) =>
+  list: (params?: { page?: number; targetType?: string; from?: string; to?: string }) =>
     api.get<ApiResponse<{ content: ActivityLogEntry[]; totalPages: number }>>(
       '/activity-logs',
       { params: { size: 30, ...params } },
@@ -1267,10 +1711,13 @@ export type ShopUser = {
   id: string;
   username: string;
   fullName: string | null;
+  avatarUrl: string | null;
   roles: ShopUserRole[];
   active: boolean;
   accountNonLocked: boolean;
   createdAt: string;
+  /** Per-user feature overrides. Non-null = user has custom features; null = uses role defaults. */
+  userFeatureNames: string[] | null;
 };
 
 export type CreateStaffPayload = {
@@ -1278,16 +1725,32 @@ export type CreateStaffPayload = {
   password: string;
   fullName: string;
   roleNames: string[];
+  /**
+   * Per-user feature overrides. When provided, these features are used in the JWT
+   * instead of the role-based features (intersected with tenant features).
+   * Omit to use role defaults.
+   */
+  featureNames?: string[];
 };
 
 export type UpdateStaffPayload = {
   fullName?: string;
   roleNames?: string[];
+  /**
+   * Per-user feature overrides.
+   * null / undefined = no-op (keep existing).
+   * [] = clear overrides (revert to role defaults).
+   * [...] = set new override set.
+   */
+  featureNames?: string[] | null;
 };
 
 export const shopUserApi = {
   list: () =>
     api.get<ApiResponse<{ content: ShopUser[]; totalElements: number }>>('/users'),
+
+  getById: (id: string) =>
+    api.get<ApiResponse<ShopUser>>(`/users/${id}`),
 
   create: (data: CreateStaffPayload) =>
     api.post<ApiResponse<ShopUser>>('/users', data),
@@ -1300,6 +1763,10 @@ export const shopUserApi = {
 
   resetPassword: (id: string) =>
     api.post<ApiResponse<{ tempPassword: string }>>(`/users/${id}/reset-password`),
+
+  /** Get all feature names the current tenant has subscribed to. Used for the feature-assignment matrix. */
+  tenantFeatures: () =>
+    api.get<ApiResponse<string[]>>('/users/tenant-features'),
 };
 
 // ── Legal API ─────────────────────────────────────────────────────────────────
@@ -1353,6 +1820,64 @@ export const printTemplateApi = {
 
   setDefault: (id: string) =>
     api.put<ApiResponse<null>>(`/shop-config/print-templates/${id}/default`),
+};
+
+// ── Zalo message templates ────────────────────────────────────────────────────
+
+export type ZaloMessageTemplate = {
+  id: number;
+  name: string;
+  templateType: string;
+  templateId: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SaveZaloMessageTemplateRequest = {
+  name: string;
+  templateId: string;
+};
+
+export const zaloTemplateApi = {
+  list: (type = 'APPOINTMENT_REMINDER') =>
+    api.get<ApiResponse<ZaloMessageTemplate[]>>('/shop-config/zalo-templates', { params: { type } }),
+
+  getById: (id: number) =>
+    api.get<ApiResponse<ZaloMessageTemplate>>(`/shop-config/zalo-templates/${id}`),
+
+  create: (data: SaveZaloMessageTemplateRequest, type = 'APPOINTMENT_REMINDER') =>
+    api.post<ApiResponse<ZaloMessageTemplate>>('/shop-config/zalo-templates', data, { params: { type } }),
+
+  update: (id: number, data: SaveZaloMessageTemplateRequest) =>
+    api.put<ApiResponse<ZaloMessageTemplate>>(`/shop-config/zalo-templates/${id}`, data),
+
+  setDefault: (id: number, type = 'APPOINTMENT_REMINDER') =>
+    api.put<ApiResponse<ZaloMessageTemplate>>(`/shop-config/zalo-templates/${id}/default`, {}, { params: { type } }),
+
+  delete: (id: number) =>
+    api.delete<ApiResponse<void>>(`/shop-config/zalo-templates/${id}`),
+};
+
+// ── Zalo OA API ───────────────────────────────────────────────────────────────
+
+export type ZaloOaStatus = {
+  connected: boolean;
+  appId?: string;
+  oaName?: string;      // display name of the OA, e.g. "Tiệm Cà Phê ABC"
+  oaId?: string;        // Zalo OA page ID
+  tokenExpiry?: string; // ISO datetime string
+};
+
+export const zaloOaApi = {
+  getStatus: () =>
+    api.get<ApiResponse<ZaloOaStatus>>('/shop-config/zalo-oa'),
+
+  connect: (data: ({ appId: string; appSecret: string } | { accessToken: string }) & { oaName: string; oaId?: string }) =>
+    api.post<ApiResponse<ZaloOaStatus>>('/shop-config/zalo-oa', data),
+
+  disconnect: () =>
+    api.delete<ApiResponse<void>>('/shop-config/zalo-oa'),
 };
 
 // ── Loyalty API ───────────────────────────────────────────────────────────────
@@ -1428,6 +1953,8 @@ export type AppointmentData = {
   createdBy: string;
   createdAt: string;
   services: AppointmentServiceItemData[];
+  /** Advisory employee-conflict warnings returned by create/update. Empty otherwise. */
+  warnings: string[];
 };
 
 export type CheckInPayload = {
@@ -1461,6 +1988,33 @@ export type CreateAppointmentPayload = {
 
 export type UpdateAppointmentPayload = Partial<CreateAppointmentPayload>;
 
+export type AppointmentAnalyticsSummary = {
+  total: number;
+  completedCount: number;
+  completionRate: number; // 0.0–1.0
+  cancelledCount: number;
+  avgPerDay: number;
+};
+
+export type AppointmentTrendPoint = {
+  label: string;
+  total: number;
+  completed: number;
+  cancelled: number;
+};
+
+export type AppointmentRankItem = {
+  name: string;
+  count: number;
+};
+
+export type AppointmentAnalytics = {
+  summary: AppointmentAnalyticsSummary;
+  trend: AppointmentTrendPoint[];
+  rankingServices: AppointmentRankItem[];
+  rankingEmployees: AppointmentRankItem[];
+};
+
 export const appointmentApi = {
   list: (date: string, page = 0, size = 50) =>
     api.get<ApiResponse<{ content: AppointmentData[]; totalPages: number; totalElements: number }>>('/appointments', { params: { date, page, size } }),
@@ -1472,6 +2026,17 @@ export const appointmentApi = {
   cancel: (id: number) => api.put<ApiResponse<AppointmentData>>(`/appointments/${id}/cancel`),
   noShow: (id: number) => api.put<ApiResponse<AppointmentData>>(`/appointments/${id}/no-show`),
   delete: (id: number) => api.delete<ApiResponse<void>>(`/appointments/${id}`),
+  /**
+   * Returns appointment counts per day for the given date range.
+   * Result: { countByDate: { "2026-05-18": 3, "2026-05-20": 1, ... } }
+   * Days with zero appointments are omitted from the map.
+   */
+  weekSummary: (from: string, to: string) =>
+    api.get<ApiResponse<{ countByDate: Record<string, number> }>>(
+      '/appointments/week-summary', { params: { from, to } }),
+
+  analytics: (params: { from: string; to: string; granularity?: string; limit?: number }) =>
+    api.get<ApiResponse<AppointmentAnalytics>>('/appointments/analytics', { params }),
 };
 
 export const userApi = {
@@ -1480,7 +2045,7 @@ export const userApi = {
     fullName: string | null;
     nickname: string | null;
     shopName: string | null;
-    role: string | null;
+    roles: string[];
     lang: string | null;
   }>>('/profiles/me'),
 
@@ -1688,9 +2253,14 @@ export type ShopTable = {
   status: TableStatus;
   currentOrderId?: number;
   currentOrderNumber?: string;
+  currentOrderTotal?: number;
   location?: string;
   displayOrder: number;
   elapsedMinutes?: number;
+  /** Name of the party who reserved this table (only when status = RESERVED). */
+  reservedFor?: string | null;
+  /** Human-readable reservation time, e.g. "19:00" (only when status = RESERVED). */
+  reservedTime?: string | null;
 };
 
 export const tableApi = {
@@ -1700,4 +2270,102 @@ export const tableApi = {
   update: (id: number, data: { tableNumber?: string; capacity?: number; location?: string; displayOrder?: number }) =>
     api.put<ApiResponse<ShopTable>>(`/tables/${id}`, data),
   delete: (id: number) => api.delete<ApiResponse<null>>(`/tables/${id}`),
+  /** Staff manually sets table status: RESERVED (with name+time), CLEANING, or AVAILABLE. */
+  setStatus: (id: number, data: { status: TableStatus; reservedFor?: string; reservedTime?: string }) =>
+    api.patch<ApiResponse<ShopTable>>(`/tables/${id}/status`, data),
+};
+
+// ── Commission API ────────────────────────────────────────────────────────────
+
+export type CommissionItemDTO = {
+  orderItemId: number;
+  orderNumber: string;
+  productName: string;
+  quantity: number;
+  amount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  completedAt: string;
+};
+
+export type MyCommissionDTO = {
+  employeeId: number;
+  employeeName: string;
+  month: number;
+  year: number;
+  totalCommission: number;
+  itemCount: number;
+  items: CommissionItemDTO[];
+};
+
+export type EmployeeCommissionDTO = {
+  employeeId: number;
+  employeeName: string;
+  totalCommission: number;
+  itemCount: number;
+};
+
+export type CommissionReportDTO = {
+  month: number;
+  year: number;
+  totalCommission: number;
+  totalItemCount: number;
+  employees: EmployeeCommissionDTO[];
+};
+
+export const commissionApi = {
+  getMyCommission: (month: number, year: number) =>
+    api.get<ApiResponse<MyCommissionDTO>>('/commission/me', { params: { month, year } }),
+
+  getReport: (month: number, year: number) =>
+    api.get<ApiResponse<CommissionReportDTO>>('/commission/report', { params: { month, year } }),
+};
+
+// ── Shop Invitations API ───────────────────────────────────────────────────────
+
+export type InvitationCodeResponse = {
+  code: string;
+  roleName: string;
+  features: string[];
+  expiresAt: string;         // ISO-8601
+  secondsRemaining: number;
+};
+
+export type InvitationPreviewResponse = {
+  shopName: string;
+  shopType: string;          // e.g. "NAIL_SHOP"
+  roleName: string;
+  expiresAt: string;         // ISO-8601
+  secondsRemaining: number;
+};
+
+export type GenerateInvitationRequest = {
+  roleName: string;
+  features?: string[];
+};
+
+export const invitationApi = {
+  /** Shop owner generates a 5-min invitation code (requires USER feature, tenant-scoped). */
+  generate: (data: GenerateInvitationRequest) =>
+    api.post<ApiResponse<InvitationCodeResponse>>('/shop-config/invitations', data),
+
+  /** Preview shop info for a code without accepting (no tenant context needed). */
+  preview: (code: string) =>
+    api.get<ApiResponse<InvitationPreviewResponse>>('/invitations/preview', { params: { code } }),
+
+  /** Accept an invitation — returns new accessToken + tenantId. */
+  join: (code: string) =>
+    api.post<ApiResponse<{ accessToken: string; tenantId: string }>>('/invitations/join', { code }),
+};
+
+// ── Shop deletion ─────────────────────────────────────────────────────────────
+
+export const shopDeletionApi = {
+  /**
+   * Permanently soft-delete the authenticated shop owner's shop.
+   * Requires USER feature + SHOP_OWNER role (enforced server-side).
+   * confirmToken must equal "DELETE" (case-insensitive on server).
+   */
+  deleteShop: (data: { confirmToken: string; reason?: string }) =>
+    api.delete<ApiResponse<null>>('/shop-config/delete-shop', { data }),
 };

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '../../store/onboardingStore';
@@ -15,13 +16,17 @@ export function WelcomeScreen({ navigation }: OnboardingScreenProps<'Welcome'>) 
   const { t } = useTranslation();
   const typo = useTypography();
   const lastCompletedStep = useOnboardingStore((s) => s.lastCompletedStep);
+  const isFocused = useIsFocused();
 
-  // Mid-wizard restart: skip welcome after store hydrates from AsyncStorage
+  // Mid-wizard restart: skip welcome when the store hydrates with prior progress.
+  // Guard with isFocused so this never fires while Welcome is buried under other
+  // screens — otherwise completeStep() calls during the active wizard session
+  // would re-trigger replace() and duplicate ShopType in the navigation stack.
   useEffect(() => {
-    if (lastCompletedStep !== -1) {
+    if (isFocused && lastCompletedStep !== -1) {
       navigation.replace('ShopType');
     }
-  }, [lastCompletedStep, navigation]);
+  }, [isFocused, lastCompletedStep, navigation]);
 
   return (
     <View
@@ -49,8 +54,8 @@ export function WelcomeScreen({ navigation }: OnboardingScreenProps<'Welcome'>) 
 
           {/* Title */}
           <Text
-            className="text-gray-900 dark:text-white text-center mb-3"
-            style={{ fontSize: 28, fontWeight: '800', letterSpacing: -0.5, lineHeight: 36 }}
+            className={`${typo.heading} text-gray-900 dark:text-white text-center mb-3`}
+            style={{ fontWeight: '800', letterSpacing: -0.5, lineHeight: Math.round(typo.displaySize * 1.3) }}
           >
             {t('onboarding.welcome.title')}
           </Text>
@@ -58,7 +63,6 @@ export function WelcomeScreen({ navigation }: OnboardingScreenProps<'Welcome'>) 
           {/* Subtitle */}
           <Text
             className={`${typo.caption} text-gray-500 dark:text-gray-400 text-center leading-6 mb-8 max-w-xs`}
-            style={{ fontSize: 15 }}
           >
             {t('onboarding.welcome.subtitle')}
           </Text>
@@ -87,22 +91,18 @@ export function WelcomeScreen({ navigation }: OnboardingScreenProps<'Welcome'>) 
                   }`}
                 >
                   <Text
-                    style={{
-                      fontSize: 11,
-                      fontWeight: '700',
-                      color: i === 0 ? '#065f46' : '#059669',
-                    }}
+                    className={`${typo.caption} font-bold`}
+                    style={{ color: i === 0 ? '#065f46' : '#059669' }}
                   >
                     {i + 1}
                   </Text>
                 </View>
                 <Text
-                  className={`flex-1 ${
+                  className={`${typo.label} flex-1 ${
                     i === 0
                       ? 'text-gray-900 dark:text-white font-semibold'
                       : 'text-gray-600 dark:text-gray-300'
                   }`}
-                  style={{ fontSize: 14 }}
                 >
                   {t(`onboarding.welcome.steps.${step}`)}
                 </Text>
@@ -117,11 +117,12 @@ export function WelcomeScreen({ navigation }: OnboardingScreenProps<'Welcome'>) 
         </View>
       </ScrollView>
 
-      {/* Footer CTA */}
+      {/* Footer CTAs */}
       <View
         className="px-6 pt-4 bg-emerald-50 dark:bg-gray-900 border-t border-emerald-100 dark:border-gray-800"
-        style={{ paddingBottom: insets.bottom + 16 }}
+        style={{ paddingBottom: insets.bottom + 16, gap: 12 }}
       >
+        {/* Primary: Create shop */}
         <TouchableOpacity
           className="bg-primary rounded-2xl py-4 items-center justify-center active:opacity-80"
           style={{
@@ -135,6 +136,19 @@ export function WelcomeScreen({ navigation }: OnboardingScreenProps<'Welcome'>) 
         >
           <Text className={`${typo.labelBold} text-white`}>
             {t('onboarding.welcome.cta')}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Secondary: Join existing shop */}
+        <TouchableOpacity
+          className="rounded-2xl py-4 items-center justify-center border-2 border-emerald-300 dark:border-emerald-700 active:opacity-70"
+          onPress={() => navigation.navigate('JoinShop')}
+        >
+          <Text className={`${typo.labelBold} text-emerald-700 dark:text-emerald-400`}>
+            {t('onboarding.welcome.joinShop')}
+          </Text>
+          <Text className="text-emerald-500 dark:text-emerald-500 text-xs mt-0.5">
+            {t('onboarding.welcome.joinShopHint')}
           </Text>
         </TouchableOpacity>
       </View>

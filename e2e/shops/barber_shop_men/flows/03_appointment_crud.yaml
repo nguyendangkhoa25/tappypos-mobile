@@ -1,0 +1,54 @@
+appId: com.knp.tappypos
+name: "BARM 03 Appointment CRUD — create then cancel appointment (APPOINTMENT feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-appointments"
+- assertVisible: "Lịch hẹn"
+- assertNotVisible: "500"
+
+# Create appointment
+- tapOn:
+    id: "appointment-add-fab"
+- assertVisible: "Đặt lịch"
+
+- tapOn:
+    id: "appt-customer-name"
+- inputText: "Khách Barber Test"
+
+- tapOn:
+    id: "appt-customer-phone"
+- inputText: "0922111333"
+
+- tapOn:
+    id: "appt-save-btn"
+- assertVisible: "Lịch hẹn"
+
+# Open the just-created appointment
+- tapOn:
+    id: "appointment-card-0"
+- assertNotVisible: "500"
+
+# Cancel it (to keep data clean)
+- tapOn:
+    id: "appt-cancel-btn"
+    optional: true
+- tapOn:
+    text: "Xác nhận"
+    optional: true
+- tapOn:
+    text: "Huỷ lịch"
+    optional: true
+- tapOn:
+    text: "OK"
+    optional: true
+- tapOn:
+    text: "‹"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

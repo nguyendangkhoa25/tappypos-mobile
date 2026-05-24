@@ -1,0 +1,39 @@
+appId: com.knp.tappypos
+name: "BARM 07 Product list — search barber services, verify inventory tab absent (PRODUCT feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-products"
+- assertVisible: "Sản phẩm"
+- assertNotVisible: "500"
+
+# Search for a barber service
+- tapOn:
+    id: "product-search-input"
+- inputText: "cắt fade"
+- tapOn: "Sản phẩm"
+- assertNotVisible: "500"
+- assertVisible: "Cắt Fade"
+
+# Clear search — all 24 services visible
+- tapOn:
+    id: "product-search-input"
+- eraseText: 50
+- tapOn: "Sản phẩm"
+- assertNotVisible: "500"
+
+# Open a product detail
+- tapOn:
+    id: "product-row-0"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

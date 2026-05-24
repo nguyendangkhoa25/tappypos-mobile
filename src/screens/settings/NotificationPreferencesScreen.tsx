@@ -79,7 +79,7 @@ export function NotificationPreferencesScreen({ navigation }: SettingsScreenProp
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
       >
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
@@ -87,7 +87,7 @@ export function NotificationPreferencesScreen({ navigation }: SettingsScreenProp
             {t('settings.notificationPreferences.title')}
           </Text>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('settings.notificationPreferences.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('settings.notificationPreferences.hint')}</Text>
       </View>
 
       {isLoading || !prefs ? (
@@ -95,7 +95,7 @@ export function NotificationPreferencesScreen({ navigation }: SettingsScreenProp
           <ActivityIndicator color="#4f46e5" />
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, gap: 16 }}>
           {PREF_GROUPS.map((group) => (
             <View key={group.section} className="bg-white dark:bg-gray-800 rounded-2xl p-4">
               <Text className={`${typo.label} text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3`}>

@@ -1,0 +1,36 @@
+appId: com.knp.tappypos
+name: "BARM 11 Settings — shop info, bank accounts smoke test (SHOP_INFO feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+# Shop info is in "Cấu hình cửa hàng" section (collapsed — scroll 2x to reach it)
+- scroll
+- scroll
+- tapOn:
+    id: "more-section-shopConfig"
+- waitForAnimationToEnd
+- scroll
+- tapOn:
+    id: "more-config-shopInfo"
+- assertVisible: "Thông tin cửa hàng"
+- assertNotVisible: "500"
+# Back to MoreMain via tab press (tabPress listener navigates to MoreMain)
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- scroll
+- scroll
+- tapOn:
+    id: "more-section-shopConfig"
+- waitForAnimationToEnd
+- scroll
+- tapOn:
+    id: "more-config-bankAccounts"
+- assertVisible: "Tài khoản ngân hàng"
+- assertNotVisible: "500"
+# Smoke test: list loads — skip opening the add form (modal has no testID for close)
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

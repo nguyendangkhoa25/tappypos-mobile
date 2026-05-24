@@ -124,14 +124,12 @@ export function TaxCalculatorScreen({ navigation }: Props) {
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#059669" />
           </TouchableOpacity>
-          <View className="flex-1">
-            <Text className={`${typo.heading} text-gray-900 dark:text-white`}>{t('taxCalc.title')}</Text>
-            <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('taxCalc.subtitle2026')}</Text>
-          </View>
+          <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('taxCalc.title')}</Text>
         </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('taxCalc.subtitle2026')}</Text>
       </View>
 
-      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, paddingBottom: bottom + 32 }}>
         <View className="flex-row items-start bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100 mb-3">
           <Text className="text-indigo-400 mr-2 mt-0.5">💡</Text>
           <Text className={`${typo.caption} text-indigo-600 leading-4 flex-1`}>{t('taxCalc.hint')}</Text>

@@ -1,0 +1,31 @@
+appId: com.knp.tappypos
+name: "BARM 18 My Work screen — queue + available tabs (MY_WORK feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+# mywork is in "Vận hành" (collapsed by default — expand first)
+- tapOn:
+    id: "more-section-ops"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "more-config-mywork"
+- tapOn:
+    id: "more-config-mywork"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+- tapOn:
+    text: "Chờ nhận"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    text: "Hàng chờ của tôi"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

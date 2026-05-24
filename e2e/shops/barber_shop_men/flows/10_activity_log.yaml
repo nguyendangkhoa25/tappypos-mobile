@@ -1,0 +1,48 @@
+appId: com.knp.tappypos
+name: "BARM 10 Activity log — list renders, filter tabs (ACTIVITY_LOG feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+# Activity log is inside Settings screen, under "Cài đặt & Bảo mật" section (at bottom — scroll 4x)
+- scroll
+- scroll
+- scroll
+- scroll
+- tapOn:
+    id: "more-section-settings"
+- waitForAnimationToEnd
+- scroll
+- tapOn:
+    id: "more-config-settings"
+- assertVisible: "Bảo mật"
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "settings-activity-log"
+- assertVisible: "Nhật ký hoạt động"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+- assertVisible:
+    id: "activity-entry-0"
+    optional: true
+
+- tapOn:
+    text: "Đơn hàng"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    text: "Sản phẩm"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    text: "Tất cả"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

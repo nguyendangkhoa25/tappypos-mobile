@@ -100,7 +100,7 @@ export function ExpenseAddScreen({ navigation, route }: Props) {
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
       >
-        <View className="flex-row items-center gap-3">
+        <View className="flex-row items-center gap-3 mb-0.5">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -110,13 +110,13 @@ export function ExpenseAddScreen({ navigation, route }: Props) {
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {t('expenses.addSheet.title')}
           </Text>
-          <TouchableOpacity onPress={() => saveMutation.mutate()} disabled={saveMutation.isPending || !canSave} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity testID="expense-save-btn" onPress={() => saveMutation.mutate()} disabled={saveMutation.isPending || !canSave} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             {saveMutation.isPending ? <ActivityIndicator size="small" color="#4f46e5" /> : (
               <Text className={`${typo.label} ${canSave ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-300 dark:text-gray-600'}`}>{t('common.save')}</Text>
             )}
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
           {t('expenses.addScreen.hint')}
         </Text>
       </View>
@@ -125,7 +125,7 @@ export function ExpenseAddScreen({ navigation, route }: Props) {
         className="flex-1"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+        contentContainerStyle={{ padding: 4, paddingBottom: insets.bottom + 32 }}
       >
         {/* Suggestion chips */}
         <View className="pt-4 pb-3">
@@ -181,6 +181,7 @@ export function ExpenseAddScreen({ navigation, route }: Props) {
               {t('expenses.addSheet.nameLabel')}
             </Text>
             <ClearableInput
+              testID="expense-desc-input"
               value={description}
               onChangeText={setDescription}
               onClear={() => setDescription('')}
@@ -198,6 +199,7 @@ export function ExpenseAddScreen({ navigation, route }: Props) {
               {t('expenses.addSheet.amountLabel')}
             </Text>
             <MoneyInput
+              testID="expense-amount-input"
               ref={amountRef}
               rawValue={amount}
               onChangeRaw={setAmount}

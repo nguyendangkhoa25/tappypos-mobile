@@ -159,7 +159,7 @@ export function AppointmentDetailScreen({ route, navigation }: Props) {
             </TouchableOpacity>
             <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('appt.detail')}</Text>
           </View>
-          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-0 mt-0.5`}>{t('appt.detailHint')}</Text>
+          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('appt.detailHint')}</Text>
         </View>
         <View className="px-4 mt-4 gap-3">
           <Skeleton width="100%" height={100} borderRadius={16} />

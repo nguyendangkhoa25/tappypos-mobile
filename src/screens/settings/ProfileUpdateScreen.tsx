@@ -84,10 +84,10 @@ export function ProfileUpdateScreen({ navigation }: { navigation: { goBack: () =
             )}
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-0 mt-0.5`}>{t('settings.profileSettings.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('settings.profileSettings.hint')}</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }} keyboardShouldPersistTaps="handled">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16, gap: 16 }} keyboardShouldPersistTaps="handled">
         {/* Avatar */}
         <View className="items-center py-4">
           <View className="w-20 h-20 rounded-full items-center justify-center" style={{ backgroundColor: '#4f46e5' }}>

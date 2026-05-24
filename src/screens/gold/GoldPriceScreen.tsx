@@ -90,22 +90,22 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
       <View
-        className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 flex-row items-center px-4"
+        className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
       >
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
-          <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('gold.title')}</Text>
-          <Text className={`${typo.caption} text-gray-500 dark:text-gray-400`}>{t('gold.hint')}</Text>
-          {current && (
-            <Text className={`${typo.caption} text-gray-400`}>{t('gold.lastUpdated', { time: formatDate(current.date) })}</Text>
-          )}
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
+            <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
+          </TouchableOpacity>
+          <Text className={`${typo.section} text-gray-900 dark:text-white flex-1`}>{t('gold.title')}</Text>
+          <TouchableOpacity onPress={openSheet} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <MaterialCommunityIcons name="pencil-outline" size={22} color="#4f46e5" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={openSheet} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <MaterialCommunityIcons name="pencil-outline" size={22} color="#4f46e5" />
-        </TouchableOpacity>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('gold.hint')}</Text>
+        {current && (
+          <Text className={`${typo.caption} text-gray-400 mt-0.5`}>{t('gold.lastUpdated', { time: formatDate(current.date) })}</Text>
+        )}
       </View>
 
       {loadingCurrent ? (
@@ -113,7 +113,7 @@ export function GoldPriceScreen({ navigation }: GoldPriceScreenProps<'GoldPriceM
           <ActivityIndicator color="#4f46e5" />
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, gap: 16 }}>
           {/* Price cards */}
           {current ? (
             <View className="flex-row gap-3">

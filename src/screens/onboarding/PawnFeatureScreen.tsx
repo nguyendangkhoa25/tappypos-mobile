@@ -32,7 +32,8 @@ export function PawnFeatureScreen({ navigation }: OnboardingScreenProps<'PawnFea
   const handleNo = () => {
     setHasPawnFeature(false);
     // Jump past PAWN_TYPES and PAWN_INTEREST directly to EXPENSE_SETUP
-    navigation.navigate('Step3');
+    const next = getNextScreen('PAWN_INTEREST');
+    if (next) navigation.navigate(next as any);
   };
 
   return (

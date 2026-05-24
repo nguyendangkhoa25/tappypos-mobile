@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { useTypography } from '../../hooks/useTypography';
 import { Skeleton } from '../../components/Skeleton';
 import { DatePickerInput } from '../../components/DatePickerInput';
 import { PhoneInput } from '../../components/PhoneInput';
+import { IdCardSection, EMPTY_ID_CARD_DATA, type IdCardData } from '../../components/IdCardSection';
 import type { HomeScreenProps } from '../../types/navigation';
 
 type Props = HomeScreenProps<'CustomerForm'>;
@@ -40,10 +41,7 @@ type FormState = {
   allergiesOrSensitivities: string;
   specialRequests: string;
   notes: string;
-  idCardNumber: string;
-  idCardIssuedDate: string;
-  idCardIssuedPlace: string;
-  permanentAddress: string;
+  idCard: IdCardData;
 };
 
 const EMPTY_FORM: FormState = {
@@ -59,18 +57,31 @@ const EMPTY_FORM: FormState = {
   allergiesOrSensitivities: '',
   specialRequests: '',
   notes: '',
-  idCardNumber: '',
-  idCardIssuedDate: '',
-  idCardIssuedPlace: '',
-  permanentAddress: '',
+  idCard: EMPTY_ID_CARD_DATA,
 };
 
-function SectionHeader({ icon, title }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; title: string }) {
+function CollapseSection({
+  title, icon, isOpen, onToggle, children,
+}: {
+  title: string;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
   const typo = useTypography();
   return (
-    <View className="flex-row items-center mb-3 mt-1">
-      <MaterialCommunityIcons name={icon} size={15} color="#6b7280" style={{ marginRight: 6 }} />
-      <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase tracking-wide`}>{title}</Text>
+    <View className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+      <TouchableOpacity onPress={onToggle} activeOpacity={0.7} className="flex-row items-center px-4 py-3.5">
+        <MaterialCommunityIcons name={icon} size={18} color="#4f46e5" />
+        <Text className={`flex-1 ${typo.label} text-gray-700 dark:text-gray-200 ml-2.5`}>{title}</Text>
+        <MaterialCommunityIcons name={isOpen ? 'chevron-up' : 'chevron-down'} size={20} color="#9ca3af" />
+      </TouchableOpacity>
+      {isOpen && (
+        <View className="border-t border-gray-100 dark:border-gray-700 px-4 pt-4 pb-3" style={{ gap: 16 }}>
+          {children}
+        </View>
+      )}
     </View>
   );
 }
@@ -78,7 +89,7 @@ function SectionHeader({ icon, title }: { icon: React.ComponentProps<typeof Mate
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
   const typo = useTypography();
   return (
-    <View className="mb-4">
+    <View>
       <Text className={`${typo.caption} font-medium text-gray-700 dark:text-gray-300 mb-1.5`}>{label}</Text>
       {children}
     </View>
@@ -137,6 +148,16 @@ export function CustomerFormScreen({ navigation, route }: Props) {
   const isEdit = !!customerId;
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [openSections, setOpenSections] = useState(
+    () => new Set(['basic', 'social', 'prefs', 'id']),
+  );
+  const toggleSection = useCallback((key: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }, []);
 
   const { isLoading: loadingCustomer } = useQuery({
     queryKey: ['customer', customerId],
@@ -162,16 +183,27 @@ export function CustomerFormScreen({ navigation, route }: Props) {
         allergiesOrSensitivities: c.allergiesOrSensitivities ?? '',
         specialRequests: c.specialRequests ?? '',
         notes: c.notes ?? c.note ?? '',
-        idCardNumber: c.idCardNumber ?? '',
-        idCardIssuedDate: c.idCardIssuedDate ?? '',
-        idCardIssuedPlace: c.idCardIssuedPlace ?? '',
-        permanentAddress: c.permanentAddress ?? '',
+        idCard: {
+          idCardNumber: c.idCardNumber ?? '',
+          idCardFullName: c.idCardFullName ?? '',
+          idCardSex: c.idCardSex ?? '',
+          idCardNationality: c.idCardNationality ?? '',
+          idCardPlaceOfOrigin: c.idCardPlaceOfOrigin ?? '',
+          idCardPlaceOfResidence: c.idCardPlaceOfResidence ?? c.permanentAddress ?? '',
+          idCardDateOfBirth: c.idCardDateOfBirth ?? '',
+          idCardIssuedDate: c.idCardIssuedDate ?? '',
+          idCardIssuedPlace: c.idCardIssuedPlace ?? '',
+        },
       });
     }).catch(() => {});
   }, [customerId, isEdit]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function setIdCard<K extends keyof IdCardData>(key: K, value: IdCardData[K]) {
+    setForm((prev) => ({ ...prev, idCard: { ...prev.idCard, [key]: value } }));
   }
 
   const createMutation = useMutation({
@@ -233,6 +265,7 @@ export function CustomerFormScreen({ navigation, route }: Props) {
   }
 
   function buildPayload(): CustomerFormPayload {
+    const id = form.idCard;
     return {
       name: form.name.trim(),
       phone: form.phone.trim(),
@@ -246,10 +279,19 @@ export function CustomerFormScreen({ navigation, route }: Props) {
       ...(form.allergiesOrSensitivities.trim() && { allergiesOrSensitivities: form.allergiesOrSensitivities.trim() }),
       ...(form.specialRequests.trim() && { specialRequests: form.specialRequests.trim() }),
       ...(form.notes.trim() && { notes: form.notes.trim() }),
-      ...(form.idCardNumber.trim() && { idCardNumber: form.idCardNumber.trim() }),
-      ...(form.idCardIssuedDate.trim() && { idCardIssuedDate: form.idCardIssuedDate.trim() }),
-      ...(form.idCardIssuedPlace.trim() && { idCardIssuedPlace: form.idCardIssuedPlace.trim() }),
-      ...(form.permanentAddress.trim() && { permanentAddress: form.permanentAddress.trim() }),
+      // ID card fields
+      ...(id.idCardNumber.trim() && { idCardNumber: id.idCardNumber.trim() }),
+      ...(id.idCardFullName.trim() && { idCardFullName: id.idCardFullName.trim() }),
+      ...(id.idCardSex && { idCardSex: id.idCardSex }),
+      ...(id.idCardNationality.trim() && { idCardNationality: id.idCardNationality.trim() }),
+      ...(id.idCardPlaceOfOrigin.trim() && { idCardPlaceOfOrigin: id.idCardPlaceOfOrigin.trim() }),
+      ...(id.idCardPlaceOfResidence.trim() && {
+        idCardPlaceOfResidence: id.idCardPlaceOfResidence.trim(),
+        permanentAddress: id.idCardPlaceOfResidence.trim(), // backward compat
+      }),
+      ...(id.idCardDateOfBirth.trim() && { idCardDateOfBirth: id.idCardDateOfBirth.trim() }),
+      ...(id.idCardIssuedDate.trim() && { idCardIssuedDate: id.idCardIssuedDate.trim() }),
+      ...(id.idCardIssuedPlace.trim() && { idCardIssuedPlace: id.idCardIssuedPlace.trim() }),
     };
   }
 
@@ -291,7 +333,7 @@ export function CustomerFormScreen({ navigation, route }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4" style={{ paddingTop: top + 12, paddingBottom: 12 }}>
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
@@ -304,18 +346,24 @@ export function CustomerFormScreen({ navigation, route }: Props) {
             )}
           </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('customers.formHint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>
+          {isEdit ? t('customers.editHint') : t('customers.formHint')}
+        </Text>
       </View>
 
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ padding: 4, paddingBottom: 40, gap: 12 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Section 1 – Basic Info */}
-        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
-          <SectionHeader icon="account-outline" title={t('customers.sectionBasic')} />
+        <CollapseSection
+          icon="account-outline"
+          title={t('customers.sectionBasic')}
+          isOpen={openSections.has('basic')}
+          onToggle={() => toggleSection('basic')}
+        >
 
           <FormField label={`${t('customers.name')} *`}>
             <StyledInput
@@ -374,15 +422,19 @@ export function CustomerFormScreen({ navigation, route }: Props) {
                 onChange={(v) => set('dateOfBirth', v)}
                 placeholder={t('customers.dateOfBirthPlaceholder')}
                 maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() - 18))}
+                clearable
               />
             </View>
           </FormField>
-        </View>
+        </CollapseSection>
 
         {/* Section 2 – Social Contact */}
-        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
-          <SectionHeader icon="message-outline" title={t('customers.sectionSocial')} />
-
+        <CollapseSection
+          icon="message-outline"
+          title={t('customers.sectionSocial')}
+          isOpen={openSections.has('social')}
+          onToggle={() => toggleSection('social')}
+        >
           <FormField label={t('customers.zaloId')}>
             <StyledInput
               value={form.zaloId}
@@ -399,12 +451,15 @@ export function CustomerFormScreen({ navigation, route }: Props) {
               placeholder={t('customers.facebookPlaceholder')}
             />
           </FormField>
-        </View>
+        </CollapseSection>
 
         {/* Section 3 – Preferences & Notes */}
-        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 border border-gray-100 dark:border-gray-700">
-          <SectionHeader icon="heart-outline" title={t('customers.sectionPrefs')} />
-
+        <CollapseSection
+          icon="heart-outline"
+          title={t('customers.sectionPrefs')}
+          isOpen={openSections.has('prefs')}
+          onToggle={() => toggleSection('prefs')}
+        >
           <FormField label={t('customers.hairType')}>
             <StyledInput
               value={form.hairType}
@@ -452,46 +507,17 @@ export function CustomerFormScreen({ navigation, route }: Props) {
               multiline
             />
           </FormField>
-        </View>
+        </CollapseSection>
 
         {/* Section 4 – ID Document */}
-        <View className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-6 border border-gray-100 dark:border-gray-700">
-          <SectionHeader icon="card-account-details-outline" title={t('customers.sectionId')} />
-
-          <FormField label={t('customers.idCardNumber')}>
-            <StyledInput
-              value={form.idCardNumber}
-              onChangeText={(v) => set('idCardNumber', v)}
-              placeholder={t('customers.idCardNumberPlaceholder')}
-              keyboardType="decimal-pad"
-            />
-          </FormField>
-
-          <FormField label={t('customers.idCardIssuedDate')}>
-            <StyledInput
-              value={form.idCardIssuedDate}
-              onChangeText={(v) => set('idCardIssuedDate', v)}
-              placeholder={t('customers.idCardIssuedDatePlaceholder')}
-            />
-          </FormField>
-
-          <FormField label={t('customers.idCardIssuedPlace')}>
-            <StyledInput
-              value={form.idCardIssuedPlace}
-              onChangeText={(v) => set('idCardIssuedPlace', v)}
-              placeholder={t('customers.idCardIssuedPlaceholder')}
-            />
-          </FormField>
-
-          <FormField label={t('customers.permanentAddress')}>
-            <StyledInput
-              value={form.permanentAddress}
-              onChangeText={(v) => set('permanentAddress', v)}
-              placeholder={t('customers.permanentAddressPlaceholder')}
-              multiline
-            />
-          </FormField>
-        </View>
+        <CollapseSection
+          icon="card-account-details-outline"
+          title={t('customers.sectionId')}
+          isOpen={openSections.has('id')}
+          onToggle={() => toggleSection('id')}
+        >
+          <IdCardSection value={form.idCard} onChange={setIdCard} />
+        </CollapseSection>
 
       </ScrollView>
 

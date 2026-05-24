@@ -31,6 +31,25 @@ export function formatDate(iso: string | null | undefined): string {
   });
 }
 
+/**
+ * Returns a human-readable relative date label.
+ * - Today    → "Hôm nay" / "Today"
+ * - Yesterday→ "Hôm qua" / "Yesterday"
+ * - Older    → short "dd/MM" (no year — same month context assumed)
+ */
+export function formatRelativeDate(iso: string | null | undefined, lang = 'vi'): string {
+  if (!iso) return '—';
+  const parts = iso.split('T')[0].split('-').map(Number);
+  if (parts.length < 3 || parts.some(isNaN)) return '—';
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  const now = new Date();
+  const today     = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 86_400_000);
+  if (d.getTime() === today.getTime())     return lang === 'vi' ? 'Hôm nay'  : 'Today';
+  if (d.getTime() === yesterday.getTime()) return lang === 'vi' ? 'Hôm qua'  : 'Yesterday';
+  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+}
+
 export function formatDateTime(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString('vi-VN', {

@@ -1,0 +1,34 @@
+appId: com.knp.tappypos
+name: "BARM 16 Staff performance + my work ops smoke test (ORDER_VIEW_ALL + MY_WORK features)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+# staffPerformance is in "Khách & Nhân viên" (expanded by default)
+- tapOn:
+    id: "more-config-staffPerformance"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+- tapOn:
+    text: "›"
+    optional: true
+- tapOn:
+    text: "‹"
+    optional: true
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+# mywork is in "Vận hành" (collapsed by default — expand first)
+- tapOn:
+    id: "more-section-ops"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "more-config-mywork"
+- tapOn:
+    id: "more-config-mywork"
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

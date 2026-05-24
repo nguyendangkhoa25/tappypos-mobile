@@ -1,0 +1,28 @@
+appId: com.knp.tappypos
+name: "BARM 08 Revenue report — KPI tabs, total revenue visible (DASHBOARD/REVENUE feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-report"
+- assertNotVisible: "500"
+
+- assertVisible:
+    id: "report-total-revenue"
+
+- tapOn:
+    text: "Chi phí"
+    optional: true
+- assertNotVisible: "500"
+
+- tapOn:
+    text: "Doanh thu"
+    optional: true
+- assertVisible:
+    id: "report-total-revenue"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

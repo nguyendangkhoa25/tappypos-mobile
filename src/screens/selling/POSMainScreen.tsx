@@ -1,11 +1,13 @@
 import { ActivityIndicator, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { useShallow } from 'zustand/react/shallow';
 import { shopConfigApi } from '../../services/api';
 import { useSellingStore } from '../../store/sellingStore';
 import { useFeatureCheck } from '../../hooks/useFeature';
 import { useCartStore } from '../../store/cartStore';
 import { POSScreen } from '../pos/POSScreen';
-import { BarberServiceScreen } from './BarberServiceScreen';
+import { BeautyServiceScreen } from './BeautyServiceScreen';
+import { FnBServiceScreen } from './FnBServiceScreen';
 import { TableGridScreen } from './TableGridScreen';
 import { ScanScreen } from '../scan/ScanScreen';
 import { OrderListScreen } from '../orders/OrderListScreen';
@@ -18,7 +20,7 @@ const FB_TABLE_CODES = ['RESTAURANT', 'COFFEE_SHOP', 'PUB', 'PUB_SEAFOOD', 'PUB_
 export function POSMainScreen(props: SellingScreenProps<'POSMain'>) {
   const { activeView } = useSellingStore();
   const has = useFeatureCheck();
-  const tableId = useCartStore((s) => s.tableId);
+  const { tableId, isTakeaway } = useCartStore(useShallow((s) => ({ tableId: s.tableId, isTakeaway: s.isTakeaway })));
 
   const { data, isLoading } = useQuery({
     queryKey: ['shopConfig'],
@@ -41,9 +43,9 @@ export function POSMainScreen(props: SellingScreenProps<'POSMain'>) {
 
   const code = data?.shopTypeCode ?? '';
 
-  // F&B shops with table management: show grid unless a table is already selected
+  // F&B shops with table management: show FnBServiceScreen when a table is selected OR takeaway mode is active
   if (FB_TABLE_CODES.includes(code) && has('TABLE_SERVICE')) {
-    if (tableId) return <POSScreen {...props} />;
+    if (tableId || isTakeaway) return <FnBServiceScreen {...props} />;
     return <TableGridScreen />;
   }
 
@@ -51,6 +53,6 @@ export function POSMainScreen(props: SellingScreenProps<'POSMain'>) {
   if (SCAN_SHOP_CODES.includes(code)) return <ScanScreen />;
   if (['BARBER_SHOP', 'BARBER_SHOP_MEN', 'HAIR_SALON', 'NAIL_SHOP',
        'LASH_PMU_STUDIO', 'SPA_SHOP', 'MASSAGE_SHOP', 'BEAUTY_CLINIC',
-       'MAKEUP_STUDIO'].includes(code)) return <BarberServiceScreen {...props} />;
+       'MAKEUP_STUDIO'].includes(code)) return <BeautyServiceScreen {...props} />;
   return <POSScreen {...props} />;
 }

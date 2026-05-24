@@ -326,7 +326,7 @@ export function Step4Screen({ navigation }: OnboardingScreenProps<'Step4'>) {
                   {tables.length > 5 && (
                     <View className="px-4 py-2">
                       <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>
-                        +{tables.length - 5} bàn nữa
+                        +{tables.length - 5} {t('onboarding.step4.moreTables')}
                       </Text>
                     </View>
                   )}

@@ -1,0 +1,74 @@
+appId: com.knp.tappypos
+name: "BARM 02 Customer CRUD — create walk-in customer, view detail, clean up (CUSTOMER feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-customers"
+- assertVisible: "Khách hàng"
+
+# Pre-cleanup: delete test customer if it exists from a prior run
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Barber Test Maestro"
+- tapOn: "Khách hàng"
+- tapOn:
+    id: "customer-row-0"
+    optional: true
+- tapOn:
+    id: "customer-detail-edit-btn"
+    optional: true
+- tapOn:
+    text: "Xoá khách hàng"
+    optional: true
+- tapOn:
+    text: "Xác nhận"
+    optional: true
+- tapOn:
+    text: "‹"
+    optional: true
+
+# Clear search
+- tapOn:
+    id: "customer-search-input"
+- eraseText: 50
+- tapOn: "Khách hàng"
+
+# Create new customer
+- tapOn:
+    id: "customer-add-fab"
+- assertVisible: "Thêm khách hàng"
+
+- tapOn:
+    id: "customer-name-input"
+- inputText: "Barber Test Maestro"
+
+- tapOn:
+    id: "customer-phone-input"
+- inputText: ${NEW_CUSTOMER_PHONE}
+
+- tapOn:
+    id: "customer-save-btn"
+- assertVisible: "Khách hàng"
+
+# Verify new customer appears
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Barber Test Maestro"
+- hideKeyboard
+- assertVisible: "Barber Test Maestro"
+
+# Open detail
+- tapOn:
+    id: "customer-row-0"
+- assertVisible: "Barber Test Maestro"
+- assertNotVisible: "500"
+
+- tapOn:
+    text: "‹"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

@@ -55,12 +55,18 @@ export function NotificationScreen() {
     mutationFn: (id: string) => notificationApi.markRead(id),
     onMutate: (id) => {
       setLocalReadIds((prev) => new Set([...prev, id]));
+      // Optimistically decrement the bell badge immediately
+      qc.setQueryData<number>(['notification-unread-count'], (old) => Math.max(0, (old ?? 0) - 1));
     },
     onError: (_err, id) => {
       setLocalReadIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+      qc.invalidateQueries({ queryKey: ['notification-unread-count'] });
       showErrorAlert(_err);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notification-unread-count'] });
+    },
   });
 
   const markAllMutation = useMutation({
@@ -68,12 +74,18 @@ export function NotificationScreen() {
     onMutate: () => {
       const unreadIds = (data?.content ?? []).filter((n) => !n.isRead).map((n) => n.id);
       setLocalReadIds((prev) => new Set([...prev, ...unreadIds]));
+      // Optimistically zero the bell badge immediately
+      qc.setQueryData(['notification-unread-count'], 0);
     },
     onError: (_err, _v, _ctx) => {
       setLocalReadIds(new Set());
+      qc.invalidateQueries({ queryKey: ['notification-unread-count'] });
       showErrorAlert(_err);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notification-unread-count'] });
+    },
   });
 
   const handleMarkAllRead = () => {
@@ -93,9 +105,18 @@ export function NotificationScreen() {
     return n.type.startsWith(filter);
   };
 
-  const notifications = (data?.content ?? []).filter(typeFilter);
+  const allNotifications = data?.content ?? [];
+  const notifications = allNotifications.filter(typeFilter);
   const totalUnread = data?.totalUnread ?? 0;
   const hasUnread = notifications.some((n) => !n.isRead && !localReadIds.has(n.id));
+
+  // Count per chip (cross-count: each chip shows how many would appear if tapped)
+  const filterCounts = useMemo<Record<string, number>>(() => ({
+    '':      allNotifications.length,
+    UNREAD:  allNotifications.filter((n) => !n.isRead && !localReadIds.has(n.id)).length,
+    ORDER:   allNotifications.filter((n) => n.type.startsWith('ORDER')).length,
+    SYSTEM:  allNotifications.filter((n) => n.type.startsWith('SYSTEM')).length,
+  }), [allNotifications, localReadIds]);
 
   const renderMarkAllHeader = () => {
     if (!hasUnread) return null;
@@ -162,7 +183,7 @@ export function NotificationScreen() {
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: insets.top + 12, paddingBottom: 0 }}
       >
-        <View className="flex-row items-center justify-between mb-3">
+        <View className="flex-row items-center justify-between mb-0.5">
           <View className="flex-row items-center gap-2">
             <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-1">
               <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
@@ -177,7 +198,7 @@ export function NotificationScreen() {
             )}
           </View>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-2`}>{t('notifications.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mb-2 mt-0.5`}>{t('notifications.hint')}</Text>
         {/* Filter chips */}
         <FlatList
           horizontal
@@ -187,14 +208,20 @@ export function NotificationScreen() {
           contentContainerStyle={{ paddingBottom: 10, gap: 8 }}
           renderItem={({ item: f }) => {
             const active = filter === f.key;
+            const count  = filterCounts[f.key] ?? 0;
             return (
               <TouchableOpacity
                 onPress={() => setFilter(f.key)}
-                className={`px-4 py-1.5 rounded-full border ${active ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
+                className={`flex-row items-center gap-1.5 px-3.5 py-1.5 rounded-full border ${active ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
               >
                 <Text className={`${typo.caption} font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                   {t(`notifications.${f.labelKey}`)}
                 </Text>
+                {allNotifications.length > 0 && (
+                  <View className={`rounded-full px-1.5 py-0.5 min-w-[18px] items-center ${active ? 'bg-white/25' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                    <Text className={`${typo.captionBold} ${active ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>{count}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             );
           }}
@@ -220,7 +247,7 @@ export function NotificationScreen() {
           keyExtractor={(n) => n.id}
           renderItem={renderItem}
           ListHeaderComponent={renderMarkAllHeader}
-          contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + 16 }}
+          contentContainerStyle={{ padding: 4, paddingTop: 12, paddingBottom: insets.bottom + 16 }}
           refreshControl={<RefreshControl refreshing={isManualRefreshing} onRefresh={onRefresh} tintColor="#059669" />}
         />
       )}

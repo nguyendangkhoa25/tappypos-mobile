@@ -114,6 +114,19 @@ export function getBackendCode(shopTypeCode: string | null | undefined): string 
   return BACKEND_CODE_MAP[shopTypeCode] ?? shopTypeCode;
 }
 
+/**
+ * Groups that are fully supported in the current release.
+ * Unsupported groups are shown in the UI (grayed out, collapsed) so users
+ * know they are coming — but cannot be selected.
+ */
+export const SUPPORTED_GROUPS = new Set([
+  'FOOD', 'DRINKS', 'PUB', 'GROCERY', 'BEAUTY', 'GOLD',
+]);
+
+export function isGroupSupported(groupId: string): boolean {
+  return SUPPORTED_GROUPS.has(groupId);
+}
+
 export const FB_BACKEND_CODES = new Set([
   'RESTAURANT', 'COFFEE_SHOP', 'FOOD_BEVERAGE',
   'PUB', 'PUB_SEAFOOD', 'PUB_GOAT', 'PUB_BEEF',

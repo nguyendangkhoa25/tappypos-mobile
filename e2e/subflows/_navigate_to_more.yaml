@@ -6,4 +6,6 @@ appId: com.knp.tappypos
 
 - tapOn:
     id: "tab-more"
-- assertVisible: "Khác"
+# Assert a tile that is always present (text "Khác" is inside a non-accessible Pressable)
+- assertVisible:
+    id: "more-config-products"

@@ -1,0 +1,33 @@
+appId: com.knp.tappypos
+name: "BARM 09 Notifications — list renders, open entry (NOTIFICATION feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+# Expand "Vận hành" section (collapsed by default)
+- tapOn:
+    id: "more-section-ops"
+- waitForAnimationToEnd
+# Wait for section items to render
+- assertVisible:
+    id: "more-config-mywork"
+# Scroll down to bring notifications row into view, then tap
+- scroll
+- tapOn:
+    id: "more-config-notifications"
+- assertVisible: "Thông báo"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+- tapOn:
+    id: "notification-row-0"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+    optional: true
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

@@ -40,7 +40,7 @@ export function DisplayScreen({ navigation }: SettingsScreenProps<'Display'>) {
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
       >
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
@@ -48,10 +48,10 @@ export function DisplayScreen({ navigation }: SettingsScreenProps<'Display'>) {
             {t('settings.displaySettings.title')}
           </Text>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('settings.displaySettings.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('settings.displaySettings.hint')}</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 16 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, gap: 16 }}>
         {/* Theme */}
         <View className="bg-white dark:bg-gray-800 rounded-2xl p-4">
           <Text className={`${typo.captionBold} text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3`}>
@@ -149,7 +149,7 @@ export function DisplayScreen({ navigation }: SettingsScreenProps<'Display'>) {
                       : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
                   }`}
                 >
-                  <Text style={{ fontSize: 28 }}>{item.flag}</Text>
+                  <Text className={typo.heading}>{item.flag}</Text>
                   <Text
                     className={`${typo.caption} font-medium mt-1 ${
                       selected ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'

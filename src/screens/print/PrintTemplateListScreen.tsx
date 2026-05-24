@@ -70,13 +70,19 @@ export function PrintTemplateListScreen({ navigation }: PrintTemplateScreenProps
         className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4"
         style={{ paddingTop: insets.top + 12, paddingBottom: 12 }}
       >
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mb-0.5">
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3">
             <MaterialCommunityIcons name="chevron-left" size={26} color="#4f46e5" />
           </TouchableOpacity>
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('printTemplates.title')}</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('PrintTemplateCreate')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <MaterialCommunityIcons name="plus" size={24} color="#4f46e5" />
+          </TouchableOpacity>
         </View>
-        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-1 ml-9`}>{t('printTemplates.hint')}</Text>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('printTemplates.hint')}</Text>
       </View>
 
       {isError ? (
@@ -94,7 +100,7 @@ export function PrintTemplateListScreen({ navigation }: PrintTemplateScreenProps
           showsVerticalScrollIndicator={false}
           data={templates}
           keyExtractor={(t) => t.id}
-          contentContainerStyle={{ padding: 16, gap: 10 }}
+          contentContainerStyle={{ padding: 4, gap: 10 }}
           refreshing={isLoading}
           onRefresh={refetch}
           renderItem={({ item, index }) => (

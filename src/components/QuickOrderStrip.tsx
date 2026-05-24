@@ -26,10 +26,10 @@ const MAX_PINNED = 5;
 type PinnedProduct = { id: string; name: string; price: number };
 type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CARD';
 
-const PAYMENT_OPTS: { key: PaymentMethod; icon: string; label: string }[] = [
-  { key: 'CASH', icon: 'cash', label: 'Tiền mặt' },
-  { key: 'BANK_TRANSFER', icon: 'bank-transfer', label: 'Chuyển khoản' },
-  { key: 'CARD', icon: 'credit-card-outline', label: 'Thẻ' },
+const PAYMENT_OPTS: { key: PaymentMethod; icon: string; labelKey: string }[] = [
+  { key: 'CASH',          icon: 'cash',                labelKey: 'pos.cash' },
+  { key: 'BANK_TRANSFER', icon: 'bank-transfer',       labelKey: 'pos.transfer' },
+  { key: 'CARD',          icon: 'credit-card-outline', labelKey: 'pos.card' },
 ];
 
 async function loadPinned(): Promise<PinnedProduct[] | null> {
@@ -127,7 +127,7 @@ function QuickCheckoutSheet({ product, onClose, onSuccess }: CheckoutSheetProps)
           >
             <MaterialCommunityIcons name="minus" size={20} color="#374151" />
           </TouchableOpacity>
-          <Text className="text-2xl font-bold text-gray-900 dark:text-gray-100 w-10 text-center">{qty}</Text>
+          <Text className={`${typo.heading} font-bold text-gray-900 dark:text-gray-100 w-10 text-center`}>{qty}</Text>
           <TouchableOpacity
             onPress={() => setQty((q) => q + 1)}
             className="w-10 h-10 rounded-full bg-indigo-600 items-center justify-center"
@@ -170,7 +170,7 @@ function QuickCheckoutSheet({ product, onClose, onSuccess }: CheckoutSheetProps)
                 color={payment === opt.key ? '#4f46e5' : '#9ca3af'}
               />
               <Text className={`${typo.label} mt-0.5 ${payment === opt.key ? 'text-indigo-600' : 'text-gray-500'}`}>
-                {opt.label}
+                {t(opt.labelKey)}
               </Text>
             </TouchableOpacity>
           ))}

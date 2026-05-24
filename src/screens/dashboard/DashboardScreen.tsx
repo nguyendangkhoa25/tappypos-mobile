@@ -33,6 +33,7 @@ import { useTypography } from '../../hooks/useTypography';
 import { useUserStore } from '../../store/userStore';
 import { usePrivacyStore } from '../../store/privacyStore';
 import { useFeatureCheck } from '../../hooks/useFeature';
+import { SectionHeader, RankRow, RANK_ICONS } from '../../components/RankCard';
 import type { HomeScreenProps } from '../../types/navigation';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -86,26 +87,15 @@ function getChartAllowed(preset: KpiPreset): ChartGranularity[] {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const PRESETS: { key: KpiPreset; label: string }[] = [
-  { key: 'today',     label: 'Hôm nay' },
-  { key: 'yesterday', label: 'Hôm qua' },
-  { key: 'month',     label: 'Tháng này' },
+// Period preset keys (labels resolved at runtime via t())
+const PRESET_KEYS: KpiPreset[] = ['today', 'yesterday', 'month'];
+const MORE_OPTION_KEYS: { key: KpiPreset; icon: string }[] = [
+  { key: 'week',      icon: '🗓️' },
+  { key: 'lastMonth', icon: '📆' },
+  { key: 'year',      icon: '📊' },
+  { key: 'lastYear',  icon: '📋' },
 ];
-
-const MORE_OPTIONS: { key: KpiPreset; label: string }[] = [
-  { key: 'week',      label: '📅 Tuần này' },
-  { key: 'lastMonth', label: '📆 Tháng trước' },
-  { key: 'year',      label: '📈 Năm này' },
-  { key: 'lastYear',  label: '📉 Năm ngoái' },
-];
-
-const MORE_PRESET_LABEL: Partial<Record<KpiPreset, string>> = {
-  week:      'Tuần này',
-  lastMonth: 'Tháng trước',
-  year:      'Năm này',
-  lastYear:  'Năm ngoái',
-  custom:    'Tùy chỉnh',
-};
+const MORE_PRESET_KEYS: KpiPreset[] = ['week', 'lastMonth', 'year', 'lastYear', 'custom'];
 
 const STATUS_COLORS: Record<string, string> = {
   COMPLETED:  '#059669',
@@ -115,7 +105,6 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const RANK_COLORS = ['#f59e0b', '#9ca3af', '#b45309'];
-const RANK_ICONS  = ['🥇', '🥈', '🥉'];
 
 const SERVICE_SHOP_CODES = [
   'BARBER_SHOP', 'BARBER_SHOP_MEN', 'HAIR_SALON', 'NAIL_SHOP',
@@ -181,53 +170,6 @@ const AlertCard = memo(function AlertCard({
   );
 });
 
-const SectionHeader = memo(function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) {
-  const typo = useTypography();
-  return (
-    <View className="flex-row items-center justify-between mb-3">
-      <Text className={`${typo.labelBold} text-gray-800 dark:text-gray-100`}>{title}</Text>
-      {onSeeAll && (
-        <TouchableOpacity onPress={onSeeAll}>
-          <Text className={`${typo.caption} font-medium text-indigo-600 dark:text-indigo-400`}>Xem tất cả</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-});
-
-const RankRow = memo(function RankRow({
-  rank, name, sub, value, loading, isHidden, onPress,
-}: {
-  rank: number; name: string; sub: string; value: number; loading: boolean; isHidden: boolean; onPress?: () => void;
-}) {
-  const typo = useTypography();
-  if (loading) return <Skeleton height={44} borderRadius={12} style={{ marginBottom: 8 }} />;
-  const inner = (
-    <>
-      <Text className={`${typo.caption} mr-3 w-6 text-center`}>{rank <= 3 ? RANK_ICONS[rank - 1] : `${rank}`}</Text>
-      <View className="flex-1">
-        <Text className={`${typo.label} text-gray-800 dark:text-gray-100`} numberOfLines={1}>{name}</Text>
-        <Text className={`${typo.caption} text-gray-400 dark:text-gray-500`}>{sub}</Text>
-      </View>
-      <Text className={`${typo.labelBold} text-gray-800 dark:text-gray-100`}>
-        {isHidden ? '••••' : formatVnd(value)}
-      </Text>
-    </>
-  );
-  if (onPress) {
-    return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7} className="flex-row items-center py-2.5 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
-        {inner}
-      </TouchableOpacity>
-    );
-  }
-  return (
-    <View className="flex-row items-center py-2.5 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
-      {inner}
-    </View>
-  );
-});
-
 const QuickAction = memo(function QuickAction({
   icon, label, onPress,
 }: {
@@ -281,13 +223,14 @@ function MorePeriodsSheet({
   onSelect: (key: KpiPreset) => void;
 }) {
   const typo = useTypography();
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={{ flex: 1, justifyContent: 'flex-end' }}>
         <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
         <View className="bg-white dark:bg-gray-900 rounded-t-3xl px-5 pt-5 pb-10">
           <View className="flex-row items-center justify-between mb-5">
-            <Text className={`${typo.section} text-gray-900 dark:text-white`}>Khoảng thời gian khác</Text>
+            <Text className={`${typo.section} text-gray-900 dark:text-white`}>{t('dashboard.morePeriods')}</Text>
             <TouchableOpacity
               onPress={onClose}
               className="w-8 h-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700"
@@ -296,7 +239,7 @@ function MorePeriodsSheet({
             </TouchableOpacity>
           </View>
 
-          {MORE_OPTIONS.map(({ key, label }) => {
+          {MORE_OPTION_KEYS.map(({ key, icon }) => {
             const active = preset === key;
             return (
               <TouchableOpacity
@@ -307,7 +250,7 @@ function MorePeriodsSheet({
                 }`}
               >
                 <Text className={`${typo.label} ${active ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
-                  {label}
+                  {icon} {t(`dashboard.${key}`)}
                 </Text>
                 {active && <Text className={`${typo.label} text-white`}>✓</Text>}
               </TouchableOpacity>
@@ -316,22 +259,47 @@ function MorePeriodsSheet({
 
           <View className="mt-4">
             <Text className={`${typo.captionBold} text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3`}>
-              Tùy chỉnh
+              {t('dashboard.custom')}
             </Text>
-            <View className="flex-row gap-3 mb-3">
-              <View className="flex-1 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 bg-gray-50 dark:bg-gray-800">
-                <DatePickerInput value={customFrom} onChange={onCustomFrom} placeholder="Từ ngày" maximumDate={new Date()} />
-              </View>
-              <View className="flex-1 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 bg-gray-50 dark:bg-gray-800">
-                <DatePickerInput value={customTo} onChange={onCustomTo} placeholder="Đến ngày" maximumDate={new Date()} />
-              </View>
-            </View>
+            {(() => {
+              const toMinDate = customFrom.length === 10 ? new Date(customFrom + 'T00:00:00') : undefined;
+              const toDisabled = customFrom.length < 10;
+              return (
+                <View className="flex-row gap-3 mb-3">
+                  <View className="flex-1 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 bg-gray-50 dark:bg-gray-800">
+                    <DatePickerInput
+                      value={customFrom}
+                      onChange={onCustomFrom}
+                      placeholder={t('dashboard.customFrom')}
+                      maximumDate={new Date()}
+                    />
+                  </View>
+                  <View
+                    pointerEvents={toDisabled ? 'none' : 'auto'}
+                    style={toDisabled ? { opacity: 0.4 } : undefined}
+                    className={`flex-1 border rounded-xl px-3 py-2.5 ${
+                      toDisabled
+                        ? 'border-gray-100 dark:border-gray-700 bg-gray-100 dark:bg-gray-700/50'
+                        : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
+                    }`}
+                  >
+                    <DatePickerInput
+                      value={customTo}
+                      onChange={onCustomTo}
+                      placeholder={t('dashboard.customTo')}
+                      minimumDate={toMinDate}
+                      maximumDate={new Date()}
+                    />
+                  </View>
+                </View>
+              );
+            })()}
             {customFrom.length === 10 && customTo.length === 10 && (
               <TouchableOpacity
                 onPress={() => onSelect('custom')}
                 className="bg-primary rounded-2xl py-3.5 items-center"
               >
-                <Text className={`${typo.labelBold} text-white`}>Áp dụng khoảng này</Text>
+                <Text className={`${typo.labelBold} text-white`}>{t('dashboard.applyRange')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -549,30 +517,30 @@ export function DashboardScreen({ navigation }: Props) {
     const goMore = (screen: string) => navigation.getParent()?.navigate('More', { screen } as any);
 
     if (isPawnShop) return [
-      { icon: '📋', label: 'HĐ mới',     onPress: goSelling },
-      { icon: '🔄', label: 'Gia hạn',    onPress: goSelling },
-      { icon: '💸', label: 'Ghi chi',    onPress: goExpenses },
-      { icon: '👥', label: 'Khách hàng', onPress: goCustomers },
+      { icon: '📋', label: t('dashboard.quickAction.newContract'),   onPress: goSelling },
+      { icon: '🔄', label: t('dashboard.quickAction.renew'),         onPress: goSelling },
+      { icon: '💸', label: t('dashboard.quickAction.recordExpense'), onPress: goExpenses },
+      { icon: '👥', label: t('dashboard.quickAction.customers'),     onPress: goCustomers },
     ];
     if (isServiceShop) return [
-      { icon: '🛎️', label: 'Tạo dịch vụ', onPress: goSelling },
-      { icon: '📅', label: 'Lịch hẹn',   onPress: () => goMore('AppointmentList') },
-      { icon: '💸', label: 'Ghi chi',    onPress: goExpenses },
-      { icon: '👥', label: 'Khách hàng', onPress: goCustomers },
+      { icon: '🛎️', label: t('dashboard.quickAction.createService'),  onPress: goSelling },
+      { icon: '📅', label: t('dashboard.quickAction.appointments'),   onPress: () => goMore('AppointmentList') },
+      { icon: '💸', label: t('dashboard.quickAction.recordExpense'),  onPress: goExpenses },
+      { icon: '👥', label: t('dashboard.quickAction.customers'),      onPress: goCustomers },
     ];
     if (isFbShop) return [
-      { icon: '🍽️', label: 'Chọn bàn',   onPress: goSelling },
-      { icon: '🧾', label: 'Tạo đơn',    onPress: goSelling },
-      { icon: '💸', label: 'Ghi chi',    onPress: goExpenses },
-      { icon: '👥', label: 'Khách hàng', onPress: goCustomers },
+      { icon: '🍽️', label: t('dashboard.quickAction.selectTable'),   onPress: goSelling },
+      { icon: '🧾', label: t('dashboard.quickAction.newOrder'),       onPress: goSelling },
+      { icon: '💸', label: t('dashboard.quickAction.recordExpense'),  onPress: goExpenses },
+      { icon: '👥', label: t('dashboard.quickAction.customers'),      onPress: goCustomers },
     ];
     return [
-      { icon: '🧾', label: 'Tạo đơn',   onPress: goSelling },
-      { icon: '📦', label: 'Nhập hàng', onPress: () => goMore('Inventory') },
-      { icon: '💸', label: 'Ghi chi',   onPress: goExpenses },
-      { icon: '👥', label: 'Khách',     onPress: goCustomers },
+      { icon: '🧾', label: t('dashboard.quickAction.newOrder'),        onPress: goSelling },
+      { icon: '📦', label: t('dashboard.quickAction.importInventory'), onPress: () => goMore('Inventory') },
+      { icon: '💸', label: t('dashboard.quickAction.recordExpense'),   onPress: goExpenses },
+      { icon: '👥', label: t('dashboard.quickAction.customersShort'),  onPress: goCustomers },
     ];
-  }, [isPawnShop, isServiceShop, isFbShop, navigation]);
+  }, [isPawnShop, isServiceShop, isFbShop, navigation, t]);
 
   const onRefresh = useCallback(async () => {
     setIsManualRefreshing(true);
@@ -599,10 +567,15 @@ export function DashboardScreen({ navigation }: Props) {
       >
         {/* ── Subscription top banner ── */}
         {subBanner && (
-          <View className={`${subBanner.color} px-5 py-2.5 flex-row items-center gap-2`}>
+          <TouchableOpacity
+            className={`${subBanner.color} px-5 py-2.5 flex-row items-center gap-2`}
+            activeOpacity={0.85}
+            onPress={() => navigation.getParent()?.navigate('More', { screen: 'Subscription' } as any)}
+          >
             <MaterialCommunityIcons name="alert-circle-outline" size={16} color="white" />
             <Text className={`${typo.captionBold} text-white flex-1`}>{subBanner.text}</Text>
-          </View>
+            <MaterialCommunityIcons name="chevron-right" size={16} color="white" />
+          </TouchableOpacity>
         )}
 
         {/* ── Hero gradient header ── */}
@@ -624,7 +597,7 @@ export function DashboardScreen({ navigation }: Props) {
                   className="absolute -top-1 -right-1 bg-red-500 rounded-full items-center justify-center"
                   style={{ minWidth: 16, height: 16, paddingHorizontal: 3 }}
                 >
-                  <Text className="text-white font-bold" style={{ fontSize: 9, lineHeight: 12 }}>
+                  <Text className="text-white font-bold" style={{ fontSize: Math.round(typo.displaySize / 4), lineHeight: Math.round(typo.displaySize / 3) }}>
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </Text>
                 </View>
@@ -696,10 +669,10 @@ export function DashboardScreen({ navigation }: Props) {
 
         {/* ── Period selector ── */}
         {(() => {
-          const moreActive = preset in MORE_PRESET_LABEL;
+          const moreActive = MORE_PRESET_KEYS.includes(preset);
           const allTabs: { key: KpiPreset | 'more'; label: string }[] = [
-            ...PRESETS,
-            { key: 'more', label: 'Tùy chỉnh' },
+            ...PRESET_KEYS.map((key) => ({ key, label: t(`dashboard.${key}`) })),
+            { key: 'more', label: t('dashboard.custom') },
           ];
           return (
             <>
@@ -731,11 +704,11 @@ export function DashboardScreen({ navigation }: Props) {
               {moreActive && (
                 <View className="mx-4 mb-3 flex-row items-center bg-indigo-50 dark:bg-indigo-950 rounded-xl px-3 py-2 gap-2">
                   <Ionicons name="time-outline" size={14} color="#6366f1" />
-                  <Text className={`${typo.caption} text-indigo-400 dark:text-indigo-500`}>Đang xem:</Text>
+                  <Text className={`${typo.caption} text-indigo-400 dark:text-indigo-500`}>{t('dashboard.viewingLabel')}</Text>
                   <Text className={`${typo.captionBold} flex-1 text-indigo-600 dark:text-indigo-300`}>
                     {preset === 'custom'
                       ? `${customFrom} → ${customTo}`
-                      : MORE_PRESET_LABEL[preset]}
+                      : t(`dashboard.${preset}`)}
                   </Text>
                   <TouchableOpacity
                     onPress={() => handlePresetChange('today')}
@@ -752,23 +725,23 @@ export function DashboardScreen({ navigation }: Props) {
         {/* ── Shop-type stat cards ── */}
         {isPawnShop && has('PAWN') && (
           <View className="mx-4 mb-4 flex-row gap-2">
-            <StatCard icon="📋" label="Đang cầm" value={pawnKpis?.totalPawnedCount ?? 0} color="#4f46e5" loading={pawnKpisLoading} />
-            <StatCard icon="⚠️" label="Quá hạn" value={overdueCount} color={overdueCount > 0 ? '#ef4444' : '#9ca3af'} loading={pawnKpisLoading} />
-            <StatCard icon="📅" label="Đáo hạn HN" value={dueTodayCount} color={dueTodayCount > 0 ? '#f59e0b' : '#9ca3af'} loading={pawnKpisLoading} />
+            <StatCard icon="📝" label={t('dashboard.stat.activePawns')} value={pawnKpis?.totalPawnedCount ?? 0} color="#4f46e5" loading={pawnKpisLoading} />
+            <StatCard icon="⚠️" label={t('dashboard.stat.overdue')} value={overdueCount} color={overdueCount > 0 ? '#ef4444' : '#9ca3af'} loading={pawnKpisLoading} />
+            <StatCard icon="📅" label={t('dashboard.stat.dueToday')} value={dueTodayCount} color={dueTodayCount > 0 ? '#f59e0b' : '#9ca3af'} loading={pawnKpisLoading} />
           </View>
         )}
         {isServiceShop && has('APPOINTMENT') && (
           <View className="mx-4 mb-4 flex-row gap-2">
-            <StatCard icon="📅" label="Lịch hẹn HN" value={apptTotal} color="#4f46e5" loading={apptsLoading} />
-            <StatCard icon="✅" label="Đã check-in" value={apptCheckedIn} color="#059669" loading={apptsLoading} />
-            <StatCard icon="⏳" label="Chờ đến" value={apptUpcoming} color="#f59e0b" loading={apptsLoading} />
+            <StatCard icon="📅" label={t('dashboard.stat.appointmentsToday')} value={apptTotal} color="#4f46e5" loading={apptsLoading} />
+            <StatCard icon="✅" label={t('dashboard.stat.checkedIn')} value={apptCheckedIn} color="#059669" loading={apptsLoading} />
+            <StatCard icon="⏳" label={t('dashboard.stat.upcoming')} value={apptUpcoming} color="#f59e0b" loading={apptsLoading} />
           </View>
         )}
         {isFbShop && has('TABLE_SERVICE') && (
           <View className="mx-4 mb-4 flex-row gap-2">
-            <StatCard icon="🍽️" label={`Bàn dùng ${tablesOccupied}/${tablesTotal}`} value={tablesOccupied} color={tablesOccupied > 0 ? '#4f46e5' : '#9ca3af'} loading={tablesLoading} />
-            <StatCard icon="🪑" label="Bàn trống" value={tablesTotal - tablesOccupied} color="#059669" loading={tablesLoading} />
-            <StatCard icon="🧾" label="Đơn hôm nay" value={kpiData?.orderCount ?? 0} color="#6b7280" loading={kpiLoading} />
+            <StatCard icon="🍽️" label={t('dashboard.stat.tablesOccupied', { occupied: tablesOccupied, total: tablesTotal })} value={tablesOccupied} color={tablesOccupied > 0 ? '#4f46e5' : '#9ca3af'} loading={tablesLoading} />
+            <StatCard icon="🪑" label={t('dashboard.stat.tablesEmpty')} value={tablesTotal - tablesOccupied} color="#059669" loading={tablesLoading} />
+            <StatCard icon="🧾" label={t('dashboard.stat.ordersToday')} value={kpiData?.orderCount ?? 0} color="#6b7280" loading={kpiLoading} />
           </View>
         )}
 
@@ -777,7 +750,7 @@ export function DashboardScreen({ navigation }: Props) {
           <AlertCard
             icon="🚨"
             bg="bg-red-500"
-            text={`${overdueCount} hợp đồng quá hạn — cần xử lý ngay`}
+            text={t('dashboard.alert.pawnOverdue', { count: overdueCount })}
             onDismiss={() => dismiss('pawn-overdue')}
           />
         )}
@@ -785,7 +758,7 @@ export function DashboardScreen({ navigation }: Props) {
           <AlertCard
             icon="📦"
             bg="bg-amber-500"
-            text={`${stockAlertCount} sản phẩm ${outStock > 0 ? 'hết hàng / ' : ''}sắp hết — nhấn để xem`}
+            text={t('dashboard.alert.lowStock', { count: stockAlertCount, prefix: outStock > 0 ? t('dashboard.alert.lowStockOutPrefix') : '' })}
             onPress={() => navigation.getParent()?.navigate('More', { screen: 'Inventory' } as any)}
             onDismiss={() => dismiss('stock')}
           />
@@ -854,7 +827,7 @@ export function DashboardScreen({ navigation }: Props) {
         {has('CUSTOMER') && (topCustomersLoading || topCustomers.length > 0) && (
           <View className="mx-4 mb-4 bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
             <SectionHeader
-              title="🥇🥈🥉 Khách hàng thân thiết"
+              title="👑 Khách hàng thân thiết"
               onSeeAll={() => navigation.navigate('CustomerList')}
             />
             {topCustomersLoading ? (
@@ -895,11 +868,11 @@ export function DashboardScreen({ navigation }: Props) {
                   key={e.name + i}
                   rank={i + 1}
                   name={e.name}
-                  sub={`${e.orderCount} đơn · Nhân viên`}
+                  sub={t('dashboard.stat.employeeOrderCount', { count: e.orderCount })}
                   value={e.revenue}
                   loading={false}
                   isHidden={isHidden}
-                  onPress={e.userId ? () => navigation.getParent()?.navigate('More', { screen: 'StaffForm', params: { userId: e.userId } } as any) : undefined}
+                  onPress={e.userId ? () => navigation.getParent()?.navigate('More', { screen: 'StaffDetail', params: { userId: String(e.userId) } } as any) : undefined}
                 />
               ))
             )}
@@ -966,7 +939,11 @@ export function DashboardScreen({ navigation }: Props) {
         preset={preset}
         customFrom={customFrom}
         customTo={customTo}
-        onCustomFrom={setCustomFrom}
+        onCustomFrom={(v) => {
+          setCustomFrom(v);
+          // If the new "from" is after the current "to", reset "to" so it never goes backwards
+          if (v && customTo && v > customTo) setCustomTo('');
+        }}
         onCustomTo={setCustomTo}
         onSelect={handlePresetChange}
       />

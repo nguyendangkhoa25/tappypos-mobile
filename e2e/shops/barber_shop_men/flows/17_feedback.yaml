@@ -1,0 +1,40 @@
+appId: com.knp.tappypos
+name: "BARM 17 Feedback submission — category + content + submit (FEEDBACK feature)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+# Feedback is in "Liên hệ & Hỗ trợ" section (near bottom — scroll 4x)
+- scroll
+- scroll
+- scroll
+- scroll
+- tapOn:
+    id: "more-section-support"
+- waitForAnimationToEnd
+- scroll
+- tapOn:
+    id: "more-config-support"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# Select category (BUG = "Báo lỗi")
+- tapOn:
+    id: "feedback-category-bug"
+
+- tapOn:
+    id: "feedback-content-input"
+- inputText: "E2E test barber shop feedback - please ignore"
+
+# Scroll up to dismiss keyboard (keyboardDismissMode=on-drag),
+# then the submit button in the header is fully accessible
+- scroll
+- tapOn:
+    id: "feedback-submit-btn"
+- waitForAnimationToEnd
+- assertNotVisible: "500"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

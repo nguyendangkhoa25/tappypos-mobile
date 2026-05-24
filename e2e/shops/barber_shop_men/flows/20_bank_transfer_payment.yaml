@@ -1,0 +1,55 @@
+appId: com.knp.tappypos
+name: "BARM 20 Bank transfer payment + walk-in customer (BANK_TRANSFER payment method)"
+---
+
+- runFlow: ../../../subflows/_login.yaml
+
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Tạo đơn mới"
+
+# Add a barber service
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible:
+    id: "barber-cart-count"
+
+# Open checkout
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Xem giỏ hàng"
+
+# Default payment is Cash
+- assertVisible:
+    id: "checkout-payment-cash"
+
+# Switch to Bank Transfer
+- tapOn:
+    id: "checkout-payment-bank_transfer"
+- assertVisible:
+    id: "checkout-payment-bank_transfer"
+- assertNotVisible: "500"
+
+# Switch back to Cash and complete
+- tapOn:
+    id: "checkout-payment-cash"
+- tapOn:
+    id: "barber-place-order-btn"
+
+# Dismiss rebook modal
+- tapOn:
+    id: "barber-rebook-skip"
+    optional: true
+
+- assertVisible: "Đặt hàng thành công!"
+
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Tạo đơn mới"
+
+- tapOn:
+    id: "tab-home"
+- assertVisible: "Doanh thu"

@@ -88,14 +88,10 @@ export function InterestCalculatorScreen({ navigation }: Props) {
           </TouchableOpacity>
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>{t('interestCalc.title')}</Text>
         </View>
+        <Text className={`${typo.caption} text-gray-500 dark:text-gray-400 mt-0.5`}>{t('interestCalc.subtitle')}</Text>
       </View>
 
-      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: bottom + 32 }}>
-        <View className="flex-row items-start bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100 mb-3">
-          <Text className="text-indigo-400 mr-2 mt-0.5">💡</Text>
-          <Text className={`${typo.caption} text-indigo-600 leading-4 flex-1`}>{t('interestCalc.hint')}</Text>
-        </View>
-
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 4, paddingBottom: bottom + 32 }}>
         <View className="flex-row items-start bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 mb-3">
           <MaterialCommunityIcons name="information-outline" size={16} color="#d97706" style={{ marginTop: 1, marginRight: 6 }} />
           <Text className={`${typo.caption} flex-1 text-amber-700 leading-4`}>{t('interestCalc.disclaimer')}</Text>

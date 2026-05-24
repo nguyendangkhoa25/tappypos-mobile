@@ -56,12 +56,10 @@ export function InventoryListScreen() {
 
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
+  // Always load all items — filter client-side so counts are always accurate
   const { data: inventory = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ['inventory', filter],
-    queryFn: () =>
-      inventoryApi
-        .list(filter === 'all' ? undefined : { status: filter as 'low' | 'out' })
-        .then((r) => r.data.data),
+    queryKey: ['inventory'],
+    queryFn: () => inventoryApi.list(undefined).then((r) => r.data.data),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
@@ -93,14 +91,20 @@ export function InventoryListScreen() {
     onError: showErrorAlert,
   });
 
-
-  const displayedInventory = search.trim()
+  // Search-filtered full list — counts are derived from this (cross-count pattern)
+  const searchFiltered = search.trim()
     ? inventory.filter((i) => i.productName.toLowerCase().includes(search.toLowerCase()))
     : inventory;
 
-  const totalSku = displayedInventory.length;
-  const lowCount = displayedInventory.filter((i) => getStatus(i) === 'low').length;
-  const outCount = displayedInventory.filter((i) => getStatus(i) === 'out').length;
+  const totalSku = searchFiltered.length;
+  const lowCount = searchFiltered.filter((i) => getStatus(i) === 'low').length;
+  const outCount = searchFiltered.filter((i) => getStatus(i) === 'out').length;
+
+  // Apply status chip filter for the actual list
+  const displayedInventory =
+    filter === 'low' ? searchFiltered.filter((i) => getStatus(i) === 'low') :
+    filter === 'out' ? searchFiltered.filter((i) => getStatus(i) === 'out') :
+    searchFiltered;
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-900">
@@ -148,18 +152,26 @@ export function InventoryListScreen() {
         </View>
         {/* Filter chips */}
         <View className="flex-row gap-2 pb-3">
-          {(['all', 'low', 'out'] as const).map((f) => {
+          {([
+            { key: 'all' as const, labelKey: 'filterAll', count: totalSku },
+            { key: 'low' as const, labelKey: 'filterLow', count: lowCount },
+            { key: 'out' as const, labelKey: 'filterOut', count: outCount },
+          ]).map(({ key: f, labelKey, count }) => {
             const active = filter === f;
-            const labelKey = f === 'all' ? 'filterAll' : f === 'low' ? 'filterLow' : 'filterOut';
             return (
               <TouchableOpacity
                 key={f}
                 onPress={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-full border ${active ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
+                className={`flex-row items-center gap-1.5 px-3.5 py-1.5 rounded-full border ${active ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}
               >
                 <Text className={`${typo.caption} font-medium ${active ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                   {t(`inventory.${labelKey}`)}
                 </Text>
+                {inventory.length > 0 && (
+                  <View className={`rounded-full px-1.5 py-0.5 min-w-[18px] items-center ${active ? 'bg-white/25' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                    <Text className={`${typo.captionBold} ${active ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>{count}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             );
           })}
@@ -185,7 +197,7 @@ export function InventoryListScreen() {
           showsVerticalScrollIndicator={false}
           data={displayedInventory}
           keyExtractor={(i) => i.productId}
-          contentContainerStyle={{ padding: 16, gap: 10 }}
+          contentContainerStyle={{ padding: 4, gap: 10 }}
           refreshing={isManualRefreshing}
           onRefresh={onRefresh}
           renderItem={({ item }) => {
