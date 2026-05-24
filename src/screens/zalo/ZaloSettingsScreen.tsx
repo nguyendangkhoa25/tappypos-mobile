@@ -5,9 +5,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { zaloOaApi } from '../../services/api';
 import { useTypography } from '../../hooks/useTypography';
-import type { SettingsScreenProps } from '../../types/navigation';
+import type { MoreScreenProps } from '../../types/navigation';
 
-type Props = SettingsScreenProps<'ZaloSettings'>;
+// Registered in both SettingsStack and MoreStack; MoreStack is the primary path.
+type Props = MoreScreenProps<'ZaloSettings'>;
 
 export function ZaloSettingsScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();

@@ -69,7 +69,16 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
     mutationFn: async ({ method, amountPaid, note }: { method: PaymentMethod; amountPaid?: number; note?: string }) => {
       // Offline path
       if (isOffline) {
-        addOrder({ items, paymentMethod: method, total, tableId, tableLabel });
+        addOrder({
+          items,
+          paymentMethod: method,
+          total,
+          tableId,
+          tableLabel,
+          customerId: selectedCustomer?.type === 'managed' ? selectedCustomer.id : undefined,
+          customerName: selectedCustomer?.type === 'guest' ? selectedCustomer.name : undefined,
+          notes: note || undefined,
+        });
         return { orderId: '', orderNumber: t('pos.savedOffline'), total, savedOffline: true as const, method };
       }
 
@@ -123,7 +132,17 @@ export function CheckoutScreen({ navigation }: POSScreenProps<'Checkout'>) {
     if (!promoInput.trim()) return;
     setApplyingPromo(true);
     try {
-      setPromo(promoInput.trim(), 0);
+      // Validate the promo code via the API by initialising a temp cart, adding
+      // the current items, and applying the promotion. This gives real-time
+      // feedback on whether the code is valid and what discount it yields.
+      const initRes = await cartApi.init();
+      const tempCartId = initRes.data.data.cartId;
+      for (const item of items) {
+        await cartApi.addItem(tempCartId, item.productId, item.quantity, item.price);
+      }
+      const promoRes = await cartApi.applyPromo(tempCartId, promoInput.trim());
+      const discount = promoRes.data.data.totalDiscount ?? 0;
+      setPromo(promoInput.trim(), discount);
     } catch (err) {
       showErrorAlert(err);
     } finally {

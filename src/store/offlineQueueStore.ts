@@ -10,6 +10,11 @@ export type OfflineOrder = {
   total: number;
   tableId?: number | null;
   tableLabel?: string | null;
+  tip?: number;
+  customerId?: string;
+  customerName?: string;
+  loyaltyPointsToRedeem?: number;
+  notes?: string;
   createdAt: string;
   status: 'pending' | 'syncing' | 'error';
   errorMessage?: string;

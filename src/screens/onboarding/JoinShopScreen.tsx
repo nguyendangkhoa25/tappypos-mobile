@@ -290,12 +290,12 @@ export function JoinShopScreen({ navigation }: OnboardingScreenProps<'JoinShop'>
           </View>
         )}
 
-        {/* Expired notice */}
+        {/* Expired notice — distinct from "invalid code" so the user knows to request a fresh one */}
         {expired && preview && (
           <View className="mt-5 bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 flex-row items-center gap-3">
             <MaterialCommunityIcons name="clock-alert-outline" size={22} color="#ef4444" />
             <Text className="text-red-600 dark:text-red-400 font-medium flex-1">
-              {t('onboarding.joinShop.invalidCode')}
+              {t('onboarding.joinShop.expiredCode')}
             </Text>
           </View>
         )}

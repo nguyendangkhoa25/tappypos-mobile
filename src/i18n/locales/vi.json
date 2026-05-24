@@ -711,7 +711,8 @@
     "scanQr": "Quét mã để thanh toán",
     "doubleTapFullscreen": "Nhấn đúp để phóng to",
     "autoClose": "Tự đóng sau {{seconds}}s",
-    "searchResults": "Kết quả tìm kiếm"
+    "searchResults": "Kết quả tìm kiếm",
+    "requestFailed": "Yêu cầu thất bại. Vui lòng thử lại."
   },
   "datePickerModal": {
     "weekdays": "T2,T3,T4,T5,T6,T7,CN",
@@ -1180,7 +1181,15 @@
     "cancelReasonHint": "Chọn lý do thường gặp hoặc nhập lý do khác",
     "cancelReasonPlaceholder": "Lý do hủy (không bắt buộc)...",
     "cancelConfirmBtn": "Xác nhận hủy đơn",
-    "cancelChips": ["Khách đổi ý", "Khách không đến", "Đặt nhầm", "Hết hàng", "Đơn trùng", "Lỗi thanh toán", "Đơn thử"],
+    "cancelChips": [
+      "Khách đổi ý",
+      "Khách không đến",
+      "Đặt nhầm",
+      "Hết hàng",
+      "Đơn trùng",
+      "Lỗi thanh toán",
+      "Đơn thử"
+    ],
     "voidButton": "Huỷ hoàn tiền",
     "voiding": "Đang huỷ...",
     "voidSuccess": "Đã huỷ đơn",
@@ -1192,7 +1201,13 @@
     "voidReasonHint": "Chọn lý do hoặc nhập lý do khác",
     "voidReasonPlaceholder": "Lý do (bắt buộc)...",
     "voidConfirmBtn": "Xác nhận huỷ hoàn tiền",
-    "voidChips": ["Sai số tiền", "Sai khách hàng", "Sai sản phẩm", "Đơn trùng", "Đơn thử"],
+    "voidChips": [
+      "Sai số tiền",
+      "Sai khách hàng",
+      "Sai sản phẩm",
+      "Đơn trùng",
+      "Đơn thử"
+    ],
     "receiptTotalLabel": "TỔNG THANH TOÁN",
     "receiptCustomer": "Khách: {{name}}",
     "receiptTime": "Thời gian",
@@ -2000,7 +2015,8 @@
       "timeEstimate": "⏱ Khoảng 3–5 phút",
       "cta": "Bắt đầu",
       "joinShop": "Tham gia cửa hàng",
-      "joinShopHint": "Bạn có mã mời từ chủ cửa hàng?"
+      "joinShopHint": "Bạn có mã mời từ chủ cửa hàng?",
+      "ctaHint": "Tôi muốn tạo cửa hàng của riêng mình"
     },
     "joinShop": {
       "title": "Tham gia cửa hàng",
@@ -2009,6 +2025,7 @@
       "codeLabel": "Mã mời",
       "lookingUp": "Đang tìm kiếm...",
       "invalidCode": "Mã không hợp lệ hoặc đã hết hạn",
+      "expiredCode": "Mã đã hết hạn. Hãy nhờ chủ cửa hàng tạo mã mới.",
       "shopCard": {
         "role": "Vai trò",
         "expires": "Còn hiệu lực",

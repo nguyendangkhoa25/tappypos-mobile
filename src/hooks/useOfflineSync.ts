@@ -68,6 +68,11 @@ export function useOfflineSync() {
           amountPaid: order.total,
           tableId: order.tableId ?? undefined,
           tableLabel: order.tableLabel ?? undefined,
+          tip: order.tip,
+          customerId: order.customerId,
+          customerName: order.customerName,
+          loyaltyPointsToRedeem: order.loyaltyPointsToRedeem,
+          notes: order.notes,
         });
         removeOrder(order.id);
         synced++;

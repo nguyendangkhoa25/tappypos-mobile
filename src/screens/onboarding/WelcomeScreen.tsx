@@ -137,6 +137,9 @@ export function WelcomeScreen({ navigation }: OnboardingScreenProps<'Welcome'>) 
           <Text className={`${typo.labelBold} text-white`}>
             {t('onboarding.welcome.cta')}
           </Text>
+          <Text className="text-emerald-100 dark:text-emerald-200 text-xs mt-0.5 opacity-90">
+            {t('onboarding.welcome.ctaHint')}
+          </Text>
         </TouchableOpacity>
 
         {/* Secondary: Join existing shop */}
