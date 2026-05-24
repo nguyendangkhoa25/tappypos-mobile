@@ -12,10 +12,8 @@
       "distribution": "internal"
     },
     "staging": {
-      "distribution": "internal",
-      "ios": {
-        "simulator": false
-      },
+      "distribution": "store",
+      "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://staging.tappypos.vn/api",
         "EXPO_PUBLIC_APP_VARIANT": "staging"
@@ -31,6 +29,13 @@
   },
   "submit": {
     "production": {
+      "ios": {
+        "appleId": "nguyendangkhoa25@gmail.com",
+        "ascAppId": "6770521683",
+        "appleTeamId": "JANRX6WR5A"
+      }
+    },
+    "staging": {
       "ios": {
         "appleId": "nguyendangkhoa25@gmail.com",
         "ascAppId": "6770521683",
