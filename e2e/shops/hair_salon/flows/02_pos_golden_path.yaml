@@ -1,0 +1,61 @@
+appId: com.knp.tappypos
+name: "HAIR 02 POS golden path — hair service card → add to order → checkout → success"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Sell tab (BeautyServiceScreen shows hair services) ────────────
+# If ORDERS view was persisted from a previous run, switch back to POS view.
+- tapOn:
+    id: "tab-sell"
+- tapOn:
+    text: "Bán hàng"
+    optional: true
+- assertVisible: "Tạo đơn mới"
+
+# ── HP01: First service card is visible ──────────────────────────────────────
+# barber-service-<name> testID — tap the first one rendered (regex match)
+- tapOn:
+    id: "barber-service-.*"
+
+# ── HP02: AddItemSheet appears ───────────────────────────────────────────────
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+
+# ── HP03: CartBar appears with count 1 ───────────────────────────────────────
+- assertVisible:
+    id: "barber-cart-count"
+
+# ── HP04: Add a second service ────────────────────────────────────────────────
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+
+# ── HP05: Open CheckoutSheet ──────────────────────────────────────────────────
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Xem giỏ hàng"
+
+# ── HP06: Open PaymentSheet and place order ───────────────────────────────────
+- tapOn:
+    id: "barber-place-order-btn"
+- assertVisible: "Thu tiền"
+- tapOn: "Thu tiền & Hoàn tất"
+
+# ── HP07: Order success screen ───────────────────────────────────────────────
+- assertVisible: "Đặt hàng thành công!"
+- assertVisible:
+    id: "order-success-number"
+
+# ── HP08: Start a new order ───────────────────────────────────────────────────
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Tạo đơn mới"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

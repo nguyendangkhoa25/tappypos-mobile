@@ -1,0 +1,43 @@
+appId: com.knp.tappypos
+name: "HAIR 10 Notifications — list renders, filter chips visible (NOTIFICATION feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Notifications via More → Vận hành section ───────────────────
+# "Vận hành" (ops) section starts collapsed — scroll to it and tap header to expand.
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- scrollUntilVisible:
+    element:
+      id: "more-section-ops"
+- tapOn:
+    id: "more-section-ops"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "more-config-notifications"
+- tapOn:
+    id: "more-config-notifications"
+- assertVisible: "Thông báo"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── NT01: Tap first notification if any exist ─────────────────────────────────
+- tapOn:
+    id: "notification-row-0"
+    optional: true
+- assertNotVisible: "500"
+# Back if went into detail
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── NT02: Filter tabs are visible ─────────────────────────────────────────────
+- assertVisible:
+    text: "Tất cả"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

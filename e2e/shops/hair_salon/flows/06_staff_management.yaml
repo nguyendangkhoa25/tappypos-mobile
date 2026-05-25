@@ -1,0 +1,69 @@
+appId: com.knp.tappypos
+name: "HAIR 06 Staff management — list, add (USER feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+# The test staff account "hair_nv_test_e2e" is deleted via API in run_all.sh
+# before this flow runs (to avoid username-conflict errors from previous runs).
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Staff list via More ──────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-staff"
+- assertVisible: "Nhân viên"
+- assertNotVisible: "500"
+- waitForAnimationToEnd
+# Analytics section is expanded by default — scroll past it to reach staff rows
+- scroll
+
+# ── ST01: At least one staff row exists (the owner account) ──────────────────
+- assertVisible:
+    id: "staff-row-0"
+
+# ── ST02: Open form to add a new staff member ────────────────────────────────
+- tapOn:
+    id: "staff-add-fab"
+# t('staff.add') = "Thêm nhân viên" — wait for form screen before filling fields
+- assertVisible:
+    text: "Thêm nhân viên"
+
+# ── ST03: Fill in required fields ────────────────────────────────────────────
+- tapOn:
+    id: "staff-fullname"
+# ASCII-only name avoids any potential Vietnamese diacritic input edge cases.
+- inputText: "Nhan Vien Hair Test"
+
+- tapOn:
+    id: "staff-username"
+- waitForAnimationToEnd
+# keyboardType="default" + autoCorrect={false} (fixed in source — was phone-pad
+# which prevents typeText from firing onChangeText for non-numeric chars).
+# No explicit blur step needed: onChangeText fires for each character typed,
+# and waitForAnimationToEnd gives React time to process all state updates
+# before handleCreate() reads username.trim().
+- inputText: "hair_nv_test_e2e"
+- waitForAnimationToEnd
+
+# ── ST04: Save ────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "staff-save-btn"
+
+# After save, CredentialModal (React Native Modal) appears — this is a TRUE Modal
+# that removes background elements from the accessibility tree, including tab-home.
+# Must dismiss it BEFORE navigating anywhere.
+# onClose: setCreateCredModal(false) + showToast(staff.createSuccess) + navigation.goBack()
+# Use testID="staff-cred-close-btn" on the TouchableOpacity (line 334 of StaffFormScreen).
+# tapOn: text: "Đã ghi lại" is unreliable — iOS may merge text into the parent
+# button's accessibility label, making the StaticText invisible to Maestro.
+# assertVisible polls up to 60s, giving the API call time to complete.
+- assertVisible:
+    id: "staff-cred-close-btn"
+- tapOn:
+    id: "staff-cred-close-btn"
+
+- assertNotVisible: "500"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

@@ -1,0 +1,36 @@
+appId: com.knp.tappypos
+name: "HAIR 12 Settings — shop info, POS config (SHOP_INFO feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → Cấu hình cửa hàng section ────────────────────────────
+# "Cấu hình cửa hàng" (shopConfig) section starts collapsed — scroll + tap header to expand.
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- scroll
+- tapOn:
+    id: "more-section-shopConfig"
+- waitForAnimationToEnd
+
+# ── SC01: Shop Info ───────────────────────────────────────────────────────────
+- tapOn:
+    id: "more-config-shopInfo"
+- assertVisible: "Thông tin cửa hàng"
+- assertNotVisible: "500"
+# Navigate back by tapping the More tab (pops to MoreMain)
+- tapOn:
+    id: "tab-more"
+
+# ── SC02: POS Configuration ───────────────────────────────────────────────────
+- tapOn:
+    id: "more-config-posConfig"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    id: "tab-more"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

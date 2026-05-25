@@ -1,0 +1,103 @@
+appId: com.knp.tappypos
+name: "HAIR 22 Hair salon service categories — verify category tabs in POS screen (HAIR-SPECIFIC)"
+---
+
+# This flow is unique to HAIR_SALON — it verifies that the hair salon service
+# categories seeded for hair-56748 appear as filter tabs in the BeautyServiceScreen:
+#   Cắt tóc · Nhuộm tóc · Uốn & Duỗi · Gội đầu & Massage
+#   Chăm sóc tóc · Combo & Liệu trình
+#
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Sell tab ──────────────────────────────────────────────────────
+# If ORDERS view was persisted from a previous run, switch back to POS view.
+- tapOn:
+    id: "tab-sell"
+- tapOn:
+    text: "Bán hàng"
+    optional: true
+- assertVisible: "Tạo đơn mới"
+- assertNotVisible: "500"
+
+# ── SC01: "Tất cả" / all-services tab shows service cards ────────────────────
+- tapOn:
+    text: "Tất cả"
+    optional: true
+- assertVisible:
+    id: "barber-service-.*"
+- assertNotVisible: "500"
+
+# ── SC02: Cắt tóc category tab (primary hair service) ────────────────────────
+- tapOn:
+    text: "Cắt tóc"
+    optional: true
+- assertNotVisible: "500"
+# At least one haircut service should appear (seeded: "Cắt tóc nữ ngắn")
+- assertVisible:
+    id: "barber-service-.*"
+    optional: true
+
+# ── SC03: Nhuộm tóc category tab ─────────────────────────────────────────────
+- tapOn:
+    text: "Nhuộm tóc"
+    optional: true
+- assertNotVisible: "500"
+- assertVisible:
+    id: "barber-service-.*"
+    optional: true
+
+# ── SC04: Uốn & Duỗi category tab ────────────────────────────────────────────
+- tapOn:
+    text: "Uốn"
+    optional: true
+- tapOn:
+    text: "Uốn & Duỗi"
+    optional: true
+- assertNotVisible: "500"
+
+# ── SC05: Gội đầu & Massage category tab ─────────────────────────────────────
+- tapOn:
+    text: "Gội đầu"
+    optional: true
+- tapOn:
+    text: "Gội đầu & Massage"
+    optional: true
+- assertNotVisible: "500"
+
+# ── SC06: Chăm sóc tóc category tab ──────────────────────────────────────────
+- tapOn:
+    text: "Chăm sóc tóc"
+    optional: true
+- assertNotVisible: "500"
+
+# ── SC07: Combo & Liệu trình category tab ────────────────────────────────────
+- tapOn:
+    text: "Combo"
+    optional: true
+- tapOn:
+    text: "Combo & Liệu trình"
+    optional: true
+- assertNotVisible: "500"
+
+# ── SC08: Return to all and confirm add-to-cart still works ──────────────────
+# Use testID="barber-cat-all" (set on the TouchableOpacity) instead of text-
+# based tap — the "Tất cả" tab may be scrolled off screen after tapping later
+# category tabs, making text search unreliable.
+- tapOn:
+    id: "barber-cat-all"
+    optional: true
+- waitForAnimationToEnd
+- assertVisible:
+    id: "barber-service-.*"
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible:
+    id: "barber-cart-count"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

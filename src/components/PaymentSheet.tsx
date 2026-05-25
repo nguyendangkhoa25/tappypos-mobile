@@ -184,6 +184,7 @@ export function PaymentSheet({
             {visibleMethods.map(({ value, labelKey, icon }) => (
               <TouchableOpacity
                 key={value}
+                testID={`payment-method-${value}`}
                 className={`flex-1 flex-row items-center justify-center gap-x-1.5 py-3 rounded-xl border ${
                   method === value
                     ? 'bg-indigo-600 border-indigo-600'

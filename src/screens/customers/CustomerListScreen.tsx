@@ -321,6 +321,7 @@ export function CustomerListScreen({ navigation }: Props) {
 
       {/* Toggle bar */}
       <TouchableOpacity
+        testID="customer-analytics-toggle"
         onPress={() => setAnalyticsOpen((o) => !o)}
         className="flex-row items-center justify-between bg-white dark:bg-gray-800 rounded-2xl px-4 py-3 border border-gray-100 dark:border-gray-700 mb-3"
         activeOpacity={0.8}

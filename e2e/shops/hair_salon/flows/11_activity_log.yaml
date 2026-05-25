@@ -1,0 +1,53 @@
+appId: com.knp.tappypos
+name: "HAIR 11 Activity log — list renders, filter tabs (ACTIVITY_LOG feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Activity Log via More → Cài đặt & Bảo mật section ───────────
+# "Cài đặt & Bảo mật" (settings) section starts collapsed — scroll to it then expand.
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- scrollUntilVisible:
+    element:
+      id: "more-section-settings"
+- tapOn:
+    id: "more-section-settings"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "more-config-settings"
+- tapOn:
+    id: "more-config-settings"
+# SettingsScreen title is "Bảo mật" (security/account settings)
+- assertVisible: "Bảo mật"
+- tapOn:
+    id: "settings-activity-log"
+- assertVisible: "Nhật ký hoạt động"
+- assertNotVisible: "500"
+
+# ── AL01: First entry is visible ──────────────────────────────────────────────
+- assertVisible:
+    id: "activity-entry-0"
+    optional: true
+
+# ── AL02: Filter by ORDER action ─────────────────────────────────────────────
+- tapOn:
+    text: "Đơn hàng"
+    optional: true
+- assertNotVisible: "500"
+
+# ── AL03: Filter by product action ───────────────────────────────────────────
+- tapOn:
+    text: "Sản phẩm"
+    optional: true
+- assertNotVisible: "500"
+
+# ── AL04: Reset filter ────────────────────────────────────────────────────────
+- tapOn:
+    text: "Tất cả"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

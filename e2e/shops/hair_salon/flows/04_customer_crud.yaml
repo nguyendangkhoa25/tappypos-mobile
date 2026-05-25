@@ -1,0 +1,69 @@
+appId: com.knp.tappypos
+name: "HAIR 04 Customer CRUD — create, view, delete (CUSTOMER feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Customer list via More (people section, always expanded) ──────
+# run_all.sh pre-04 deletes "Hair Test Maestro" via API before this flow runs.
+# No in-flow pre-cleanup needed — avoids keyboard-obscuring-FAB issues.
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-customers"
+- assertVisible: "Khách hàng"
+
+# ── CR01: Open form to create a new customer ──────────────────────────────────
+# No keyboard showing at this point — safe to tap FAB directly.
+- tapOn:
+    id: "customer-add-fab"
+- waitForAnimationToEnd
+- assertVisible: "Thêm khách hàng"
+
+- tapOn:
+    id: "customer-name"
+- inputText: "Hair Test Maestro"
+
+- tapOn:
+    id: "customer-phone"
+- inputText: "0933000099"
+
+- tapOn:
+    id: "customer-save-btn"
+# showToast("Đã thêm khách hàng") + navigation.goBack() → CustomerListScreen.
+- assertVisible: "Khách hàng"
+
+# ── Verify customer appears in list ───────────────────────────────────────────
+# CustomerListScreen opens with analyticsOpen=true. The TrendChart inside the
+# analytics section intercepts vertical scroll gestures, causing scrollUntilVisible
+# to time out after 60s. Fix: collapse analytics first (removing the chart from
+# the DOM), then search to get a single filtered result — no scrolling needed.
+- tapOn:
+    id: "customer-analytics-toggle"
+- waitForAnimationToEnd
+- tapOn:
+    id: "customer-search-input"
+- inputText: "Hair Test Maestro"
+- pressKey: Enter
+- waitForAnimationToEnd
+# Analytics collapsed + single search result → customer-row-0 is visible.
+- assertVisible:
+    id: "customer-row-0"
+- tapOn:
+    id: "customer-row-0"
+- assertVisible: "Hair Test Maestro"
+- assertVisible:
+    id: "customer-delete-btn"
+
+# ── Delete the test customer ──────────────────────────────────────────────────
+- tapOn:
+    id: "customer-delete-btn"
+# FriendlyAlert: cancel → alert-btn-cancel | Xóa khách hàng → alert-btn-1
+- tapOn:
+    id: "alert-btn-1"
+    optional: true
+# showToast("Đã xóa khách hàng") + navigation.goBack() → CustomerListScreen.
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

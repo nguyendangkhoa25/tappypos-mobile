@@ -331,7 +331,7 @@ function CredentialModal({
               </View>
             </View>
           </View>
-          <TouchableOpacity onPress={onClose} activeOpacity={0.8} className="bg-indigo-600 rounded-2xl py-3.5 items-center">
+          <TouchableOpacity testID="staff-cred-close-btn" onPress={onClose} activeOpacity={0.8} className="bg-indigo-600 rounded-2xl py-3.5 items-center">
             <Text className={`${typo.labelBold} text-white`}>{t('staff.gotIt')}</Text>
           </TouchableOpacity>
         </View>
@@ -983,7 +983,7 @@ export function StaffFormScreen({ route, navigation }: Props) {
             {isEdit ? t('staff.edit') : t('staff.add')}
           </Text>
           {!isSelf && (
-            <TouchableOpacity onPress={isEdit ? () => updateMutation.mutate() : handleCreate} disabled={isSaving} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <TouchableOpacity testID="staff-save-btn" onPress={isEdit ? () => updateMutation.mutate() : handleCreate} disabled={isSaving} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               {isSaving ? <ActivityIndicator size="small" color="#4f46e5" /> : (
                 <Text className={`${typo.labelBold} text-indigo-600 dark:text-indigo-400`}>{t('common.save')}</Text>
               )}
@@ -1095,8 +1095,10 @@ export function StaffFormScreen({ route, navigation }: Props) {
                       onChangeText={setUsername}
                       placeholder={t('staff.usernamePlaceholder')}
                       placeholderTextColor="#9ca3af"
-                      keyboardType="phone-pad"
+                      keyboardType="default"
                       autoCapitalize="none"
+                      autoCorrect={false}
+                      spellCheck={false}
                       className={`flex-1 ${typo.inputSize} text-gray-900 dark:text-white`}
                     />
                     {tenantSuffix ? (

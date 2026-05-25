@@ -1,14 +1,39 @@
 appId: com.knp.tappypos
 ---
 
-# Creates 2 PENDING orders via the backend send-to-kitchen API.
-# Runs BEFORE _login.yaml so there is no active app session.
-# Uses /auth/login/force to override any leftover session from a previous test run,
-# then logs out at the end so the app can log in cleanly.
+# ⚠️  THIS SUBFLOW IS DEPRECATED — DO NOT USE IN NEW FLOWS ⚠️
 #
-# Two-step evalScript pattern avoids the Maestro bug where ${VAR} + any } in the
-# same script causes "Missing close quote" (Maestro wraps evalScript in a regex
-# that greedily matches ${ ... } and the first } inside an object literal closes it).
+# Maestro evalScript uses GraalVM JS (js-language-24.2.0.jar). The GraalJsHttp
+# class exposes:
+#
+#   post(String url, Map<String, Object> options)
+#
+# GraalVM cannot automatically coerce a plain JS object literal `{}` to
+# Java's `Map<String, Object>` without an explicit `targetTypeMapping` in the
+# HostAccess configuration — and Maestro's GraalJsEngine does not configure this.
+# As a result, `http.post(url, { body: '...', headers: {...} })` silently fails
+# (the exception is swallowed by Maestro) and makes zero TCP connections.
+#
+# Confirmed by: `netcat -l 6868` receiving 0 bytes while evalScript "runs" in 0ms.
+#
+# REPLACEMENT: Use curl in a shell pre-seed script (run_all.sh) before running
+# flow 03. See:
+#   e2e/shops/hair_salon/run_all.sh   (seed_pending_orders function)
+#   e2e/shops/spa_shop/run_all.sh
+#   e2e/shops/makeup_studio/run_all.sh
+#
+# The correct 2-arg API format (for reference — still broken at GraalVM level):
+#
+#   http.post(BASE + '/auth/login/force', {
+#     body: JSON.stringify({ username: PHONE, password: PASSWORD, rememberMe: false }),
+#     headers: { 'Content-Type': 'application/json', 'X-Tenant-ID': SHOP_ID }
+#   });
+#
+# Two-step evalScript pattern explained (kept for documentation):
+# The Maestro bug where ${VAR} + any } in the same script causes
+# "Missing close quote" requires splitting into two evalScript steps:
+#   Step 1: output.xxx = "${VAR}"   (no {} object literals here)
+#   Step 2: var x = output.xxx      (no ${VAR} substitutions here, use output.xxx)
 
 # Step 1: capture env vars into output (no {} in this script)
 - evalScript: |
@@ -16,54 +41,25 @@ appId: com.knp.tappypos
     output.password = "${PASSWORD}";
     output.shopId = "${SHOP_ID}";
 
-# Step 2: force-login, seed 2 PENDING orders, then logout
+# Step 2: attempt force-login and seed — WILL NOT WORK due to GraalVM type coercion
+# Left here only to document the intended logic; use run_all.sh instead.
 - evalScript: |
     var BASE = 'http://localhost:6868/api';
     var PHONE = output.phone;
     var PASSWORD = output.password;
     var SHOP_ID = output.shopId;
 
+    // NOTE: http.post(url, optionsMap) silently fails under GraalVM.
+    // GraalJsHttp.post(String, Map<String,Object>) cannot accept a plain JS
+    // object as the second arg — GraalVM type coercion is not configured.
+    // Zero bytes reach the server; no error is thrown; Maestro reports COMPLETED.
     var loginResp = http.post(
       BASE + '/auth/login/force',
-      JSON.stringify({ username: PHONE, password: PASSWORD, rememberMe: false }),
-      { 'Content-Type': 'application/json', 'X-Tenant-ID': SHOP_ID }
+      {
+        body: JSON.stringify({ username: PHONE, password: PASSWORD, rememberMe: false }),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': SHOP_ID
+        }
+      }
     );
-    var loginBody = JSON.parse(loginResp.body);
-    if (!loginBody.data || !loginBody.data.accessToken) {
-      throw new Error('Login failed: ' + loginResp.body);
-    }
-    var token = loginBody.data.accessToken;
-
-    var H = {
-      'Content-Type': 'application/json',
-      'X-Tenant-ID': SHOP_ID,
-      'Authorization': 'Bearer ' + token
-    };
-
-    var productsResp = http.get(BASE + '/products?size=1', H);
-    var productsBody = JSON.parse(productsResp.body);
-    if (!productsBody.data || !productsBody.data.content || productsBody.data.content.length === 0) {
-      throw new Error('No products found for seeding');
-    }
-    var productId = productsBody.data.content[0].id;
-
-    function createPendingOrder(label) {
-      var cartResp = http.post(BASE + '/carts', '{}', H);
-      var cartId = JSON.parse(cartResp.body).data.cartId;
-      http.post(
-        BASE + '/carts/' + cartId + '/items',
-        JSON.stringify({ productId: productId, quantity: 1 }),
-        H
-      );
-      http.post(
-        BASE + '/carts/' + cartId + '/send-to-kitchen',
-        JSON.stringify({ tableLabel: label }),
-        H
-      );
-    }
-
-    createPendingOrder('E2E Test A');
-    createPendingOrder('E2E Test B');
-
-    // Logout so the app can log in cleanly without DEVICE_CONFLICT
-    http.post(BASE + '/auth/logout', '{}', H);

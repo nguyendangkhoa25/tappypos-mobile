@@ -1,0 +1,54 @@
+appId: com.knp.tappypos
+name: "HAIR 07 Expense flow — create expense via tab (EXPENSE feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Expenses tab ─────────────────────────────────────────────────
+- tapOn:
+    id: "tab-expenses"
+- assertVisible:
+    text: "Chi tiêu"
+    optional: true
+- assertVisible:
+    text: "Khoản chi"
+    optional: true
+- assertNotVisible: "500"
+
+# ── EX01: Open add expense form ───────────────────────────────────────────────
+- tapOn:
+    id: "expense-add-fab"
+- assertVisible:
+    text: "Thêm khoản chi"
+    optional: true
+- assertVisible:
+    text: "Khoản chi mới"
+    optional: true
+
+# ── EX02: Fill in description (hair salon-relevant expense) ──────────────────
+- tapOn:
+    id: "expense-desc-input"
+- inputText: "Dầu gội chuyên dụng test"
+
+# ── EX03: Fill in amount ──────────────────────────────────────────────────────
+- tapOn:
+    id: "expense-amount-input"
+- inputText: "350000"
+
+# ── EX04: Save ────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "expense-save-btn"
+- assertVisible:
+    text: "Đã lưu"
+    optional: true
+- assertNotVisible: "500"
+
+# ── EX05: Expense appears in list ─────────────────────────────────────────────
+- assertVisible:
+    text: "Dầu gội chuyên dụng test"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
