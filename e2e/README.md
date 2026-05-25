@@ -2,6 +2,7 @@
 
 ## Prerequisites
 
+
 ### 1. Install Maestro
 ```bash
 curl -Ls "https://get.maestro.mobile.dev" | bash
