@@ -1,0 +1,55 @@
+appId: com.knp.tappypos
+name: "HAIR 14 Order history — list, filter, detail (ORDER + ORDER_VIEW_ALL)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Order History from Dashboard ──────────────────────────────────
+- tapOn:
+    id: "tab-home"
+- tapOn:
+    text: "Đơn hàng"
+    optional: true
+- tapOn:
+    id: "dashboard-orders-btn"
+    optional: true
+
+# ── Fallback: navigate via More if dashboard shortcut unavailable ─────────────
+- assertVisible:
+    text: "Đơn hàng"
+    optional: true
+
+# ── OH01: Order list renders ─────────────────────────────────────────────────
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── OH02: First order row is accessible ──────────────────────────────────────
+- tapOn:
+    id: "order-row-0"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    id: "order-detail-back-btn"
+    optional: true
+
+# ── OH03: Filter by COMPLETED ────────────────────────────────────────────────
+- tapOn:
+    id: "order-filter-COMPLETED"
+    optional: true
+- assertNotVisible: "500"
+
+# ── OH04: Filter by CANCELLED ────────────────────────────────────────────────
+- tapOn:
+    id: "order-filter-CANCELLED"
+    optional: true
+- assertNotVisible: "500"
+
+# ── OH05: Reset filter ────────────────────────────────────────────────────────
+- tapOn:
+    id: "order-filter-ALL"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

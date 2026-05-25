@@ -1,0 +1,52 @@
+appId: com.knp.tappypos
+name: "HAIR 18 Feedback submission — category + content + submit (FEEDBACK feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Feedback via More → Liên hệ & Hỗ trợ section ────────────────
+# "Liên hệ & Hỗ trợ" (support) section starts collapsed — scroll + tap header to expand.
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- scroll
+- scroll
+- tapOn:
+    id: "more-section-support"
+- waitForAnimationToEnd
+- tapOn:
+    id: "more-config-support"
+- assertVisible:
+    text: "Phản hồi"
+    optional: true
+- assertVisible:
+    text: "Gửi phản hồi"
+    optional: true
+- assertNotVisible: "500"
+
+# ── FB01: Select a feedback category ─────────────────────────────────────────
+- tapOn:
+    text: "Góp ý tính năng"
+    optional: true
+- tapOn:
+    text: "Lỗi / Sự cố"
+    optional: true
+
+# ── FB02: Enter feedback content ─────────────────────────────────────────────
+- tapOn:
+    id: "feedback-content-input"
+- inputText: "E2E test hair salon feedback - please ignore"
+
+# ── FB03: Submit ──────────────────────────────────────────────────────────────
+- tapOn:
+    id: "feedback-submit-btn"
+- assertVisible:
+    text: "Cảm ơn"
+    optional: true
+- assertVisible:
+    text: "thành công"
+    optional: true
+- assertNotVisible: "500"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

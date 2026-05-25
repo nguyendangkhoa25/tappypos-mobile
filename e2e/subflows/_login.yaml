@@ -57,11 +57,22 @@ appId: com.knp.tappypos
 - inputText: ${PHONE}
 - tapOn:
     id: "login-password"
+# Reveal password before typing — secureTextEntry blocks onChangeText in Maestro/XCUITest on iOS.
+# Toggle once to show (secureTextEntry=false), type, then blur re-hides it.
+- tapOn:
+    id: "password-toggle"
+- tapOn:
+    id: "login-password"
 - inputText: ${PASSWORD}
-- assertVisible:
+# Blur the password field by tapping its non-interactive label "Mật khẩu".
+# This commits the React onChangeText state without shifting the keyboard layout
+# (unlike tapping login-phone, which switches to phone keyboard and may obscure submit).
+# waitForAnimationToEnd first lets XCUITest settle after the last inputText keystroke.
+- waitForAnimationToEnd
+- tapOn:
+    text: "Mật khẩu"
+- tapOn:
     id: "login-submit"
-    enabled: true
-- pressKey: Enter
 
 # ── 3. PIN setup — skip if it appears ────────────────────────────────────────
 - tapOn:

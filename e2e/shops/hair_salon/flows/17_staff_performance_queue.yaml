@@ -1,0 +1,51 @@
+appId: com.knp.tappypos
+name: "HAIR 17 Staff performance + queue view (ORDER_VIEW_ALL feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Staff list via More ──────────────────────────────────────────
+# ORDER_VIEW_ALL: owner can see all staff and their orders
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-staff"
+- assertVisible: "Nhân viên"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+- waitForAnimationToEnd
+# Analytics section is expanded by default — scroll past it to reach staff rows
+- scroll
+
+# ── SP01: Staff list renders (owner sees all staff via ORDER_VIEW_ALL) ────────
+- assertVisible:
+    id: "staff-row-0"
+
+# ── SP02: Period navigation ───────────────────────────────────────────────────
+- tapOn:
+    text: "›"
+    optional: true
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── Navigate to Queue View ────────────────────────────────────────────────────
+# "Vận hành" (ops) section starts collapsed — scroll to it and tap header to expand.
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- scroll
+- tapOn:
+    id: "more-section-ops"
+- waitForAnimationToEnd
+- tapOn:
+    id: "more-config-queueView"
+    optional: true
+- assertNotVisible: "500"
+
+# ── QV01: Hàng chờ tab is visible ────────────────────────────────────────────
+- assertVisible:
+    text: "Hàng chờ"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

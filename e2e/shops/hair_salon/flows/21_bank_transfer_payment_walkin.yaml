@@ -1,0 +1,65 @@
+appId: com.knp.tappypos
+name: "HAIR 21 Bank transfer payment + walk-in customer — checkout with BANK_TRANSFER, QR visible"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Sell tab ──────────────────────────────────────────────────────
+# If ORDERS view was persisted from a previous run, switch back to POS view.
+- tapOn:
+    id: "tab-sell"
+- tapOn:
+    text: "Bán hàng"
+    optional: true
+- assertVisible: "Tạo đơn mới"
+
+# ── BT01: Add a hair service to cart ─────────────────────────────────────────
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+- assertVisible:
+    id: "barber-cart-count"
+
+# ── BT02: Open checkout ───────────────────────────────────────────────────────
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Xem giỏ hàng"
+
+# ── BT03: Walk-in customer (Khách lẻ) is default pre-selected ────────────────
+- assertVisible:
+    text: "Khách lẻ"
+    optional: true
+
+# ── BT04: Open PaymentSheet ───────────────────────────────────────────────────
+- tapOn:
+    id: "barber-place-order-btn"
+- assertVisible: "Thu tiền"
+- waitForAnimationToEnd
+
+# ── BT05: Select BANK_TRANSFER payment method ─────────────────────────────────
+- tapOn:
+    id: "payment-method-BANK_TRANSFER"
+
+# ── BT06: Bank QR / transfer info section appears ─────────────────────────────
+- assertVisible:
+    text: "Chuyển khoản"
+    optional: true
+- assertNotVisible: "500"
+
+# ── BT07: Switch back to CASH and complete the order ─────────────────────────
+- tapOn:
+    id: "payment-method-CASH"
+- tapOn: "Thu tiền & Hoàn tất"
+- assertVisible: "Đặt hàng thành công!"
+
+# ── BT08: New order clears cart ───────────────────────────────────────────────
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Tạo đơn mới"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

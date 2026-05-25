@@ -1,0 +1,108 @@
+appId: com.knp.tappypos
+name: "HAIR 15 Appointment check-in → POS — core hair salon workflow (APPOINTMENT + POS)"
+---
+
+# This flow tests the core hair salon workflow:
+# Book appointment → check in → service POS opens → place order → success
+#
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Step 1: Create a fresh appointment ────────────────────────────────────────
+# Appointments is in the "Khách & Nhân viên" (people) section — starts expanded.
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-appointments"
+- assertVisible: "Lịch hẹn"
+
+- tapOn:
+    id: "appointment-add-fab"
+# Form title is "Đặt lịch" (appt.new translation)
+- assertVisible: "Đặt lịch"
+
+# Enter walk-in customer via CustomerPickerSheet — toggle to unmanaged (guest) mode.
+- tapOn:
+    id: "appt-customer-picker"
+- tapOn:
+    id: "appt-customer-type-toggle"
+- tapOn:
+    id: "appt-guest-name-input"
+- inputText: "Khách Hair Check-In"
+- tapOn:
+    id: "appt-guest-confirm-btn"
+
+- tapOn:
+    id: "appt-save-btn"
+# Success alert appears — tap OK (alert-btn-0) to dismiss and navigate back to list.
+# appt.saveSuccess = "Đã lưu lịch hẹn" — navigation.goBack() fires on OK tap.
+# FriendlyAlert is NOT a Modal: background tree is accessible while alert shows.
+# MUST tap alert-btn-0 (non-optional) so goBack() actually fires.
+- tapOn:
+    id: "alert-btn-0"
+# appointment-add-fab only exists on AppointmentListScreen, not AppointmentFormScreen.
+- assertVisible:
+    id: "appointment-add-fab"
+- waitForAnimationToEnd
+
+# ── Step 2: Open the appointment and check in ─────────────────────────────────
+- tapOn:
+    id: "appointment-card-0"
+- assertVisible: "Khách Hair Check-In"
+- assertVisible:
+    id: "appt-checkin-btn"
+
+- tapOn:
+    id: "appt-checkin-btn"
+
+# ── CI03: Success alert "Khách đã được check-in..." — tap "Xác nhận" to open POS ─
+- tapOn:
+    text: "Xác nhận"
+    optional: true
+
+# ── CI04: Hair service screen is open ────────────────────────────────────────
+# If ORDERS view was persisted, switch back to POS view.
+- tapOn:
+    id: "tab-sell"
+- tapOn:
+    text: "Bán hàng"
+    optional: true
+- assertVisible: "Tạo đơn mới"
+
+# ── CI05: Add a hair service and place order ──────────────────────────────────
+- tapOn:
+    id: "barber-service-.*"
+- assertVisible: "Thêm vào đơn"
+- tapOn:
+    id: "barber-add-to-order"
+
+- tapOn:
+    id: "barber-checkout-btn"
+- assertVisible: "Xem giỏ hàng"
+
+- tapOn:
+    id: "barber-place-order-btn"
+- assertVisible: "Thu tiền"
+- tapOn: "Thu tiền & Hoàn tất"
+- assertVisible: "Đặt hàng thành công!"
+- assertVisible:
+    id: "order-success-number"
+
+# ── CI06: Start new order ─────────────────────────────────────────────────────
+- tapOn:
+    id: "order-success-new"
+- assertVisible: "Tạo đơn mới"
+
+# ── CI07: Verify appointment no longer shows check-in button ─────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-appointments"
+- assertVisible: "Lịch hẹn"
+- tapOn:
+    id: "appointment-card-0"
+    optional: true
+- assertNotVisible:
+    id: "appt-checkin-btn"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

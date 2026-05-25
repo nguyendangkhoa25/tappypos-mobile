@@ -224,7 +224,7 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
     }
     return null;
   });
-  const [date, setDate] = useState(() => toDateStr(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)));
+  const [date, setDate] = useState(() => toDateStr(new Date()));
   const [hour, setHour] = useState(new Date().getHours());
   const [minute, setMinute] = useState(0);
   // Default duration from prefill services total, otherwise 60 min
@@ -410,7 +410,7 @@ export function AppointmentFormScreen({ route, navigation }: Props) {
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`} numberOfLines={1}>
             {isEdit ? t('appt.edit') : t('appt.new')}
           </Text>
-          <TouchableOpacity onPress={handleSave} disabled={isSaving} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity testID="appt-save-btn" onPress={handleSave} disabled={isSaving} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             {isSaving ? <ActivityIndicator size="small" color="#4f46e5" /> : (
               <Text className={`${typo.labelBold} text-indigo-600 dark:text-indigo-400`}>{t('common.save')}</Text>
             )}

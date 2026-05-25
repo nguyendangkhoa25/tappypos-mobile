@@ -340,7 +340,7 @@ export function CustomerFormScreen({ navigation, route }: Props) {
           <Text className={`${typo.heading} text-gray-900 dark:text-white flex-1`}>
             {isEdit ? t('customers.editCustomer') : t('customers.addCustomer')}
           </Text>
-          <TouchableOpacity onPress={handleSubmit} disabled={isPending} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity testID="customer-save-btn" onPress={handleSubmit} disabled={isPending} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             {isPending ? <ActivityIndicator size="small" color="#4f46e5" /> : (
               <Text className={`${typo.body} text-indigo-600 dark:text-indigo-400`}>{t('common.save')}</Text>
             )}

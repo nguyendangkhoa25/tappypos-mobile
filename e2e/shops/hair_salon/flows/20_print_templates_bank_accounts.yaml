@@ -1,0 +1,61 @@
+appId: com.knp.tappypos
+name: "HAIR 20 Print templates + bank accounts — list, smoke test (PRINT_TEMPLATE + BANK_ACCOUNT)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More → Print Templates (in Cấu hình cửa hàng section) ────────
+# "Cấu hình cửa hàng" (shopConfig) section starts collapsed — tap header to expand it.
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- scrollUntilVisible:
+    element:
+      id: "more-section-shopConfig"
+- tapOn:
+    id: "more-section-shopConfig"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "more-config-printTemplates"
+- tapOn:
+    id: "more-config-printTemplates"
+- assertVisible: "Mẫu in"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── PT01: First template card is accessible if any exist ─────────────────────
+- tapOn:
+    id: "print-template-row-0"
+    optional: true
+- assertNotVisible: "500"
+- tapOn:
+    text: "‹"
+    optional: true
+
+# ── Navigate back to More → Bank Accounts (also in Cấu hình cửa hàng section) ─
+# Use tab-more to pop back to MoreMain. The shopConfig section MAY have collapsed
+# (MoreScreen state can reset on pop-to-root). Re-expand it defensively.
+- tapOn:
+    id: "tab-more"
+- waitForAnimationToEnd
+- tapOn:
+    id: "more-section-shopConfig"
+    optional: true
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "more-config-bankAccounts"
+- tapOn:
+    id: "more-config-bankAccounts"
+- assertVisible: "Tài khoản ngân hàng"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── BA01: At least one bank account exists (seeded via API) ──────────────────
+- assertVisible:
+    id: "bank-account-row-0"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

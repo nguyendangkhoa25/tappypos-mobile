@@ -329,6 +329,7 @@ export function CustomerPickerSheet({
               </Text>
             </View>
             <Switch
+              testID="appt-customer-type-toggle"
               value={isUnmanaged}
               onValueChange={handleToggleUnmanaged}
               trackColor={{ false: '#d1d5db', true: '#a5b4fc' }}
@@ -382,6 +383,7 @@ export function CustomerPickerSheet({
                     </Text>
                   )}
                   <TextInput
+                    testID="appt-guest-name-input"
                     className="flex-1 text-gray-800 dark:text-gray-100"
                     style={{ fontSize: typo.inputFontSizePx, lineHeight: typo.inputFontSizePx + 4, padding: 0 }}
                     placeholder={selectedHonorific ? t('customers.namePlaceholder') : t('pos.guestNamePlaceholder')}
@@ -402,6 +404,7 @@ export function CustomerPickerSheet({
                   )}
                 </View>
                 <TouchableOpacity
+                  testID="appt-guest-confirm-btn"
                   className="px-4 py-2.5 rounded-xl bg-primary"
                   onPress={confirmGuest}
                 >

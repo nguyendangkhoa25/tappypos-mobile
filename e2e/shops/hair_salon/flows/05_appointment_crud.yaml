@@ -1,0 +1,88 @@
+appId: com.knp.tappypos
+name: "HAIR 05 Appointment CRUD — create, cancel (APPOINTMENT feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+# Old "Khách Hair Test" appointments are deleted via API in run_all.sh
+# before this flow runs (keeps appointment-card-0 unambiguous).
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Appointments via More ────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- tapOn:
+    id: "more-config-appointments"
+- assertVisible: "Lịch hẹn"
+- assertNotVisible: "500"
+
+# ── AP01: Open form to create appointment ────────────────────────────────────
+- tapOn:
+    id: "appointment-add-fab"
+# Form title is "Đặt lịch" (appt.new translation)
+- assertVisible: "Đặt lịch"
+
+# ── AP02: Enter walk-in customer via CustomerPickerSheet ─────────────────────
+# Sheet starts in managed mode — toggle to unmanaged (walk-in) mode first.
+- tapOn:
+    id: "appt-customer-picker"
+- tapOn:
+    id: "appt-customer-type-toggle"
+- tapOn:
+    id: "appt-guest-name-input"
+- inputText: "Khách Hair Test"
+- tapOn:
+    id: "appt-guest-confirm-btn"
+
+# ── AP04: Save the appointment ────────────────────────────────────────────────
+- tapOn:
+    id: "appt-save-btn"
+# Success alert appears — dismiss it with the default OK button (alert-btn-0).
+# appt.saveSuccess = "Đã lưu lịch hẹn" (FriendlyAlert — absolute overlay, NOT a Modal).
+# NOTE: FriendlyAlert does NOT block the background accessibility tree, so
+# appointment-add-fab would be "visible" even while the alert is showing.
+# MUST tap alert-btn-0 (non-optional) so navigation.goBack() fires.
+- tapOn:
+    id: "alert-btn-0"
+# appointment-add-fab only exists on AppointmentListScreen, not AppointmentFormScreen.
+# This assertion confirms navigation back to the list succeeded.
+- assertVisible:
+    id: "appointment-add-fab"
+- waitForAnimationToEnd
+
+# ── AP05: Open the newly created appointment ──────────────────────────────────
+# pre-05 cleanup deletes all "Khách Hair Test" appointments for today before the
+# flow runs, so after the creation above there is exactly ONE appointment for today.
+# analyticsExpanded=false by default → only a 56px toggle banner above the list.
+# The newly created appointment is appointment-card-0 (gIdx=0, aIdx=0).
+# assertVisible polls (up to 60s) so the background refetch from invalidateQueries
+# completes before we try to tap.
+- assertVisible:
+    id: "appointment-card-0"
+- tapOn:
+    id: "appointment-card-0"
+- assertVisible:
+    id: "appt-checkin-btn"
+
+# ── AP06: Cancel the appointment ─────────────────────────────────────────────
+# FriendlyAlert cancel confirmation:
+#   title:   appt.confirmCancel = "Huỷ lịch hẹn này?"
+#   btn[cancel] testID=alert-btn-cancel  label="Bỏ qua"
+#   btn[1]      testID=alert-btn-1       label="Xác nhận" (destructive)
+# After confirmation:
+#   success alert: appt.cancelSuccess = "Đã huỷ lịch hẹn" → btn[0] testID=alert-btn-0
+- tapOn:
+    id: "appt-cancel-btn"
+- tapOn:
+    id: "alert-btn-1"
+    optional: true
+- tapOn:
+    id: "alert-btn-0"
+    optional: true
+
+# ── AP07: Check-in button is gone after cancel ───────────────────────────────
+- assertNotVisible:
+    id: "appt-checkin-btn"
+    optional: true
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

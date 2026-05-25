@@ -171,13 +171,14 @@ const AlertCard = memo(function AlertCard({
 });
 
 const QuickAction = memo(function QuickAction({
-  icon, label, onPress,
+  icon, label, testID, onPress,
 }: {
-  icon: string; label: string; onPress: () => void;
+  icon: string; label: string; testID?: string; onPress: () => void;
 }) {
   const typo = useTypography();
   return (
     <TouchableOpacity
+      testID={testID}
       onPress={onPress}
       className="flex-1 items-center bg-white dark:bg-gray-800 rounded-2xl py-3 px-1 border border-gray-100 dark:border-gray-700"
       activeOpacity={0.75}
@@ -517,28 +518,28 @@ export function DashboardScreen({ navigation }: Props) {
     const goMore = (screen: string) => navigation.getParent()?.navigate('More', { screen } as any);
 
     if (isPawnShop) return [
-      { icon: '📋', label: t('dashboard.quickAction.newContract'),   onPress: goSelling },
-      { icon: '🔄', label: t('dashboard.quickAction.renew'),         onPress: goSelling },
-      { icon: '💸', label: t('dashboard.quickAction.recordExpense'), onPress: goExpenses },
-      { icon: '👥', label: t('dashboard.quickAction.customers'),     onPress: goCustomers },
+      { icon: '📋', label: t('dashboard.quickAction.newContract'),   testID: 'dashboard-quick-newContract',   onPress: goSelling },
+      { icon: '🔄', label: t('dashboard.quickAction.renew'),         testID: 'dashboard-quick-renew',         onPress: goSelling },
+      { icon: '💸', label: t('dashboard.quickAction.recordExpense'), testID: 'dashboard-quick-expense',       onPress: goExpenses },
+      { icon: '👥', label: t('dashboard.quickAction.customers'),     testID: 'dashboard-quick-customers',     onPress: goCustomers },
     ];
     if (isServiceShop) return [
-      { icon: '🛎️', label: t('dashboard.quickAction.createService'),  onPress: goSelling },
-      { icon: '📅', label: t('dashboard.quickAction.appointments'),   onPress: () => goMore('AppointmentList') },
-      { icon: '💸', label: t('dashboard.quickAction.recordExpense'),  onPress: goExpenses },
-      { icon: '👥', label: t('dashboard.quickAction.customers'),      onPress: goCustomers },
+      { icon: '🛎️', label: t('dashboard.quickAction.createService'),  testID: 'dashboard-quick-createService', onPress: goSelling },
+      { icon: '📅', label: t('dashboard.quickAction.appointments'),   testID: 'dashboard-quick-appointments',  onPress: () => goMore('AppointmentList') },
+      { icon: '💸', label: t('dashboard.quickAction.recordExpense'),  testID: 'dashboard-quick-expense',       onPress: goExpenses },
+      { icon: '👥', label: t('dashboard.quickAction.customers'),      testID: 'dashboard-quick-customers',     onPress: goCustomers },
     ];
     if (isFbShop) return [
-      { icon: '🍽️', label: t('dashboard.quickAction.selectTable'),   onPress: goSelling },
-      { icon: '🧾', label: t('dashboard.quickAction.newOrder'),       onPress: goSelling },
-      { icon: '💸', label: t('dashboard.quickAction.recordExpense'),  onPress: goExpenses },
-      { icon: '👥', label: t('dashboard.quickAction.customers'),      onPress: goCustomers },
+      { icon: '🍽️', label: t('dashboard.quickAction.selectTable'),   testID: 'dashboard-quick-selectTable',  onPress: goSelling },
+      { icon: '🧾', label: t('dashboard.quickAction.newOrder'),       testID: 'dashboard-quick-newOrder',     onPress: goSelling },
+      { icon: '💸', label: t('dashboard.quickAction.recordExpense'),  testID: 'dashboard-quick-expense',      onPress: goExpenses },
+      { icon: '👥', label: t('dashboard.quickAction.customers'),      testID: 'dashboard-quick-customers',    onPress: goCustomers },
     ];
     return [
-      { icon: '🧾', label: t('dashboard.quickAction.newOrder'),        onPress: goSelling },
-      { icon: '📦', label: t('dashboard.quickAction.importInventory'), onPress: () => goMore('Inventory') },
-      { icon: '💸', label: t('dashboard.quickAction.recordExpense'),   onPress: goExpenses },
-      { icon: '👥', label: t('dashboard.quickAction.customersShort'),  onPress: goCustomers },
+      { icon: '🧾', label: t('dashboard.quickAction.newOrder'),        testID: 'dashboard-quick-newOrder',     onPress: goSelling },
+      { icon: '📦', label: t('dashboard.quickAction.importInventory'), testID: 'dashboard-quick-inventory',    onPress: () => goMore('Inventory') },
+      { icon: '💸', label: t('dashboard.quickAction.recordExpense'),   testID: 'dashboard-quick-expense',      onPress: goExpenses },
+      { icon: '👥', label: t('dashboard.quickAction.customersShort'),  testID: 'dashboard-quick-customers',    onPress: goCustomers },
     ];
   }, [isPawnShop, isServiceShop, isFbShop, navigation, t]);
 
@@ -790,7 +791,7 @@ export function DashboardScreen({ navigation }: Props) {
         <View className="mx-4 mb-4">
           <View className="flex-row gap-2">
             {quickActions.map((a) => (
-              <QuickAction key={a.label} icon={a.icon} label={a.label} onPress={a.onPress} />
+              <QuickAction key={a.label} icon={a.icon} label={a.label} testID={a.testID} onPress={a.onPress} />
             ))}
           </View>
         </View>

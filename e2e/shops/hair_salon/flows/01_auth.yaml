@@ -1,0 +1,24 @@
+appId: com.knp.tappypos
+name: "HAIR 01 Auth — login with hair salon credentials, skip PIN, arrive at Dashboard"
+---
+
+# ── HAIR01: Full login flow ───────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── HAIR01-A: App is loaded (tab bar is present) ─────────────────────────────
+- assertVisible:
+    id: "tab-home"
+- assertNotVisible: "500"
+
+# ── HAIR01-B: Sell tab shows hair service screen ─────────────────────────────
+# If ORDERS view was persisted from a previous run, switch back to POS view.
+- tapOn:
+    id: "tab-sell"
+- tapOn:
+    text: "Bán hàng"
+    optional: true
+- assertVisible: "Tạo đơn mới"
+
+# ── HAIR01-C: Return to home ──────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

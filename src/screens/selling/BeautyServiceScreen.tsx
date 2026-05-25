@@ -1978,6 +1978,7 @@ export function BeautyServiceScreen({ navigation, route }: SellingScreenProps<'P
             keyboardShouldPersistTaps="always"
           >
             <TouchableOpacity
+              testID="barber-cat-all"
               className={`flex-row items-center gap-x-1 rounded-full px-3.5 py-1.5 border ${
                 selectedCategoryId === null
                   ? 'bg-indigo-600 border-indigo-600'

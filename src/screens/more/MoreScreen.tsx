@@ -33,7 +33,10 @@ export function MoreScreen({ navigation }: MoreScreenProps<'MoreMain'>) {
 
   // First 2 sections expanded by default, rest collapsed
   const SECTION_KEYS = ['catalog', 'people', 'ops', 'shopConfig', 'tools', 'support', 'settings'] as const;
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  // First 2 sections (catalog, people) expanded by default; the rest start collapsed for a cleaner initial view.
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    new Set<string>(['ops', 'shopConfig', 'tools', 'support', 'settings']),
+  );
   const toggle = (key: string) =>
     setCollapsedSections((prev) => {
       const next = new Set(prev);

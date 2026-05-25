@@ -1,0 +1,74 @@
+appId: com.knp.tappypos
+name: "HAIR 03 Order complete + cancel — seed 2 PENDING orders via API, complete one, cancel one"
+---
+
+# ── Log in ────────────────────────────────────────────────────────────────────
+# PENDING orders are pre-seeded via curl in run_all.sh before this flow runs.
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Order list ────────────────────────────────────────────────────
+# POSMainScreen checks sellingStore.activeView on mount:
+#   • activeView='POS'    → renders BeautyServiceScreen (has "Tạo đơn mới" + barber-orders-tab)
+#   • activeView='ORDERS' → renders OrderListScreen directly (no barber-orders-tab needed)
+# activeView persists across runs, so we handle both cases with a conditional.
+- tapOn:
+    id: "tab-sell"
+# If BeautyServiceScreen is showing (POS view), tap its orders tab to switch to OrderListScreen.
+# If OrderListScreen is already showing (ORDERS view persisted), this conditional is skipped.
+- runFlow:
+    when:
+      visible:
+        text: "Tạo đơn mới"
+    commands:
+      - tapOn:
+          id: "barber-orders-tab"
+- assertNotVisible: "500"
+- waitForAnimationToEnd
+
+# ── Filter to PENDING orders ──────────────────────────────────────────────────
+- tapOn:
+    id: "order-filter-PENDING"
+    optional: true
+- waitForAnimationToEnd
+- assertVisible:
+    id: "order-row-0"
+
+# ── OC01: Open first PENDING order ───────────────────────────────────────────
+- tapOn:
+    id: "order-row-0"
+- assertVisible: "Chi tiết đơn hàng"
+- assertVisible:
+    id: "order-complete-btn"
+- assertVisible:
+    id: "order-cancel-btn"
+
+# ── OC02: Cancel this order ───────────────────────────────────────────────────
+- tapOn:
+    id: "order-cancel-btn"
+- assertVisible: "Hủy đơn hàng"
+- tapOn: "Xác nhận hủy đơn"
+- assertVisible: "Đã hủy"
+- assertNotVisible: "Hoàn thành"
+
+# ── Return to list ────────────────────────────────────────────────────────────
+# waitForAnimationToEnd lets React Query invalidation + list refresh settle.
+- tapOn:
+    id: "order-detail-back-btn"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "order-row-0"
+
+# ── OC03: Open second PENDING order and complete it ──────────────────────────
+- tapOn:
+    id: "order-row-0"
+- assertVisible: "Chi tiết đơn hàng"
+- assertVisible:
+    id: "order-complete-btn"
+- tapOn:
+    id: "order-complete-btn"
+- assertVisible: "Hoàn thành"
+- assertNotVisible: "Hủy đơn"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

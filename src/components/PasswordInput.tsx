@@ -56,7 +56,7 @@ export const PasswordInput = forwardRef<TextInput, Props>(
             placeholderTextColor="#9ca3af"
             {...rest}
           />
-          <TouchableOpacity onPress={() => setShow((v) => !v)} className="p-1">
+          <TouchableOpacity testID="password-toggle" onPress={() => setShow((v) => !v)} className="p-1">
             <MaterialCommunityIcons
               name={show ? 'eye-off-outline' : 'eye-outline'}
               size={22}

@@ -1,0 +1,35 @@
+appId: com.knp.tappypos
+name: "HAIR 13 Security — blocked features absent, service features present"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to More ──────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+
+# ── SEC01: INVENTORY tile is NOT visible (hair salon has no inventory) ─────────
+- assertNotVisible:
+    id: "more-config-inventory"
+
+# ── SEC02: Gold price tile is NOT visible (hair salon has no gold price) ───────
+- assertNotVisible:
+    id: "more-config-goldPrice"
+
+# ── SEC03: APPOINTMENT tile IS visible (hair salon has appointments) ───────────
+- assertVisible:
+    id: "more-config-appointments"
+
+# ── SEC04: Sell tab shows hair service screen (not product POS) ────────────────
+- tapOn:
+    id: "tab-sell"
+- assertVisible: "Tạo đơn mới"
+- assertNotVisible: "Tìm sản phẩm..."
+
+# ── SEC05: Vendor tile is NOT visible (hair salon has no vendor) ───────────────
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- assertNotVisible: "Nhà cung cấp"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

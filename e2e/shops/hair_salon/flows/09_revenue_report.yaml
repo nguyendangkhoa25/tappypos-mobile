@@ -1,0 +1,38 @@
+appId: com.knp.tappypos
+name: "HAIR 09 Revenue report — KPI tabs, total revenue visible (DASHBOARD/REVENUE feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to Report tab ───────────────────────────────────────────────────
+- tapOn:
+    id: "tab-report"
+- assertVisible:
+    text: "Báo cáo"
+    optional: true
+- assertVisible:
+    text: "Doanh thu"
+    optional: true
+- assertNotVisible: "500"
+
+# ── RV01: Total revenue KPI is visible ───────────────────────────────────────
+- assertVisible:
+    id: "report-total-revenue"
+
+# ── RV02: Switch to Expenses tab within report ───────────────────────────────
+- tapOn:
+    text: "Chi phí"
+    optional: true
+- assertNotVisible: "500"
+
+# ── RV03: Switch back to Revenue ─────────────────────────────────────────────
+- tapOn:
+    text: "Doanh thu"
+    optional: true
+- assertVisible:
+    id: "report-total-revenue"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"

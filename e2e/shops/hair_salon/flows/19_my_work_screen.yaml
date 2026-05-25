@@ -1,0 +1,34 @@
+appId: com.knp.tappypos
+name: "HAIR 19 My Work screen — queue tab + available tab (MY_WORK feature)"
+---
+
+# ── Setup: log in ────────────────────────────────────────────────────────────
+- runFlow: ../../../subflows/_login.yaml
+
+# ── Navigate to My Work via More ─────────────────────────────────────────────
+# "Vận hành" (ops) section starts collapsed — scroll to it and tap header to expand.
+- runFlow: ../../../subflows/_navigate_to_more.yaml
+- scroll
+- tapOn:
+    id: "more-section-ops"
+- waitForAnimationToEnd
+- tapOn:
+    id: "more-config-mywork"
+- assertNotVisible: "500"
+- assertNotVisible: "INTERNAL_SERVER_ERROR"
+
+# ── MW01: Switch to "Chờ nhận" (available) tab ───────────────────────────────
+- tapOn:
+    text: "Chờ nhận"
+    optional: true
+- assertNotVisible: "500"
+
+# ── MW02: Switch back to my queue ────────────────────────────────────────────
+- tapOn:
+    text: "Hàng chờ của tôi"
+    optional: true
+- assertNotVisible: "500"
+
+# ── Navigate back to home ─────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-home"
