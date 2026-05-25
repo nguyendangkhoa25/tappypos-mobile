@@ -138,7 +138,10 @@ export function StaffDetailScreen({ navigation, route }: Props) {
   // A user must never edit their own employee record.
   // JWT `sub` is the username string (e.g. "0901234567.shopABC"), NOT the UUID.
   // Compare against user.username once the query resolves — never against the route-param UUID.
-  const isSelf = currentUserId != null && user != null && currentUserId === user.username;
+  //
+  // Safety: if currentUserId is null (auth still hydrating on cold start), treat
+  // the record as self — destructive actions stay hidden until identity is confirmed.
+  const isSelf = user != null && (currentUserId == null || currentUserId === user.username);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['employeeProfile', userId],

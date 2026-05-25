@@ -19,9 +19,11 @@ import { useToastStore } from '../../store/toastStore';
 import { useErrorAlert } from '../../hooks/useErrorAlert';
 import { useTypography } from '../../hooks/useTypography';
 import { formatDate } from '../../utils/format';
-import type { SettingsScreenProps } from '../../types/navigation';
+import type { MoreScreenProps } from '../../types/navigation';
 
-type Props = SettingsScreenProps<'ZaloOaConnect'>;
+// Registered in both SettingsStack and MoreStack; MoreStack is the primary path.
+// The screen only calls navigation.goBack(), so the prop type is safe for both.
+type Props = MoreScreenProps<'ZaloOaConnect'>;
 
 type ConnectMode = 'app_secret' | 'access_token';
 

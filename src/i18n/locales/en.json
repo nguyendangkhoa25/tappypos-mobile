@@ -711,7 +711,8 @@
     "scanQr": "Scan to pay",
     "doubleTapFullscreen": "Double-tap to expand",
     "autoClose": "Auto-close in {{seconds}}s",
-    "searchResults": "Search results"
+    "searchResults": "Search results",
+    "requestFailed": "Request failed. Please try again."
   },
   "datePickerModal": {
     "weekdays": "Mo,Tu,We,Th,Fr,Sa,Su",
@@ -1180,7 +1181,15 @@
     "cancelReasonHint": "Select a common reason or type your own",
     "cancelReasonPlaceholder": "Reason (optional)...",
     "cancelConfirmBtn": "Confirm cancellation",
-    "cancelChips": ["Changed mind", "No-show", "Wrong order", "Out of stock", "Duplicate order", "Payment issue", "Test order"],
+    "cancelChips": [
+      "Changed mind",
+      "No-show",
+      "Wrong order",
+      "Out of stock",
+      "Duplicate order",
+      "Payment issue",
+      "Test order"
+    ],
     "voidButton": "Void order",
     "voiding": "Voiding...",
     "voidSuccess": "Order voided",
@@ -1192,7 +1201,13 @@
     "voidReasonHint": "Select a reason or type your own",
     "voidReasonPlaceholder": "Reason (required)...",
     "voidConfirmBtn": "Confirm void",
-    "voidChips": ["Wrong amount", "Wrong customer", "Wrong items", "Duplicate order", "Test order"],
+    "voidChips": [
+      "Wrong amount",
+      "Wrong customer",
+      "Wrong items",
+      "Duplicate order",
+      "Test order"
+    ],
     "receiptTotalLabel": "TOTAL DUE",
     "receiptCustomer": "Customer: {{name}}",
     "receiptTime": "Time",
@@ -2000,7 +2015,8 @@
       "timeEstimate": "⏱ About 3–5 minutes",
       "cta": "Get started",
       "joinShop": "Join a shop",
-      "joinShopHint": "Have an invitation code from a shop owner?"
+      "joinShopHint": "Have an invitation code from a shop owner?",
+      "ctaHint": "Set up your own new shop"
     },
     "joinShop": {
       "title": "Join a shop",
@@ -2009,6 +2025,7 @@
       "codeLabel": "Invitation code",
       "lookingUp": "Looking up...",
       "invalidCode": "Invalid or expired code",
+      "expiredCode": "This code has expired. Ask the shop owner to generate a new one.",
       "shopCard": {
         "role": "Role",
         "expires": "Valid for",

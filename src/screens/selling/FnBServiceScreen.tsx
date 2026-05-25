@@ -1160,7 +1160,9 @@ export function FnBServiceScreen(_props: Props) {
           initialMethod={lastPaymentMethod}
           onClose={() => setPaymentSheetVisible(false)}
           onConfirm={({ method, amountPaid }) => {
-            handleCheckout(method, amountPaid);
+            // handleCheckout is async; errors are handled internally via try/catch/finally.
+            // `void` prevents an unhandled-rejection warning without masking the real error.
+            void handleCheckout(method, amountPaid);
           }}
           paying={checkingOut}
           qrDescription={tableLabel ?? undefined}
